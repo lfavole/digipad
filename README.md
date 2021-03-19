@@ -22,7 +22,7 @@ npm run build
 pm2 start
 ```
 
-### Fichier .env nécessaire à la racine avant compilation avec 1 variable
+### Fichier .env nécessaire à la racine avant compilation avec 6 variables
 ```
 HOST (serveur de production)
 DB_HOST (serveur de base de données Redis)
