@@ -1,0 +1,2312 @@
+import axios from 'axios'
+import imagesLoaded from 'imagesloaded'
+import draggable from 'vuedraggable'
+import pell from 'pell'
+import linkifyHtml from 'linkifyjs/html'
+import Panzoom from '@panzoom/panzoom'
+import chargement from '@/components/chargement.vue'
+import emojis from '@/components/emojis.vue'
+
+export default {
+	name: 'Pad',
+	components: {
+		draggable,
+		chargement,
+		emojis
+	},
+	sockets: {
+		connexion: function (donnees) {
+			this.definirUtilisateurs(donnees)
+		},
+		deconnexion: function (identifiant) {
+			const utilisateurs = this.utilisateurs
+			utilisateurs.forEach(function (utilisateur, index) {
+				if (utilisateur.identifiant === identifiant) {
+					utilisateurs.splice(index, 1)
+				}
+			})
+			this.utilisateurs = utilisateurs
+		},
+		erreur: function () {
+			this.$store.dispatch('modifierAlerte', this.$t('erreurActionServeur'))
+		},
+		ajouterbloc: function (donnees) {
+			this.action = 'ajouter'
+			this.utilisateur = donnees.identifiant
+			if (this.pad.affichage === 'colonnes') {
+				this.colonnes[donnees.colonne].push(donnees)
+				this.$nextTick(function () {
+					const colonne = document.querySelector('#colonne' + donnees.colonne + ' .conteneur-colonne')
+					colonne.scrollTop = colonne.scrollHeight
+				})
+			}
+			this.blocs.push(donnees)
+			this.activite.unshift({ bloc: donnees.bloc, identifiant: donnees.identifiant, nom: donnees.nom, titre: donnees.titre, date: donnees.date, couleur: donnees.couleur, type: 'bloc-ajoute' })
+			this.$nextTick(function () {
+				const bloc = document.querySelector('#' + donnees.bloc)
+				bloc.classList.add('anime')
+				bloc.addEventListener('animationend', function () {
+					bloc.classList.remove('anime')
+				})
+			})
+		},
+		modifierbloc: function (donnees) {
+			this.action = 'modifier'
+			if (this.pad.affichage === 'colonnes') {
+				this.colonnes[donnees.colonne].forEach(function (item, index) {
+					if (item.bloc === donnees.bloc) {
+						this.colonnes[donnees.colonne][index] = { bloc: donnees.bloc, identifiant: item.identifiant, nom: item.nom, titre: donnees.titre, texte: donnees.texte, media: donnees.media, iframe: donnees.iframe, type: donnees.type, source: donnees.source, vignette: donnees.vignette, date: item.date, modifie: donnees.modifie, couleur: item.couleur, commentaires: item.commentaires, evaluations: item.evaluations, colonne: item.colonne }
+					}
+				}.bind(this))
+			}
+			this.blocs.forEach(function (item, index) {
+				if (item.bloc === donnees.bloc) {
+					this.utilisateur = donnees.identifiant
+					this.blocs.splice(index, 1, { bloc: donnees.bloc, identifiant: item.identifiant, nom: item.nom, titre: donnees.titre, texte: donnees.texte, media: donnees.media, iframe: donnees.iframe, type: donnees.type, source: donnees.source, vignette: donnees.vignette, date: item.date, modifie: donnees.modifie, couleur: item.couleur, commentaires: item.commentaires, evaluations: item.evaluations, colonne: item.colonne })
+				}
+			}.bind(this))
+			this.activite.unshift({ bloc: donnees.bloc, identifiant: donnees.identifiant, nom: donnees.nom, titre: donnees.titre, date: donnees.date, couleur: donnees.couleur, type: 'bloc-modifie' })
+		},
+		deplacerbloc: function (donnees) {
+			this.utilisateur = donnees.identifiant
+			const blocActif = document.querySelector('.bloc.actif')
+			let blocId = ''
+			if (blocActif && this.utilisateur !== this.identifiant) {
+				blocId = blocActif.id
+			}
+			if (this.pad.affichage === 'colonnes') {
+				this.colonnes = donnees.colonnes
+			}
+			this.blocs = donnees.blocs
+			this.$nextTick(function () {
+				if (blocActif && this.utilisateur !== this.identifiant) {
+					blocActif.classList.remove('actif')
+					document.querySelector('#' + blocId).classList.add('actif')
+				}
+			}.bind(this))
+		},
+		supprimerbloc: function (donnees) {
+			this.action = 'supprimer'
+			if (this.pad.affichage === 'colonnes') {
+				this.colonnes[donnees.colonne].forEach(function (item, index) {
+					if (item.bloc === donnees.bloc) {
+						this.colonnes[donnees.colonne].splice(index, 1)
+					}
+				}.bind(this))
+			}
+			this.blocs.forEach(function (item, index) {
+				if (item.bloc === donnees.bloc) {
+					this.utilisateur = donnees.identifiant
+					this.blocs.splice(index, 1)
+				}
+			}.bind(this))
+			this.activite.unshift({ bloc: donnees.bloc, identifiant: donnees.identifiant, nom: donnees.nom, titre: donnees.titre, date: donnees.date, couleur: donnees.couleur, type: 'bloc-supprime' })
+		},
+		commenterbloc: function (donnees) {
+			const blocs = this.blocs
+			blocs.forEach(function (item) {
+				if (item.bloc === donnees.bloc) {
+					item.commentaires = donnees.commentaires
+				}
+			})
+			this.blocs = blocs
+			if (this.modaleCommentaires && this.bloc === donnees.bloc) {
+				this.commentaires.unshift({ id: donnees.id, identifiant: donnees.identifiant, nom: donnees.nom, texte: donnees.texte, date: donnees.date })
+			}
+			this.activite.unshift({ bloc: donnees.bloc, identifiant: donnees.identifiant, nom: donnees.nom, titre: donnees.titre, date: donnees.date, couleur: donnees.couleur, type: 'bloc-commente' })
+		},
+		modifiercommentaire: function (donnees) {
+			const commentaires = this.commentaires
+			commentaires.forEach(function (commentaire) {
+				if (commentaire.id === donnees.id) {
+					commentaire.texte = donnees.texte
+				}
+			})
+			this.commentaires = commentaires
+		},
+		supprimercommentaire: function (donnees) {
+			const blocs = this.blocs
+			blocs.forEach(function (item) {
+				if (item.bloc === donnees.bloc) {
+					item.commentaires = donnees.commentaires
+				}
+			})
+			this.blocs = blocs
+			const commentaires = this.commentaires
+			commentaires.forEach(function (commentaire, index) {
+				if (commentaire.id === donnees.id) {
+					commentaires.splice(index, 1)
+				}
+			})
+			this.commentaires = commentaires
+		},
+		commentaires: function (donnees) {
+			this.commentaires = donnees.commentaires
+			if (donnees.type === 'discussion') {
+				this.chargement = false
+				this.modaleCommentaires = true
+				this.$nextTick(function () {
+					this.genererEditeur()
+				}.bind(this))
+			} else {
+				this.chargerDiapositive()
+			}
+		},
+		evaluerbloc: function (donnees) {
+			this.chargement = false
+			const blocs = this.blocs
+			blocs.forEach(function (item) {
+				if (item.bloc === donnees.bloc) {
+					item.evaluations.push(donnees.evaluation)
+				}
+			})
+			this.blocs = blocs
+			this.activite.unshift({ bloc: donnees.bloc, identifiant: donnees.identifiant, nom: donnees.nom, titre: donnees.titre, date: donnees.date, couleur: donnees.couleur, type: 'bloc-evalue' })
+		},
+		modifierevaluation: function (donnees) {
+			this.chargement = false
+			const blocs = this.blocs
+			blocs.forEach(function (item, index) {
+				if (item.bloc === donnees.bloc) {
+					const evaluations = item.evaluations
+					evaluations.forEach(function (evaluation) {
+						if (evaluation.id === donnees.id) {
+							evaluation.date = donnees.date
+							evaluation.etoiles = donnees.etoiles
+						}
+					})
+				}
+			})
+			this.blocs = blocs
+		},
+		supprimerevaluation: function (donnees) {
+			this.chargement = false
+			const blocs = this.blocs
+			blocs.forEach(function (item, index) {
+				if (item.bloc === donnees.bloc) {
+					const evaluations = item.evaluations
+					evaluations.forEach(function (evaluation, index) {
+						if (evaluation.id === donnees.id) {
+							evaluations.splice(index, 1)
+						}
+					})
+				}
+			})
+			this.blocs = blocs
+		},
+		modifiernom: function (donnees) {
+			this.modifierCaracteristique(donnees.identifiant, 'nom', donnees.nom)
+			this.chargement = false
+			if (donnees.identifiant === this.identifiant) {
+				this.$store.dispatch('modifierNom', donnees.nom)
+				this.$store.dispatch('modifierMessage', this.$t('nomModifie'))
+			}
+		},
+		modifiercouleur: function (donnees) {
+			this.modifierCaracteristique(donnees.identifiant, 'couleur', donnees.couleur)
+			if (donnees.identifiant === this.identifiant) {
+				this.$store.dispatch('modifierMessage', this.$t('couleurModifiee'))
+			}
+		},
+		modifiertitre: function (titre) {
+			this.pad.titre = titre
+			this.chargement = false
+			if (this.pad.identifiant === this.identifiant) {
+				this.$store.dispatch('modifierMessage', this.$t('titrePadModifie'))
+			}
+		},
+		modifieracces: function (acces) {
+			this.pad.acces = acces
+			this.chargement = false
+			if (this.pad.identifiant === this.identifiant) {
+				this.$store.dispatch('modifierMessage', this.$t('accesPadModifie'))
+			} else {
+				if (acces === 'prive') {
+					this.$socket.emit('sortie')
+					this.$router.push('/')
+				}
+			}
+		},
+		modifiercontributions: function (contributions) {
+			this.pad.contributions = contributions
+			this.chargement = false
+			if (this.pad.identifiant === this.identifiant) {
+				this.$store.dispatch('modifierMessage', this.$t('statutPadModifie'))
+			}
+		},
+		modifieraffichage: function (affichage) {
+			this.pad.affichage = affichage
+			this.affichage = affichage
+			this.chargement = false
+			if (this.pad.identifiant === this.identifiant) {
+				this.action = ''
+				this.$store.dispatch('modifierMessage', this.$t('affichagePadModifie'))
+			}
+		},
+		modifierfond: function (fond) {
+			this.pad.fond = fond
+			imagesLoaded('#pad', { background: true }, function () {
+				this.chargement = false
+				if (this.pad.identifiant === this.identifiant) {
+					this.$store.dispatch('modifierMessage', this.$t('imageFondModifiee'))
+				}
+			}.bind(this))
+		},
+		modifierfichiers: function (statut) {
+			this.pad.fichiers = statut
+			this.chargement = false
+			if (this.pad.identifiant === this.identifiant) {
+				this.$store.dispatch('modifierMessage', this.$t('parametreFichiersModifie'))
+			}
+		},
+		modifierliens: function (statut) {
+			this.pad.liens = statut
+			this.chargement = false
+			if (this.pad.identifiant === this.identifiant) {
+				this.$store.dispatch('modifierMessage', this.$t('parametreLiensModifie'))
+			}
+		},
+		modifierdocuments: function (statut) {
+			this.pad.documents = statut
+			this.chargement = false
+			if (this.pad.identifiant === this.identifiant) {
+				this.$store.dispatch('modifierMessage', this.$t('parametreDocumentsModifie'))
+			}
+		},
+		modifiercommentaires: function (statut) {
+			this.pad.commentaires = statut
+			this.chargement = false
+			if (this.pad.identifiant === this.identifiant) {
+				this.$store.dispatch('modifierMessage', this.$t('parametreCommentairesModifie'))
+			}
+		},
+		modifierevaluations: function (statut) {
+			this.pad.evaluations = statut
+			this.chargement = false
+			if (this.pad.identifiant === this.identifiant) {
+				this.$store.dispatch('modifierMessage', this.$t('parametreEvaluationModifie'))
+			}
+		},
+		message: function (message) {
+			this.messages.push(message)
+			if (message.identifiant !== this.identifiant && !this.menuChat) {
+				this.nouveauxMessages++
+			}
+		},
+		reinitialisermessages: function () {
+			this.messages = []
+			this.nouveauxMessages = 0
+			this.chargement = false
+			if (this.pad.identifiant === this.identifiant) {
+				this.$store.dispatch('modifierMessage', this.$t('historiqueConversationSupprime'))
+			}
+		},
+		reinitialiseractivite: function () {
+			this.activite = []
+			this.chargement = false
+			if (this.pad.identifiant === this.identifiant) {
+				this.$store.dispatch('modifierMessage', this.$t('activiteSupprimee'))
+			}
+		},
+		ajoutercolonne: function (donnees) {
+			this.colonnes.push([])
+			this.pad.colonnes = donnees.colonnes
+			this.activite.unshift({ identifiant: donnees.identifiant, nom: donnees.nom, titre: donnees.titre, date: donnees.date, couleur: donnees.couleur, type: 'colonne-ajoutee' })
+			if (this.pad.identifiant === this.identifiant) {
+				this.$store.dispatch('modifierMessage', this.$t('colonneAjoutee'))
+			}
+			this.chargement = false
+		},
+		modifiercolonne: function (colonnes) {
+			this.pad.colonnes = colonnes
+			if (this.pad.identifiant === this.identifiant) {
+				this.$store.dispatch('modifierMessage', this.$t('nomColonneModifie'))
+			}
+			this.chargement = false
+		},
+		supprimercolonne: function (donnees) {
+			this.blocs = donnees.blocs
+			this.activite.unshift({ identifiant: donnees.identifiant, nom: donnees.nom, titre: donnees.titre, date: donnees.date, couleur: donnees.couleur, type: 'colonne-supprimee' })
+			if (this.pad.identifiant === this.identifiant) {
+				this.$store.dispatch('modifierMessage', this.$t('colonneSupprimee'))
+			} else {
+				this.pad.colonnes = donnees.colonnes
+				this.colonnes.splice(donnees.colonne, 1)
+			}
+			this.chargement = false
+		},
+		debloquerpad: function (donnees) {
+			this.chargement = false
+			this.modifierCaracteristique(this.identifiant, 'identifiant', donnees.identifiant)
+			this.modifierCaracteristique(donnees.identifiant, 'nom', donnees.nom)
+			this.modifierCaracteristique(donnees.identifiant, 'couleur', donnees.couleur)
+			this.$store.dispatch('modifierUtilisateur', { identifiant: donnees.identifiant, nom: donnees.nom, motdepasse: '', langue: donnees.langue, statut: 'auteur' })
+			this.$store.dispatch('modifierMessage', this.$t('padDebloque'))
+		},
+		deconnecte: function () {
+			this.chargement = false
+			this.$store.dispatch('modifierMessage', this.$t('problemeConnexion'))
+		}
+	},
+	watchQuery: ['page'],
+	async asyncData (context) {
+		const id = context.route.params.id
+		const token = context.route.params.pad
+		const identifiant = context.store.state.identifiant
+		const statut = context.store.state.statut
+		const { data } = await axios.post(context.store.state.hote + '/api/recuperer-donnees-pad', {
+			id: id,
+			token: token,
+			identifiant: identifiant,
+			statut: statut
+		}, {
+			headers: { 'Content-Type': 'application/json' }
+		})
+		if (data === 'erreur_pad' && context.store.state.statut === 'utilisateur') {
+			context.redirect('/u/' + context.store.state.identifiant)
+		} else if (data === 'erreur_pad' && (context.store.state.statut === 'invite' || context.store.state.statut === 'auteur' || context.store.state.statut === '')) {
+			context.redirect('/')
+		} else {
+			return {
+				pad: data.pad,
+				blocs: data.blocs,
+				activite: data.activite
+			}
+		}
+	},
+	data () {
+		return {
+			chargement: false,
+			modaleBloc: false,
+			titreModale: '',
+			action: '',
+			mode: '',
+			affichage: '',
+			colonnes: [],
+			colonne: 0,
+			modaleColonne: false,
+			titreModaleColonne: '',
+			modeColonne: '',
+			titreColonne: '',
+			bloc: '',
+			titre: '',
+			texte: '',
+			media: '',
+			lien: '',
+			iframe: '',
+			vignette: '',
+			vignetteDefaut: '',
+			source: '',
+			type: '',
+			progressionFichier: 0,
+			progressionVignette: 0,
+			progressionFond: 0,
+			fichiers: [],
+			vignettes: [],
+			chargementLien: false,
+			chargementMedia: false,
+			menuActivite: false,
+			menuChat: false,
+			menuOptions: false,
+			menuUtilisateurs: false,
+			modaleCommentaires: false,
+			commentaires: [],
+			commentaire: '',
+			commentaireId: '',
+			commentaireModifie: '',
+			editeurCommentaire: '',
+			editionCommentaire: false,
+			emojis: '',
+			modaleEvaluations: false,
+			evaluations: [],
+			evaluation: 0,
+			evaluationId: '',
+			messages: [],
+			message: '',
+			nouveauxMessages: 0,
+			utilisateurs: [],
+			utilisateur: '',
+			modaleModifierNom: false,
+			nomUtilisateur: '',
+			couleur: '',
+			couleurs: ['#fdcc33', '#048eca', '#00a885', '#f39c12', '#9b59b6', '#4a69bd', '#7f8fa6', '#e32f6c', '#6e6363', '#f8a5c2', '#ff5e57', '#4b6584', '#79b95e', '#25b3c2', '#be9d6b'],
+			listeCouleurs: false,
+			panneaux: [],
+			fonds: ['fond1.png', 'fond2.png', 'fond3.png', 'fond4.png', 'fond5.png', 'fond6.png', 'fond7.png', 'fond8.png'],
+			modaleConfirmer: false,
+			messageConfirmation: '',
+			typeConfirmation: '',
+			modaleDiaporama: false,
+			donneesBloc: {},
+			motDePasse: '',
+			modaleMotDePasse: false,
+			modaleModifierMotDePasse: false,
+			nouveauMotDePasse: '',
+			defilement: false,
+			depart: 0,
+			distance: 0,
+			etherpad: 'https://env-7747481.jcloud-ver-jpe.ik-server.com',
+			resultats: {},
+			page: 1
+		}
+	},
+	computed: {
+		hote () {
+			return this.$store.state.hote
+		},
+		userAgent () {
+			return this.$store.state.userAgent
+		},
+		identifiant () {
+			return this.$store.state.identifiant
+		},
+		nom () {
+			return this.$store.state.nom
+		},
+		langue () {
+			return this.$store.state.langue
+		},
+		statut () {
+			return this.$store.state.statut
+		}
+	},
+	watch: {
+		affichage: function (affichage) {
+			if (affichage === 'colonnes') {
+				this.definirColonnes()
+				this.$nextTick(function () {
+					this.activerDefilementHorizontal()
+				}.bind(this))
+			} else {
+				this.desactiverDefilementHorizontal()
+			}
+		},
+		blocs: function () {
+			imagesLoaded('#pad', { background: true }, function () {
+				this.$nextTick(function () {
+					this.chargement = false
+					let auteur = false
+					if (this.utilisateur === this.identifiant) {
+						auteur = true
+					}
+					const blocActif = document.querySelector('.bloc.actif')
+					if (blocActif && this.action !== 'modifier' && this.bloc !== '' && auteur === true) {
+						blocActif.classList.remove('actif')
+					}
+					if (this.action === 'ajouter' && auteur === true) {
+						this.$store.dispatch('modifierMessage', this.$t('capsuleAjoutee'))
+						document.querySelector('#' + this.bloc).classList.add('actif')
+					} else if (this.action === 'modifier' && auteur === true) {
+						this.$store.dispatch('modifierMessage', this.$t('capsuleModifiee'))
+					} else if (this.action === 'supprimer' && auteur === true) {
+						this.$store.dispatch('modifierMessage', this.$t('capsuleSupprimee'))
+					}
+					this.utilisateur = ''
+					if (this.action !== 'organiser' && auteur === true) {
+						this.fermerModaleBloc()
+					}
+				}.bind(this))
+			}.bind(this))
+		},
+		messages: function () {
+			this.$nextTick(function () {
+				document.querySelector('#messages').scrollIntoView({ behavior: 'smooth', block: 'end' })
+			})
+		},
+		page: function (page) {
+			this.rechercherImage(page)
+		}
+	},
+	created () {
+		if (this.pad.affichage === 'colonnes') {
+			this.definirColonnes()
+		}
+		if (this.pad.acces === 'public' || (this.pad.acces === 'prive' && this.pad.identifiant === this.identifiant)) {
+			this.$nuxt.$loading.start()
+			this.$socket.emit('connexion', { pad: this.pad.id, identifiant: this.identifiant, nom: this.nom })
+		} else if (this.statut === 'utilisateur') {
+			this.$router.push('/u/' + this.identifiant)
+		} else {
+			this.$router.push('/')
+		}
+		this.$i18n.setLocale(this.langue)
+	},
+	mounted () {
+		imagesLoaded('#pad', { background: true }, function () {
+			document.documentElement.setAttribute('lang', this.langue)
+			document.addEventListener('mousedown', this.surlignerBloc, false)
+			window.addEventListener('beforeunload', this.quitterPage, false)
+			window.addEventListener('resize', this.redimensionner, false)
+			if (this.pad.affichage === 'colonnes') {
+				this.activerDefilementHorizontal()
+			}
+			setTimeout(function () {
+				this.$nuxt.$loading.finish()
+			}.bind(this), 100)
+		}.bind(this))
+	},
+	beforeDestroy () {
+		this.panneaux.forEach(function (panneau) {
+			panneau.close()
+		})
+		this.panneaux = []
+		document.removeEventListener('mousedown', this.surlignerBloc, false)
+		window.removeEventListener('beforeunload', this.quitterPage, false)
+		window.removeEventListener('resize', this.redimensionner, false)
+	},
+	methods: {
+		allerAccueil () {
+			if (this.statut === 'invite' || this.statut === 'auteur') {
+				this.$router.push('/')
+			}
+		},
+		allerCompte () {
+			this.$router.push('/u/' + this.identifiant)
+		},
+		definirUtilisateurs (donnees) {
+			let utilisateurs = []
+			const autresUtilisateurs = []
+			donnees.forEach(function (utilisateur) {
+				if (utilisateur.identifiant === this.identifiant && utilisateurs.length === 0) {
+					utilisateurs.push(utilisateur)
+					this.couleur = utilisateur.couleur
+				} else if (utilisateur.identifiant !== this.identifiant) {
+					autresUtilisateurs.push(utilisateur)
+				}
+			}.bind(this))
+			utilisateurs = utilisateurs.concat(autresUtilisateurs)
+			this.utilisateurs = utilisateurs
+		},
+		definirNom (donnees) {
+			if (donnees.nom === '') {
+				return donnees.identifiant
+			} else {
+				return donnees.nom
+			}
+		},
+		definirColonnes () {
+			const colonnes = []
+			if (this.pad.colonnes && this.pad.colonnes.length > 0) {
+				this.pad.colonnes.forEach(function () {
+					colonnes.push([])
+				})
+				this.blocs.forEach(function (bloc, index) {
+					if (bloc.colonne !== undefined) {
+						colonnes[bloc.colonne].push(bloc)
+					} else {
+						this.blocs[index].colonne = 0
+						colonnes[bloc.colonne].push(bloc)
+					}
+				}.bind(this))
+			} else {
+				this.pad.colonnes.push(this.$t('colonneSansTitre'))
+				colonnes.push([])
+				this.blocs.forEach(function (bloc, index) {
+					this.blocs[index].colonne = 0
+					colonnes[0].push(bloc)
+				}.bind(this))
+			}
+			this.colonnes = colonnes
+		},
+		definirVignette (item) {
+			let vignette
+			if (item.vignette && item.vignette !== '') {
+				vignette = item.vignette
+			} else {
+				switch (item.type) {
+				case 'audio':
+					vignette = '/img/audio.png'
+					break
+				case 'video':
+					vignette = '/img/video.png'
+					break
+				case 'pdf':
+					vignette = '/fichiers/' + this.pad.id + '/' + item.fichier.replace(/\.[^/.]+$/, '') + '.jpg'
+					break
+				case 'document':
+					vignette = '/img/document.png'
+					break
+				case 'office':
+					vignette = '/img/office.png'
+					break
+				case 'lien':
+					vignette = '/img/lien.png'
+					break
+				case 'embed':
+					if (item.source === 'youtube') {
+						vignette = '/img/youtube.png'
+					} else if (item.source === 'vimeo') {
+						vignette = '/img/vimeo.png'
+					} else if (item.source === 'dailymotion') {
+						vignette = '/img/dailymotion.png'
+					} else if (item.source === 'slideshare') {
+						vignette = '/img/slideshare.png'
+					} else if (item.source === 'flickr') {
+						vignette = '/img/flickr.png'
+					} else if (item.source === 'soundcloud') {
+						vignette = '/img/soundcloud.png'
+					} else if (item.source === 'twitter') {
+						vignette = '/img/twitter.png'
+					} else if (item.source === 'etherpad') {
+						vignette = '/img/etherpad.png'
+					} else if (item.media.includes('facebook.com')) {
+						vignette = '/img/facebook.png'
+					} else if (item.media.includes('vocaroo.com') || item.media.includes('voca.ro')) {
+						vignette = '/img/vocaroo.png'
+					} else if (item.media.includes('learningapps.org')) {
+						vignette = '/img/learning-apps.png'
+					} else if (item.media.includes('drive.google.com')) {
+						vignette = '/img/google-drive.png'
+					} else if (item.media.includes('docs.google.com/document')) {
+						vignette = '/img/google-docs.png'
+					} else if (item.media.includes('docs.google.com/presentation')) {
+						vignette = '/img/google-slides.png'
+					} else if (item.media.includes('docs.google.com/spreadsheets')) {
+						vignette = '/img/google-sheets.png'
+					} else if (item.media.includes('docs.google.com/forms')) {
+						vignette = '/img/google-forms.png'
+					} else if (item.media.includes('docs.google.com/drawings')) {
+						vignette = '/img/google-drawings.png'
+					} else if (item.media.includes('google.com/maps')) {
+						vignette = '/img/google-maps.png'
+					} else if (item.media.includes('clyp.it')) {
+						vignette = '/img/clyp.png'
+					} else if (item.media.includes('wikipedia.org')) {
+						vignette = '/img/wikipedia.png'
+					} else if (item.media.includes('quizlet.com')) {
+						vignette = '/img/quizlet.png'
+					} else if (item.media.includes('genial.ly')) {
+						vignette = '/img/genially.png'
+					} else if (item.media.includes('leplaisirdapprendre.com/outils/')) {
+						vignette = '/img/cavitools.png'
+					} else if (item.media.includes('teamimg.now.sh')) {
+						vignette = '/img/teamimg.png'
+					} else if (item.media.includes('framapad.org')) {
+						vignette = '/img/framapad.png'
+					} else {
+						vignette = '/img/code.png'
+					}
+					break
+				default:
+					vignette = '/img/telechargement.png'
+					break
+				}
+			}
+			return vignette
+		},
+		definirIconeMedia (item) {
+			let icone
+			switch (item.type) {
+			case 'image':
+			case 'lien-image':
+				icone = 'image'
+				break
+			case 'audio':
+				icone = 'volume_up'
+				break
+			case 'video':
+				icone = 'movie'
+				break
+			case 'pdf':
+			case 'document':
+			case 'office':
+				icone = 'description'
+				break
+			case 'lien':
+				icone = 'link'
+				break
+			case 'embed':
+				if (item.source === 'youtube' || item.source === 'vimeo' || item.source === 'dailymotion') {
+					icone = 'movie'
+				} else if (item.source === 'slideshare' || item.media.includes('wikipedia.org') || item.media.includes('drive.google.com') || item.media.includes('docs.google.com')) {
+					icone = 'description'
+				} else if (item.source === 'flickr') {
+					icone = 'image'
+				} else if (item.source === 'soundcloud' || item.media.includes('vocaroo.com') || item.media.includes('voca.ro') || item.media.includes('clyp.it')) {
+					icone = 'volume_up'
+				} else if (item.media.includes('google.com/maps')) {
+					icone = 'place'
+				} else if (item.source === 'etherpad' || item.media.includes('teamimg.now.sh') || item.media.includes('framapad.org')) {
+					icone = 'group_work'
+				} else {
+					icone = 'web'
+				}
+				break
+			default:
+				icone = 'save_alt'
+				break
+			}
+			return icone
+		},
+		definirDescription (item) {
+			if (item.hasOwnProperty('modifie')) {
+				return this.$t('creeeLe') + ' ' + this.$formaterDate(item.date, this.langue) + ' ' + this.$t('par') + ' ' + this.definirNom(item) + '. ' + this.$t('modifieeLe') + ' ' + this.$formaterDate(item.modifie, this.langue) + '.'
+			} else {
+				return this.$t('creeeLe') + ' ' + this.$formaterDate(item.date, this.langue) + ' ' + this.$t('par') + ' ' + this.definirNom(item) + '.'
+			}
+		},
+		ouvrirModaleColonne (type, index) {
+			if (type === 'edition') {
+				this.colonne = index
+				this.titreModaleColonne = this.$t('modifierColonne')
+				this.titreColonne = this.pad.colonnes[index]
+			} else {
+				this.titreModaleColonne = this.$t('ajouterColonne')
+			}
+			this.modeColonne = type
+			this.modaleColonne = true
+		},
+		ajouterColonne () {
+			if (this.titreColonne !== '') {
+				this.chargement = true
+				const colonnes = JSON.parse(JSON.stringify(this.pad.colonnes))
+				colonnes.push(this.titreColonne)
+				this.$socket.emit('ajoutercolonne', this.pad.id, this.titreColonne, colonnes, this.couleur)
+				this.fermerModaleColonne()
+			}
+		},
+		modifierColonne () {
+			if (this.titreColonne !== '') {
+				this.chargement = true
+				const colonnes = JSON.parse(JSON.stringify(this.pad.colonnes))
+				colonnes[this.colonne] = this.titreColonne
+				this.$socket.emit('modifiercolonne', this.pad.id, colonnes)
+				this.fermerModaleColonne()
+			}
+		},
+		afficherSupprimerColonne (index) {
+			this.colonne = index
+			this.titreColonne = this.pad.colonnes[index]
+			this.messageConfirmation = this.$t('confirmationSupprimerColonne')
+			this.typeConfirmation = 'supprimer-colonne'
+			this.modaleConfirmer = true
+		},
+		supprimerColonne () {
+			this.modaleConfirmer = false
+			this.chargement = true
+			const blocsColonne = []
+			this.colonnes[this.colonne].forEach(function (item) {
+				blocsColonne.push(item.bloc)
+			})
+			this.colonnes.splice(this.colonne, 1)
+			const blocs = []
+			this.colonnes.forEach(function (colonne, index) {
+				colonne.forEach(function (bloc) {
+					bloc.colonne = index
+				})
+				blocs.push(...colonne)
+			})
+			this.pad.colonnes.splice(this.colonne, 1)
+			this.$socket.emit('supprimercolonne', this.pad.id, this.titreColonne, this.colonne, this.pad.colonnes, blocsColonne, blocs, this.couleur)
+			this.fermerModaleColonne()
+		},
+		fermerModaleColonne () {
+			this.modaleColonne = false
+			this.titreModaleColonne = ''
+			this.titreColonne = ''
+			this.modeColonne = ''
+			this.colonne = 0
+		},
+		ouvrirModaleBloc (mode, item, colonne) {
+			this.mode = mode
+			if (mode === 'creation') {
+				this.titreModale = this.$t('ajouterCapsule')
+			} else {
+				this.titreModale = this.$t('modifierCapsule')
+				this.bloc = item.bloc
+				this.titre = item.titre
+				this.texte = item.texte
+				this.media = item.media
+				this.iframe = item.iframe
+				this.type = item.type
+				this.source = item.source
+				if (item.vignette && item.vignette !== '') {
+					this.vignette = item.vignette
+				} else if (item.type !== 'image' && (!item.vignette || item.vignette === '')) {
+					this.vignette = this.definirVignette(item)
+				}
+			}
+			if (this.pad.affichage === 'colonnes') {
+				this.colonne = colonne
+			}
+			this.menuActivite = false
+			this.menuChat = false
+			this.menuOptions = false
+			this.modaleBloc = true
+			this.$nextTick(function () {
+				if (mode === 'creation') {
+					document.querySelector('#champ-titre').focus()
+				}
+				const that = this
+				const editeur = pell.init({
+					element: document.querySelector('#texte'),
+					onChange: function (html) {
+						const texte = linkifyHtml(html, {
+							defaultProtocol: 'https'
+						})
+						this.texte = texte
+					}.bind(this),
+					actions: [{ name: 'gras', title: that.$t('gras'), icon: '<i class="material-icons">format_bold</i>', result: () => pell.exec('bold') }, { name: 'italique', title: that.$t('italique'), icon: '<i class="material-icons">format_italic</i>', result: () => pell.exec('italic') }, { name: 'souligne', title: that.$t('souligne'), icon: '<i class="material-icons">format_underlined</i>', result: () => pell.exec('underline') }, { name: 'barre', title: that.$t('barre'), icon: '<i class="material-icons">format_strikethrough</i>', result: () => pell.exec('strikethrough') }, { name: 'listeordonnee', title: that.$t('listeOrdonnee'), icon: '<i class="material-icons">format_list_numbered</i>', result: () => pell.exec('insertOrderedList') }, { name: 'liste', title: that.$t('liste'), icon: '<i class="material-icons">format_list_bulleted</i>', result: () => pell.exec('insertUnorderedList') }],
+					classes: { actionbar: 'boutons-editeur', button: 'bouton-editeur', content: 'contenu-editeur', selected: 'bouton-actif' }
+				})
+				editeur.content.innerHTML = this.texte
+				editeur.onpaste = function (event) {
+					event.preventDefault()
+					event.stopPropagation()
+					const texte = event.clipboardData.getData('text/plain')
+					pell.exec('insertText', texte)
+				}
+				document.querySelector('#texte .contenu-editeur').addEventListener('focus', function () {
+					document.querySelector('#texte').classList.add('focus')
+				})
+				document.querySelector('#texte .contenu-editeur').addEventListener('blur', function () {
+					document.querySelector('#texte').classList.remove('focus')
+				})
+			}.bind(this))
+		},
+		ajouterFichier () {
+			const champ = this.$refs['televerser-fichier']
+			const formats = ['jpg', 'jpeg', 'png', 'gif', 'mp4', 'm4v', 'mp3', 'm4a', 'ogg', 'wav', 'pdf', 'ppt', 'pptx', 'odp', 'doc', 'docx', 'odt']
+			const extension = champ.files[0].name.substring(champ.files[0].name.lastIndexOf('.') + 1).toLowerCase()
+			if (champ.files && champ.files[0] && formats.includes(extension) && champ.files[0].size < 52428800) {
+				const fichier = champ.files[0]
+				const formulaire = new FormData()
+				formulaire.append('pad', this.pad.id)
+				formulaire.append('fichier', fichier)
+				axios.post(this.hote + '/api/televerser-fichier', formulaire, {
+					headers: {
+						'Content-Type': 'multipart/form-data'
+					},
+					onUploadProgress: function (progression) {
+						const pourcentage = parseInt(Math.round((progression.loaded * 100) / progression.total))
+						this.progressionFichier = pourcentage
+					}.bind(this)
+				}).then(function (reponse) {
+					const donnees = reponse.data
+					if (donnees === 'non_connecte') {
+						this.$router.push('/')
+					} else if (donnees === 'erreur_televersement') {
+						champ.value = ''
+						this.progressionFichier = 0
+						this.$store.dispatch('modifierAlerte', this.$t('erreurTeleversementFichier'))
+					} else {
+						this.chargementMedia = true
+						this.media = donnees.fichier
+						this.type = donnees.mimetype.split('/')[0]
+						donnees.type = this.type
+						const vignette = this.definirVignette(donnees)
+						if (this.type !== 'image') {
+							this.vignette = vignette
+							this.vignetteDefaut = vignette
+						}
+						switch (this.type) {
+						case 'image':
+							this.$nextTick(function () {
+								imagesLoaded('#media', function () {
+									this.chargementMedia = false
+								}.bind(this))
+							}.bind(this))
+							break
+						case 'video':
+							this.$nextTick(function () {
+								const video = document.querySelector('#video')
+								video.addEventListener('loadedmetadata', function () {
+									imagesLoaded('#vignette', function () {
+										this.chargementMedia = false
+									}.bind(this))
+								}.bind(this))
+							}.bind(this))
+							break
+						case 'audio':
+							this.$nextTick(function () {
+								const audio = document.querySelector('#audio')
+								audio.addEventListener('loadedmetadata', function () {
+									imagesLoaded('#vignette', function () {
+										this.chargementMedia = false
+									}.bind(this))
+								}.bind(this))
+							}.bind(this))
+							break
+						case 'pdf':
+						case 'document':
+						case 'office':
+							this.$nextTick(function () {
+								const iframe = document.querySelector('#document')
+								iframe.addEventListener('load', function () {
+									imagesLoaded('#vignette', function () {
+										this.chargementMedia = false
+									}.bind(this))
+								}.bind(this))
+							}.bind(this))
+							break
+						}
+					}
+					this.progressionFichier = 0
+					champ.value = ''
+				}.bind(this)).catch(function () {
+					champ.value = ''
+					this.progressionFichier = 0
+					this.$store.dispatch('modifierAlerte', this.$t('erreurCommunicationServeur'))
+				}.bind(this))
+			} else {
+				if (formats.includes(extension) === false) {
+					this.$store.dispatch('modifierAlerte', this.$t('formatFichierPasAccepte'))
+				} else if (champ.files[0].size > 26214400) {
+					this.$store.dispatch('modifierAlerte', this.$t('tailleMaximale25'))
+				}
+				champ.value = ''
+			}
+		},
+		definirExtensionFichier (fichier) {
+			return fichier.substring(fichier.lastIndexOf('.') + 1)
+		},
+		definirNomFichier (fichier) {
+			return fichier.substring(0, fichier.lastIndexOf('.'))
+		},
+		supprimerFichier () {
+			if (this.mode === 'creation') {
+				if (this.verifierURL(this.media) === false) {
+					this.$socket.emit('supprimerfichier', { pad: this.pad.id, fichier: this.media, vignette: this.vignette })
+				}
+			} else {
+				if (this.verifierURL(this.media) === false) {
+					this.fichiers.push(this.media)
+				}
+				if (this.vignette !== '' && this.vignette.substring(1, 9) === 'fichiers') {
+					this.vignettes.push(this.vignette)
+				}
+			}
+			if (this.verifierURL(this.media) === true && this.media.includes(this.etherpad)) {
+				const etherpadId = this.media.replace(this.etherpad + '/p/', '')
+				const url = this.etherpad + '/api/1/deletePad?apikey=d6609cda593eda4a7fa9b0acc99e5867ec6e18191534e9962ac6a5038d3ef314&padID=' + etherpadId
+				axios.get(url)
+			}
+			this.media = ''
+			this.lien = ''
+			this.type = ''
+			this.vignette = ''
+			this.vignetteDefaut = ''
+			this.resultats = {}
+		},
+		ajouterLien () {
+			if (this.lien !== '') {
+				const regex = RegExp('<iframe(.+)</iframe>', 'g')
+				if (regex.test(this.lien) === true) {
+					this.lien = this.lien.match(/<iframe [^>]*src="[^"]*"[^>]*>/g).map(x => x.replace(/.*src="([^"]*)".*/, '$1'))[0]
+				}
+				if (this.verifierURL(this.lien) === true && this.lien.match(/\.(jpeg|jpg|gif|png)$/) === null) {
+					this.chargementLien = true
+					axios.get('https://noembed.com/embed?url=' + this.lien).then(function (reponse) {
+						let donnees = reponse.data
+						if (donnees.hasOwnProperty('error')) {
+							this.iframe = this.lien
+							this.$nextTick(function () {
+								this.media = this.lien
+								this.source = 'web'
+								this.type = 'embed'
+								donnees = {}
+								donnees.media = this.media
+								donnees.source = this.source
+								donnees.type = this.type
+								this.vignette = this.definirVignette(donnees)
+								this.vignetteDefaut = this.definirVignette(donnees)
+								this.chargementLien = false
+							}.bind(this))
+						} else {
+							if (donnees.provider_name.toLowerCase() === 'learningapps.org') {
+								donnees.html = donnees.html.replace('http://LearningApps.org', 'https://learningapps.org')
+							}
+							this.iframe = donnees.html.match(/<iframe [^>]*src="[^"]*"[^>]*>/g).map(x => x.replace(/.*src="([^"]*)".*/, '$1'))[0]
+							this.media = this.lien
+							this.source = donnees.provider_name.toLowerCase()
+							this.type = 'embed'
+							if (donnees.thumbnail_url !== '') {
+								this.vignette = donnees.thumbnail_url
+								this.vignetteDefaut = donnees.thumbnail_url
+							} else {
+								donnees.media = this.media
+								donnees.source = this.source
+								donnees.type = this.type
+								this.vignette = this.definirVignette(donnees)
+								this.vignetteDefaut = this.definirVignette(donnees)
+							}
+							this.chargementLien = false
+						}
+					}.bind(this)).catch(function () {
+						this.chargementLien = false
+						this.lien = ''
+						this.$store.dispatch('modifierAlerte', this.$t('erreurRecuperationContenu'))
+					}.bind(this))
+				} else if (this.verifierURL(this.lien) === true && this.lien.match(/\.(jpeg|jpg|gif|png)$/) !== null) {
+					this.chargementMedia = true
+					this.media = this.lien
+					this.type = 'lien-image'
+					this.$nextTick(function () {
+						imagesLoaded('#media', function () {
+							this.chargementMedia = false
+						}.bind(this))
+					}.bind(this))
+				} else {
+					this.rechercherImage(1)
+				}
+			}
+		},
+		rechercherImage (page) {
+			if (this.lien !== '') {
+				this.chargementLien = true
+				const requete = this.lien.replace(/\s+/g, '+')
+				if (page === 1) {
+					this.page = page
+				}
+				axios.get('https://pixabay.com/api/?key=17995783-8722cfb0d46adc88b39d0bb64&q=' + requete + '&image_type=photo&lang=' + this.langue + '&orientation=horizontal&safesearch=true&per_page=16&page=' + page).then(function (reponse) {
+					this.chargementLien = false
+					const donnees = reponse.data
+					if (donnees && donnees.total > 0) {
+						this.resultats = donnees
+						this.$nextTick(function () {
+							// eslint-disable-next-line
+							new flexImages({ selector: '#resultats', rowHeight: 60 })
+						})
+					}
+				}.bind(this)).catch(function () {
+					this.chargementLien = false
+					this.lien = ''
+					this.$store.dispatch('modifierAlerte', this.$t('erreurRecuperationContenu'))
+				}.bind(this))
+			}
+		},
+		modifierPage (type) {
+			if (type === 'suivante' && this.page < (this.resultats.total / 12)) {
+				this.page++
+			} else if (type === 'precedente' && this.page > 1) {
+				this.page--
+			}
+		},
+		selectionnerImage (image) {
+			this.chargementMedia = true
+			this.media = image
+			this.type = 'lien-image'
+			this.$nextTick(function () {
+				imagesLoaded('#media', function () {
+					this.chargementMedia = false
+				}.bind(this))
+			}.bind(this))
+		},
+		verifierURL (url) {
+			try {
+				return Boolean(new URL(url))
+			} catch (e) {
+				return false
+			}
+		},
+		convertirEnLien () {
+			this.iframe = ''
+			this.media = this.lien
+			this.source = 'web'
+			this.type = 'lien'
+		},
+		supprimerLien () {
+			if (this.iframe.includes(this.etherpad)) {
+				const etherpadId = this.iframe.replace(this.etherpad + '/p/', '')
+				const url = this.etherpad + '/api/1/deletePad?apikey=d6609cda593eda4a7fa9b0acc99e5867ec6e18191534e9962ac6a5038d3ef314&padID=' + etherpadId
+				axios.get(url)
+			}
+			this.media = ''
+			this.lien = ''
+			this.iframe = ''
+			this.type = ''
+			this.source = ''
+			this.vignette = ''
+			this.vignetteDefaut = ''
+			this.resultats = {}
+		},
+		ajouterDocument () {
+			this.chargementLien = true
+			this.lien = this.etherpad + '/p/' + 'pad-' + this.pad.id + '-' + Math.random().toString(16).slice(2)
+			this.iframe = this.lien
+			this.$nextTick(function () {
+				this.media = this.lien
+				this.source = 'etherpad'
+				this.type = 'embed'
+				const donnees = {}
+				donnees.media = this.media
+				donnees.source = this.source
+				donnees.type = this.type
+				this.vignette = this.definirVignette(donnees)
+				this.vignetteDefaut = this.definirVignette(donnees)
+				this.chargementLien = false
+			}.bind(this))
+		},
+		ajouterVignette () {
+			if (this.mode === 'creation' && this.vignette !== '' && this.vignette.substring(1, 9) === 'fichiers') {
+				this.$socket.emit('supprimervignette', this.vignette)
+			} else if (this.mode === 'edition' && this.vignette !== '' && this.vignette.substring(1, 9) === 'fichiers') {
+				this.vignettes.push(this.vignette)
+			}
+			const champ = this.$refs['televerser-vignette']
+			const formats = ['jpg', 'jpeg', 'png', 'gif']
+			const extension = champ.files[0].name.substring(champ.files[0].name.lastIndexOf('.') + 1).toLowerCase()
+			if (champ.files && champ.files[0] && formats.includes(extension) && champ.files[0].size < 5242880) {
+				const fichier = champ.files[0]
+				const formulaire = new FormData()
+				formulaire.append('pad', this.pad.id)
+				formulaire.append('fichier', fichier)
+				axios.post(this.hote + '/api/televerser-vignette', formulaire, {
+					headers: {
+						'Content-Type': 'multipart/form-data'
+					},
+					onUploadProgress: function (progression) {
+						const pourcentage = parseInt(Math.round((progression.loaded * 100) / progression.total))
+						this.progressionVignette = pourcentage
+					}.bind(this)
+				}).then(function (reponse) {
+					const donnees = reponse.data
+					if (donnees === 'non_connecte') {
+						this.$router.push('/')
+					} else if (donnees === 'erreur_televersement') {
+						champ.value = ''
+						this.progressionFichier = 0
+						this.$store.dispatch('modifierAlerte', this.$t('erreurTeleversementVignette'))
+					} else {
+						this.vignette = donnees
+						this.$nextTick(function () {
+							imagesLoaded('#vignette', function () {
+								this.progressionVignette = 0
+								this.$nextTick(function () {
+									const modaleBloc = document.querySelector('#bloc')
+									modaleBloc.scrollTop = modaleBloc.scrollHeight
+								})
+							}.bind(this))
+						}.bind(this))
+					}
+					champ.value = ''
+				}.bind(this)).catch(function () {
+					champ.value = ''
+					this.progressionVignette = 0
+					this.$store.dispatch('modifierAlerte', this.$t('erreurCommunicationServeur'))
+				}.bind(this))
+			} else {
+				if (formats.includes(extension) === false) {
+					this.$store.dispatch('modifierAlerte', this.$t('formatFichierPasAccepte'))
+				} else if (champ.files[0].size > 3145728) {
+					this.$store.dispatch('modifierAlerte', this.$t('tailleMaximale3'))
+				}
+				champ.value = ''
+			}
+		},
+		remettreVignetteDefaut () {
+			const vignette = this.vignette
+			this.vignette = this.vignetteDefaut
+			if (vignette.substring(1, 9) === 'fichiers') {
+				this.$socket.emit('supprimervignette', vignette)
+			}
+		},
+		ajouterBloc () {
+			this.bloc = 'bloc-id-' + (new Date()).getTime() + Math.random().toString(16).slice(10)
+			if (this.titre !== '' || this.texte !== '' || this.media !== '') {
+				this.chargement = true
+				this.$socket.emit('ajouterbloc', this.bloc, this.pad.id, this.pad.token, this.titre, this.texte, this.media, this.iframe, this.type, this.source, this.vignette, this.couleur, this.colonne)
+				this.modaleBloc = false
+			}
+		},
+		modifierBloc () {
+			if (this.titre !== '' || this.texte !== '' || this.media !== '') {
+				this.chargement = true
+				this.$socket.emit('modifierbloc', this.bloc, this.pad.id, this.pad.token, this.titre, this.texte, this.media, this.iframe, this.type, this.source, this.vignette, this.couleur, this.colonne)
+				this.modaleBloc = false
+				if (this.fichiers.length > 0) {
+					this.$socket.emit('supprimerfichiers', { pad: this.pad.id, fichiers: this.fichiers })
+				}
+				if (this.vignettes.length > 0) {
+					this.$socket.emit('supprimervignettes', this.vignettes)
+				}
+			}
+		},
+		fermerModaleBloc () {
+			this.modaleBloc = false
+			this.mode = ''
+			this.action = ''
+			this.titreModale = ''
+			this.colonne = 0
+			this.bloc = ''
+			this.titre = ''
+			this.texte = ''
+			this.iframe = ''
+			this.vignette = ''
+			this.vignetteDefaut = ''
+			this.type = ''
+			this.source = ''
+			this.media = ''
+			this.lien = ''
+			this.progressionFichier = 0
+			this.progressionVignette = 0
+			this.chargementLien = false
+			this.chargementMedia = false
+			this.fichiers = []
+			this.vignettes = []
+			this.resultats = {}
+		},
+		fermerModaleBlocSansEnregistrement () {
+			this.modaleBloc = false
+			this.titreModale = ''
+			if (this.mode === 'creation' && this.media !== '' && this.lien === '') {
+				this.$socket.emit('supprimerfichier', { pad: this.pad.id, fichier: this.media, vignette: this.vignette })
+			} else if (this.mode === 'edition' && this.vignette !== '' && this.vignette.substring(1, 9) === 'fichiers') {
+				this.$socket.emit('supprimervignette', this.vignette)
+			}
+			if (this.fichiers.length > 0) {
+				this.$socket.emit('supprimerfichiers', { pad: this.pad.id, fichiers: this.fichiers })
+			}
+			if (this.vignettes.length > 0) {
+				this.$socket.emit('supprimervignettes', this.vignettes)
+			}
+			this.fermerModaleBloc()
+		},
+		afficherSupprimerBloc (bloc, titre, colonne) {
+			this.bloc = bloc
+			this.titre = titre
+			this.colonne = colonne
+			this.messageConfirmation = this.$t('confirmationSupprimerCapsule')
+			this.typeConfirmation = 'supprimer-bloc'
+			this.modaleConfirmer = true
+		},
+		supprimerBloc () {
+			this.modaleConfirmer = false
+			this.chargement = true
+			this.$socket.emit('supprimerbloc', this.bloc, this.pad.id, this.pad.token, this.titre, this.couleur, this.colonne)
+		},
+		fermerModaleConfirmer () {
+			this.modaleConfirmer = false
+			this.commentaireId = ''
+			this.titre = ''
+			this.messageConfirmation = ''
+			this.typeConfirmation = ''
+		},
+		afficherVisionneuse (item) {
+			if (this.panneaux.map(function (e) { return e.id }).includes('panneau_' + item.bloc) === false) {
+				const imageId = 'image-' + (new Date()).getTime()
+				let html
+				switch (item.type) {
+				case 'image':
+					html = '<span id="' + imageId + '" class="image"><img src="/fichiers/' + this.pad.id + '/' + item.media + '"></span>'
+					break
+				case 'lien-image':
+					html = '<span id="' + imageId + '" class="image"><img src="' + item.media + '"></span>'
+					break
+				case 'audio':
+					html = '<audio controls preload="metadata" src="/fichiers/' + this.pad.id + '/' + item.media + '"></audio>'
+					break
+				case 'video':
+					html = '<video controls playsinline crossOrigin="anonymous" src="/fichiers/' + this.pad.id + '/' + item.media + '"></video>'
+					break
+				case 'pdf':
+				case 'document':
+					html = '<iframe src="/viewer/#../fichiers/' + this.pad.id + '/' + item.media + '" allowfullscreen></iframe>'
+					break
+				case 'office':
+					html = '<iframe src="https://view.officeapps.live.com/op/embed.aspx?src=' + this.hote + '/fichiers/' + this.pad.id + '/' + item.media + '" allowfullscreen></iframe>'
+					break
+				case 'embed':
+					if (item.source === 'etherpad') {
+						html = '<iframe src="' + item.media + '?userName=' + this.nom + '&userColor=' + this.couleur + '" allowfullscreen></iframe>'
+					} else {
+						html = '<iframe src="' + item.iframe + '" allowfullscreen></iframe>'
+					}
+					break
+				}
+				this.$nextTick(function () {
+					let largeurPanneau = '308px'
+					let hauteurPanneau = '300px'
+					if (document.querySelector('#page').offsetWidth > 580 && document.querySelector('#page').offsetHeight > 580) {
+						largeurPanneau = '508px'
+						hauteurPanneau = '500px'
+					}
+					const snapOptions = this.definirOptionsSnap()
+					// eslint-disable-next-line no-undef
+					const panneau = jsPanel.create({
+						id: 'panneau_' + item.bloc,
+						animateIn: 'jsPanelFadeIn',
+						animateOut: 'jsPanelFadeOut',
+						iconfont: 'material-icons',
+						closeOnEscape: true,
+						border: '4px solid ' + item.couleur,
+						headerTitle: item.titre,
+						position: 'center',
+						maximizedMargin: 0,
+						syncMargins: true,
+						resizeit: {
+							minWidth: 200,
+							minHeight: 150
+						},
+						panelSize: {
+							width: largeurPanneau,
+							height: hauteurPanneau
+						},
+						content: html,
+						callback: function (panel) {
+							panel.setControlStatus('normalize', 'hide')
+							panel.setControlStatus('minimize', 'remove')
+							document.querySelector('#masque').classList.add('ouvert')
+							if (item.type === 'image' || item.type === 'lien-image') {
+								document.querySelector('#' + imageId + ' img').style.height = document.querySelector('#' + panel.id + ' .jsPanel-content').clientHeight + 'px'
+								const image = document.querySelector('#' + imageId)
+								// eslint-disable-next-line no-undef
+								const panzoom = Panzoom(image, {
+									maxScale: 10,
+									minScale: 0.5,
+									panOnlyWhenZoomed: true
+								})
+								image.parentElement.addEventListener('wheel', panzoom.zoomWithWheel)
+								panel.addControl({
+									html: '<span class="material-icons">adjust</span>',
+									name: 'dezoom',
+									handler: function () {
+										document.querySelector('#' + imageId + ' img').style.height = document.querySelector('#' + panel.id + ' .jsPanel-content').clientHeight + 'px'
+										panzoom.reset()
+									}
+								})
+							} else if (item.type === 'audio') {
+								panel.resize({
+									width: largeurPanneau,
+									height: '150px'
+								}).reposition()
+							}
+						},
+						onbeforeclose: function (panel) {
+							const panneaux = document.querySelectorAll('.jsPanel')
+							if (document.querySelector('#masque') && panneaux.length === 1) {
+								document.querySelector('#masque').classList.remove('ouvert')
+							}
+							this.panneaux.forEach(function (panneau, index) {
+								if (panneau.id === panel.id) {
+									this.panneaux.splice(index, 1)
+								}
+							}.bind(this))
+							return true
+						}.bind(this),
+						dragit: {
+							snap: snapOptions
+						}
+					})
+					this.panneaux.push(panneau)
+				}.bind(this))
+			}
+		},
+		definirOptionsSnap () {
+			let snapOptions
+			if (window.innerHeight < window.innerWidth) {
+				snapOptions = {
+					sensitivity: 40,
+					repositionOnSnap: true,
+					resizeToPreSnap: true,
+					snapLeftTop: function (panel) {
+						panel.resize({ width: '50%', height: '100%' })
+					},
+					snapRightTop: function (panel) {
+						panel.resize({ width: '50%', height: '100%' })
+					},
+					snapLeftBottom: function (panel) {
+						panel.resize({ width: '50%', height: '100%' })
+					},
+					snapRightBottom: function (panel) {
+						panel.resize({ width: '50%', height: '100%' })
+					},
+					snapCenterTop: false,
+					snapRightCenter: false,
+					snapCenterBottom: false,
+					snapLeftCenter: false
+				}
+			} else {
+				snapOptions = {
+					sensitivity: 15,
+					repositionOnSnap: true,
+					resizeToPreSnap: true,
+					snapCenterTop: function (panel) {
+						panel.resize({ width: '100%', height: '50%' })
+					},
+					snapCenterBottom: function (panel) {
+						panel.resize({ width: '100%', height: '50%' })
+					},
+					snapLeftTop: false,
+					snapRightCenter: false,
+					snapRightBottom: false,
+					snapRightTop: false,
+					snapLeftBottom: false,
+					snapLeftCenter: false
+				}
+			}
+			return snapOptions
+		},
+		activerDefilementHorizontal () {
+			const pad = document.querySelector('#pad')
+			pad.addEventListener('mousedown', this.defilementHorizontalDebut)
+			pad.addEventListener('mouseleave', this.defilementHorizontalFin)
+			pad.addEventListener('mouseup', this.defilementHorizontalFin)
+			pad.addEventListener('mousemove', this.defilementHorizontalEnCours)
+		},
+		desactiverDefilementHorizontal () {
+			const pad = document.querySelector('#pad')
+			pad.removeEventListener('mousedown', this.defilementHorizontalDebut)
+			pad.removeEventListener('mouseleave', this.defilementHorizontalFin)
+			pad.removeEventListener('mouseup', this.defilementHorizontalFin)
+			pad.removeEventListener('mousemove', this.defilementHorizontalEnCours)
+		},
+		defilementHorizontalDebut (event) {
+			const pad = document.querySelector('#pad')
+			this.defilement = true
+			this.depart = event.pageX - pad.offsetLeft
+			this.distance = pad.scrollLeft
+		},
+		defilementHorizontalFin () {
+			this.defilement = false
+		},
+		defilementHorizontalEnCours (event) {
+			if (!this.defilement) { return }
+			event.preventDefault()
+			const pad = document.querySelector('#pad')
+			const x = event.pageX - pad.offsetLeft
+			const delta = (x - this.depart) * 1.5
+			pad.scrollLeft = this.distance - delta
+		},
+		activerModeOrganiser () {
+			if (this.blocs.length > 1) {
+				this.menuActivite = false
+				this.menuChat = false
+				this.menuOptions = false
+				this.action = 'organiser'
+				this.$store.dispatch('modifierMessage', this.$t('modeOrganiserActive'))
+			}
+		},
+		desactiverModeOrganiser () {
+			this.menuActivite = false
+			this.menuChat = false
+			this.menuOptions = false
+			this.action = ''
+			this.$store.dispatch('modifierMessage', this.$t('modeOrganiserDesactive'))
+		},
+		afficherModaleDiaporama () {
+			if (this.blocs.length > 0) {
+				this.panneaux.forEach(function (panneau) {
+					panneau.close()
+				})
+				this.panneaux = []
+				this.chargement = true
+				let donneesBloc = {}
+				const blocActif = document.querySelector('.bloc.actif')
+				if (blocActif) {
+					const bloc = blocActif.id
+					this.blocs.forEach(function (item) {
+						if (item.bloc === bloc) {
+							donneesBloc = item
+						}
+					})
+				} else {
+					donneesBloc = this.blocs[0]
+					this.definirBlocActif(donneesBloc.bloc)
+				}
+				this.donneesBloc = donneesBloc
+				this.menuActivite = false
+				this.menuChat = false
+				this.menuOptions = false
+				this.modaleDiaporama = true
+				if (this.pad.commentaires === 'actives') {
+					this.$socket.emit('commentaires', donneesBloc.bloc, 'diapositive')
+				} else {
+					this.chargerDiapositive()
+				}
+			}
+		},
+		afficherBlocPrecedent () {
+			this.chargement = true
+			this.commentaire = ''
+			const bloc = this.donneesBloc.bloc
+			let indexBloc = 0
+			this.blocs.forEach(function (item, index) {
+				if (item.bloc === bloc) {
+					indexBloc = index
+				}
+			})
+			indexBloc--
+			if (indexBloc === -1) {
+				this.donneesBloc = this.blocs[this.blocs.length - 1]
+			} else {
+				this.donneesBloc = this.blocs[indexBloc]
+			}
+			this.definirBlocActif(this.donneesBloc.bloc)
+			if (this.pad.commentaires === 'actives') {
+				this.$socket.emit('commentaires', this.donneesBloc.bloc, 'diapositive')
+			} else {
+				this.chargerDiapositive()
+			}
+		},
+		afficherBlocSuivant () {
+			this.chargement = true
+			this.commentaire = ''
+			const bloc = this.donneesBloc.bloc
+			let indexBloc = 0
+			this.blocs.forEach(function (item, index) {
+				if (item.bloc === bloc) {
+					indexBloc = index
+				}
+			})
+			indexBloc++
+			if (indexBloc === this.blocs.length) {
+				this.donneesBloc = this.blocs[0]
+			} else {
+				this.donneesBloc = this.blocs[indexBloc]
+			}
+			this.definirBlocActif(this.donneesBloc.bloc)
+			if (this.pad.commentaires === 'actives') {
+				this.$socket.emit('commentaires', this.donneesBloc.bloc, 'diapositive')
+			} else {
+				this.chargerDiapositive()
+			}
+		},
+		definirBlocActif (bloc) {
+			const blocActif = document.querySelector('.bloc.actif')
+			if (blocActif) {
+				blocActif.classList.remove('actif')
+			}
+			if (document.querySelector('#' + bloc)) {
+				document.querySelector('#' + bloc).classList.add('actif')
+			}
+		},
+		definirTypeMedia () {
+			if (this.donneesBloc.source === 'youtube' || this.donneesBloc.source === 'vimeo' || this.donneesBloc.source === 'dailymotion') {
+				return 'video'
+			} else if (this.donneesBloc.source === 'slideshare' || this.donneesBloc.source === 'soundcloud' || this.donneesBloc.media.includes('clyp.it') || this.donneesBloc.media.includes('vocaroo.com') || this.donneesBloc.media.includes('voca.ro')) {
+				return 'embed'
+			} else {
+				return 'document'
+			}
+		},
+		chargerDiapositive () {
+			const contenuCharge = function () {
+				this.chargement = false
+				this.$nextTick(function () {
+					document.querySelector('#diapositive .contenu').style.height = document.querySelector('#diapositive').clientHeight - this.convertirRem(5) + 'px'
+					if (this.pad.commentaires === 'actives') {
+						this.genererEditeur()
+					}
+				}.bind(this))
+			}.bind(this)
+			if (document.querySelector('#diapositive')) {
+				document.querySelector('#diapositive .contenu').removeAttribute('style')
+				switch (this.donneesBloc.type) {
+				case 'audio':
+					this.$nextTick(function () {
+						const audio = document.querySelector('#diapositive audio')
+						audio.addEventListener('loadedmetadata', function () {
+							contenuCharge()
+						})
+						if (audio.readyState >= 2) {
+							contenuCharge()
+						}
+					})
+					break
+				case 'video':
+					this.$nextTick(function () {
+						const video = document.querySelector('#diapositive video')
+						video.addEventListener('loadedmetadata', function () {
+							contenuCharge()
+						})
+						if (video.readyState >= 2) {
+							contenuCharge()
+						}
+					})
+					break
+				default:
+					this.$nextTick(function () {
+						imagesLoaded('#diapositive', function () {
+							contenuCharge()
+						})
+					})
+					break
+				}
+			} else {
+				this.chargement = false
+			}
+		},
+		fermerModaleDiaporama () {
+			this.modaleDiaporama = false
+			this.commentaires = []
+			this.commentaire = ''
+			this.commentaireId = ''
+			this.commentaireModifie = ''
+			this.editeurCommentaire = ''
+			this.emojis = ''
+			this.donneesBloc = {}
+		},
+		ouvrirModaleCommentaires (bloc, titre) {
+			this.chargement = true
+			this.bloc = bloc
+			this.titre = titre
+			this.$socket.emit('commentaires', bloc, 'discussion')
+		},
+		envoyerCommentaire (event) {
+			event.preventDefault()
+			let bloc = this.bloc
+			if (Object.keys(this.donneesBloc).length > 0) {
+				bloc = this.donneesBloc.bloc
+			}
+			if (this.commentaire !== '') {
+				this.$socket.emit('commenterbloc', bloc, this.pad.id, this.titre, this.commentaire, this.couleur)
+				this.commentaire = ''
+				this.commentaireId = ''
+				this.commentaireModifie = ''
+				this.editeurCommentaire.content.innerHTML = ''
+				this.emojis = ''
+			}
+		},
+		afficherModifierCommentaire (id, texte) {
+			this.commentaireId = id
+			this.commentaireModifie = texte
+			this.editionCommentaire = true
+			this.$nextTick(function () {
+				const actions = this.definirActionsEditeur()
+				const editeur = pell.init({
+					element: document.querySelector('#commentaire-modifie'),
+					onChange: function (html) {
+						const commentaire = linkifyHtml(html, {
+							defaultProtocol: 'https'
+						})
+						this.commentaireModifie = commentaire
+					}.bind(this),
+					actions: actions,
+					classes: { actionbar: 'boutons-editeur-commentaire', button: 'bouton-editeur', content: 'contenu-editeur-commentaire', selected: 'bouton-actif' }
+				})
+				editeur.content.innerHTML = this.commentaireModifie
+				editeur.onpaste = function (event) {
+					event.preventDefault()
+					event.stopPropagation()
+					const texte = event.clipboardData.getData('text/plain')
+					pell.exec('insertText', texte)
+				}
+			}.bind(this))
+		},
+		annulerModifierCommentaire () {
+			this.commentaireId = ''
+			this.commentaireModifie = ''
+			this.editionCommentaire = false
+			this.emojis = ''
+		},
+		modifierCommentaire () {
+			let bloc = this.bloc
+			if (Object.keys(this.donneesBloc).length > 0) {
+				bloc = this.donneesBloc.bloc
+			}
+			this.$socket.emit('modifiercommentaire', bloc, this.commentaireId, this.commentaireModifie)
+			this.commentaireId = ''
+			this.commentaireModifie = ''
+			this.editionCommentaire = false
+			this.emojis = ''
+		},
+		afficherSupprimerCommentaire (id) {
+			this.editionCommentaire = false
+			this.commentaireId = id
+			this.messageConfirmation = this.$t('confirmationSupprimerCommentaire')
+			this.typeConfirmation = 'supprimer-commentaire'
+			this.modaleConfirmer = true
+		},
+		supprimerCommentaire () {
+			this.modaleConfirmer = false
+			let bloc = this.bloc
+			if (Object.keys(this.donneesBloc).length > 0) {
+				bloc = this.donneesBloc.bloc
+			}
+			this.$socket.emit('supprimercommentaire', bloc, this.commentaireId)
+			this.fermerModaleConfirmer()
+		},
+		genererEditeur () {
+			if (this.editeurCommentaire === '') {
+				const actions = this.definirActionsEditeur()
+				this.editeurCommentaire = pell.init({
+					element: document.querySelector('#commentaire'),
+					onChange: function (html) {
+						const commentaire = linkifyHtml(html, {
+							defaultProtocol: 'https'
+						})
+						this.commentaire = commentaire
+					}.bind(this),
+					actions: actions,
+					classes: { actionbar: 'boutons-editeur-commentaire', button: 'bouton-editeur', content: 'contenu-editeur-commentaire', selected: 'bouton-actif' }
+				})
+				this.editeurCommentaire.onpaste = function (event) {
+					event.preventDefault()
+					event.stopPropagation()
+					const texte = event.clipboardData.getData('text/plain')
+					pell.exec('insertText', texte)
+				}
+			}
+		},
+		definirActionsEditeur () {
+			let actions = [{ name: 'gras', title: this.$t('gras'), icon: '<i class="material-icons">format_bold</i>', result: () => pell.exec('bold') }, { name: 'italique', title: this.$t('italique'), icon: '<i class="material-icons">format_italic</i>', result: () => pell.exec('italic') }, { name: 'souligne', title: this.$t('souligne'), icon: '<i class="material-icons">format_underlined</i>', result: () => pell.exec('underline') }, { name: 'barre', title: this.$t('barre'), icon: '<i class="material-icons">format_strikethrough</i>', result: () => pell.exec('strikethrough') }, { name: 'emojis', title: this.$t('emoticones'), icon: '<i class="material-icons">insert_emoticon</i>', result: function () { this.afficherEmojis('ecrire') }.bind(this) }]
+			if (((this.userAgent.match(/iPhone/i) || this.userAgent.match(/iPad/i) || this.userAgent.match(/iPod/i)) && this.userAgent.match(/Mobile/i)) || this.userAgent.match(/Android/i)) {
+				actions = [{ name: 'gras', title: this.$t('gras'), icon: '<i class="material-icons">format_bold</i>', result: () => pell.exec('bold') }, { name: 'italique', title: this.$t('italique'), icon: '<i class="material-icons">format_italic</i>', result: () => pell.exec('italic') }, { name: 'souligne', title: this.$t('souligne'), icon: '<i class="material-icons">format_underlined</i>', result: () => pell.exec('underline') }, { name: 'barre', title: this.$t('barre'), icon: '<i class="material-icons">format_strikethrough</i>', result: () => pell.exec('strikethrough') }]
+			}
+			return actions
+		},
+		afficherEmojis (type) {
+			if (type === 'ecrire' && this.emojis !== 'ecrire') {
+				this.emojis = 'ecrire'
+			} else if (type === 'ecrire' && this.emojis === 'ecrire') {
+				this.emojis = ''
+			} else if (type === 'modifier' && this.emojis !== 'modifier') {
+				this.emojis = 'modifier'
+			} else if (type === 'modifier' && this.emojis === 'modifier') {
+				this.emojis = ''
+			}
+		},
+		insererEmoji (emoji) {
+			pell.exec('insertText', emoji)
+		},
+		fermerModaleCommentaire () {
+			this.modaleCommentaires = false
+			this.commentaires = []
+			this.commentaire = ''
+			this.commentaireId = ''
+			this.commentaireModifie = ''
+			this.editeurCommentaire = ''
+			this.emojis = ''
+			this.bloc = ''
+			this.titre = ''
+		},
+		verifierUtilisateurEvaluation (evaluations) {
+			if (evaluations && evaluations.length > 0) {
+				let capsuleEvaluee = false
+				evaluations.forEach(function (evaluation) {
+					if (evaluation.identifiant === this.identifiant) {
+						capsuleEvaluee = true
+					}
+				}.bind(this))
+				return capsuleEvaluee
+			} else {
+				return false
+			}
+		},
+		definirEvaluationCapsule (evaluations) {
+			if (evaluations && evaluations.length > 0) {
+				let note = 0
+				evaluations.forEach(function (evaluation) {
+					note = note + evaluation.etoiles
+				})
+				if (note > 0) {
+					return Math.round(note / evaluations.length)
+				} else {
+					return 0
+				}
+			} else {
+				return 0
+			}
+		},
+		ouvrirModaleEvaluations (bloc, titre, evaluations) {
+			this.bloc = bloc
+			this.titre = titre
+			if (evaluations !== '') {
+				this.evaluations = evaluations
+				evaluations.forEach(function (evaluation) {
+					if (evaluation.identifiant === this.identifiant) {
+						this.evaluationId = evaluation.id
+						this.evaluation = evaluation.etoiles
+					}
+				}.bind(this))
+			}
+			this.modaleEvaluations = true
+		},
+		envoyerEvaluation () {
+			let bloc = this.bloc
+			if (Object.keys(this.donneesBloc).length > 0) {
+				bloc = this.donneesBloc.bloc
+			} else {
+				this.chargement = true
+			}
+			this.$socket.emit('evaluerbloc', bloc, this.pad.id, this.titre, this.evaluation, this.couleur)
+			this.fermerModaleEvaluations()
+		},
+		modifierEvaluation () {
+			let bloc = this.bloc
+			if (Object.keys(this.donneesBloc).length > 0) {
+				bloc = this.donneesBloc.bloc
+			} else {
+				this.chargement = true
+			}
+			if (this.evaluation === 0) {
+				this.$socket.emit('supprimerevaluation', bloc, this.evaluationId)
+			} else {
+				this.$socket.emit('modifierevaluation', bloc, this.evaluationId, this.evaluation)
+			}
+			this.fermerModaleEvaluations()
+		},
+		fermerModaleEvaluations () {
+			this.modaleEvaluations = false
+			this.evaluations = []
+			this.evaluation = 0
+			this.evaluationId = ''
+			this.bloc = ''
+			this.titre = ''
+		},
+		deplacerBloc (event) {
+			if (this.pad.affichage === 'colonnes') {
+				const blocs = []
+				this.colonnes.forEach(function (colonne, index) {
+					colonne.forEach(function (bloc) {
+						bloc.colonne = index
+					})
+					blocs.push(...colonne)
+				})
+				this.blocs = blocs
+			}
+			this.$nextTick(function () {
+				const blocsActifs = document.querySelectorAll('.bloc.actif')
+				if (blocsActifs.length > 0) {
+					blocsActifs.forEach(function (bloc) {
+						bloc.classList.remove('actif')
+					})
+				}
+				let indexBloc
+				if (this.pad.affichage === 'colonnes') {
+					const indexColonne = event.to.getAttribute('data-index')
+					indexBloc = event.newIndex
+					if (this.colonnes[indexColonne][indexBloc] && this.colonnes[indexColonne][indexBloc].bloc) {
+						document.querySelector('#' + this.colonnes[indexColonne][indexBloc].bloc).classList.add('actif')
+					}
+				} else {
+					indexBloc = event.newIndex
+					if (this.blocs[indexBloc] && this.blocs[indexBloc].bloc) {
+						document.querySelector('#' + this.blocs[indexBloc].bloc).classList.add('actif')
+					}
+				}
+			}.bind(this))
+			this.$socket.emit('deplacerbloc', this.blocs, this.colonnes, this.pad.id, this.pad.affichage)
+		},
+		surlignerBloc (event) {
+			const blocActif = document.querySelector('.bloc.actif')
+			if (blocActif && document.querySelector('#pad').contains(event.target)) {
+				blocActif.classList.remove('actif')
+			}
+			const element = event.target.closest('.bloc') || event.target.closest('li')
+			if (element && element.hasAttribute('data-bloc')) {
+				if (blocActif) {
+					blocActif.classList.remove('actif')
+				}
+				const id = element.getAttribute('data-bloc')
+				if (document.querySelector('#' + id)) {
+					document.querySelector('#' + id).classList.add('actif')
+				}
+			}
+		},
+		redimensionner () {
+			const diapositive = document.querySelector('#diapositive')
+			if (diapositive) {
+				const contenuDiapositive = document.querySelector('#diapositive .contenu')
+				contenuDiapositive.removeAttribute('style')
+				this.$nextTick(function () {
+					contenuDiapositive.style.height = diapositive.clientHeight - this.convertirRem(5) + 'px'
+				}.bind(this))
+			}
+			const blocs = document.querySelector('#blocs')
+			this.$nextTick(function () {
+				blocs.classList.add('anime')
+				blocs.addEventListener('animationend', function () {
+					blocs.classList.remove('anime')
+				})
+			})
+		},
+		afficherActivite () {
+			this.menuUtilisateurs = false
+			this.menuChat = false
+			this.menuOptions = false
+			this.menuActivite = !this.menuActivite
+		},
+		afficherChat () {
+			this.menuUtilisateurs = false
+			this.menuActivite = false
+			this.menuOptions = false
+			this.menuChat = !this.menuChat
+			this.nouveauxMessages = 0
+		},
+		afficherOptions () {
+			this.menuUtilisateurs = false
+			this.menuActivite = false
+			this.menuChat = false
+			this.menuOptions = !this.menuOptions
+		},
+		afficherUtilisateurs () {
+			this.menuActivite = false
+			this.menuChat = false
+			this.menuOptions = false
+			this.listeCouleurs = false
+			this.menuUtilisateurs = !this.menuUtilisateurs
+		},
+		envoyerMessage () {
+			if (this.message !== '') {
+				this.$socket.emit('message', this.message)
+				this.message = ''
+			}
+		},
+		afficherReinitialiserMessages () {
+			this.messageConfirmation = this.$t('confirmationSupprimerMessages')
+			this.typeConfirmation = 'reinitialiser-messages'
+			this.modaleConfirmer = true
+		},
+		reinitialiserMessages () {
+			this.$socket.emit('reinitialisermessages')
+			this.chargement = true
+			this.menuChat = false
+			this.fermerModaleConfirmer()
+		},
+		afficherReinitialiserActivite () {
+			this.messageConfirmation = this.$t('confirmationSupprimerActivite')
+			this.typeConfirmation = 'reinitialiser-activite'
+			this.modaleConfirmer = true
+		},
+		reinitialiserActivite () {
+			this.$socket.emit('reinitialiseractivite', this.pad.id)
+			this.chargement = true
+			this.menuActivite = false
+			this.fermerModaleConfirmer()
+		},
+		modifierTitre () {
+			const titre = document.querySelector('#titre-pad').value
+			if (this.pad.titre !== titre && titre !== '') {
+				this.$socket.emit('modifiertitre', this.pad.id, titre)
+				this.chargement = true
+			}
+		},
+		modifierLangue (langue) {
+			if (this.langue !== langue) {
+				this.chargement = true
+				axios.post(this.hote + '/api/modifier-langue', {
+					identifiant: this.identifiant,
+					langue: langue
+				}).then(function () {
+					this.$i18n.setLocale(langue)
+					this.$store.dispatch('modifierLangue', langue)
+					this.$store.dispatch('modifierMessage', this.$t('langueModifiee'))
+					this.chargement = false
+				}.bind(this)).catch(function () {
+					this.chargement = false
+					this.$store.dispatch('modifierAlerte', this.$t('erreurCommunicationServeur'))
+				}.bind(this))
+			}
+		},
+		modifierAcces (acces) {
+			if (this.pad.acces !== acces) {
+				this.$socket.emit('modifieracces', this.pad.id, acces)
+				this.chargement = true
+			}
+		},
+		modifierContributions (contributions) {
+			if (this.pad.contributions !== contributions) {
+				this.$socket.emit('modifiercontributions', this.pad.id, contributions)
+				this.chargement = true
+			}
+		},
+		modifierAffichage (affichage) {
+			if (this.pad.affichage !== affichage) {
+				this.$socket.emit('modifieraffichage', this.pad.id, affichage)
+				this.chargement = true
+			}
+		},
+		modifierFond (fond) {
+			if (this.pad.fond !== fond) {
+				this.$socket.emit('modifierfond', this.pad.id, '/img/' + fond, this.pad.fond)
+				this.chargement = true
+			}
+		},
+		ajouterFond () {
+			const champ = this.$refs['televerser-fond']
+			const formats = ['jpg', 'jpeg', 'png', 'gif']
+			const extension = champ.files[0].name.substring(champ.files[0].name.lastIndexOf('.') + 1).toLowerCase()
+			if (champ.files && champ.files[0] && formats.includes(extension)) {
+				this.chargement = true
+				const fichier = champ.files[0]
+				const formulaire = new FormData()
+				formulaire.append('pad', this.pad.id)
+				formulaire.append('fichier', fichier)
+				axios.post(this.hote + '/api/televerser-fond', formulaire, {
+					headers: {
+						'Content-Type': 'multipart/form-data'
+					},
+					onUploadProgress: function (progression) {
+						const pourcentage = parseInt(Math.round((progression.loaded * 100) / progression.total))
+						this.progressionFond = pourcentage
+					}.bind(this)
+				}).then(function (reponse) {
+					const donnees = reponse.data
+					if (donnees === 'non_connecte') {
+						this.$router.push('/')
+					} else if (donnees === 'erreur_televersement') {
+						champ.value = ''
+						this.progressionFond = 0
+						this.$store.dispatch('modifierAlerte', this.$t('erreurTeleversementFichier'))
+					} else {
+						this.$socket.emit('modifierfond', this.pad.id, donnees, this.pad.fond)
+					}
+					this.progressionFond = 0
+					champ.value = ''
+				}.bind(this)).catch(function () {
+					champ.value = ''
+					this.progressionFond = 0
+					this.$store.dispatch('modifierAlerte', this.$t('erreurCommunicationServeur'))
+				}.bind(this))
+			} else {
+				this.$store.dispatch('modifierAlerte', this.$t('formatFichierPasAccepte'))
+				champ.value = ''
+			}
+		},
+		modifierFichiers (event) {
+			if (event.target.checked === true) {
+				this.$socket.emit('modifierfichiers', this.pad.id, 'actives')
+			} else {
+				this.$socket.emit('modifierfichiers', this.pad.id, 'desactives')
+			}
+			this.chargement = true
+		},
+		modifierLiens (event) {
+			if (event.target.checked === true) {
+				this.$socket.emit('modifierliens', this.pad.id, 'actives')
+			} else {
+				this.$socket.emit('modifierliens', this.pad.id, 'desactives')
+			}
+			this.chargement = true
+		},
+		modifierDocuments (event) {
+			if (event.target.checked === true) {
+				this.$socket.emit('modifierdocuments', this.pad.id, 'actives')
+			} else {
+				this.$socket.emit('modifierdocuments', this.pad.id, 'desactives')
+			}
+			this.chargement = true
+		},
+		modifierCommentaires (event) {
+			if (event.target.checked === true) {
+				this.$socket.emit('modifiercommentaires', this.pad.id, 'actives')
+			} else {
+				this.$socket.emit('modifiercommentaires', this.pad.id, 'desactives')
+			}
+			this.chargement = true
+		},
+		modifierEvaluations (event) {
+			if (event.target.checked === true) {
+				this.$socket.emit('modifierevaluations', this.pad.id, 'activees')
+			} else {
+				this.$socket.emit('modifierevaluations', this.pad.id, 'desactivees')
+			}
+			this.chargement = true
+		},
+		fermerMenuOptions () {
+			this.menuOptions = false
+			if (document.querySelector('#titre-pad')) {
+				document.querySelector('#titre-pad').value = this.pad.titre
+			}
+		},
+		modifierCouleur (couleur) {
+			this.listeCouleurs = false
+			this.couleur = couleur
+			this.$socket.emit('modifiercouleur', this.pad.id, couleur)
+		},
+		afficherModifierNom () {
+			this.nomUtilisateur = this.nom
+			this.modaleModifierNom = true
+			this.$nextTick(function () {
+				document.querySelector('#champ-nom').focus()
+			})
+		},
+		modifierNom () {
+			const nom = this.nomUtilisateur
+			if (nom !== '') {
+				this.$socket.emit('modifiernom', nom, this.statut)
+				this.chargement = true
+				this.fermerModaleModifierNom()
+			}
+		},
+		fermerModaleModifierNom () {
+			this.modaleModifierNom = false
+			this.nomUtilisateur = ''
+		},
+		modifierCaracteristique (identifiant, caracteristique, valeur) {
+			this.blocs.forEach(function (item) {
+				if (item.identifiant === identifiant && item.hasOwnProperty(caracteristique)) {
+					item[caracteristique] = valeur
+				}
+			})
+			this.commentaires.forEach(function (commentaire) {
+				if (commentaire.identifiant === identifiant && commentaire.hasOwnProperty(caracteristique)) {
+					commentaire[caracteristique] = valeur
+				}
+			})
+			this.activite.forEach(function (entree) {
+				if (entree.identifiant === identifiant && entree.hasOwnProperty(caracteristique)) {
+					entree[caracteristique] = valeur
+				}
+			})
+			this.messages.forEach(function (message) {
+				if (message.identifiant === identifiant && message.hasOwnProperty(caracteristique)) {
+					message[caracteristique] = valeur
+				}
+			})
+			this.utilisateurs.forEach(function (utilisateur) {
+				if (utilisateur.identifiant === identifiant && utilisateur.hasOwnProperty(caracteristique)) {
+					utilisateur[caracteristique] = valeur
+				}
+			})
+		},
+		eclaircirCouleur (hex) {
+			const r = parseInt(hex.slice(1, 3), 16)
+			const v = parseInt(hex.slice(3, 5), 16)
+			const b = parseInt(hex.slice(5, 7), 16)
+			return 'rgba(' + r + ', ' + v + ', ' + b + ', ' + 0.15 + ')'
+		},
+		convertirRem (rem) {
+			return rem * parseFloat(getComputedStyle(document.documentElement).fontSize)
+		},
+		deconnexion () {
+			const identifiant = this.identifiant
+			axios.post(this.hote + '/api/deconnexion').then(function () {
+				this.$socket.emit('deconnexion', identifiant)
+				this.$store.dispatch('reinitialiser')
+				this.$router.push('/')
+			}.bind(this)).catch(function () {
+				this.$store.dispatch('modifierAlerte', this.$t('erreurCommunicationServeur'))
+			}.bind(this))
+		},
+		afficherModaleModifierMotDePasse () {
+			this.menuOptions = false
+			this.modaleModifierMotDePasse = true
+			this.$nextTick(function () {
+				document.querySelector('#champ-motdepasse-actuel').focus()
+			})
+		},
+		modifierMotDePasse () {
+			const motDePasse = this.motDePasse
+			const nouveauMotDePasse = this.nouveauMotDePasse
+			if (motDePasse !== '' && nouveauMotDePasse !== '') {
+				this.modaleModifierMotDePasse = false
+				this.chargement = true
+				axios.post(this.hote + '/api/modifier-mot-de-passe-pad', {
+					pad: this.pad.id,
+					identifiant: this.identifiant,
+					motdepasse: motDePasse,
+					nouveaumotdepasse: nouveauMotDePasse
+				}).then(function (reponse) {
+					const donnees = reponse.data
+					if (donnees === 'non_connecte') {
+						this.$router.push('/')
+					} else if (donnees === 'motdepasse_incorrect') {
+						this.chargement = false
+						this.$store.dispatch('modifierAlerte', this.$t('motDePasseActuelPasCorrect'))
+					} else if (donnees === 'erreur') {
+						this.chargement = false
+						this.$store.dispatch('modifierAlerte', this.$t('erreurCommunicationServeur'))
+					} else {
+						this.$store.dispatch('modifierMessage', this.$t('motDePasseModifie'))
+						this.fermerModaleModifierMotDePasse()
+						this.chargement = false
+					}
+				}.bind(this)).catch(function () {
+					this.chargement = false
+					this.$store.dispatch('modifierAlerte', this.$t('erreurCommunicationServeur'))
+				}.bind(this))
+			} else {
+				this.$store.dispatch('modifierAlerte', this.$t('remplirChamps'))
+			}
+		},
+		fermerModaleModifierMotDePasse () {
+			this.modaleModifierMotDePasse = false
+			this.motDePasse = ''
+			this.nouveauMotDePasse = ''
+		},
+		afficherModaleMotDePasse () {
+			this.modaleMotDePasse = true
+			this.$nextTick(function () {
+				document.querySelector('#champ-motdepasse').focus()
+			})
+		},
+		verifierMotDePasse () {
+			this.chargement = true
+			axios.post(this.hote + '/api/verifier-mot-de-passe', {
+				pad: this.pad.id,
+				motdepasse: this.motDePasse
+			}).then(function (reponse) {
+				const donnees = reponse.data
+				if (donnees === 'motdepasse_incorrect') {
+					this.chargement = false
+					this.$store.dispatch('modifierAlerte', this.$t('motDePassePasCorrect'))
+				} else if (donnees === 'erreur') {
+					this.chargement = false
+					this.$store.dispatch('modifierAlerte', this.$t('erreurCommunicationServeur'))
+				} else {
+					this.$socket.emit('debloquerpad', this.pad.id, this.pad.identifiant)
+					this.fermerModaleMotDePasse()
+				}
+			}.bind(this)).catch(function () {
+				this.chargement = false
+				this.$store.dispatch('modifierAlerte', this.$t('erreurCommunicationServeur'))
+			}.bind(this))
+		},
+		fermerModaleMotDePasse () {
+			this.motDePasse = ''
+			this.modaleMotDePasse = false
+		},
+		afficherSeDeconnecterPad () {
+			this.messageConfirmation = this.$t('confirmationSeDeconnecterPad')
+			this.typeConfirmation = 'deconnecter-pad'
+			this.modaleConfirmer = true
+		},
+		seDeconnecterPad () {
+			this.modaleConfirmer = false
+			this.chargement = true
+			axios.post(this.hote + '/api/deconnecter-pad', {
+				identifiant: this.identifiant
+			}).then(function (reponse) {
+				const donnees = reponse.data
+				if (donnees === 'deconnecte') {
+					this.$router.go()
+				}
+				this.chargement = false
+			}.bind(this)).catch(function () {
+				this.chargement = false
+				this.$store.dispatch('modifierAlerte', this.$t('erreurCommunicationServeur'))
+			}.bind(this))
+		},
+		afficherSupprimerPad () {
+			this.messageConfirmation = this.$t('confirmationSupprimerPad')
+			this.typeConfirmation = 'supprimer-pad'
+			this.modaleConfirmer = true
+		},
+		supprimerPad () {
+			this.modaleConfirmer = false
+			this.chargement = true
+			axios.post(this.hote + '/api/supprimer-pad', {
+				padId: this.pad.id,
+				identifiant: this.identifiant
+			}).then(function (reponse) {
+				const donnees = reponse.data
+				if (donnees === 'erreur_suppression') {
+					this.chargement = false
+					this.$store.dispatch('modifierAlerte', this.$t('erreurSuppressionPad'))
+				} else {
+					this.$router.push('/')
+				}
+			}.bind(this)).catch(function () {
+				this.chargement = false
+				this.$store.dispatch('modifierAlerte', this.$t('erreurCommunicationServeur'))
+			}.bind(this))
+		},
+		quitterPage () {
+			this.$socket.emit('sortie')
+			if (this.mode === 'creation' && this.media !== '' && this.lien === '') {
+				this.$socket.emit('supprimerfichier', { pad: this.pad.id, fichier: this.media })
+			}
+			if (this.fichiers.length > 0) {
+				this.$socket.emit('supprimerfichiers', { pad: this.pad.id, fichiers: this.fichiers })
+			}
+		}
+	},
+	head () {
+		return {
+			title: this.pad.hasOwnProperty('titre') ? this.pad.titre + ' - Digipad' : 'Digipad'
+		}
+	}
+}
