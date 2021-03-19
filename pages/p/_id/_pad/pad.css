@@ -167,6 +167,11 @@
 	cursor: move;
 }
 
+.organiser #blocs .bloc.haut {
+	animation: none;
+	cursor: default;
+}
+
 #blocs.colonnes .bloc.haut,
 #blocs.colonnes .ajouter {
 	margin: 0.75rem;
