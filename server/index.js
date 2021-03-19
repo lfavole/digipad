@@ -791,7 +791,7 @@ app.post('/api/televerser-fichier', function (req, res) {
 				const destination = path.join(__dirname, '..', '/static/fichiers/' + pad + '/' + path.parse(fichier.filename).name + '.jpg')
 				gm(chemin + '[0]').setFormat('jpg').resize(450).quality(75).write(destination, function (erreur) {
 					if (erreur) {
-						res.send('erreur_televersement')
+						res.json({ fichier: fichier.filename, mimetype: 'document' })
 					} else {
 						res.json({ fichier: fichier.filename, mimetype: 'pdf' })
 					}
