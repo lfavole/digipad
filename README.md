@@ -1,6 +1,6 @@
 # Digipad
 
-## Préparation et installation des dépendances
+### Préparation et installation des dépendances
 ```
 npm install
 ```
