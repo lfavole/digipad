@@ -663,7 +663,6 @@ export default {
 }
 
 .pad {
-	display: table;
     padding: 0 0 4rem;
 	width: calc(50% - 1.5rem);
 	height: 20rem;
