@@ -445,7 +445,7 @@ export default {
 			defilement: false,
 			depart: 0,
 			distance: 0,
-			etherpad: 'https://env-7747481.jcloud-ver-jpe.ik-server.com',
+			etherpad: process.env.ETHERPAD,
 			resultats: {},
 			page: 1
 		}
