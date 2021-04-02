@@ -1,6 +1,6 @@
 let hote = 'http://localhost:3000'
 if (process.env.NODE_ENV === 'production') {
-	hote = 'https://digipad.app'
+	hote = process.env.DOMAIN
 }
 
 export const state = () => ({

@@ -22,10 +22,11 @@ npm run build
 pm2 start
 ```
 
-### Fichier .env nécessaire à la racine avant compilation avec 6 variables
+### Fichier .env nécessaire à la racine avant compilation avec 7 variables
 ```
-HOST (serveur de production)
-DB_HOST (serveur de base de données Redis)
+DOMAIN (protocole + domaine. ex : https://digipad.app)
+HOST (IP du serveur de production)
+DB_HOST (IP du serveur de base de données Redis)
 DB_PWD (mot de passe de la base de données Redis)
 SESSION_KEY (clé de session Express Session)
 ETHERPAD (lien vers un serveur Etherpad pour les documents collaboratifs)
