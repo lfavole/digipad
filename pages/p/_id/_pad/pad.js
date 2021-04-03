@@ -252,6 +252,20 @@ export default {
 				}
 			}.bind(this))
 		},
+		modifieractivite: function (statut) {
+			this.pad.registreActivite = statut
+			this.chargement = false
+			if (this.pad.identifiant === this.identifiant) {
+				this.$store.dispatch('modifierMessage', this.$t('parametreActiviteModifie'))
+			}
+		},
+		modifierconversation: function (statut) {
+			this.pad.conversation = statut
+			this.chargement = false
+			if (this.pad.identifiant === this.identifiant) {
+				this.$store.dispatch('modifierMessage', this.$t('parametreConversationModifie'))
+			}
+		},
 		modifierfichiers: function (statut) {
 			this.pad.fichiers = statut
 			this.chargement = false
@@ -2054,6 +2068,22 @@ export default {
 				this.$store.dispatch('modifierAlerte', this.$t('formatFichierPasAccepte'))
 				champ.value = ''
 			}
+		},
+		modifierActivite (event) {
+			if (event.target.checked === true) {
+				this.$socket.emit('modifieractivite', this.pad.id, 'active')
+			} else {
+				this.$socket.emit('modifieractivite', this.pad.id, 'desactive')
+			}
+			this.chargement = true
+		},
+		modifierConversation (event) {
+			if (event.target.checked === true) {
+				this.$socket.emit('modifierconversation', this.pad.id, 'activee')
+			} else {
+				this.$socket.emit('modifierconversation', this.pad.id, 'desactivee')
+			}
+			this.chargement = true
 		},
 		modifierFichiers (event) {
 			if (event.target.checked === true) {
