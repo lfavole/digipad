@@ -146,7 +146,7 @@ export default {
 	emoticones: 'Emoticons',
 	erreurTeleversementFichier: 'Error while uploading the file.',
 	formatFichierPasAccepte: 'This file format is not supported.',
-	tailleMaximale25: 'The maximum size allowed is 25 MB.',
+	tailleMaximale50: 'The maximum size allowed is 50 MB.',
 	tailleMaximale3: 'The maximum size allowed is 3 MB.',
 	erreurRecuperationContenu: 'Error while retrieving the content.',
 	erreurTeleversementVignette: 'Error while uploading the thumbnail.',

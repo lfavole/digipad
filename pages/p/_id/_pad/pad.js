@@ -965,8 +965,8 @@ export default {
 			} else {
 				if (formats.includes(extension) === false) {
 					this.$store.dispatch('modifierAlerte', this.$t('formatFichierPasAccepte'))
-				} else if (champ.files[0].size > 26214400) {
-					this.$store.dispatch('modifierAlerte', this.$t('tailleMaximale25'))
+				} else if (champ.files[0].size > 52428800) {
+					this.$store.dispatch('modifierAlerte', this.$t('tailleMaximale50'))
 				}
 				champ.value = ''
 			}
