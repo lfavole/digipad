@@ -105,7 +105,6 @@ app.get('/p/:id/:token', function (req) {
 			req.session.langue = 'fr'
 			req.session.statut = 'invite'
 			req.session.cookie.expires = new Date(Date.now() + (3600 * 24 * 7 * 1000))
-			req.session.ip = req.ip
 			req.next()
 		})
 	} else {
@@ -129,7 +128,6 @@ app.post('/api/inscription', function (req, res) {
 				req.session.langue = 'fr'
 				req.session.statut = 'utilisateur'
 				req.session.cookie.expires = new Date(Date.now() + (3600 * 24 * 7 * 1000))
-				req.session.ip = req.ip
 				res.json({ identifiant: identifiant, motdepasse: hash, nom: '', langue: 'fr', statut: 'utilisateur' })
 			})
 		} else {
@@ -154,7 +152,6 @@ app.post('/api/connexion', function (req, res) {
 					req.session.langue = langue
 					req.session.statut = 'utilisateur'
 					req.session.cookie.expires = new Date(Date.now() + (3600 * 24 * 7 * 1000))
-					req.session.ip = req.ip
 					res.json({ identifiant: identifiant, nom: nom, langue: langue, statut: 'utilisateur' })
 				} else {
 					res.send('erreur_connexion')
@@ -412,7 +409,6 @@ app.post('/api/creer-pad-sans-compte', function (req, res) {
 			req.session.langue = 'fr'
 			req.session.statut = 'auteur'
 			req.session.cookie.expires = new Date(Date.now() + (3600 * 24 * 7 * 1000))
-			req.session.ip = req.ip
 			res.json({ id: id, token: token, titre: titre, identifiant: identifiant, fond: '/img/fond1.png', acces: 'public', contributions: 'ouvertes', affichage: 'mur', registreActivite: 'active', conversation: 'desactivee', fichiers: 'actives', liens: 'actives', documents: 'desactives', commentaires: 'desactives', evaluations: 'desactivees', date: date, colonnes: [], bloc: 0, activite: 0 })
 		})
 	})
