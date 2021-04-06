@@ -662,7 +662,9 @@ export default {
 					vignette = '/img/lien.png'
 					break
 				case 'embed':
-					if (item.source === 'youtube') {
+					if (item.source === 'peertube') {
+						vignette = item.media.replace('/videos/watch/', '/static/thumbnails/') + '.jpg'
+					} else if (item.source === 'youtube') {
 						vignette = '/img/youtube.png'
 					} else if (item.source === 'vimeo') {
 						vignette = '/img/vimeo.png'
@@ -698,16 +700,14 @@ export default {
 						vignette = '/img/google-drawings.png'
 					} else if (item.media.includes('google.com/maps')) {
 						vignette = '/img/google-maps.png'
-					} else if (item.media.includes('clyp.it')) {
-						vignette = '/img/clyp.png'
 					} else if (item.media.includes('wikipedia.org')) {
 						vignette = '/img/wikipedia.png'
 					} else if (item.media.includes('quizlet.com')) {
 						vignette = '/img/quizlet.png'
 					} else if (item.media.includes('genial.ly')) {
 						vignette = '/img/genially.png'
-					} else if (item.media.includes('leplaisirdapprendre.com/outils/')) {
-						vignette = '/img/cavitools.png'
+					} else if (item.media.includes('ladigitale.dev/digitools/')) {
+						vignette = '/img/digitools.png'
 					} else if (item.media.includes('teamimg.now.sh')) {
 						vignette = '/img/teamimg.png'
 					} else if (item.media.includes('framapad.org')) {
@@ -751,7 +751,7 @@ export default {
 					icone = 'description'
 				} else if (item.source === 'flickr') {
 					icone = 'image'
-				} else if (item.source === 'soundcloud' || item.media.includes('vocaroo.com') || item.media.includes('voca.ro') || item.media.includes('clyp.it')) {
+				} else if (item.source === 'soundcloud' || item.media.includes('vocaroo.com') || item.media.includes('voca.ro')) {
 					icone = 'volume_up'
 				} else if (item.media.includes('google.com/maps')) {
 					icone = 'place'
@@ -1032,6 +1032,9 @@ export default {
 							this.$nextTick(function () {
 								this.media = this.lien
 								this.source = 'web'
+								if (this.lien.includes('tube.ac-lyon.fr')) {
+									this.source = 'peertube'
+								}
 								this.type = 'embed'
 								donnees = {}
 								donnees.media = this.media
