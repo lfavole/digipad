@@ -72,7 +72,7 @@ module.exports = {
 			hashAlgorithm: 'sha256',
 			policies: {
 				'script-src': ["'self'", "'unsafe-inline'"],
-				'frame-ancestors': ["'self'", 'https://ladigitale.dev']
+				'frame-ancestors': ["*"]
 			}
 		},
 		static: {
