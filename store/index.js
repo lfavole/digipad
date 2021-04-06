@@ -2,6 +2,8 @@ let hote = 'http://localhost:3000'
 if (process.env.NODE_ENV === 'production') {
 	hote = process.env.DOMAIN
 }
+const etherpad = process.env.ETHERPAD
+const etherpadApi = process.env.ETHERPAD_API_KEY
 
 export const state = () => ({
 	hote: hote,
@@ -11,7 +13,9 @@ export const state = () => ({
 	identifiant: '',
 	nom: '',
 	langue: 'fr',
-	statut: ''
+	statut: '',
+	etherpad: etherpad,
+	etherpadApi: etherpadApi
 })
 
 export const mutations = {
