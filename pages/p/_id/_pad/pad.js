@@ -6,6 +6,7 @@ import linkifyHtml from 'linkifyjs/html'
 import Panzoom from '@panzoom/panzoom'
 import chargement from '@/components/chargement.vue'
 import emojis from '@/components/emojis.vue'
+import ClipboardJS from 'clipboard'
 
 export default {
 	name: 'Pad',
@@ -459,7 +460,6 @@ export default {
 			defilement: false,
 			depart: 0,
 			distance: 0,
-			etherpad: process.env.ETHERPAD,
 			resultats: {},
 			page: 1
 		}
@@ -482,6 +482,12 @@ export default {
 		},
 		statut () {
 			return this.$store.state.statut
+		},
+		etherpad () {
+			return this.$store.state.etherpad
+		},
+		etherpadApi () {
+			return this.$store.state.etherpadApi
 		}
 	},
 	watch: {
@@ -554,6 +560,15 @@ export default {
 			if (this.pad.affichage === 'colonnes') {
 				this.activerDefilementHorizontal()
 			}
+			const lien = this.hote + '/p/' + this.pad.id + '/' + this.pad.token
+			const clipboardLien = new ClipboardJS('#copier-lien span', {
+				text: function () {
+					return lien
+				}
+			})
+			clipboardLien.on('success', function () {
+				this.$store.dispatch('modifierMessage', this.$t('lienCopie'))
+			}.bind(this))
 			setTimeout(function () {
 				this.$nuxt.$loading.finish()
 			}.bind(this), 100)
@@ -992,7 +1007,7 @@ export default {
 			}
 			if (this.verifierURL(this.media) === true && this.media.includes(this.etherpad)) {
 				const etherpadId = this.media.replace(this.etherpad + '/p/', '')
-				const url = this.etherpad + '/api/1/deletePad?apikey=d6609cda593eda4a7fa9b0acc99e5867ec6e18191534e9962ac6a5038d3ef314&padID=' + etherpadId
+				const url = this.etherpad + '/api/1/deletePad?apikey=' + this.etherpadApi + '&padID=' + etherpadId
 				axios.get(url)
 			}
 			this.media = ''
@@ -1122,7 +1137,7 @@ export default {
 		supprimerLien () {
 			if (this.iframe.includes(this.etherpad)) {
 				const etherpadId = this.iframe.replace(this.etherpad + '/p/', '')
-				const url = this.etherpad + '/api/1/deletePad?apikey=d6609cda593eda4a7fa9b0acc99e5867ec6e18191534e9962ac6a5038d3ef314&padID=' + etherpadId
+				const url = this.etherpad + '/api/1/deletePad?apikey=' + this.etherpadApi + '&padID=' + etherpadId
 				axios.get(url)
 			}
 			this.media = ''

@@ -17,6 +17,27 @@
     text-align: center;
 }
 
+#copier-lien {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+}
+
+#copier-lien input {
+	display: block;
+	width: calc(100% - 34px);
+	margin-right: 10px;
+}
+
+#copier-lien span i {
+	font-size: 24px;
+	cursor: pointer;
+}
+
+#copier-lien span i:active {
+	opacity: 0.8;
+}
+
 #organisation.actif {
 	color: #fdcc33;
 }

@@ -87,6 +87,13 @@
 				<span role="button" class="bouton-bleu" @click="afficherModaleModifierMotDePasse">{{ $t('modifierMotDePasse') }}</span>
 			</div>
 			<div class="conteneur">
+				<label>{{ $t('lien') }}</label>
+				<div id="copier-lien">
+					<input type="text" disabled :value="hote + '/p/' + pad.id + '/' + pad.token">
+					<span class="icone" role="button" :title="$t('copierLien')"><i class="material-icons">content_copy</i></span>
+				</div>
+			</div>
+			<div class="conteneur">
 				<label>{{ $t('langue') }}</label>
 				<div id="langues">
 					<span role="button" :class="{'selectionne': langue === 'fr'}" @click="modifierLangue('fr')">FR</span>
