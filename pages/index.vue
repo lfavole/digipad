@@ -3,6 +3,7 @@
 		<div id="accueil" :style="{'background-image': 'url(./img/fond.jpg)'}">
 			<div id="langues">
 				<span class="bouton" role="button" :class="{'selectionne': langue === 'fr'}" @click="modifierLangue('fr')">FR</span>
+				<span class="bouton" role="button" :class="{'selectionne': langue === 'it'}" @click="modifierLangue('it')">IT</span>
 				<span class="bouton" role="button" :class="{'selectionne': langue === 'en'}" @click="modifierLangue('en')">EN</span>
 			</div>
 			<div id="masque" />
