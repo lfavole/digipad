@@ -1,5 +1,10 @@
 # Digipad
 
+Digipad est une application en ligne pour créer des murs collaboratifs. 
+
+Elle est publiée sous licence GNU GPLv3.
+Sauf les fontes Roboto Slab et Material Icons (Apache License Version 2.0) et la fonte HKGrotesk (Sil Open Font Licence 1.1)
+
 ### Préparation et installation des dépendances
 ```
 npm install

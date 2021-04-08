@@ -1,6 +1,13 @@
-@font-face {
+/* @font-face {
 	font-family: 'HKGroteskWide-ExtraBold';
 	src: url('~@/assets/fonts/HKGroteskWide-ExtraBold.woff') format('woff'), url('~@/assets/fonts/HKGroteskWide-ExtraBold.woff2') format('woff2');
+	font-weight: normal;
+	font-style: normal;
+} */
+
+@font-face {
+	font-family: 'HKGrotesk-ExtraBold';
+	src: url('~@/assets/fonts/HKGrotesk-ExtraBold.woff') format('woff'), url('~@/assets/fonts/HKGrotesk-ExtraBold.woff2') format('woff2');
 	font-weight: normal;
 	font-style: normal;
 }
