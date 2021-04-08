@@ -39,5 +39,6 @@ ETHERPAD_API_KEY (clé API Etherpad)
 ### Démo
 https://digipad.app
 
+
 ### THANKS AND CREDITS
 Italian translation by Paolo Mauri (https://gitlab.com/maupao)
