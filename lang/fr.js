@@ -195,5 +195,6 @@ export default {
 	courriel: 'Courriel :',
 	siteWeb: 'Site Web :',
 	pagePrecedente: 'Page précédente',
-	pageSuivante: 'Page suivante'
+	pageSuivante: 'Page suivante',
+	codeSource: 'Code source'
 }

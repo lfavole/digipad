@@ -192,5 +192,6 @@ export default {
 	courriel: 'Email :',
 	siteWeb: 'Sito Web :',
 	pagePrecedente: 'Pagina precedente',
-	pageSuivante: 'Pagina successiva'
+	pageSuivante: 'Pagina successiva',
+	codeSource: 'Codice sorgente'
 }
