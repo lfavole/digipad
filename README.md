@@ -47,3 +47,4 @@ https://digipad.app
 
 ### THANKS AND CREDITS
 Italian translation by Paolo Mauri (https://gitlab.com/maupao)
+Spanish translation by Fernando S. Delgado Trujillo (https://gitlab.com/fersdt)

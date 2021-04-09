@@ -24,6 +24,7 @@
 					<label>{{ $t('langue') }}</label>
 					<div id="langues">
 						<span role="button" :class="{'selectionne': langue === 'fr'}" @click="modifierLangue('fr')">FR</span>
+						<span role="button" :class="{'selectionne': langue === 'es'}" @click="modifierLangue('es')">ES</span>
 						<span role="button" :class="{'selectionne': langue === 'it'}" @click="modifierLangue('it')">IT</span>
 						<span role="button" :class="{'selectionne': langue === 'en'}" @click="modifierLangue('en')">EN</span>
 					</div>

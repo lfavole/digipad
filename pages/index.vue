@@ -3,6 +3,7 @@
 		<div id="accueil" :style="{'background-image': 'url(./img/fond.jpg)'}">
 			<div id="langues">
 				<span class="bouton" role="button" :class="{'selectionne': langue === 'fr'}" @click="modifierLangue('fr')">FR</span>
+				<span class="bouton" role="button" :class="{'selectionne': langue === 'es'}" @click="modifierLangue('es')">ES</span>
 				<span class="bouton" role="button" :class="{'selectionne': langue === 'it'}" @click="modifierLangue('it')">IT</span>
 				<span class="bouton" role="button" :class="{'selectionne': langue === 'en'}" @click="modifierLangue('en')">EN</span>
 			</div>
@@ -23,7 +24,7 @@
 				</div>
 				<div id="credits">
 					<p><span class="mentions-legales" @click="modaleMentionsLegales = true">{{ $t('mentionsLegales') }}</span> - <a href="https://opencollective.com/ladigitale" target="_blank">{{ $t('soutien') }} ❤️.</a></p>
-					<p>{{ new Date().getFullYear() }}&nbsp;-&nbsp;<a href="https://ladigitale.dev" target="_blank" rel="noreferrer">La Digitale</a>&nbsp;-&nbsp;<a href="https://gitlab.com/ladigitale/digipad" target="_blank" rel="noreferrer">Code source</a>&nbsp;-&nbsp;<span class="hub" @click="ouvrirHub"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#001d1d" width="36px" height="36px"><path d="M0 0h24v24H0z" fill="none" /><path d="M4 8h4V4H4v4zm6 12h4v-4h-4v4zm-6 0h4v-4H4v4zm0-6h4v-4H4v4zm6 0h4v-4h-4v4zm6-10v4h4V4h-4zm-6 4h4V4h-4v4zm6 6h4v-4h-4v4zm0 6h4v-4h-4v4z" /></svg></span></p>
+					<p>{{ new Date().getFullYear() }}&nbsp;-&nbsp;<a href="https://ladigitale.dev" target="_blank" rel="noreferrer">La Digitale</a>&nbsp;-&nbsp;<a href="https://gitlab.com/ladigitale/digipad" target="_blank" rel="noreferrer">{{ $t('codeSource') }}</a>&nbsp;-&nbsp;<span class="hub" @click="ouvrirHub"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#001d1d" width="36px" height="36px"><path d="M0 0h24v24H0z" fill="none" /><path d="M4 8h4V4H4v4zm6 12h4v-4h-4v4zm-6 0h4v-4H4v4zm0-6h4v-4H4v4zm6 0h4v-4h-4v4zm6-10v4h4V4h-4zm-6 4h4V4h-4v4zm6 6h4v-4h-4v4zm0 6h4v-4h-4v4z" /></svg></span></p>
 				</div>
 			</div>
 		</div>

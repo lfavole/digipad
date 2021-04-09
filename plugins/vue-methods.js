@@ -7,6 +7,9 @@ Vue.prototype.$formaterDate = function (date, langue) {
 	case 'fr':
 		dateFormattee = moment(date).locale('fr').format('L') + ' à ' + moment(date).locale('fr').format('LT')
 		break
+	case 'es':
+		dateFormattee = moment(date).locale('es').format('L') + ' a las ' + moment(date).locale('es').format('LT')
+		break
 	case 'it':
 		dateFormattee = moment(date).locale('it').format('L') + ' alle ' + moment(date).locale('it').format('LT')
 		break
