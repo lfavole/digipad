@@ -76,7 +76,7 @@ export default {
 	titre: 'Titre',
 	lien: 'Lien',
 	copierLien: 'Copier le lien',
-	lienCopie: 'Lien copié dans le presse-papier',
+	lienCopie: 'Lien copié dans le presse-papier.',
 	acces: 'Accès',
 	public: 'public',
 	prive: 'privé',
@@ -196,5 +196,11 @@ export default {
 	siteWeb: 'Site Web :',
 	pagePrecedente: 'Page précédente',
 	pageSuivante: 'Page suivante',
-	codeSource: 'Code source'
+	codeSource: 'Code source',
+	protege: 'protégé',
+	codeAcces: 'Code d\'accès',
+	afficherCode: 'Afficher le code d\'accès',
+	masquerCode: 'Masquer le code d\'accès',
+	codePasCorrect: 'Le code d\'accès indiqué n\'est pas correct.',
+	padProtegeCodeAcces: 'Pad protégé avec un code d\'accès'
 }

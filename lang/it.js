@@ -74,6 +74,9 @@ export default {
 	aCommenteUneCapsule: 'hai commentato una capsula',
 	aEvalueUneCapsule: 'hai  rivisto una capsula',
 	titre: 'Titolo',
+	lien: 'Link',
+	copierLien: 'Copia il link',
+	lienCopie: 'Link copiato negli appunti.',
 	acces: 'Accesso',
 	public: 'publico',
 	prive: 'privato',
@@ -193,5 +196,11 @@ export default {
 	siteWeb: 'Sito Web :',
 	pagePrecedente: 'Pagina precedente',
 	pageSuivante: 'Pagina successiva',
-	codeSource: 'Codice sorgente'
+	codeSource: 'Codice sorgente',
+	protege: 'protetto',
+	codeAcces: 'Codice di accesso',
+	afficherCode: 'Visualizza il codice di accesso',
+	masquerCode: 'Nascondi il codice di accesso',
+	codePasCorrect: 'Il codice di accesso dato non è corretto.',
+	padProtegeCodeAcces: 'Pad protetto da un codice di accesso'
 }

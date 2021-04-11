@@ -17,18 +17,21 @@
     text-align: center;
 }
 
+#code-acces,
 #copier-lien {
 	display: flex;
 	justify-content: center;
 	align-items: center;
 }
 
+#code-acces input,
 #copier-lien input {
 	display: block;
 	width: calc(100% - 34px);
 	margin-right: 10px;
 }
 
+#code-acces span i,
 #copier-lien span i {
 	font-size: 24px;
 	cursor: pointer;

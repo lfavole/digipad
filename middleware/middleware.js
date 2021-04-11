@@ -8,6 +8,9 @@ export default function (context) {
 		donnees.nom = context.req.session.nom
 		donnees.langue = context.req.session.langue
 		donnees.statut = context.req.session.statut
+		if (context.req.session.acces) {
+			donnees.acces = context.req.session.acces
+		}
 		context.store.dispatch('modifierUtilisateur', donnees)
 	}
 }

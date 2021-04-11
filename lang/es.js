@@ -76,7 +76,7 @@ export default {
 	titre: 'Título',
 	lien: 'Enlace',
 	copierLien: 'Copiar el enlace',
-	lienCopie: 'Enlace copiado en el portapapeles',
+	lienCopie: 'Enlace copiado en el portapapeles.',
 	acces: 'Acceso',
 	public: 'público',
 	prive: 'privado',
@@ -196,5 +196,11 @@ export default {
 	siteWeb: 'Sitio Web:',
 	pagePrecedente: 'Página anterior',
 	pageSuivante: 'Página siguiente',
-	codeSource: 'Código fuente'
+	codeSource: 'Código fuente',
+	protege: 'protegido',
+	codeAcces: 'Código de acceso',
+	afficherCode: 'Visualizar el código de acceso',
+	masquerCode: 'Ocultar el código de acceso',
+	codePasCorrect: 'El código de acceso dado no es correcto.',
+	padProtegeCodeAcces: 'Pad protegido con un código de acceso'
 }

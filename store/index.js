@@ -14,6 +14,7 @@ export const state = () => ({
 	nom: '',
 	langue: 'fr',
 	statut: '',
+	acces: [],
 	etherpad: etherpad,
 	etherpadApi: etherpadApi
 })
@@ -39,6 +40,9 @@ export const mutations = {
 	},
 	modifierStatut (state, statut) {
 		state.statut = statut
+	},
+	modifierAcces (state, acces) {
+		state.acces = acces
 	}
 }
 
@@ -57,6 +61,9 @@ export const actions = {
 		commit('modifierNom', donnees.nom)
 		commit('modifierLangue', donnees.langue)
 		commit('modifierStatut', donnees.statut)
+		if (donnees.acces) {
+			commit('modifierAcces', donnees.acces)
+		}
 	},
 	modifierNom ({ commit }, nom) {
 		commit('modifierNom', nom)

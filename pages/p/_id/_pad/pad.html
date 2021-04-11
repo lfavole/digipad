@@ -11,21 +11,21 @@
 	</header>
 
 	<nav id="nav">
-		<span role="button" id="compte" @click="allerCompte" v-if="statut === 'utilisateur'" :title="$t('compteUtilisateur')"><i class="material-icons">arrow_back</i></span>
-		<span role="button" id="accueil" @click="allerAccueil" v-else><i class="material-icons" :title="$t('accueil')">home</i></span>
-		<span role="button" id="activite" @click="afficherActivite" :title="$t('activitePad')" v-if="!pad.registreActivite || (pad.registreActivite && pad.registreActivite === 'active')"><i class="material-icons">schedule</i></span>
-		<span role="button" id="chat" @click="afficherChat" :title="$t('conversation')" v-if="!pad.conversation || (pad.conversation && pad.conversation === 'activee')">
+		<span id="compte" role="button" @click="allerCompte" v-if="statut === 'utilisateur'" :title="$t('compteUtilisateur')"><i class="material-icons">arrow_back</i></span>
+		<span id="accueil" role="button" @click="allerAccueil" v-else><i class="material-icons" :title="$t('accueil')">home</i></span>
+		<span id="activite" role="button" @click="afficherActivite" :title="$t('activitePad')" v-if="accesAutorise && (!pad.registreActivite || (pad.registreActivite && pad.registreActivite === 'active'))"><i class="material-icons">schedule</i></span>
+		<span id="chat" @click="afficherChat" :title="$t('conversation')" v-if="accesAutorise && (!pad.conversation || (pad.conversation && pad.conversation === 'activee'))">
 			<i class="material-icons">chat</i>
 			<span class="badge" v-if="nouveauxMessages > 0">{{ nouveauxMessages }}</span>
 		</span>
-		<span role="button" id="motdepasse" @click="afficherModaleMotDePasse" v-if="pad.motdepasse && pad.identifiant !== identifiant && statut !== 'utilisateur'" :title="$t('motDePassePad')"><i class="material-icons">vpn_key</i></span>
-		<span role="button" id="options" @click="afficherOptions" v-if="pad.identifiant === identifiant" :title="$t('parametresPad')"><i class="material-icons">settings</i></span>
-		<span role="button" id="options" @click="afficherOptions" v-else-if="pad.identifiant !== identifiant && statut !== 'utilisateur'" :title="$t('parametresPad')"><i class="material-icons">language</i></span>
-		<span role="button" id="organisation" :class="{'desactive': blocs.length < 2}" @click="activerModeOrganiser" v-if="pad.identifiant === identifiant && action !== 'organiser'" :title="$t('modeOrganiser')"><i class="material-icons">sort</i></span>
-		<span role="button" id="organisation" class="actif" @click="desactiverModeOrganiser" v-if="pad.identifiant === identifiant && action === 'organiser'" :title="$t('finModeOrganiser')"><i class="material-icons">sort</i></span>
-		<span role="button" id="diaporama" :class="{'desactive': blocs.length === 0}" @click="afficherModaleDiaporama" :title="$t('modeDiaporama')"><i class="material-icons">slideshow</i></span>
-		<span role="button" id="deconnexion" @click="deconnexion" v-if="statut === 'utilisateur'" :title="$t('deconnexion')"><i class="material-icons">power_settings_new</i></span>
-		<span role="button" id="deconnexion" @click="afficherSeDeconnecterPad" v-else-if="statut === 'auteur'" :title="$t('seDeconnecterPad')"><i class="material-icons">power_settings_new</i></span>
+		<span id="motdepasse" role="button" @click="afficherModaleMotDePasse" v-if="pad.motdepasse && pad.identifiant !== identifiant && statut !== 'utilisateur'" :title="$t('motDePassePad')"><i class="material-icons">vpn_key</i></span>
+		<span id="options" role="button" @click="afficherOptions" v-if="pad.identifiant === identifiant" :title="$t('parametresPad')"><i class="material-icons">settings</i></span>
+		<span id="options" role="button" @click="afficherOptions" v-else-if="pad.identifiant !== identifiant && statut !== 'utilisateur'" :title="$t('parametresPad')"><i class="material-icons">language</i></span>
+		<span id="organisation" role="button" :class="{'desactive': blocs.length < 2}" @click="activerModeOrganiser" v-if="pad.identifiant === identifiant && action !== 'organiser'" :title="$t('modeOrganiser')"><i class="material-icons">sort</i></span>
+		<span id="organisation" role="button" class="actif" @click="desactiverModeOrganiser" v-if="pad.identifiant === identifiant && action === 'organiser'" :title="$t('finModeOrganiser')"><i class="material-icons">sort</i></span>
+		<span id="diaporama" role="button" :class="{'desactive': blocs.length === 0}" @click="afficherModaleDiaporama" :title="$t('modeDiaporama')"><i class="material-icons">slideshow</i></span>
+		<span id="deconnexion" role="button" @click="deconnexion" v-if="statut === 'utilisateur'" :title="$t('deconnexion')"><i class="material-icons">power_settings_new</i></span>
+		<span id="deconnexion" role="button" @click="afficherSeDeconnecterPad" v-else-if="statut === 'auteur'" :title="$t('seDeconnecterPad')"><i class="material-icons">power_settings_new</i></span>
 	</nav>
 
 	<div class="menu gauche" :class="{'ouvert': menuActivite}">
@@ -78,13 +78,13 @@
 		<div class="contenu ascenseur">
 			<div class="conteneur">
 				<label for="titre-pad">{{ $t('titre') }}</label>
-				<input id="titre-pad" type="text" :value="pad.titre" @keydown.enter="modifierTitre">
+				<input id="titre-pad"  type="text" :value="pad.titre" @keydown.enter="modifierTitre">
 			</div>
 			<div class="conteneur">
-				<span role="button" class="bouton-vert" @click="modifierTitre">{{ $t('enregistrer') }}</span>
+				<span role="button" tabindex="0" class="bouton-vert" @click="modifierTitre">{{ $t('enregistrer') }}</span>
 			</div>
 			<div class="conteneur" v-if="statut === 'auteur'">
-				<span role="button" class="bouton-bleu" @click="afficherModaleModifierMotDePasse">{{ $t('modifierMotDePasse') }}</span>
+				<span role="button" tabindex="0" class="bouton-bleu" @click="afficherModaleModifierMotDePasse">{{ $t('modifierMotDePasse') }}</span>
 			</div>
 			<div class="conteneur">
 				<label>{{ $t('lien') }}</label>
@@ -112,6 +112,19 @@
 					<input type="radio" name="acces" :checked="pad.acces === 'prive'" @change="modifierAcces('prive')">
 					<span class="coche" />
 				</label>
+				<label class="bouton-radio">{{ $t('protege') }}
+					<input type="radio" name="acces" :checked="pad.acces === 'code'" @change="modifierAcces('code')">
+					<span class="coche" />
+				</label>
+			</div>
+			<div class="conteneur" v-if="pad.acces === 'code'">
+				<label>{{ $t('codeAcces') }}</label>
+				<div id="code-acces">
+					<input type="text" disabled :value="pad.code" v-if="codeVisible">
+					<input type="password" disabled :value="pad.code" v-else>
+					<span class="icone" role="button" :title="$t('masquerCode')" @click="masquerCodeAcces" v-if="codeVisible"><i class="material-icons">visibility_off</i></span>
+					<span class="icone" role="button" :title="$t('afficherCode')" @click="afficherCodeAcces" v-else><i class="material-icons">visibility</i></span>
+				</div>
 			</div>
 			<div class="conteneur">
 				<label>{{ $t('contributions') }}</label>
@@ -209,7 +222,7 @@
 				</div>
 			</div>
 			<div class="conteneur" v-if="statut === 'auteur'">
-				<span role="button" class="bouton-rouge" @click="afficherSupprimerPad">{{ $t('supprimerPad') }}</span>
+				<span role="button" tabindex="0" class="bouton-rouge" @click="afficherSupprimerPad">{{ $t('supprimerPad') }}</span>
 			</div>
 		</div>
 	</div>
@@ -255,7 +268,7 @@
 		</div>
 	</div>
 
-	<div id="pad" :class="{'fond-personnalise': pad.fond.substring(1, 9) === 'fichiers', 'organiser': action === 'organiser'}" :style="{'background-image': 'url(' + pad.fond + ')'}">
+	<div id="pad" :class="{'fond-personnalise': pad.fond.substring(1, 9) === 'fichiers', 'organiser': action === 'organiser'}" :style="{'background-image': 'url(' + pad.fond + ')'}" v-if="pad.acces !== 'code' || (pad.acces === 'code' && accesAutorise)">
 		<transition name="fondu">
 			<masonry id="blocs" class="mur" :cols="{default: 6, 1729: 5, 1449: 4, 1365: 3, 899: 2, 499: 1}" :gutter="0" v-if="pad.affichage === 'mur' && action !== 'organiser'">
 				<div :id="item.bloc" class="bloc" v-for="(item, indexItem) in blocs" :style="{'border-color': item.couleur}" :data-bloc="item.bloc" :key="'bloc' + indexItem">
@@ -373,7 +386,7 @@
 							</div>
 						</div>
 					</div>
-					<div class="ajouter" v-if="pad.identifiant === identifiant || pad.contributions === 'ouvertes'">
+					<div class="ajouter" v-if="accesAutorise && (pad.identifiant === identifiant || pad.contributions === 'ouvertes')">
 						<span role="button" @click="ouvrirModaleBloc('creation', '', indexCol)">
 							<i class="material-icons">add</i>
 						</span>
@@ -465,8 +478,10 @@
 		</transition>
 	</div>
 
+	<div id="pad" :style="{'background': '#00ced1'}" v-else />
+
 	<transition name="fondu">
-		<span role="button" id="ajouter" @click="ouvrirModaleBloc('creation', '', 0)" v-if="(pad.affichage === 'mur' || pad.affichage === 'flux-vertical') && ((pad.identifiant === identifiant && action !== 'organiser') || (pad.identifiant !== identifiant && pad.contributions === 'ouvertes'))">
+		<span role="button" id="ajouter" @click="ouvrirModaleBloc('creation', '', 0)" v-if="accesAutorise && ((pad.affichage === 'mur' || pad.affichage === 'flux-vertical') && ((pad.identifiant === identifiant && action !== 'organiser') || (pad.identifiant !== identifiant && pad.contributions === 'ouvertes')))">
 			<i class="material-icons">add</i>
 		</span>
 	</transition>
@@ -483,8 +498,8 @@
 					<input id="champ-nom-colonne" type="text" maxlength="48" :value="titreColonne" @input="titreColonne = $event.target.value" @keydown.enter="ajouterColonne" v-if="modeColonne === 'creation'">
 					<input id="champ-nom-colonne" type="text" maxlength="48" :value="titreColonne" @input="titreColonne = $event.target.value" @keydown.enter="modifierColonne" v-else>
 					<div class="actions">
-						<span role="button" class="bouton" @click="ajouterColonne" v-if="modeColonne === 'creation'">{{ $t('valider') }}</span>
-						<span role="button" class="bouton" @click="modifierColonne" v-else>{{ $t('valider') }}</span>
+						<span role="button" tabindex="0" class="bouton" @click="ajouterColonne" v-if="modeColonne === 'creation'">{{ $t('valider') }}</span>
+						<span role="button" tabindex="0" class="bouton" @click="modifierColonne" v-else>{{ $t('valider') }}</span>
 					</div>
 				</div>
 			</div>
@@ -516,7 +531,7 @@
 					</div>
 					<div id="ajouter-lien" v-show="media === '' && progressionFichier === 0" v-if="pad.liens === 'actives'">
 						<input type="text" :value="lien" @input="lien = $event.target.value" :placeholder="$t('ajouterLien')" @keydown.enter="ajouterLien" v-if="!chargementLien">
-						<span role="button" class="bouton rechercher" @click="ajouterLien" v-if="!chargementLien"><i class="material-icons">search</i></span>
+						<span role="button" tabindex="0" class="bouton rechercher" @click="ajouterLien" v-if="!chargementLien"><i class="material-icons">search</i></span>
 						<div class="conteneur-chargement" v-else>
 							<div class="chargement" />
 						</div>
@@ -525,7 +540,7 @@
 						<span>{{ $t('ou') }}</span>
 					</div>
 					<div id="ajouter-document" v-show="media === '' && progressionFichier === 0 && !chargementLien" v-if="pad.documents === 'actives'">
-						<span role="button" class="bouton" @click="ajouterDocument">{{ $t('creerDocCollaboratif') }}</span>
+						<span role="button" tabindex="0" class="bouton" @click="ajouterDocument">{{ $t('creerDocCollaboratif') }}</span>
 					</div>
 					<label v-show="media !== ''" v-if="source !== 'etherpad'">{{ $t('media') }}</label>
 					<label v-show="media !== ''" v-else>{{ $t('documentCollaboratif') }}</label>
@@ -563,7 +578,7 @@
 							<span class="icone"><i class="material-icons">attachment</i></span>
 						</a>
 						<div class="action">
-							<span role="button" class="bouton supprimer" @click="supprimerFichier">{{ $t('supprimer') }}</span>
+							<span role="button" tabindex="0" class="bouton supprimer" @click="supprimerFichier">{{ $t('supprimer') }}</span>
 						</div>
 					</div>
 					<div id="recherche" v-if="pad.liens === 'actives' && !chargementLien && Object.keys(resultats).length > 0 && media === ''">
@@ -583,7 +598,7 @@
 					</div>
 					<div class="televerser vignette" v-if="type !== 'image' && type !== 'lien-image' && media !== ''">
 						<label for="televerser-vignette" class="bouton" v-show="progressionVignette === 0">{{ $t('modifierVignette') }}</label>
-						<span role="button" class="bouton" @click="remettreVignetteDefaut" v-if="vignetteDefaut !== '' && vignette !== vignetteDefaut" v-show="progressionVignette === 0">{{ $t('remettreVignette') }}</span>
+						<span role="button" tabindex="0" class="bouton" @click="remettreVignetteDefaut" v-if="vignetteDefaut !== '' && vignette !== vignetteDefaut" v-show="progressionVignette === 0">{{ $t('remettreVignette') }}</span>
 						<input id="televerser-vignette" ref="televerser-vignette" type="file" style="display: none" accept=".jpg, .jpeg, .png, .gif" @change="ajouterVignette">
 						<div class="conteneur-chargement progression" v-if="progressionVignette > 0">
 							<progress class="barre-progression" max="100" :value="progressionVignette" />
@@ -592,8 +607,8 @@
 					</div>
 				</div>
 			</div>
-			<div class="valider" role="button" @click="ajouterBloc" v-if="mode === 'creation'">{{ $t('valider') }}</div>
-			<div class="valider" role="button" @click="modifierBloc" v-else-if="mode === 'edition'">{{ $t('valider') }}</div>
+			<div class="valider" role="button" tabindex="0" @click="ajouterBloc" v-if="mode === 'creation'">{{ $t('valider') }}</div>
+			<div class="valider" role="button" tabindex="0" @click="modifierBloc" v-else-if="mode === 'edition'">{{ $t('valider') }}</div>
 		</div>
 	</div>
 
@@ -675,8 +690,8 @@
 				</div>
 			</div>
 		</div>
-		<span role="button" id="precedent" v-if="blocs.length > 1" @click="afficherBlocPrecedent"><i class="material-icons">arrow_back</i></span>
-		<span role="button" id="suivant" v-if="blocs.length > 1" @click="afficherBlocSuivant"><i class="material-icons">arrow_forward</i></span>
+		<span role="button" tabindex="0" id="precedent" v-if="blocs.length > 1" @click="afficherBlocPrecedent"><i class="material-icons">arrow_back</i></span>
+		<span role="button" tabindex="0" id="suivant" v-if="blocs.length > 1" @click="afficherBlocSuivant"><i class="material-icons">arrow_forward</i></span>
 	</div>
 
 	<div class="conteneur-modale" v-if="modaleCommentaires">
@@ -736,8 +751,8 @@
 						<i class="material-icons annuler" @click="evaluation = 0" v-if="evaluation > 0">delete_forever</i>
 					</div>
 					<div class="actions">
-						<span role="button" class="bouton" @click="envoyerEvaluation" v-if="evaluations.map(function (e) { return e.identifiant }).indexOf(identifiant) === -1">{{ $t('valider') }}</span>
-						<span role="button" class="bouton" @click="modifierEvaluation" v-else>{{ $t('modifier') }}</span>
+						<span role="button" tabindex="0" class="bouton" @click="envoyerEvaluation" v-if="evaluations.map(function (e) { return e.identifiant }).indexOf(identifiant) === -1">{{ $t('valider') }}</span>
+						<span role="button" tabindex="0" class="bouton" @click="modifierEvaluation" v-else>{{ $t('modifier') }}</span>
 					</div>
 				</div>
 			</div>
@@ -755,7 +770,7 @@
 					<label for="champ-nom">{{ $t('votreNom') }}</label>
 					<input id="champ-nom" type="text" maxlength="48" :value="nomUtilisateur" @input="nomUtilisateur = $event.target.value" @keydown.enter="modifierNom">
 					<div class="actions">
-						<span role="button" class="bouton" @click="modifierNom">{{ $t('valider') }}</span>
+						<span role="button" tabindex="0" class="bouton" @click="modifierNom">{{ $t('valider') }}</span>
 					</div>
 				</div>
 			</div>
@@ -773,7 +788,7 @@
 					<label for="champ-motdepasse">{{ $t('motDePasse') }}</label>
 					<input id="champ-motdepasse" type="text" maxlength="24" :value="motDePasse" @input="motDePasse = $event.target.value" @keydown.enter="verifierMotDePasse">
 					<div class="actions">
-						<span role="button" class="bouton" @click="verifierMotDePasse">{{ $t('valider') }}</span>
+						<span role="button" tabindex="0" class="bouton" @click="verifierMotDePasse">{{ $t('valider') }}</span>
 					</div>
 				</div>
 			</div>
@@ -793,7 +808,25 @@
 					<label for="champ-nouveau-motdepasse">{{ $t('nouveauMotDePasse') }}</label>
 					<input id="champ-nouveau-motdepasse" type="text" maxlength="24" :value="nouveauMotDePasse" @input="nouveauMotDePasse = $event.target.value" @keydown.enter="modifierMotDePasse">
 					<div class="actions">
-						<span role="button" class="bouton" @click="modifierMotDePasse">{{ $t('modifier') }}</span>
+						<span role="button" tabindex="0" class="bouton" @click="modifierMotDePasse">{{ $t('modifier') }}</span>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<div class="conteneur-modale" v-if="modaleCodeAcces">
+		<div class="modale">
+			<div class="en-tete">
+				<span class="titre">{{ $t('padProtegeCodeAcces') }}</span>
+				<span role="button" class="fermer" @click="fermerModaleCodeAcces"><i class="material-icons">close</i></span>
+			</div>
+			<div class="conteneur">
+				<div class="contenu">
+					<label for="champ-code">{{ $t('codeAcces') }}</label>
+					<input id="champ-code" type="text" maxlength="6" :value="codeAcces" @input="codeAcces = $event.target.value" @keydown.enter="verifierCodeAcces">
+					<div class="actions">
+						<span role="button" tabindex="0" class="bouton" @click="verifierCodeAcces">{{ $t('valider') }}</span>
 					</div>
 				</div>
 			</div>
@@ -806,14 +839,14 @@
 				<div class="contenu">
 					<div class="message" v-html="messageConfirmation" />
 					<div class="actions">
-						<span role="button" class="bouton" @click="fermerModaleConfirmer">{{ $t('non') }}</span>
-						<span role="button" class="bouton" @click="supprimerBloc" v-if="typeConfirmation === 'supprimer-bloc'">{{ $t('oui') }}</span>
-						<span role="button" class="bouton" @click="supprimerColonne" v-if="typeConfirmation === 'supprimer-colonne'">{{ $t('oui') }}</span>
-						<span role="button" class="bouton" @click="supprimerCommentaire" v-if="typeConfirmation === 'supprimer-commentaire'">{{ $t('oui') }}</span>
-						<span role="button" class="bouton" @click="seDeconnecterPad" v-if="typeConfirmation === 'deconnecter-pad'">{{ $t('oui') }}</span>
-						<span role="button" class="bouton" @click="supprimerPad" v-if="typeConfirmation === 'supprimer-pad'">{{ $t('oui') }}</span>
-						<span role="button" class="bouton" @click="reinitialiserMessages" v-else-if="typeConfirmation === 'reinitialiser-messages'">{{ $t('oui') }}</span>
-						<span role="button" class="bouton" @click="reinitialiserActivite" v-else-if="typeConfirmation === 'reinitialiser-activite'">{{ $t('oui') }}</span>
+						<span role="button" tabindex="0" class="bouton" @click="fermerModaleConfirmer">{{ $t('non') }}</span>
+						<span role="button" tabindex="0" class="bouton" @click="supprimerBloc" v-if="typeConfirmation === 'supprimer-bloc'">{{ $t('oui') }}</span>
+						<span role="button" tabindex="0" class="bouton" @click="supprimerColonne" v-if="typeConfirmation === 'supprimer-colonne'">{{ $t('oui') }}</span>
+						<span role="button" tabindex="0" class="bouton" @click="supprimerCommentaire" v-if="typeConfirmation === 'supprimer-commentaire'">{{ $t('oui') }}</span>
+						<span role="button" tabindex="0" class="bouton" @click="seDeconnecterPad" v-if="typeConfirmation === 'deconnecter-pad'">{{ $t('oui') }}</span>
+						<span role="button" tabindex="0" class="bouton" @click="supprimerPad" v-if="typeConfirmation === 'supprimer-pad'">{{ $t('oui') }}</span>
+						<span role="button" tabindex="0" class="bouton" @click="reinitialiserMessages" v-else-if="typeConfirmation === 'reinitialiser-messages'">{{ $t('oui') }}</span>
+						<span role="button" tabindex="0" class="bouton" @click="reinitialiserActivite" v-else-if="typeConfirmation === 'reinitialiser-activite'">{{ $t('oui') }}</span>
 					</div>
 				</div>
 			</div>

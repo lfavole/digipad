@@ -29,6 +29,7 @@ export default {
 			this.utilisateurs = utilisateurs
 		},
 		erreur: function () {
+			this.chargement = false
 			this.$store.dispatch('modifierAlerte', this.$t('erreurActionServeur'))
 		},
 		ajouterbloc: function (donnees) {
@@ -216,13 +217,17 @@ export default {
 				this.$store.dispatch('modifierMessage', this.$t('titrePadModifie'))
 			}
 		},
-		modifieracces: function (acces) {
-			this.pad.acces = acces
+		modifieracces: function (donnees) {
+			this.pad.acces = donnees.acces
 			this.chargement = false
 			if (this.pad.identifiant === this.identifiant) {
+				if (donnees.acces === 'code') {
+					this.pad.code = donnees.code
+					this.codeVisible = true
+				}
 				this.$store.dispatch('modifierMessage', this.$t('accesPadModifie'))
 			} else {
-				if (acces === 'prive') {
+				if (donnees.acces === 'prive') {
 					this.$socket.emit('sortie')
 					this.$router.push('/')
 				}
@@ -461,7 +466,11 @@ export default {
 			depart: 0,
 			distance: 0,
 			resultats: {},
-			page: 1
+			page: 1,
+			accesAutorise: false,
+			codeAcces: '',
+			codeVisible: false,
+			modaleCodeAcces: false
 		}
 	},
 	computed: {
@@ -482,6 +491,9 @@ export default {
 		},
 		statut () {
 			return this.$store.state.statut
+		},
+		acces () {
+			return this.$store.state.acces
 		},
 		etherpad () {
 			return this.$store.state.etherpad
@@ -543,7 +555,17 @@ export default {
 		}
 		if (this.pad.acces === 'public' || (this.pad.acces === 'prive' && this.pad.identifiant === this.identifiant)) {
 			this.$nuxt.$loading.start()
+			this.accesAutorise = true
 			this.$socket.emit('connexion', { pad: this.pad.id, identifiant: this.identifiant, nom: this.nom })
+		} else if (this.pad.acces === 'code') {
+			this.$nuxt.$loading.start()
+			if (this.pad.identifiant === this.identifiant || this.acces.includes(this.pad.id)) {
+				this.accesAutorise = true
+				this.$socket.emit('connexion', { pad: this.pad.id, identifiant: this.identifiant, nom: this.nom })
+			}
+			if (!this.accesAutorise) {
+				this.modaleCodeAcces = true
+			}
 		} else if (this.statut === 'utilisateur') {
 			this.$router.push('/u/' + this.identifiant)
 		} else {
@@ -557,6 +579,8 @@ export default {
 			document.addEventListener('mousedown', this.surlignerBloc, false)
 			window.addEventListener('beforeunload', this.quitterPage, false)
 			window.addEventListener('resize', this.redimensionner, false)
+			window.addEventListener('message', this.ecouterMessage, false)
+
 			if (this.pad.affichage === 'colonnes') {
 				this.activerDefilementHorizontal()
 			}
@@ -582,6 +606,7 @@ export default {
 		document.removeEventListener('mousedown', this.surlignerBloc, false)
 		window.removeEventListener('beforeunload', this.quitterPage, false)
 		window.removeEventListener('resize', this.redimensionner, false)
+		window.removeEventListener('message', this.ecouterMessage, false)
 	},
 	methods: {
 		allerAccueil () {
@@ -591,6 +616,12 @@ export default {
 		},
 		allerCompte () {
 			this.$router.push('/u/' + this.identifiant)
+		},
+		ecouterMessage (event) {
+			if (this.source === 'digiplay') {
+				this.vignette = event.data
+				this.vignetteDefaut = event.data
+			}
 		},
 		definirUtilisateurs (donnees) {
 			let utilisateurs = []
@@ -664,6 +695,10 @@ export default {
 				case 'embed':
 					if (item.source === 'peertube') {
 						vignette = item.media.replace('/videos/watch/', '/static/thumbnails/') + '.jpg'
+					} else if (item.source === 'h5p') {
+						vignette = '/img/h5p.png'
+					} else if (item.source === 'digiplay') {
+						vignette = '/img/digiplay.png'
 					} else if (item.source === 'youtube') {
 						vignette = '/img/youtube.png'
 					} else if (item.source === 'vimeo') {
@@ -1034,6 +1069,10 @@ export default {
 								this.source = 'web'
 								if (this.lien.includes('tube.ac-lyon.fr')) {
 									this.source = 'peertube'
+								} else if (this.lien.includes('ladigitale.dev/digiquiz/')) {
+									this.source = 'h5p'
+								} else if (this.lien.includes('ladigitale.dev/digiplay/')) {
+									this.source = 'digiplay'
 								}
 								this.type = 'embed'
 								donnees = {}
@@ -1937,12 +1976,14 @@ export default {
 				}.bind(this))
 			}
 			const blocs = document.querySelector('#blocs')
-			this.$nextTick(function () {
-				blocs.classList.add('anime')
-				blocs.addEventListener('animationend', function () {
-					blocs.classList.remove('anime')
+			if (blocs) {
+				this.$nextTick(function () {
+					blocs.classList.add('anime')
+					blocs.addEventListener('animationend', function () {
+						blocs.classList.remove('anime')
+					})
 				})
-			})
+			}
 		},
 		afficherActivite () {
 			this.menuUtilisateurs = false
@@ -2027,6 +2068,40 @@ export default {
 				this.$socket.emit('modifieracces', this.pad.id, acces)
 				this.chargement = true
 			}
+		},
+		afficherCodeAcces () {
+			this.codeVisible = true
+		},
+		masquerCodeAcces () {
+			this.codeVisible = false
+		},
+		verifierCodeAcces () {
+			this.chargement = true
+			axios.post(this.hote + '/api/verifier-code-acces', {
+				pad: this.pad.id,
+				code: this.codeAcces
+			}).then(function (reponse) {
+				const donnees = reponse.data
+				if (donnees === 'code_incorrect') {
+					this.chargement = false
+					this.$store.dispatch('modifierAlerte', this.$t('codePasCorrect'))
+				} else if (donnees === 'erreur') {
+					this.chargement = false
+					this.$store.dispatch('modifierAlerte', this.$t('erreurCommunicationServeur'))
+				} else {
+					this.chargement = false
+					this.accesAutorise = true
+					this.$socket.emit('connexion', { pad: this.pad.id, identifiant: this.identifiant, nom: this.nom })
+					this.fermerModaleCodeAcces()
+				}
+			}.bind(this)).catch(function () {
+				this.chargement = false
+				this.$store.dispatch('modifierAlerte', this.$t('erreurCommunicationServeur'))
+			}.bind(this))
+		},
+		fermerModaleCodeAcces () {
+			this.codeAcces = ''
+			this.modaleCodeAcces = false
 		},
 		modifierContributions (contributions) {
 			if (this.pad.contributions !== contributions) {
@@ -2148,6 +2223,7 @@ export default {
 			if (document.querySelector('#titre-pad')) {
 				document.querySelector('#titre-pad').value = this.pad.titre
 			}
+			this.codeVisible = false
 		},
 		modifierCouleur (couleur) {
 			this.listeCouleurs = false

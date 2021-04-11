@@ -740,6 +740,24 @@ app.post('/api/verifier-mot-de-passe', function (req, res) {
 	})
 })
 
+app.post('/api/verifier-code-acces', function (req, res) {
+	const pad = req.body.pad
+	db.hgetall('pads:' + pad, function (err, donnees) {
+		if (err) { res.send('erreur') }
+		if (req.body.code === donnees.code) {
+			if (!req.session.acces) {
+				req.session.acces = []
+			}
+			if (!req.session.acces.includes(pad)) {
+				req.session.acces.push(pad)
+			}
+			res.send('code_correct')
+		} else {
+			res.send('code_incorrect')
+		}
+	})
+})
+
 app.post('/api/modifier-langue', function (req, res) {
 	const identifiant = req.body.identifiant
 	if (req.session.identifiant && req.session.identifiant === identifiant) {
@@ -1263,11 +1281,20 @@ io.on('connection', function (socket) {
 
 	socket.on('modifieracces', function (pad, acces) {
 		if (socket.identifiant !== '' && socket.identifiant !== undefined) {
-			db.hmset('pads:' + pad, 'acces', acces, function (err) {
+			db.hgetall('pads:' + pad, function (err, donnees) {
 				if (err) { socket.emit('erreur'); return false }
-				io.in(socket.room).emit('modifieracces', acces)
-				socket.handshake.session.cookie.expires = new Date(Date.now() + (3600 * 24 * 7 * 1000))
-				socket.handshake.session.save()
+				let code = ''
+				if (donnees.code && donnees.code !== '') {
+					code = donnees.code
+				} else {
+					code = Math.floor(1000 + Math.random() * 9000)
+				}
+				db.hmset('pads:' + pad, 'acces', acces, 'code', code, function (err) {
+					if (err) { socket.emit('erreur'); return false }
+					io.in(socket.room).emit('modifieracces', { acces: acces, code: code })
+					socket.handshake.session.cookie.expires = new Date(Date.now() + (3600 * 24 * 7 * 1000))
+					socket.handshake.session.save()
+				})
 			})
 		} else {
 			socket.emit('deconnecte')
@@ -1667,8 +1694,9 @@ const televerser = multer({
 			const info = path.parse(fichier.originalname)
 			const extension = info.ext.toLowerCase()
 			let nom = v.latinise(info.name.toLowerCase())
-			nom = v.replaceAll(nom, ' ', '')
+			nom = v.replaceAll(nom, ' ', '-')
 			nom = v.replaceAll(nom, '\'', '')
+			nom = v.replaceAll(nom, '#', '')
 			nom = v.replaceAll(nom, '.', '') + '_' + Math.random().toString(36).substring(2) + extension
 			callback(null, nom)
 		}

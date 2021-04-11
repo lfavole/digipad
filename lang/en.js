@@ -196,5 +196,11 @@ export default {
 	siteWeb: 'Website:',
 	pagePrecedente: 'Previous page',
 	pageSuivante: 'Next page',
-	codeSource: 'Source code'
+	codeSource: 'Source code',
+	protege: 'protected',
+	codeAcces: 'Access code',
+	afficherCode: 'Show access code',
+	masquerCode: 'Hide access code',
+	codePasCorrect: 'The access code is not correct.',
+	padProtegeCodeAcces: 'Pad protected with an access code'
 }
