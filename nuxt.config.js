@@ -22,6 +22,7 @@ module.exports = {
 		},
 		script: [
 			{ src: '/js/jspanel.js' },
+			{ src: '/js/qrcode.js' },
 			{ src: '/js/flex-images.js' }
 		],
 		link: [

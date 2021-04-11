@@ -470,7 +470,9 @@ export default {
 			accesAutorise: false,
 			codeAcces: '',
 			codeVisible: false,
-			modaleCodeAcces: false
+			modaleCodeAcces: false,
+			codeqr: '',
+			modaleCodeQR: false
 		}
 	},
 	computed: {
@@ -585,7 +587,7 @@ export default {
 				this.activerDefilementHorizontal()
 			}
 			const lien = this.hote + '/p/' + this.pad.id + '/' + this.pad.token
-			const clipboardLien = new ClipboardJS('#copier-lien span', {
+			const clipboardLien = new ClipboardJS('#copier-lien .lien', {
 				text: function () {
 					return lien
 				}
@@ -593,6 +595,16 @@ export default {
 			clipboardLien.on('success', function () {
 				this.$store.dispatch('modifierMessage', this.$t('lienCopie'))
 			}.bind(this))
+			// eslint-disable-next-line
+			this.codeqr = new QRCode('qr', {
+				text: lien,
+				width: 500,
+				height: 500,
+				colorDark: '#000000',
+				colorLight: '#ffffff',
+				// eslint-disable-next-line
+				correctLevel : QRCode.CorrectLevel.H
+			})
 			setTimeout(function () {
 				this.$nuxt.$loading.finish()
 			}.bind(this), 100)
@@ -2062,6 +2074,12 @@ export default {
 					this.$store.dispatch('modifierAlerte', this.$t('erreurCommunicationServeur'))
 				}.bind(this))
 			}
+		},
+		afficherCodeQR () {
+			this.modaleCodeQR = true
+		},
+		fermerModaleCodeQR () {
+			this.modaleCodeQR = false
 		},
 		modifierAcces (acces) {
 			if (this.pad.acces !== acces) {

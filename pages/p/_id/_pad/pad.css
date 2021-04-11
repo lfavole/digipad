@@ -24,10 +24,15 @@
 	align-items: center;
 }
 
-#code-acces input,
-#copier-lien input {
+#code-acces input {
 	display: block;
 	width: calc(100% - 34px);
+	margin-right: 10px;
+}
+
+#copier-lien input {
+	display: block;
+	width: calc(100% - 68px);
 	margin-right: 10px;
 }
 
@@ -35,6 +40,10 @@
 #copier-lien span i {
 	font-size: 24px;
 	cursor: pointer;
+}
+
+#copier-lien span:last-child {
+	margin-left: 10px;
 }
 
 #copier-lien span i:active {
@@ -1337,6 +1346,15 @@
 
 .menu .conteneur.fond span:nth-last-child(-n + 4) {
 	margin-bottom: 0;
+}
+
+#codeqr .contenu {
+	text-align: center;
+	font-size: 0;
+}
+
+#codeqr #qr {
+	display: inline-block;
 }
 
 .fondu-enter-active {

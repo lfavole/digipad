@@ -87,10 +87,11 @@
 				<span role="button" tabindex="0" class="bouton-bleu" @click="afficherModaleModifierMotDePasse">{{ $t('modifierMotDePasse') }}</span>
 			</div>
 			<div class="conteneur">
-				<label>{{ $t('lien') }}</label>
+				<label>{{ $t('lienEtCodeQR') }}</label>
 				<div id="copier-lien">
 					<input type="text" disabled :value="hote + '/p/' + pad.id + '/' + pad.token">
-					<span class="icone" role="button" :title="$t('copierLien')"><i class="material-icons">content_copy</i></span>
+					<span class="icone lien" role="button" :title="$t('copierLien')"><i class="material-icons">content_copy</i></span>
+					<span class="icone codeqr" role="button" :title="$t('afficherCodeQR')" @click="afficherCodeQR"><i class="material-icons">qr_code</i></span>
 				</div>
 			</div>
 			<div class="conteneur">
@@ -810,6 +811,20 @@
 					<div class="actions">
 						<span role="button" tabindex="0" class="bouton" @click="modifierMotDePasse">{{ $t('modifier') }}</span>
 					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<div class="conteneur-modale" v-show="modaleCodeQR">
+		<div id="codeqr" class="modale">
+			<div class="en-tete">
+				<span class="titre">{{ $t('codeQR') }}</span>
+				<span role="button" class="fermer" @click="fermerModaleCodeQR"><i class="material-icons">close</i></span>
+			</div>
+			<div class="conteneur">
+				<div class="contenu">
+					<div id="qr" />
 				</div>
 			</div>
 		</div>
