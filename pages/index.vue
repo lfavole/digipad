@@ -16,9 +16,9 @@
 					<div>
 						<p v-html="$t('slogan')" />
 						<div id="actions">
-							<span class="bouton" role="button" @click="afficherModaleConnexion">{{ $t('seConnecter') }}</span>
-							<span class="bouton" role="button" @click="afficherModaleInscription">{{ $t('sInscrire') }}</span>
-							<span class="bouton" role="button" @click="afficherModaleCreer">{{ $t('creerPad') }}</span>
+							<span class="bouton" role="button" tabindex="0" @click="afficherModaleConnexion">{{ $t('seConnecter') }}</span>
+							<span class="bouton" role="button" tabindex="1" @click="afficherModaleInscription">{{ $t('sInscrire') }}</span>
+							<span class="bouton" role="button" tabindex="2" @click="afficherModaleCreer">{{ $t('creerPad') }}</span>
 						</div>
 					</div>
 				</div>
@@ -43,7 +43,7 @@
 						<p class="information">{{ $t('infoMotDePassePad') }}</p>
 						<input id="champ-motdepasse-pad" type="text" maxlength="24" :value="motDePassePad" @input="motDePassePad = $event.target.value" @keydown.enter="creerPad">
 						<div class="actions">
-							<span role="button" class="bouton" @click="creerPad" v-if="!chargement">{{ $t('creer') }}</span>
+							<span role="button" tabindex="0" class="bouton" @click="creerPad" v-if="!chargement">{{ $t('creer') }}</span>
 							<div class="conteneur-chargement" v-else>
 								<div class="chargement" />
 							</div>
@@ -57,7 +57,7 @@
 			<div id="connexion" class="modale">
 				<div class="en-tete">
 					<span class="titre">{{ $t('seConnecter') }}</span>
-					<span class="fermer" @click="fermerModaleConnexion"><i class="material-icons">close</i></span>
+					<span role="button" class="fermer" @click="fermerModaleConnexion"><i class="material-icons">close</i></span>
 				</div>
 				<div class="conteneur">
 					<div class="contenu">
@@ -66,7 +66,7 @@
 						<label for="champ-motdepasse">{{ $t('motDePasse') }}</label>
 						<input id="champ-motdepasse" type="password" maxlength="24" :value="motDePasse" @input="motDePasse = $event.target.value" @keydown.enter="seConnecter">
 						<div class="actions">
-							<span role="button" class="bouton" @click="seConnecter" v-if="!chargement">{{ $t('valider') }}</span>
+							<span role="button" tabindex="0" class="bouton" @click="seConnecter" v-if="!chargement">{{ $t('valider') }}</span>
 							<div class="conteneur-chargement" v-else>
 								<div class="chargement" />
 							</div>
@@ -93,7 +93,7 @@
 						<label for="champ-confirmation-motdepasse">{{ $t('confirmationMotDePasse') }}</label>
 						<input id="champ-confirmation-motdepasse" type="password" maxlength="24" :value="confirmationMotDePasse" @input="confirmationMotDePasse = $event.target.value" @keydown.enter="sInscrire">
 						<div class="actions">
-							<span role="button" class="bouton" @click="sInscrire" v-if="!chargement">{{ $t('valider') }}</span>
+							<span role="button" tabindex="0" class="bouton" @click="sInscrire" v-if="!chargement">{{ $t('valider') }}</span>
 							<div class="conteneur-chargement" v-else>
 								<div class="chargement" />
 							</div>
