@@ -282,7 +282,7 @@ header {
     vertical-align: middle;
     color: #fff;
     line-height: 2.5rem;
-    font-weight: 500;
+    font-weight: 700;
 }
 
 #nav {
@@ -387,12 +387,16 @@ header {
     margin: 2rem 1.5rem;
 }
 
+.menu .conteneur-bouton {
+	font-size: 0;
+}
+
 .menu .conteneur label {
     font-size: 14px;
     display: block;
 	margin-bottom: 10px;
 	line-height: 1.15;
-	font-weight: 500;
+	font-weight: 700;
 }
 
 .menu .conteneur input {
@@ -443,7 +447,7 @@ header {
     display: inline-block;
 	height: 40px;
 	line-height: 38px;
-	font-weight: 500;
+	font-weight: 700;
 	letter-spacing: 1px;
 	text-indent: 1px;
 	border-radius: 4px;
@@ -579,7 +583,7 @@ label.bouton-bleu {
 .modale .conteneur label:not(.bouton) {
 	display: block;
 	width: 100%;
-	font-weight: 500;
+	font-weight: 700;
 	font-size: 14px;
 	margin-bottom: 10px;
 	line-height: 1.15;
@@ -599,7 +603,7 @@ label.bouton-bleu {
 
 .modale .conteneur .bouton {
 	display: inline-block;
-	font-weight: 500;
+	font-weight: 700;
 	font-size: 14px;
 	text-transform: uppercase;
 	height: 40px;
@@ -683,7 +687,7 @@ label.bouton-bleu {
 .modale-diapositive .titre {
     text-align: left;
     font-size: 1.7rem;
-    font-weight: 500;
+    font-weight: 700;
     width: calc(100% - 5rem);
     padding: 0 2rem;
     overflow: hidden;

@@ -493,7 +493,7 @@
 	display: flex;
 	justify-content: center;
 	align-items: center;
-	font-weight: 500;
+	font-weight: 700;
 	font-size: 16px;
 	text-transform: uppercase;
 	color: #242f3d;
@@ -834,7 +834,7 @@
 	padding-bottom: 0.5rem;
     border-bottom: 1px solid #eee;
 	margin-bottom: 2rem;
-	font-weight: 500;
+	font-weight: 700;
 }
 
 #diapositive .conteneur .evaluation {
@@ -962,7 +962,7 @@
 }
 
 #utilisateurs li.moi .utilisateur {
-	font-weight: 500;
+	font-weight: 700;
 }
 
 #utilisateurs li.moi .utilisateur.invite,
@@ -1235,12 +1235,12 @@
 	left: 0;
 	height: 2.2rem;
 	width: 2.2rem;
-	background-color: #eee;
+	background-color: #ccc;
 	border-radius: 50%;
 }
 
 .menu .bouton-radio:hover input ~ .coche {
-	background-color: #ccc;
+	background-color: #bbb;
 }
 
 .menu .bouton-radio input:checked ~ .coche {

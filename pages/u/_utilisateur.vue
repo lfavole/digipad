@@ -37,14 +37,14 @@
 					<label for="nom">{{ $t('nom') }}</label>
 					<input id="nom" type="text" maxlength="48" :value="nom" @keydown.enter="modifierNom">
 				</div>
-				<div class="conteneur">
-					<span role="button" class="bouton-vert" @click="modifierNom">{{ $t('enregistrer') }}</span>
+				<div class="conteneur conteneur-bouton">
+					<span role="button" tabindex="0" class="bouton-vert" @click="modifierNom">{{ $t('enregistrer') }}</span>
 				</div>
-				<div class="conteneur">
-					<span role="button" class="bouton-bleu" @click="afficherModaleMotDePasse">{{ $t('modifierMotDePasse') }}</span>
+				<div class="conteneur conteneur-bouton">
+					<span role="button" tabindex="0" class="bouton-bleu" @click="afficherModaleMotDePasse">{{ $t('modifierMotDePasse') }}</span>
 				</div>
-				<div class="conteneur">
-					<span role="button" class="bouton-rouge" @click="afficherModaleSupprimerCompte">{{ $t('supprimerCompte') }}</span>
+				<div class="conteneur conteneur-bouton">
+					<span role="button" tabindex="0" class="bouton-rouge" @click="afficherModaleSupprimerCompte">{{ $t('supprimerCompte') }}</span>
 				</div>
 			</div>
 		</div>
@@ -154,7 +154,7 @@
 						<label for="champ-confirmation-motdepasse">{{ $t('confirmationNouveauMotDePasse') }}</label>
 						<input id="champ-confirmation-motdepasse" type="password" maxlength="24" :value="confirmationNouveauMotDePasse" @input="confirmationNouveauMotDePasse = $event.target.value" @keydown.enter="modifierMotDePasse">
 						<div class="actions">
-							<span role="button" class="bouton" @click="modifierMotDePasse">{{ $t('modifier') }}</span>
+							<span role="button" tabindex="0" class="bouton" @click="modifierMotDePasse">{{ $t('modifier') }}</span>
 						</div>
 					</div>
 				</div>
@@ -172,7 +172,7 @@
 						<label for="champ-titre-pad">{{ $t('titrePad') }}</label>
 						<input id="champ-titre-pad" type="text" maxlength="48" :value="titre" @input="titre = $event.target.value" @keydown.enter="creerPad">
 						<div class="actions">
-							<span role="button" class="bouton" @click="creerPad">{{ $t('creer') }}</span>
+							<span role="button" tabindex="0" class="bouton" @click="creerPad">{{ $t('creer') }}</span>
 						</div>
 					</div>
 				</div>
@@ -185,8 +185,8 @@
 					<div class="contenu">
 						<div class="message" v-html="$t('confirmationDupliquerPad')" />
 						<div class="actions">
-							<span role="button" class="bouton" @click="fermerModaleDupliquerPad">{{ $t('non') }}</span>
-							<span role="button" class="bouton" @click="dupliquerPad">{{ $t('oui') }}</span>
+							<span role="button" tabindex="0" class="bouton" @click="fermerModaleDupliquerPad">{{ $t('non') }}</span>
+							<span role="button" tabindex="0" class="bouton" @click="dupliquerPad">{{ $t('oui') }}</span>
 						</div>
 					</div>
 				</div>
@@ -199,8 +199,8 @@
 					<div class="contenu">
 						<div class="message" v-html="$t('confirmationSupprimerPad')" />
 						<div class="actions">
-							<span role="button" class="bouton" @click="fermerModaleSupprimerPad">{{ $t('non') }}</span>
-							<span role="button" class="bouton" @click="supprimerPad">{{ $t('oui') }}</span>
+							<span role="button" tabindex="0" class="bouton" @click="fermerModaleSupprimerPad">{{ $t('non') }}</span>
+							<span role="button" tabindex="0" class="bouton" @click="supprimerPad">{{ $t('oui') }}</span>
 						</div>
 					</div>
 				</div>
@@ -213,8 +213,8 @@
 					<div class="contenu">
 						<div class="message" v-html="$t('confirmationSupprimerCompte')" />
 						<div class="actions">
-							<span role="button" class="bouton" @click="fermerModaleSupprimerCompte">{{ $t('non') }}</span>
-							<span role="button" class="bouton" @click="supprimerCompte">{{ $t('oui') }}</span>
+							<span role="button" tabindex="0" class="bouton" @click="fermerModaleSupprimerCompte">{{ $t('non') }}</span>
+							<span role="button" tabindex="0" class="bouton" @click="supprimerCompte">{{ $t('oui') }}</span>
 						</div>
 					</div>
 				</div>
@@ -557,7 +557,7 @@ export default {
 	width: 180px;
     line-height: 1;
     font-size: 1.6rem;
-    font-weight: 500;
+    font-weight: 700;
     text-transform: uppercase;
 	padding: 1em 1.5em;
     border: 2px solid #00ced1;
@@ -638,7 +638,7 @@ export default {
 }
 
 #onglets .conteneur.actif {
-	font-weight: 500;
+	font-weight: 700;
 	border-bottom: 3px solid #00ced1;
 }
 
@@ -708,7 +708,7 @@ export default {
 	text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.3);
     font-size: 2rem;
 	line-height: 1.4;
-	font-weight: 500;
+	font-weight: 700;
 }
 
 .pad .date {
