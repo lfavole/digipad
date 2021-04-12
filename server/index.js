@@ -23,7 +23,6 @@ const helmet = require('helmet')
 const v = require('voca')
 const multer = require('multer')
 const sharp = require('sharp')
-const jo = require('jpeg-autorotate')
 const gm = require('gm')
 const moment = require('moment')
 const bcrypt = require('bcrypt')
@@ -781,29 +780,33 @@ app.post('/api/televerser-fichier', function (req, res) {
 			let mimetype = fichier.mimetype
 			const chemin = path.join(__dirname, '..', '/static/fichiers/' + pad + '/' + fichier.filename)
 			if (mimetype.split('/')[0] === 'image') {
-				sharp(chemin).withMetadata().resize(1200, 1200, {
-					kernel: sharp.kernel.nearest,
-					fit: 'inside'
-				}).toBuffer((err, buffer) => {
-					if (err) { res.send('erreur_televersement') }
-					fs.writeFile(chemin, buffer, function() {
-						const extension = path.parse(fichier.filename).ext
-						if (extension.toLowerCase() === '.jpg' || extension.toLowerCase() === '.jpeg') {
-							jo.rotate(chemin, { quality: 80 }).then(({ buff }) => {
-								fs.writeFile(chemin, buff, function () {
-									res.json({ fichier: fichier.filename, mimetype: mimetype })
-								})
-							}).catch(() => {
-								res.json({ fichier: fichier.filename, mimetype: mimetype })
-							})
-						} else {
+				const extension = path.parse(fichier.filename).ext
+				if (extension.toLowerCase() === '.jpg' || extension.toLowerCase() === '.jpeg') {
+					sharp(chemin).withMetadata().rotate().jpeg().resize(1200, 1200, {
+						kernel: sharp.kernel.nearest,
+						fit: 'inside'
+					}).toBuffer((err, buffer) => {
+						if (err) { res.send('erreur_televersement') }
+						fs.writeFile(chemin, buffer, function() {
 							res.json({ fichier: fichier.filename, mimetype: mimetype })
-						}
+						})
 					})
-				})
+				} else {
+					sharp(chemin).withMetadata().resize(1200, 1200, {
+						kernel: sharp.kernel.nearest,
+						fit: 'inside'
+					}).toBuffer((err, buffer) => {
+						if (err) { res.send('erreur_televersement') }
+						fs.writeFile(chemin, buffer, function() {
+							res.json({ fichier: fichier.filename, mimetype: mimetype })
+						})
+					})
+				}
 			} else if (mimetype === 'application/pdf') {
+				console.log('ok')
 				const destination = path.join(__dirname, '..', '/static/fichiers/' + pad + '/' + path.parse(fichier.filename).name + '.jpg')
 				gm(chemin + '[0]').setFormat('jpg').resize(450).quality(75).write(destination, function (erreur) {
+					console.log(erreur)
 					if (erreur) {
 						res.json({ fichier: fichier.filename, mimetype: 'document' })
 					} else {
@@ -831,26 +834,28 @@ app.post('/api/televerser-vignette', function (req, res) {
 			const fichier = req.file
 			const pad = req.body.pad
 			const chemin = path.join(__dirname, '..', '/static/fichiers/' + pad + '/' + fichier.filename)
-			sharp(chemin).withMetadata().resize(400, 400, {
-				kernel: sharp.kernel.nearest,
-				fit: 'inside'
-			}).toBuffer((err, buffer) => {
-				if (err) { res.send('erreur_televersement') }
-				fs.writeFile(chemin, buffer, function() {
-					const extension = path.parse(fichier.filename).ext
-					if (extension.toLowerCase() === '.jpg' || extension.toLowerCase() === '.jpeg') {
-						jo.rotate(chemin, { quality: 80 }).then(({ buff }) => {
-							fs.writeFile(chemin, buff, function () {
-								res.send('/fichiers/' + pad + '/' + fichier.filename)
-							})
-						}).catch(() => {
-							res.send('/fichiers/' + pad + '/' + fichier.filename)
-						})
-					} else {
+			const extension = path.parse(fichier.filename).ext
+			if (extension.toLowerCase() === '.jpg' || extension.toLowerCase() === '.jpeg') {
+				sharp(chemin).withMetadata().rotate().jpeg().resize(400, 400, {
+					kernel: sharp.kernel.nearest,
+					fit: 'inside'
+				}).toBuffer((err, buffer) => {
+					if (err) { res.send('erreur_televersement') }
+					fs.writeFile(chemin, buffer, function() {
 						res.send('/fichiers/' + pad + '/' + fichier.filename)
-					}
+					})
 				})
-			})
+			} else {
+				sharp(chemin).withMetadata().resize(400, 400, {
+					kernel: sharp.kernel.nearest,
+					fit: 'inside'
+				}).toBuffer((err, buffer) => {
+					if (err) { res.send('erreur_televersement') }
+					fs.writeFile(chemin, buffer, function() {
+						res.send('/fichiers/' + pad + '/' + fichier.filename)
+					})
+				})
+			}
 		})
 	}
 })
@@ -864,26 +869,28 @@ app.post('/api/televerser-fond', function (req, res) {
 			const fichier = req.file
 			const pad = req.body.pad
 			const chemin = path.join(__dirname, '..', '/static/fichiers/' + pad + '/' + fichier.filename)
-			sharp(chemin).withMetadata().resize(1200, 1200, {
-				kernel: sharp.kernel.nearest,
-				fit: 'inside'
-			}).toBuffer((err, buffer) => {
-				if (err) { res.send('erreur_televersement') }
-				fs.writeFile(chemin, buffer, function() {
-					const extension = path.parse(fichier.filename).ext
-					if (extension.toLowerCase() === '.jpg' || extension.toLowerCase() === '.jpeg') {
-						jo.rotate(chemin, { quality: 80 }).then(({ buff }) => {
-							fs.writeFile(chemin, buff, function () {
-								res.send('/fichiers/' + pad + '/' + fichier.filename)
-							})
-						}).catch(() => {
-							res.send('/fichiers/' + pad + '/' + fichier.filename)
-						})
-					} else {
+			const extension = path.parse(fichier.filename).ext
+			if (extension.toLowerCase() === '.jpg' || extension.toLowerCase() === '.jpeg') {
+				sharp(chemin).withMetadata().rotate().jpeg().resize(1200, 1200, {
+					kernel: sharp.kernel.nearest,
+					fit: 'inside'
+				}).toBuffer((err, buffer) => {
+					if (err) { res.send('erreur_televersement') }
+					fs.writeFile(chemin, buffer, function() {
 						res.send('/fichiers/' + pad + '/' + fichier.filename)
-					}
+					})
 				})
-			})
+			} else {
+				sharp(chemin).withMetadata().resize(1200, 1200, {
+					kernel: sharp.kernel.nearest,
+					fit: 'inside'
+				}).toBuffer((err, buffer) => {
+					if (err) { res.send('erreur_televersement') }
+					fs.writeFile(chemin, buffer, function() {
+						res.send('/fichiers/' + pad + '/' + fichier.filename)
+					})
+				})
+			}
 		})
 	}
 })

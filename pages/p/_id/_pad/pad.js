@@ -941,7 +941,7 @@ export default {
 			}.bind(this))
 		},
 		ajouterFichier () {
-			const champ = this.$refs['televerser-fichier']
+			const champ = document.querySelector('#televerser-fichier')
 			const formats = ['jpg', 'jpeg', 'png', 'gif', 'mp4', 'm4v', 'mp3', 'm4a', 'ogg', 'wav', 'pdf', 'ppt', 'pptx', 'odp', 'doc', 'docx', 'odt']
 			const extension = champ.files[0].name.substring(champ.files[0].name.lastIndexOf('.') + 1).toLowerCase()
 			if (champ.files && champ.files[0] && formats.includes(extension) && champ.files[0].size < 52428800) {
@@ -1226,7 +1226,7 @@ export default {
 			} else if (this.mode === 'edition' && this.vignette !== '' && this.vignette.substring(1, 9) === 'fichiers') {
 				this.vignettes.push(this.vignette)
 			}
-			const champ = this.$refs['televerser-vignette']
+			const champ = document.querySelector('#televerser-vignette')
 			const formats = ['jpg', 'jpeg', 'png', 'gif']
 			const extension = champ.files[0].name.substring(champ.files[0].name.lastIndexOf('.') + 1).toLowerCase()
 			if (champ.files && champ.files[0] && formats.includes(extension) && champ.files[0].size < 5242880) {
@@ -2140,9 +2140,10 @@ export default {
 			}
 		},
 		ajouterFond () {
-			const champ = this.$refs['televerser-fond']
+			const champ = document.querySelector('#televerser-fond')
 			const formats = ['jpg', 'jpeg', 'png', 'gif']
 			const extension = champ.files[0].name.substring(champ.files[0].name.lastIndexOf('.') + 1).toLowerCase()
+			console.log(extension)
 			if (champ.files && champ.files[0] && formats.includes(extension)) {
 				this.chargement = true
 				const fichier = champ.files[0]
