@@ -154,10 +154,16 @@
 				</label>
 			</div>
 			<div class="conteneur fond">
-				<label>{{ $t('imageFond') }}</label>
-				<span v-for="(imageFond, indexImageFond) in fonds" @click="modifierFond(imageFond)" :key="indexImageFond">
-					<img :src="'/img/vignettes/' + imageFond">
-				</span>
+				<label>{{ $t('arrierePlan') }}</label>
+				<div class="fonds">
+					<span v-for="(imageFond, indexImageFond) in fonds" @click="modifierFond(imageFond)" :key="indexImageFond">
+						<img :src="'/img/vignettes/' + imageFond" :alt="'Fond' + (indexImageFond + 1)">
+					</span>
+					<span>
+						<label for="couleur-fond" :title="$t('selectionnerCouleur')"><i class="material-icons">colorize</i></label>
+						<input type="color" id="couleur-fond" @change="modifierCouleurFond" style="display: none;">
+					</span>
+				</div>
 			</div>
 			<div class="conteneur">
 				<label for="televerser-fond" class="bouton-bleu" v-show="menuOptions && progressionFond === 0">{{ $t('televerserImageFond') }}</label>
@@ -269,7 +275,7 @@
 		</div>
 	</div>
 
-	<div id="pad" :class="{'fond-personnalise': pad.fond.substring(1, 9) === 'fichiers', 'organiser': action === 'organiser'}" :style="{'background-image': 'url(' + pad.fond + ')'}" v-if="pad.acces !== 'code' || (pad.acces === 'code' && accesAutorise)">
+	<div id="pad" :class="{'fond-personnalise': pad.fond.substring(1, 9) === 'fichiers', 'organiser': action === 'organiser'}" :style="definirFond(pad.fond)" v-if="pad.acces !== 'code' || (pad.acces === 'code' && accesAutorise)">
 		<transition name="fondu">
 			<masonry id="blocs" class="mur" :cols="{default: 6, 1729: 5, 1449: 4, 1365: 3, 899: 2, 499: 1}" :gutter="0" v-if="pad.affichage === 'mur' && action !== 'organiser'">
 				<div :id="item.bloc" class="bloc" v-for="(item, indexItem) in blocs" :style="{'border-color': item.couleur}" :data-bloc="item.bloc" :key="'bloc' + indexItem">
@@ -834,7 +840,6 @@
 		<div class="modale">
 			<div class="en-tete">
 				<span class="titre">{{ $t('padProtegeCodeAcces') }}</span>
-				<span role="button" class="fermer" @click="fermerModaleCodeAcces"><i class="material-icons">close</i></span>
 			</div>
 			<div class="conteneur">
 				<div class="contenu">
@@ -843,6 +848,7 @@
 					<div class="actions">
 						<span role="button" tabindex="0" class="bouton" @click="verifierCodeAcces">{{ $t('valider') }}</span>
 					</div>
+					<div class="connexion" @click="afficherModaleMotDePasse" v-if="pad.motdepasse" v-html="$t('proprietairePad')" />
 				</div>
 			</div>
 		</div>

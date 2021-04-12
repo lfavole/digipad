@@ -68,7 +68,7 @@
 					<span role="button" id="bouton" @click="afficherModaleCreerPad">{{ $t('creerPad') }}</span>
 					<div class="conteneur-pads" v-if="padsCrees.length > 0">
 						<div class="pad" v-for="(pad, indexPad) in padsCrees" :key="'pad_' + indexPad">
-							<div class="conteneur" :class="{'fond-personnalise': pad.fond.substring(1, 9) === 'fichiers'}" :style="{'background-image': 'url(' + pad.fond + ')'}" @click="ouvrirPad(pad)">
+							<div class="conteneur" :class="{'fond-personnalise': pad.fond.substring(1, 9) === 'fichiers'}" :style="definirFond(pad.fond)" @click="ouvrirPad(pad)">
 								<div class="meta">
 									<span class="titre">{{ pad.titre }}</span>
 									<span class="date">{{ $t('creeLe') }} {{ $formaterDate(pad.date, langue) }}</span>
@@ -305,6 +305,13 @@ export default {
 		this.$i18n.setLocale(this.langue)
 	},
 	methods: {
+		definirFond (fond) {
+			if (fond.substring(0, 1) === '#') {
+				return { backgroundColor: fond }
+			} else {
+				return { backgroundImage: 'url(' + fond + ')' }
+			}
+		},
 		afficherModaleCreerPad () {
 			this.modaleCreerPad = true
 			this.$nextTick(function () {

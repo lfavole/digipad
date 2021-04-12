@@ -89,7 +89,8 @@ export default {
 	mur: 'muro',
 	fluxVertical: 'flujo vertical',
 	colonnes: 'columnas',
-	imageFond: 'Imagen de fondo',
+	arrierePlan: 'Fondo',
+	selectionnerCouleur: 'Seleccione un color',
 	televerserImageFond: 'Cargar una imagen',
 	onglets: 'Pestañas',
 	capsules: 'Cápsules',
@@ -123,7 +124,7 @@ export default {
 	accesPadModifie: 'Acceso al pad modificado.',
 	statutPadModifie: 'Estado del pad modificado.',
 	affichagePadModifie: 'Visualización del pad modificado.',
-	imageFondModifiee: 'Imagen de fondo modificada.',
+	arrierePlanModifie: 'Fondo modificado.',
 	parametreCommentairesModifie: 'Parámetro de comentario de las cápsulas modificado.',
 	parametreEvaluationModifie: 'Parámetro de evalución de las cápsulas modificado.',
 	historiqueConversationSupprime: 'Historial de conversación borrado.',
@@ -204,5 +205,6 @@ export default {
 	afficherCode: 'Visualizar el código de acceso',
 	masquerCode: 'Ocultar el código de acceso',
 	codePasCorrect: 'El código de acceso dado no es correcto.',
-	padProtegeCodeAcces: 'Pad protegido con un código de acceso'
+	padProtegeCodeAcces: 'Pad protegido con un código de acceso',
+	proprietairePad: '¿Es usted el propietario de este pad? Haga clic aquí para introducir su contraseña.'
 }

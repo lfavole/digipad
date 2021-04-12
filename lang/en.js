@@ -89,7 +89,8 @@ export default {
 	mur: 'wall',
 	fluxVertical: 'vertical flow',
 	colonnes: 'columns',
-	imageFond: 'Background image',
+	arrierePlan: 'Background',
+	selectionnerCouleur: 'Choose a color',
 	televerserImageFond: 'Upload an image',
 	onglets: 'Tabs',
 	capsules: 'Capsules',
@@ -123,7 +124,7 @@ export default {
 	accesPadModifie: 'Access to the pad changed.',
 	statutPadModifie: 'Status of the pad changed.',
 	affichagePadModifie: 'Disply of the pad changed.',
-	imageFondModifiee: 'Background image changed.',
+	arrierePlanModifie: 'Background changed.',
 	parametreCommentairesModifie: 'Capsule comment parameter changed.',
 	parametreEvaluationModifie: 'Capsule review parameter changed.',
 	historiqueConversationSupprime: 'Conversation history deleted.',
@@ -204,5 +205,6 @@ export default {
 	afficherCode: 'Show access code',
 	masquerCode: 'Hide access code',
 	codePasCorrect: 'The access code is not correct.',
-	padProtegeCodeAcces: 'Pad protected with an access code'
+	padProtegeCodeAcces: 'Pad protected with an access code',
+	proprietairePad: 'Are you the owner of this pad? Click here to enter your password.'
 }

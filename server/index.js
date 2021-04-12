@@ -803,10 +803,8 @@ app.post('/api/televerser-fichier', function (req, res) {
 					})
 				}
 			} else if (mimetype === 'application/pdf') {
-				console.log('ok')
 				const destination = path.join(__dirname, '..', '/static/fichiers/' + pad + '/' + path.parse(fichier.filename).name + '.jpg')
 				gm(chemin + '[0]').setFormat('jpg').resize(450).quality(75).write(destination, function (erreur) {
-					console.log(erreur)
 					if (erreur) {
 						res.json({ fichier: fichier.filename, mimetype: 'document' })
 					} else {
@@ -1339,6 +1337,23 @@ io.on('connection', function (socket) {
 			db.hmset('pads:' + pad, 'fond', fond, function (err) {
 				if (err) { socket.emit('erreur'); return false }
 				io.in(socket.room).emit('modifierfond', fond)
+				if (ancienfond.substring(1, 9) === 'fichiers') {
+					const chemin = path.join(__dirname, '..', '/static' + ancienfond)
+					fs.removeSync(chemin)
+				}
+				socket.handshake.session.cookie.expires = new Date(Date.now() + (3600 * 24 * 7 * 1000))
+				socket.handshake.session.save()
+			})
+		} else {
+			socket.emit('deconnecte')
+		}
+	})
+
+	socket.on('modifiercouleurfond', function (pad, fond, ancienfond) {
+		if (socket.identifiant !== '' && socket.identifiant !== undefined) {
+			db.hmset('pads:' + pad, 'fond', fond, function (err) {
+				if (err) { socket.emit('erreur'); return false }
+				io.in(socket.room).emit('modifiercouleurfond', fond)
 				if (ancienfond.substring(1, 9) === 'fichiers') {
 					const chemin = path.join(__dirname, '..', '/static' + ancienfond)
 					fs.removeSync(chemin)

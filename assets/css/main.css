@@ -629,6 +629,7 @@ label.bouton-bleu {
 
 .modale .conteneur .actions {
 	text-align: center;
+	font-size: 0;
 }
 
 .modale .conteneur .actions .bouton:first-child {

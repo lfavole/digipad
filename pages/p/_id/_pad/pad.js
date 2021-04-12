@@ -254,9 +254,16 @@ export default {
 			imagesLoaded('#pad', { background: true }, function () {
 				this.chargement = false
 				if (this.pad.identifiant === this.identifiant) {
-					this.$store.dispatch('modifierMessage', this.$t('imageFondModifiee'))
+					this.$store.dispatch('modifierMessage', this.$t('arrierePlanModifie'))
 				}
 			}.bind(this))
+		},
+		modifiercouleurfond: function (fond) {
+			this.pad.fond = fond
+			this.chargement = false
+			if (this.pad.identifiant === this.identifiant) {
+				this.$store.dispatch('modifierMessage', this.$t('arrierePlanModifie'))
+			}
 		},
 		modifieractivite: function (statut) {
 			this.pad.registreActivite = statut
@@ -452,7 +459,7 @@ export default {
 			couleurs: ['#fdcc33', '#048eca', '#00a885', '#f39c12', '#9b59b6', '#4a69bd', '#7f8fa6', '#e32f6c', '#6e6363', '#f8a5c2', '#ff5e57', '#4b6584', '#79b95e', '#25b3c2', '#be9d6b'],
 			listeCouleurs: false,
 			panneaux: [],
-			fonds: ['fond1.png', 'fond2.png', 'fond3.png', 'fond4.png', 'fond5.png', 'fond6.png', 'fond7.png', 'fond8.png'],
+			fonds: ['fond1.png', 'fond2.png', 'fond3.png', 'fond4.png', 'fond5.png', 'fond6.png', 'fond7.png', 'fond8.png', 'fond9.png', 'fond10.png', 'fond11.png'],
 			modaleConfirmer: false,
 			messageConfirmation: '',
 			typeConfirmation: '',
@@ -633,6 +640,13 @@ export default {
 			if (this.source === 'digiplay') {
 				this.vignette = event.data
 				this.vignetteDefaut = event.data
+			}
+		},
+		definirFond (fond) {
+			if (fond.substring(0, 1) === '#') {
+				return { backgroundColor: fond }
+			} else {
+				return { backgroundImage: 'url(' + fond + ')' }
 			}
 		},
 		definirUtilisateurs (donnees) {
@@ -2139,11 +2153,16 @@ export default {
 				this.chargement = true
 			}
 		},
+		modifierCouleurFond (event) {
+			if (this.pad.fond !== event.target.value) {
+				this.$socket.emit('modifiercouleurfond', this.pad.id, event.target.value, this.pad.fond)
+				this.chargement = true
+			}
+		},
 		ajouterFond () {
 			const champ = document.querySelector('#televerser-fond')
 			const formats = ['jpg', 'jpeg', 'png', 'gif']
 			const extension = champ.files[0].name.substring(champ.files[0].name.lastIndexOf('.') + 1).toLowerCase()
-			console.log(extension)
 			if (champ.files && champ.files[0] && formats.includes(extension)) {
 				this.chargement = true
 				const fichier = champ.files[0]
@@ -2361,6 +2380,7 @@ export default {
 			this.nouveauMotDePasse = ''
 		},
 		afficherModaleMotDePasse () {
+			this.modaleCodeAcces = false
 			this.modaleMotDePasse = true
 			this.$nextTick(function () {
 				document.querySelector('#champ-motdepasse').focus()
@@ -2380,6 +2400,7 @@ export default {
 					this.chargement = false
 					this.$store.dispatch('modifierAlerte', this.$t('erreurCommunicationServeur'))
 				} else {
+					this.accesAutorise = true
 					this.$socket.emit('debloquerpad', this.pad.id, this.pad.identifiant)
 					this.fermerModaleMotDePasse()
 				}
