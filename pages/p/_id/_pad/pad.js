@@ -359,6 +359,10 @@ export default {
 			} else {
 				this.pad.colonnes = donnees.colonnes
 				this.colonnes.splice(donnees.colonne, 1)
+				if (this.modaleBloc && this.colonne === donnees.colonne) {
+					this.fermerModaleBlocSansEnregistrement()
+					this.$store.dispatch('modifierMessage', this.$t('colonneActuelleSupprimee'))
+				}
 			}
 			this.chargement = false
 		},
@@ -1397,6 +1401,8 @@ export default {
 					html = '<video controls playsinline crossOrigin="anonymous" src="/fichiers/' + this.pad.id + '/' + item.media + '"></video>'
 					break
 				case 'pdf':
+					html = '<iframe src="/pdfjs/web/viewer.html?file=../../fichiers/' + this.pad.id + '/' + item.media + '" allowfullscreen></iframe>'
+					break
 				case 'document':
 					html = '<iframe src="/viewer/#../fichiers/' + this.pad.id + '/' + item.media + '" allowfullscreen></iframe>'
 					break

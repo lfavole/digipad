@@ -132,6 +132,7 @@ export default {
 	colonneAjoutee: 'Colonne ajoutée.',
 	nomColonneModifie: 'Nom de la colonne modifié.',
 	colonneSupprimee: 'Colonne supprimée.',
+	colonneActuelleSupprimee: 'La colonne dans laquelle vous alliez ajouter votre capsule vient d\'être supprimée...',
 	problemeConnexion: 'Problème de connexion... Essayez de rafraîchir la page.',
 	capsuleAjoutee: 'Capsule ajoutée.',
 	capsuleModifiee: 'Capsule modifiée.',
