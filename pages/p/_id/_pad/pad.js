@@ -1458,7 +1458,7 @@ export default {
 							panel.setControlStatus('minimize', 'remove')
 							document.querySelector('#masque').classList.add('ouvert')
 							if (item.type === 'image' || item.type === 'lien-image') {
-								// document.querySelector('#' + imageId + ' img').style.height = document.querySelector('#' + panel.id + ' .jsPanel-content').clientHeight + 'px'
+								document.querySelector('#' + imageId + ' img').style.maxHeight = document.querySelector('#' + panel.id + ' .jsPanel-content').clientHeight + 'px'
 								const image = document.querySelector('#' + imageId)
 								// eslint-disable-next-line no-undef
 								const panzoom = Panzoom(image, {
@@ -1471,7 +1471,7 @@ export default {
 									html: '<span class="material-icons">adjust</span>',
 									name: 'dezoom',
 									handler: function () {
-										// document.querySelector('#' + imageId + ' img').style.height = document.querySelector('#' + panel.id + ' .jsPanel-content').clientHeight + 'px'
+										document.querySelector('#' + imageId + ' img').style.maxHeight = document.querySelector('#' + panel.id + ' .jsPanel-content').clientHeight + 'px'
 										panzoom.reset()
 									}
 								})
@@ -1480,6 +1480,11 @@ export default {
 									width: largeurPanneau,
 									height: '150px'
 								}).reposition()
+							}
+						},
+						onmaximized: function(panel) {
+							if (item.type === 'image' || item.type === 'lien-image') {
+								document.querySelector('#' + imageId + ' img').style.maxHeight = document.querySelector('#' + panel.id + ' .jsPanel-content').clientHeight + 'px'
 							}
 						},
 						onbeforeclose: function (panel) {
