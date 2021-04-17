@@ -28,6 +28,7 @@ const archiver = require('archiver')
 const extract = require('extract-zip')
 const moment = require('moment')
 const bcrypt = require('bcrypt')
+const cron = require('node-cron')
 let storeOptions
 if (process.env.NODE_ENV === 'production') {
 	storeOptions = {
@@ -68,6 +69,10 @@ if (config.dev) {
 } else {
 	nuxt.ready()
 }
+
+cron.schedule('59 23 * * Saturday', () => {
+	fs.emptyDirSync(path.join(__dirname, '..', '/static/temp'))
+})
 
 app.set('trust proxy', true)
 app.use(helmet())
