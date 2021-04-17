@@ -53,6 +53,7 @@ export default {
 	erreurDuplicationPad: 'Error while duplicating the pad.',
 	erreurExportPad: 'Error while exporting the pad.',
 	erreurImportPad: 'Error while importing the pad.',
+	donneesCorrompuesImportPad: 'The data of this pad are corrupted.',
 	padSupprime: 'Pad deleted.',
 	padDuplique: 'Pad duplicated.',
 	padImporte: 'Pad imported.',

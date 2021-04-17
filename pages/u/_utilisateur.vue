@@ -403,19 +403,18 @@ export default {
 								if (donnees === 'non_connecte') {
 									this.$router.push('/')
 								} else if (donnees === 'erreur_import') {
-									champ.value = ''
-									this.progressionImport = 0
+									this.fermerModaleImporterPad()
 									this.$store.dispatch('modifierAlerte', this.$t('erreurImportPad'))
+								} else if (donnees === 'donnees_corrompues') {
+									this.fermerModaleImporterPad()
+									this.$store.dispatch('modifierAlerte', this.$t('donneesCorrompuesImportPad'))
 								} else {
 									this.padsCrees.push(donnees)
 									this.$store.dispatch('modifierMessage', this.$t('padImporte'))
-									this.modaleImporterPad = false
-									this.progressionImport = 0
-									champ.value = ''
+									this.fermerModaleImporterPad()
 								}
 							}.bind(this)).catch(function () {
-								champ.value = ''
-								this.progressionImport = 0
+								this.fermerModaleImporterPad()
 								this.$store.dispatch('modifierAlerte', this.$t('erreurCommunicationServeur'))
 							}.bind(this))
 						}.bind(this))
@@ -431,6 +430,8 @@ export default {
 			this.parametresImport.commentaires = false
 			this.parametresImport.evaluations = false
 			this.parametresImport.activite = false
+			this.progressionImport = 0
+			document.querySelector('#importer-pad').value = ''
 		},
 		ouvrirPad (pad) {
 			this.$router.push('/p/' + pad.id + '/' + pad.token)

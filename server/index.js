@@ -333,8 +333,6 @@ app.post('/api/recuperer-donnees-pad', function (req, res) {
 							const couleur = choisirCouleur()
 							couleurs.push(couleur)
 						})
-						console.log(utilisateursSansCouleur)
-						console.log(couleurs)
 						blocs.forEach(function (bloc, indexBloc) {
 							if (utilisateursSansCouleur.includes(bloc.identifiant) === true) {
 								const index = utilisateursSansCouleur.indexOf(bloc.identifiant)
@@ -347,8 +345,6 @@ app.post('/api/recuperer-donnees-pad', function (req, res) {
 								activite[indexItem].couleur = couleurs[index]
 							}
 						})
-						console.log(blocs)
-						console.log(activite)
 						if (pad.identifiant !== identifiant && statut === 'utilisateur') {
 							db.smembers('pads-rejoints:' + identifiant, function (err, padsRejoints) {
 								if (err) { res.send('erreur_pad'); return false }
@@ -669,91 +665,115 @@ app.post('/api/importer-pad', function (req, res) {
 			try {
 				const donnees = JSON.parse(req.body.donnees)
 				const parametres = JSON.parse(req.body.parametres)
-				const archive = req.file
-				const source = path.join(__dirname, '..', '/static/temp/' + archive.filename)
-				const cible = path.join(__dirname, '..', '/static/temp/archive-' + Math.floor((Math.random() * 100000) + 1))
-				await extract(source, { dir: cible })
-				db.get('pad', function (err, resultat) {
-					if (err) { res.send('erreur_import'); return false }
-					const id = parseInt(resultat) + 1
-					const chemin = path.join(__dirname, '..', '/static/fichiers/' + id)
-					const donneesBlocs = []
-					fs.mkdirpSync(chemin)
-					for (const bloc of donnees.blocs) {
-						const donneesBloc = new Promise(function (resolve) {
+				if (donnees.hasOwnProperty('pad') && donnees.hasOwnProperty('blocs') && donnees.hasOwnProperty('activite') && donnees.pad.hasOwnProperty('id') && donnees.pad.hasOwnProperty('token') && donnees.pad.hasOwnProperty('titre') && donnees.pad.hasOwnProperty('identifiant') && donnees.pad.hasOwnProperty('fond') && donnees.pad.hasOwnProperty('acces') && donnees.pad.hasOwnProperty('contributions') && donnees.pad.hasOwnProperty('affichage') && donnees.pad.hasOwnProperty('registreActivite') && donnees.pad.hasOwnProperty('conversation') && donnees.pad.hasOwnProperty('fichiers') && donnees.pad.hasOwnProperty('liens') && donnees.pad.hasOwnProperty('documents') && donnees.pad.hasOwnProperty('commentaires') && donnees.pad.hasOwnProperty('evaluations') && donnees.pad.hasOwnProperty('date') && donnees.pad.hasOwnProperty('colonnes') && donnees.pad.hasOwnProperty('bloc') && donnees.pad.hasOwnProperty('activite')) {
+					const archive = req.file
+					const source = path.join(__dirname, '..', '/static/temp/' + archive.filename)
+					const cible = path.join(__dirname, '..', '/static/temp/archive-' + Math.floor((Math.random() * 100000) + 1))
+					await extract(source, { dir: cible })
+					db.get('pad', function (err, resultat) {
+						if (err) { res.send('erreur_import'); return false }
+						const id = parseInt(resultat) + 1
+						const chemin = path.join(__dirname, '..', '/static/fichiers/' + id)
+						const donneesBlocs = []
+						fs.mkdirpSync(chemin)
+						for (const bloc of donnees.blocs) {
+							const donneesBloc = new Promise(function (resolve) {
+								if (bloc.hasOwnProperty('id') && bloc.hasOwnProperty('bloc') && bloc.hasOwnProperty('titre') && bloc.hasOwnProperty('texte') && bloc.hasOwnProperty('media') && bloc.hasOwnProperty('iframe') && bloc.hasOwnProperty('type') && bloc.hasOwnProperty('source') && bloc.hasOwnProperty('vignette') && bloc.hasOwnProperty('identifiant') && bloc.hasOwnProperty('commentaires') && bloc.hasOwnProperty('evaluations') && bloc.hasOwnProperty('colonne') && bloc.hasOwnProperty('listeCommentaires') && bloc.hasOwnProperty('listeEvaluations')) {
+									const date = moment().format()
+									let commentaires = 0
+									let evaluations = 0
+									if (parametres.commentaires === true) {
+										commentaires = bloc.commentaires
+									}
+									if (parametres.evaluations === true) {
+										evaluations = bloc.evaluations
+									}
+									const multi = db.multi()
+									const blocId = 'bloc-id-' + (new Date()).getTime() + Math.random().toString(16).slice(10)
+									multi.hmset('pad-' + id + ':' + blocId, 'id', bloc.id, 'bloc', blocId, 'titre', bloc.titre, 'texte', bloc.texte, 'media', bloc.media, 'iframe', bloc.iframe, 'type', bloc.type, 'source', bloc.source, 'vignette', bloc.vignette, 'date', date, 'identifiant', bloc.identifiant, 'commentaires', commentaires, 'evaluations', evaluations, 'colonne', bloc.colonne)
+									multi.zadd('blocs:' + id, bloc.id, blocId)
+									if (parametres.commentaires === true) {
+										for (const commentaire of bloc.listeCommentaires) {
+											if (commentaire.hasOwnProperty('id') && commentaire.hasOwnProperty('identifiant') && commentaire.hasOwnProperty('date') && commentaire.hasOwnProperty('texte')) {
+												multi.zadd('commentaires:' + blocId, commentaire.id, JSON.stringify(commentaire))
+											}
+										}
+									}
+									if (parametres.evaluations === true) {
+										for (const evaluation of bloc.listeEvaluations) {
+											if (evaluation.hasOwnProperty('id') && evaluation.hasOwnProperty('identifiant') && evaluation.hasOwnProperty('date') && evaluation.hasOwnProperty('etoiles')) {
+												multi.zadd('evaluations:' + blocId, evaluation.id, JSON.stringify(evaluation))
+											}
+										}
+									}
+									multi.exec(function () {
+										if (bloc.media !== '' && bloc.type !== 'embed' && fs.existsSync(path.normalize(cible + '/fichiers/' + bloc.media))) {
+											fs.copySync(path.normalize(cible + '/fichiers/' + bloc.media), path.normalize(chemin + '/' + bloc.media, { overwrite: true }))
+										}
+										if (bloc.vignette !== '' && bloc.vignette.substring(1, 9) === 'fichiers' && fs.existsSync(path.normalize(cible + '/fichiers/' + bloc.vignette))) {
+											fs.copySync(path.normalize(cible + '/fichiers/' + bloc.vignette), path.normalize(chemin + '/' + bloc.vignette, { overwrite: true }))
+										}
+										resolve({ bloc: bloc.bloc, blocId: blocId })
+									})
+								} else {
+									resolve({ bloc: 0, blocId: 0 })
+								}
+							})
+							donneesBlocs.push(donneesBloc)
+						}
+						Promise.all(donneesBlocs).then(function (blocs) {
+							const token = Math.random().toString(16).slice(2)
 							const date = moment().format()
-							let commentaires = 0
-							let evaluations = 0
-							if (parametres.commentaires === true) {
-								commentaires = bloc.commentaires
+							const couleur = choisirCouleur()
+							const code = Math.floor(1000 + Math.random() * 9000)
+							let registreActivite = 'active'
+							let conversation = 'desactivee'
+							let activiteId = 0
+							if (donnees.pad.registreActivite) {
+								registreActivite = donnees.pad.registreActivite
 							}
-							if (parametres.evaluations === true) {
-								evaluations = bloc.evaluations
+							if (donnees.conversation) {
+								conversation = donnees.pad.conversation
+							}
+							if (parametres.activite === true) {
+								activiteId = donnees.pad.activite
 							}
 							const multi = db.multi()
-							const blocId = 'bloc-id-' + (new Date()).getTime() + Math.random().toString(16).slice(10)
-							multi.hmset('pad-' + id + ':' + blocId, 'id', bloc.id, 'bloc', blocId, 'titre', bloc.titre, 'texte', bloc.texte, 'media', bloc.media, 'iframe', bloc.iframe, 'type', bloc.type, 'source', bloc.source, 'vignette', bloc.vignette, 'date', date, 'identifiant', bloc.identifiant, 'commentaires', commentaires, 'evaluations', evaluations, 'colonne', bloc.colonne)
-							multi.zadd('blocs:' + id, bloc.id, blocId)
-							if (parametres.commentaires === true) {
-								for (const commentaire of bloc.listeCommentaires) {
-									multi.zadd('commentaires:' + blocId, commentaire.id, JSON.stringify(commentaire))
+							multi.incr('pad')
+							multi.hmset('pads:' + id, 'id', id, 'token', token, 'titre', donnees.pad.titre, 'identifiant', identifiant, 'fond', donnees.pad.fond, 'acces', donnees.pad.acces, 'code', code, 'contributions', donnees.pad.contributions, 'affichage', donnees.pad.affichage, 'registreActivite', registreActivite, 'conversation', conversation, 'fichiers', donnees.pad.fichiers, 'liens', donnees.pad.liens, 'documents', donnees.pad.documents, 'commentaires', donnees.pad.commentaires, 'evaluations', donnees.pad.evaluations, 'date', date, 'colonnes', donnees.pad.colonnes, 'bloc', donnees.pad.bloc, 'activite', activiteId)
+							multi.sadd('pads-crees:' + identifiant, id)
+							multi.sadd('utilisateurs-pads:' + id, identifiant)
+							multi.hmset('couleurs:' + identifiant, 'pad' + id, couleur)
+							if (parametres.activite === true) {
+								if (parametres.commentaires === false) {
+									donnees.activite = donnees.activite.filter(function (element) {
+										return element.type !== 'bloc-commente'
+									})
 								}
-							}
-							if (parametres.evaluations === true) {
-								for (const evaluation of bloc.listeEvaluations) {
-									multi.zadd('evaluations:' + blocId, evaluation.id, JSON.stringify(evaluation))
+								if (parametres.evaluations === false) {
+									donnees.activite = donnees.activite.filter(function (element) {
+										return element.type !== 'bloc-evalue'
+									})
+								}
+								for (const activite of donnees.activite) {
+									if (activite.hasOwnProperty('bloc') && activite.hasOwnProperty('identifiant') && activite.hasOwnProperty('titre') && activite.hasOwnProperty('date') && activite.hasOwnProperty('couleur') && activite.hasOwnProperty('type') && activite.hasOwnProperty('id')) {
+										blocs.forEach(function (item) {
+											if (activite.bloc === item.bloc) {
+												activite.bloc = item.blocId
+											}
+										})
+										multi.zadd('activite:' + id, activite.id, JSON.stringify(activite))
+									}
 								}
 							}
 							multi.exec(function () {
-								if (bloc && bloc.media !== '' && bloc.type !== 'embed' && fs.existsSync(path.normalize(cible + '/fichiers/' + bloc.media))) {
-									fs.copySync(path.normalize(cible + '/fichiers/' + bloc.media), path.normalize(chemin + '/' + bloc.media, { overwrite: true }))
-								}
-								if (bloc && bloc.vignette !== '' && bloc.vignette.substring(1, 9) === 'fichiers' && fs.existsSync(path.normalize(cible + '/fichiers/' + bloc.vignette))) {
-									fs.copySync(path.normalize(cible + '/fichiers/' + bloc.vignette), path.normalize(chemin + '/' + bloc.vignette, { overwrite: true }))
-								}
-								resolve({ bloc: bloc.bloc, blocId: blocId })
+								res.json({ id: id, token: token, titre: donnees.pad.titre, identifiant: identifiant, fond: donnees.pad.fond, acces: donnees.pad.acces, code: code, contributions: donnees.pad.contributions, affichage: donnees.pad.affichage, registreActivite: registreActivite, conversation: conversation, fichiers: donnees.pad.fichiers, liens: donnees.pad.liens, documents: donnees.pad.documents, commentaires: donnees.pad.commentaires, evaluations: donnees.pad.evaluations, date: date, colonnes: donnees.pad.colonnes, bloc: donnees.pad.bloc, activite: activiteId })
 							})
 						})
-						donneesBlocs.push(donneesBloc)
-					}
-					Promise.all(donneesBlocs).then(function (blocs) {
-						const token = Math.random().toString(16).slice(2)
-						const date = moment().format()
-						const couleur = choisirCouleur()
-						const code = Math.floor(1000 + Math.random() * 9000)
-						let registreActivite = 'active'
-						let conversation = 'desactivee'
-						let activiteId = 0
-						if (donnees.pad.registreActivite) {
-							registreActivite = donnees.pad.registreActivite
-						}
-						if (donnees.conversation) {
-							conversation = donnees.pad.conversation
-						}
-						if (parametres.activite === true) {
-							activiteId = donnees.pad.activite
-						}
-						const multi = db.multi()
-						multi.incr('pad')
-						multi.hmset('pads:' + id, 'id', id, 'token', token, 'titre', donnees.pad.titre, 'identifiant', identifiant, 'fond', donnees.pad.fond, 'acces', donnees.pad.acces, 'code', code, 'contributions', donnees.pad.contributions, 'affichage', donnees.pad.affichage, 'registreActivite', registreActivite, 'conversation', conversation, 'fichiers', donnees.pad.fichiers, 'liens', donnees.pad.liens, 'documents', donnees.pad.documents, 'commentaires', donnees.pad.commentaires, 'evaluations', donnees.pad.evaluations, 'date', date, 'colonnes', donnees.pad.colonnes, 'bloc', donnees.pad.bloc, 'activite', activiteId)
-						multi.sadd('pads-crees:' + identifiant, id)
-						multi.sadd('utilisateurs-pads:' + id, identifiant)
-						multi.hmset('couleurs:' + identifiant, 'pad' + id, couleur)
-						if (parametres.activite === true) {
-							for (const activite of donnees.activite) {
-								blocs.forEach(function (item) {
-									if (activite.bloc === item.bloc) {
-										activite.bloc = item.blocId
-									}
-								})
-								multi.zadd('activite:' + id, activite.id, JSON.stringify(activite))
-							}
-						}
-						multi.exec(function () {
-							res.json({ id: id, token: token, titre: donnees.pad.titre, identifiant: identifiant, fond: donnees.pad.fond, acces: donnees.pad.acces, code: code, contributions: donnees.pad.contributions, affichage: donnees.pad.affichage, registreActivite: registreActivite, conversation: conversation, fichiers: donnees.pad.fichiers, liens: donnees.pad.liens, documents: donnees.pad.documents, commentaires: donnees.pad.commentaires, evaluations: donnees.pad.evaluations, date: date, colonnes: donnees.pad.colonnes, bloc: donnees.pad.bloc, activite: activiteId })
-						})
 					})
-				})
+				} else {
+					res.send('donnees_corrompues')
+				}
 			} catch (err) {
 				res.send('erreur_import')
 			}
