@@ -631,14 +631,14 @@ app.post('/api/exporter-pad', function (req, res) {
 				fs.mkdirpSync(path.normalize(chemin + '/' + id))
 				fs.mkdirpSync(path.normalize(chemin + '/' + id + '/fichiers'))
 				fs.writeFileSync(path.normalize(chemin + '/' + id + '/donnees.json'), JSON.stringify(parametres, '', 4), 'utf8')
-				parametres.blocs.forEach(function (bloc) {
-					if (bloc && bloc.media !== '' && bloc.type !== 'embed' && fs.existsSync(path.join(__dirname, '..', '/static/fichiers/' + id + '/' + bloc.media))) {
+				for (const bloc of parametres.blocs) {
+					if (bloc.media !== '' && bloc.type !== 'embed' && fs.existsSync(path.join(__dirname, '..', '/static/fichiers/' + id + '/' + bloc.media))) {
 						fs.copySync(path.join(__dirname, '..', '/static/fichiers/' + id + '/' + bloc.media), path.normalize(chemin + '/' + id + '/fichiers/' + bloc.media, { overwrite: true }))
 					}
-					if (bloc && bloc.vignette !== '' && bloc.vignette.substring(1, 9) === 'fichiers' && fs.existsSync(path.join(__dirname, '..', '/static/fichiers/' + id + '/' + bloc.vignette))) {
-						fs.copySync(path.join(__dirname, '..', '/static/fichiers/' + id + '/' + bloc.vignette), path.normalize(chemin + '/' + id + '/fichiers/' + bloc.vignette, { overwrite: true }))
+					if (bloc.vignette !== '' && bloc.vignette.substring(1, 9) === 'fichiers' && fs.existsSync(path.join(__dirname, '..', '/static' + bloc.vignette))) {
+						fs.copySync(path.join(__dirname, '..', '/static' + bloc.vignette), path.normalize(chemin + '/' + id + '/fichiers/' + bloc.vignette.replace('/fichiers/' + id + '/', ''), { overwrite: true }))
 					}
-				})
+				}
 				const archiveId = Math.floor((Math.random() * 100000) + 1)
 				const sortie = fs.createWriteStream(path.normalize(chemin + '/pad-' + id + '_' + archiveId + '.zip'))
 				const archive = archiver('zip', {
@@ -670,7 +670,7 @@ app.post('/api/importer-pad', function (req, res) {
 			try {
 				const donnees = JSON.parse(req.body.donnees)
 				const parametres = JSON.parse(req.body.parametres)
-				if (donnees.hasOwnProperty('pad') && donnees.hasOwnProperty('blocs') && donnees.hasOwnProperty('activite') && donnees.pad.hasOwnProperty('id') && donnees.pad.hasOwnProperty('token') && donnees.pad.hasOwnProperty('titre') && donnees.pad.hasOwnProperty('identifiant') && donnees.pad.hasOwnProperty('fond') && donnees.pad.hasOwnProperty('acces') && donnees.pad.hasOwnProperty('contributions') && donnees.pad.hasOwnProperty('affichage') && donnees.pad.hasOwnProperty('registreActivite') && donnees.pad.hasOwnProperty('conversation') && donnees.pad.hasOwnProperty('fichiers') && donnees.pad.hasOwnProperty('liens') && donnees.pad.hasOwnProperty('documents') && donnees.pad.hasOwnProperty('commentaires') && donnees.pad.hasOwnProperty('evaluations') && donnees.pad.hasOwnProperty('date') && donnees.pad.hasOwnProperty('colonnes') && donnees.pad.hasOwnProperty('bloc') && donnees.pad.hasOwnProperty('activite')) {
+				if (donnees.hasOwnProperty('pad') && donnees.hasOwnProperty('blocs') && donnees.hasOwnProperty('activite') && donnees.pad.hasOwnProperty('id') && donnees.pad.hasOwnProperty('token') && donnees.pad.hasOwnProperty('titre') && donnees.pad.hasOwnProperty('identifiant') && donnees.pad.hasOwnProperty('fond') && donnees.pad.hasOwnProperty('acces') && donnees.pad.hasOwnProperty('contributions') && donnees.pad.hasOwnProperty('affichage') && donnees.pad.hasOwnProperty('fichiers') && donnees.pad.hasOwnProperty('liens') && donnees.pad.hasOwnProperty('documents') && donnees.pad.hasOwnProperty('commentaires') && donnees.pad.hasOwnProperty('evaluations') && donnees.pad.hasOwnProperty('date') && donnees.pad.hasOwnProperty('colonnes') && donnees.pad.hasOwnProperty('bloc') && donnees.pad.hasOwnProperty('activite')) {
 					const archive = req.file
 					const source = path.join(__dirname, '..', '/static/temp/' + archive.filename)
 					const cible = path.join(__dirname, '..', '/static/temp/archive-' + Math.floor((Math.random() * 100000) + 1))
@@ -681,7 +681,7 @@ app.post('/api/importer-pad', function (req, res) {
 						const chemin = path.join(__dirname, '..', '/static/fichiers/' + id)
 						const donneesBlocs = []
 						fs.mkdirpSync(chemin)
-						for (const bloc of donnees.blocs) {
+						for (const [indexBloc, bloc] of donnees.blocs.entries()) {
 							const donneesBloc = new Promise(function (resolve) {
 								if (bloc.hasOwnProperty('id') && bloc.hasOwnProperty('bloc') && bloc.hasOwnProperty('titre') && bloc.hasOwnProperty('texte') && bloc.hasOwnProperty('media') && bloc.hasOwnProperty('iframe') && bloc.hasOwnProperty('type') && bloc.hasOwnProperty('source') && bloc.hasOwnProperty('vignette') && bloc.hasOwnProperty('identifiant') && bloc.hasOwnProperty('commentaires') && bloc.hasOwnProperty('evaluations') && bloc.hasOwnProperty('colonne') && bloc.hasOwnProperty('listeCommentaires') && bloc.hasOwnProperty('listeEvaluations')) {
 									const date = moment().format()
@@ -693,10 +693,13 @@ app.post('/api/importer-pad', function (req, res) {
 									if (parametres.evaluations === true) {
 										evaluations = bloc.evaluations
 									}
+									if (bloc.vignette !== '') {
+										bloc.vignette = bloc.vignette.replace('/fichiers/' + donnees.pad.id, '/fichiers/' + id)
+									}
 									const multi = db.multi()
 									const blocId = 'bloc-id-' + (new Date()).getTime() + Math.random().toString(16).slice(10)
 									multi.hmset('pad-' + id + ':' + blocId, 'id', bloc.id, 'bloc', blocId, 'titre', bloc.titre, 'texte', bloc.texte, 'media', bloc.media, 'iframe', bloc.iframe, 'type', bloc.type, 'source', bloc.source, 'vignette', bloc.vignette, 'date', date, 'identifiant', bloc.identifiant, 'commentaires', commentaires, 'evaluations', evaluations, 'colonne', bloc.colonne)
-									multi.zadd('blocs:' + id, bloc.id, blocId)
+									multi.zadd('blocs:' + id, indexBloc, blocId)
 									if (parametres.commentaires === true) {
 										for (const commentaire of bloc.listeCommentaires) {
 											if (commentaire.hasOwnProperty('id') && commentaire.hasOwnProperty('identifiant') && commentaire.hasOwnProperty('date') && commentaire.hasOwnProperty('texte')) {
@@ -715,8 +718,8 @@ app.post('/api/importer-pad', function (req, res) {
 										if (bloc.media !== '' && bloc.type !== 'embed' && fs.existsSync(path.normalize(cible + '/fichiers/' + bloc.media))) {
 											fs.copySync(path.normalize(cible + '/fichiers/' + bloc.media), path.normalize(chemin + '/' + bloc.media, { overwrite: true }))
 										}
-										if (bloc.vignette !== '' && bloc.vignette.substring(1, 9) === 'fichiers' && fs.existsSync(path.normalize(cible + '/fichiers/' + bloc.vignette))) {
-											fs.copySync(path.normalize(cible + '/fichiers/' + bloc.vignette), path.normalize(chemin + '/' + bloc.vignette, { overwrite: true }))
+										if (bloc.vignette !== '' && bloc.vignette.substring(1, 9) === 'fichiers' && fs.existsSync(path.normalize(cible + '/fichiers/' + bloc.vignette.replace('/fichiers/' + id + '/', '')))) {
+											fs.copySync(path.normalize(cible + '/fichiers/' + bloc.vignette.replace('/fichiers/' + id + '/', '')), path.normalize(chemin + '/' + bloc.vignette.replace('/fichiers/' + id + '/', ''), { overwrite: true }))
 										}
 										resolve({ bloc: bloc.bloc, blocId: blocId })
 									})

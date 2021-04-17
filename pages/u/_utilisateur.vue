@@ -192,21 +192,21 @@
 				</div>
 				<div class="conteneur">
 					<div class="contenu">
-						<div class="conteneur-interrupteur">
+						<div class="conteneur-interrupteur" v-if="progressionImport === 0">
 							<span>{{ $t('importerCommentaires') }}</span>
 							<label class="bouton-interrupteur">
 								<input type="checkbox" :checked="parametresImport.commentaires" @change="modifierParametresImport($event, 'commentaires')">
 								<span class="barre" />
 							</label>
 						</div>
-						<div class="conteneur-interrupteur">
+						<div class="conteneur-interrupteur" v-if="progressionImport === 0">
 							<span>{{ $t('importerEvaluations') }}</span>
 							<label class="bouton-interrupteur">
 								<input type="checkbox" :checked="parametresImport.evaluations" @change="modifierParametresImport($event, 'evaluations')">
 								<span class="barre" />
 							</label>
 						</div>
-						<div class="conteneur-interrupteur">
+						<div class="conteneur-interrupteur" v-if="progressionImport === 0">
 							<span>{{ $t('importerActivite') }}</span>
 							<label class="bouton-interrupteur">
 								<input type="checkbox" :checked="parametresImport.activite" @change="modifierParametresImport($event, 'activite')">
