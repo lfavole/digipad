@@ -3,6 +3,7 @@ import imagesLoaded from 'imagesloaded'
 import draggable from 'vuedraggable'
 import pell from 'pell'
 import linkifyHtml from 'linkifyjs/html'
+import saveAs from 'file-saver'
 import Panzoom from '@panzoom/panzoom'
 import chargement from '@/components/chargement.vue'
 import emojis from '@/components/emojis.vue'
@@ -1117,11 +1118,15 @@ export default {
 							if (donnees.provider_name.toLowerCase() === 'learningapps.org') {
 								donnees.html = donnees.html.replace('http://LearningApps.org', 'https://learningapps.org')
 							}
-							this.iframe = donnees.html.match(/<iframe [^>]*src="[^"]*"[^>]*>/g).map(x => x.replace(/.*src="([^"]*)".*/, '$1'))[0]
+							if (regex.test(donnees.html) === true) {
+								this.iframe = donnees.html.match(/<iframe [^>]*src="[^"]*"[^>]*>/g).map(x => x.replace(/.*src="([^"]*)".*/, '$1'))[0]
+							} else {
+								this.iframe = donnees.html
+							}
 							this.media = this.lien
 							this.source = donnees.provider_name.toLowerCase()
 							this.type = 'embed'
-							if (donnees.thumbnail_url !== '') {
+							if (donnees.thumbnail_url && donnees.thumbnail_url !== '') {
 								this.vignette = donnees.thumbnail_url
 								this.vignetteDefaut = donnees.thumbnail_url
 							} else {
@@ -1412,8 +1417,10 @@ export default {
 				case 'embed':
 					if (item.source === 'etherpad') {
 						html = '<iframe src="' + item.media + '?userName=' + this.nom + '&userColor=' + this.couleur + '" allowfullscreen></iframe>'
-					} else {
+					} else if (this.verifierURL(item.iframe) === true) {
 						html = '<iframe src="' + item.iframe + '" allowfullscreen></iframe>'
+					} else {
+						html = '<div class="html">' + item.iframe + '</div>'
 					}
 					break
 				}
@@ -2321,10 +2328,14 @@ export default {
 			})
 		},
 		eclaircirCouleur (hex) {
-			const r = parseInt(hex.slice(1, 3), 16)
-			const v = parseInt(hex.slice(3, 5), 16)
-			const b = parseInt(hex.slice(5, 7), 16)
-			return 'rgba(' + r + ', ' + v + ', ' + b + ', ' + 0.15 + ')'
+			if (hex && hex.substring(0, 1) === '#') {
+				const r = parseInt(hex.slice(1, 3), 16)
+				const v = parseInt(hex.slice(3, 5), 16)
+				const b = parseInt(hex.slice(5, 7), 16)
+				return 'rgba(' + r + ', ' + v + ', ' + b + ', ' + 0.15 + ')'
+			} else {
+				return 'transparent'
+			}
 		},
 		convertirRem (rem) {
 			return rem * parseFloat(getComputedStyle(document.documentElement).fontSize)
@@ -2435,6 +2446,31 @@ export default {
 					this.$router.go()
 				}
 				this.chargement = false
+			}.bind(this)).catch(function () {
+				this.chargement = false
+				this.$store.dispatch('modifierAlerte', this.$t('erreurCommunicationServeur'))
+			}.bind(this))
+		},
+		afficherExporterPad () {
+			this.messageConfirmation = this.$t('confirmationExporterPad')
+			this.typeConfirmation = 'exporter-pad'
+			this.modaleConfirmer = true
+		},
+		exporterPad () {
+			this.modaleConfirmer = false
+			this.chargement = true
+			axios.post(this.hote + '/api/exporter-pad', {
+				padId: this.pad.id,
+				identifiant: this.identifiant
+			}).then(function (reponse) {
+				const donnees = reponse.data
+				if (donnees === 'erreur_export') {
+					this.chargement = false
+					this.$store.dispatch('modifierAlerte', this.$t('erreurExportPad'))
+				} else {
+					saveAs('/temp/' + donnees, 'pad-' + this.pad.id + '.zip')
+					this.chargement = false
+				}
 			}.bind(this)).catch(function () {
 				this.chargement = false
 				this.$store.dispatch('modifierAlerte', this.$t('erreurCommunicationServeur'))

@@ -1100,6 +1100,11 @@ label.bouton-bleu {
     left: 0;
 }
 
+#iframe .html img {
+	width: auto;
+	max-height: 40rem;
+}
+
 #iframe:not(.youtube) iframe {
 	border: 1px solid #ddd;
 }

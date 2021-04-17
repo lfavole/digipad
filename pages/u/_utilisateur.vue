@@ -44,7 +44,7 @@
 					<span role="button" tabindex="0" class="bouton-bleu" @click="afficherModaleMotDePasse">{{ $t('modifierMotDePasse') }}</span>
 				</div>
 				<div class="conteneur conteneur-bouton">
-					<span role="button" tabindex="0" class="bouton-rouge" @click="afficherModaleSupprimerCompte">{{ $t('supprimerCompte') }}</span>
+					<span role="button" tabindex="0" class="bouton-rouge" @click="afficherModaleConfirmation('', 'supprimer-compte')">{{ $t('supprimerCompte') }}</span>
 				</div>
 			</div>
 		</div>
@@ -65,7 +65,10 @@
 		<div id="pads" class="ascenseur">
 			<transition name="fondu">
 				<section class="pads" v-show="onglet === 'pads-crees' && !recherche">
-					<span role="button" id="bouton" @click="afficherModaleCreerPad">{{ $t('creerPad') }}</span>
+					<div id="boutons">
+						<span id="bouton-creer" role="button" tabindex="0" @click="afficherModaleCreerPad">{{ $t('creerPad') }}</span>
+						<span id="bouton-importer" role="button" tabindex="0" @click="afficherModaleImporterPad">{{ $t('importerPad') }}</span>
+					</div>
 					<div class="conteneur-pads" v-if="padsCrees.length > 0">
 						<div class="pad" v-for="(pad, indexPad) in padsCrees" :key="'pad_' + indexPad">
 							<div class="conteneur" :class="{'fond-personnalise': pad.fond.substring(1, 9) === 'fichiers'}" :style="definirFond(pad.fond)" @click="ouvrirPad(pad)">
@@ -75,8 +78,9 @@
 								</div>
 							</div>
 							<div class="action">
-								<span class="dupliquer" @click="afficherModaleDupliquerPad(pad.id)"><i class="material-icons">content_copy</i></span>
-								<span class="supprimer" @click="afficherModaleSupprimerPad(pad.id)"><i class="material-icons">delete</i></span>
+								<span class="dupliquer" @click="afficherModaleConfirmation(pad.id, 'dupliquer')" :title="$t('dupliquerPad')"><i class="material-icons">content_copy</i></span>
+								<span class="exporter" @click="afficherModaleConfirmation(pad.id, 'exporter')" :title="$t('exporterPad')"><i class="material-icons">get_app</i></span>
+								<span class="supprimer" @click="afficherModaleConfirmation(pad.id, 'supprimer')" :title="$t('supprimerPad')"><i class="material-icons">delete</i></span>
 							</div>
 						</div>
 						<template v-if="padsCrees.length < 9">
@@ -100,7 +104,7 @@
 								</div>
 							</div>
 							<div class="action">
-								<span class="supprimer" @click="afficherModaleSupprimerPad(pad.id)"><i class="material-icons">delete</i></span>
+								<span class="supprimer" @click="afficherModaleConfirmation(pad.id, 'supprimer')"><i class="material-icons">delete</i></span>
 							</div>
 						</div>
 						<template v-if="padsRejoints.length < 9">
@@ -124,8 +128,9 @@
 								</div>
 							</div>
 							<div class="action">
-								<span class="dupliquer" @click="afficherModaleDupliquerPad(pad.id)" v-if="pad.identifiant === identifiant"><i class="material-icons">content_copy</i></span>
-								<span class="supprimer" @click="afficherModaleSupprimerPad(pad.id)"><i class="material-icons">delete</i></span>
+								<span class="dupliquer" @click="afficherModaleConfirmation(pad.id, 'dupliquer')" :title="$t('dupliquerPad')" v-if="pad.identifiant === identifiant"><i class="material-icons">content_copy</i></span>
+								<span class="exporter" @click="afficherModaleConfirmation(pad.id, 'exporter')" :title="$t('exporterPad')" v-if="pad.identifiant === identifiant"><i class="material-icons">get_app</i></span>
+								<span class="supprimer" @click="afficherModaleConfirmation(pad.id, 'supprimer')" :title="$t('supprimerPad')"><i class="material-icons">delete</i></span>
 							</div>
 						</div>
 						<template v-if="resultats.length < 9">
@@ -179,42 +184,60 @@
 			</div>
 		</div>
 
-		<div class="conteneur-modale alerte" v-if="modaleDupliquerPad">
-			<div class="modale">
+		<div class="conteneur-modale" v-if="modaleImporterPad">
+			<div id="import" class="modale">
+				<div class="en-tete">
+					<span class="titre">{{ $t('importerPad') }}</span>
+					<span role="button" class="fermer" @click="fermerModaleImporterPad"><i class="material-icons">close</i></span>
+				</div>
 				<div class="conteneur">
 					<div class="contenu">
-						<div class="message" v-html="$t('confirmationDupliquerPad')" />
-						<div class="actions">
-							<span role="button" tabindex="0" class="bouton" @click="fermerModaleDupliquerPad">{{ $t('non') }}</span>
-							<span role="button" tabindex="0" class="bouton" @click="dupliquerPad">{{ $t('oui') }}</span>
+						<div class="conteneur-interrupteur">
+							<span>{{ $t('importerCommentaires') }}</span>
+							<label class="bouton-interrupteur">
+								<input type="checkbox" :checked="parametresImport.commentaires" @change="modifierParametresImport($event, 'commentaires')">
+								<span class="barre" />
+							</label>
+						</div>
+						<div class="conteneur-interrupteur">
+							<span>{{ $t('importerEvaluations') }}</span>
+							<label class="bouton-interrupteur">
+								<input type="checkbox" :checked="parametresImport.evaluations" @change="modifierParametresImport($event, 'evaluations')">
+								<span class="barre" />
+							</label>
+						</div>
+						<div class="conteneur-interrupteur">
+							<span>{{ $t('importerActivite') }}</span>
+							<label class="bouton-interrupteur">
+								<input type="checkbox" :checked="parametresImport.activite" @change="modifierParametresImport($event, 'activite')">
+								<span class="barre" />
+							</label>
+						</div>
+						<label for="importer-pad" class="bouton" v-show="progressionImport === 0">{{ $t('selectionnerPad') }}</label>
+						<input id="importer-pad" type="file" style="display: none" accept=".zip" @change="importerPad">
+						<div class="conteneur-chargement progression" v-if="progressionImport > 0">
+							<progress class="barre-progression" max="100" :value="progressionImport" />
+							<div class="chargement" />
 						</div>
 					</div>
 				</div>
 			</div>
 		</div>
 
-		<div class="conteneur-modale alerte" v-if="modaleSupprimerPad">
+		<div class="conteneur-modale alerte" v-if="modaleConfirmation !== ''">
 			<div class="modale">
 				<div class="conteneur">
 					<div class="contenu">
-						<div class="message" v-html="$t('confirmationSupprimerPad')" />
+						<div class="message" v-html="$t('confirmationDupliquerPad')" v-if="modaleConfirmation === 'dupliquer'" />
+						<div class="message" v-html="$t('confirmationExporterPad')" v-else-if="modaleConfirmation === 'exporter'" />
+						<div class="message" v-html="$t('confirmationSupprimerPad')" v-else-if="modaleConfirmation === 'supprimer'" />
+						<div class="message" v-html="$t('confirmationSupprimerCompte')" v-else-if="modaleConfirmation === 'supprimer-compte'" />
 						<div class="actions">
-							<span role="button" tabindex="0" class="bouton" @click="fermerModaleSupprimerPad">{{ $t('non') }}</span>
-							<span role="button" tabindex="0" class="bouton" @click="supprimerPad">{{ $t('oui') }}</span>
-						</div>
-					</div>
-				</div>
-			</div>
-		</div>
-
-		<div class="conteneur-modale alerte" v-if="modaleSupprimerCompte">
-			<div class="modale">
-				<div class="conteneur">
-					<div class="contenu">
-						<div class="message" v-html="$t('confirmationSupprimerCompte')" />
-						<div class="actions">
-							<span role="button" tabindex="0" class="bouton" @click="fermerModaleSupprimerCompte">{{ $t('non') }}</span>
-							<span role="button" tabindex="0" class="bouton" @click="supprimerCompte">{{ $t('oui') }}</span>
+							<span role="button" tabindex="0" class="bouton" @click="fermerModaleConfirmation">{{ $t('non') }}</span>
+							<span role="button" tabindex="0" class="bouton" @click="dupliquerPad" v-if="modaleConfirmation === 'dupliquer'">{{ $t('oui') }}</span>
+							<span role="button" tabindex="0" class="bouton" @click="exporterPad" v-else-if="modaleConfirmation === 'exporter'">{{ $t('oui') }}</span>
+							<span role="button" tabindex="0" class="bouton" @click="supprimerPad" v-else-if="modaleConfirmation === 'supprimer'">{{ $t('oui') }}</span>
+							<span role="button" tabindex="0" class="bouton" @click="supprimerCompte" v-else-if="modaleConfirmation === 'supprimer-compte'">{{ $t('oui') }}</span>
 						</div>
 					</div>
 				</div>
@@ -227,6 +250,8 @@
 
 <script>
 import axios from 'axios'
+import saveAs from 'file-saver'
+import JSZip from 'jszip'
 import chargement from '../../components/chargement.vue'
 
 export default {
@@ -253,8 +278,9 @@ export default {
 			titre: '',
 			menu: false,
 			modaleCreerPad: false,
-			modaleDupliquerPad: false,
-			modaleSupprimerPad: false,
+			modaleImporterPad: false,
+			progressionImport: 0,
+			modaleConfirmation: '',
 			padId: '',
 			modaleMotDePasse: false,
 			motDePasse: '',
@@ -262,7 +288,11 @@ export default {
 			confirmationNouveauMotDePasse: '',
 			recherche: false,
 			requete: '',
-			modaleSupprimerCompte: false
+			parametresImport: {
+				commentaires: false,
+				evaluations: false,
+				activite: false
+			}
 		}
 	},
 	computed: {
@@ -342,15 +372,83 @@ export default {
 			this.modaleCreerPad = false
 			this.titre = ''
 		},
+		afficherModaleImporterPad () {
+			this.modaleImporterPad = true
+		},
+		modifierParametresImport (event, type) {
+			this.parametresImport[type] = event.target.checked
+		},
+		importerPad () {
+			const champ = document.querySelector('#importer-pad')
+			const extension = champ.files[0].name.substring(champ.files[0].name.lastIndexOf('.') + 1).toLowerCase()
+			if (champ.files && champ.files[0] && extension === 'zip') {
+				const zip = new JSZip()
+				zip.loadAsync(champ.files[0]).then(function (archive) {
+					if (archive.files['donnees.json'] && archive.files['donnees.json'] !== '') {
+						archive.files['donnees.json'].async('string').then(function (donneesJson) {
+							const formulaire = new FormData()
+							formulaire.append('donnees', donneesJson)
+							formulaire.append('parametres', JSON.stringify(this.parametresImport))
+							formulaire.append('fichier', champ.files[0])
+							axios.post(this.hote + '/api/importer-pad', formulaire, {
+								headers: {
+									'Content-Type': 'multipart/form-data'
+								},
+								onUploadProgress: function (progression) {
+									const pourcentage = parseInt(Math.round((progression.loaded * 100) / progression.total))
+									this.progressionImport = pourcentage
+								}.bind(this)
+							}).then(function (reponse) {
+								const donnees = reponse.data
+								if (donnees === 'non_connecte') {
+									this.$router.push('/')
+								} else if (donnees === 'erreur_import') {
+									champ.value = ''
+									this.progressionImport = 0
+									this.$store.dispatch('modifierAlerte', this.$t('erreurImportPad'))
+								} else {
+									this.padsCrees.push(donnees)
+									this.$store.dispatch('modifierMessage', this.$t('padImporte'))
+									this.modaleImporterPad = false
+									this.progressionImport = 0
+									champ.value = ''
+								}
+							}.bind(this)).catch(function () {
+								champ.value = ''
+								this.progressionImport = 0
+								this.$store.dispatch('modifierAlerte', this.$t('erreurCommunicationServeur'))
+							}.bind(this))
+						}.bind(this))
+					}
+				}.bind(this))
+			} else {
+				this.$store.dispatch('modifierAlerte', this.$t('formatFichierPasAccepte'))
+				champ.value = ''
+			}
+		},
+		fermerModaleImporterPad () {
+			this.modaleImporterPad = false
+			this.parametresImport.commentaires = false
+			this.parametresImport.evaluations = false
+			this.parametresImport.activite = false
+		},
 		ouvrirPad (pad) {
 			this.$router.push('/p/' + pad.id + '/' + pad.token)
 		},
-		afficherModaleDupliquerPad (pad) {
-			this.padId = pad
-			this.modaleDupliquerPad = true
+		afficherModaleConfirmation (pad, type) {
+			if (type === 'supprimer-compte') {
+				this.menu = false
+			} else {
+				this.padId = pad
+			}
+			this.modaleConfirmation = type
+		},
+		fermerModaleConfirmation () {
+			this.modaleConfirmation = ''
+			this.padId = ''
 		},
 		dupliquerPad () {
-			this.modaleDupliquerPad = false
+			this.modaleConfirmation = ''
 			this.chargement = true
 			axios.post(this.hote + '/api/dupliquer-pad', {
 				padId: this.padId,
@@ -373,16 +471,31 @@ export default {
 				this.$store.dispatch('modifierAlerte', this.$t('erreurCommunicationServeur'))
 			}.bind(this))
 		},
-		fermerModaleDupliquerPad () {
-			this.modaleDupliquerPad = false
-			this.padId = ''
-		},
-		afficherModaleSupprimerPad (pad) {
-			this.padId = pad
-			this.modaleSupprimerPad = true
+		exporterPad () {
+			this.modaleConfirmation = ''
+			this.chargement = true
+			axios.post(this.hote + '/api/exporter-pad', {
+				padId: this.padId,
+				identifiant: this.identifiant
+			}).then(function (reponse) {
+				const donnees = reponse.data
+				if (donnees === 'non_connecte') {
+					this.$router.push('/')
+				} else if (donnees === 'erreur_export') {
+					this.chargement = false
+					this.$store.dispatch('modifierAlerte', this.$t('erreurExportPad'))
+				} else {
+					saveAs('/temp/' + donnees, 'pad-' + this.padId + '.zip')
+					this.padId = ''
+					this.chargement = false
+				}
+			}.bind(this)).catch(function () {
+				this.chargement = false
+				this.$store.dispatch('modifierAlerte', this.$t('erreurCommunicationServeur'))
+			}.bind(this))
 		},
 		supprimerPad () {
-			this.modaleSupprimerPad = false
+			this.modaleConfirmation = ''
 			this.chargement = true
 			axios.post(this.hote + '/api/supprimer-pad', {
 				padId: this.padId,
@@ -413,10 +526,6 @@ export default {
 				this.chargement = false
 				this.$store.dispatch('modifierAlerte', this.$t('erreurCommunicationServeur'))
 			}.bind(this))
-		},
-		fermerModaleSupprimerPad () {
-			this.modaleSupprimerPad = false
-			this.padId = ''
 		},
 		modifierNom () {
 			const nom = document.querySelector('#nom').value
@@ -531,9 +640,6 @@ export default {
 				this.$store.dispatch('modifierAlerte', this.$t('erreurCommunicationServeur'))
 			}.bind(this))
 		},
-		fermerModaleSupprimerCompte () {
-			this.modaleSupprimerCompte = false
-		},
 		deconnexion () {
 			const identifiant = this.identifiant
 			axios.post(this.hote + '/api/deconnexion').then(function () {
@@ -559,9 +665,20 @@ export default {
 	height: 100%;
 }
 
-#bouton {
-	display: inline-block;
-	width: 180px;
+#boutons {
+	display: flex;
+	justify-content: center;
+	flex-wrap: wrap;
+	margin-bottom: 1.5rem;
+	padding: 0 1.5rem;
+}
+
+#bouton-importer,
+#bouton-creer {
+	display: inline-flex;
+	justify-content: center;
+	align-items: center;
+	width: 200px;
     line-height: 1;
     font-size: 1.6rem;
     font-weight: 700;
@@ -569,13 +686,18 @@ export default {
 	padding: 1em 1.5em;
     border: 2px solid #00ced1;
 	border-radius: 2em;
+	margin-bottom: 1.5rem;
 	background: #46fbff;
-	margin-bottom: 3rem;
 	cursor: pointer;
     transition: all ease-in 0.1s;
 }
 
-#bouton:hover {
+#bouton-creer {
+	margin-right: 1.5rem;
+}
+
+#bouton-importer:hover,
+#bouton-creer:hover {
     color: #fff;
 	text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.3);
 	background: #00ced1;
@@ -604,10 +726,10 @@ export default {
 }
 
 #onglets {
+	display: flex;
     padding-left: 4rem;
     height: 7rem;
 	line-height: calc(7rem - 3px);
-	font-size: 0;
 }
 
 #onglets .conteneur {
@@ -767,9 +889,86 @@ export default {
     margin: 0 1.5rem 5rem;
 }
 
+#import label:not(.bouton-interrupteur) {
+	width: 100%;
+	text-align: center;
+}
+
+.progression .chargement {
+	border-top: 0.7rem solid #00ced1;
+	margin-top: 1rem;
+}
+
+.modale .conteneur-interrupteur {
+	display: flex;
+	justify-content: space-between;
+	margin-bottom: 1rem;
+	line-height: 2.2rem;
+}
+
+.modale .conteneur-interrupteur > span {
+	font-size: 16px;
+}
+
+.modale .bouton-interrupteur {
+	position: relative;
+	display: inline-block!important;
+	width: 3.8rem!important;
+	height: 2.2rem;
+	margin: 0;
+}
+
+.modale .bouton-interrupteur input {
+	opacity: 0;
+	width: 0;
+	height: 0;
+}
+
+.modale .bouton-interrupteur .barre {
+	position: absolute;
+	cursor: pointer;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	background-color: #ccc;
+	transition: 0.3s;
+	border-radius: 3rem;
+}
+
+.modale .bouton-interrupteur .barre:before {
+	position: absolute;
+	content: '';
+	height: 1.6rem;
+	width: 1.6rem;
+	left: 0.3rem;
+	bottom: 0.3rem;
+	background-color: #fff;
+	transition: 0.3s;
+	border-radius: 50%;
+}
+
+.modale .bouton-interrupteur input:checked + .barre {
+	background-color: #00ced1;
+}
+
+.modale .bouton-interrupteur input:focus + .barre {
+	box-shadow: 0 0 1px #00ced1;
+}
+
+.modale .bouton-interrupteur input:checked + .barre:before {
+	transform: translateX(1.6rem);
+}
+
 @media screen and (orientation: landscape) and (max-height: 479px) {
 	#motdepasse {
 		height: 90%;
+	}
+}
+
+@media screen and (max-width: 479px) {
+	#bouton-creer {
+		margin-right: 0;
 	}
 }
 

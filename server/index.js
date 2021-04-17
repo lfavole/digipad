@@ -24,6 +24,8 @@ const v = require('voca')
 const multer = require('multer')
 const sharp = require('sharp')
 const gm = require('gm')
+const archiver = require('archiver')
+const extract = require('extract-zip')
 const moment = require('moment')
 const bcrypt = require('bcrypt')
 let storeOptions
@@ -139,10 +141,10 @@ app.post('/api/connexion', function (req, res) {
 	const identifiant = req.body.identifiant
 	const motdepasse = req.body.motdepasse
 	db.exists('utilisateurs:' + identifiant, function (err, reponse) {
-		if (err) { res.send('erreur_connexion') }
+		if (err) { res.send('erreur_connexion'); return false }
 		if (reponse === 1 && req.session.identifiant !== identifiant) {
 			db.hgetall('utilisateurs:' + identifiant, function (err, donnees) {
-				if (err) { res.send('erreur_connexion') }
+				if (err) { res.send('erreur_connexion'); return false }
 				if (bcrypt.compareSync(motdepasse, donnees.motdepasse)) {
 					const nom = donnees.nom
 					const langue = donnees.langue
@@ -186,10 +188,10 @@ app.post('/api/recuperer-donnees-pad', function (req, res) {
 	const identifiant = req.body.identifiant
 	const statut = req.body.statut
 	db.exists('pads:' + id, function (err, resultat) {
-		if (err) { res.send('erreur_pad') }
+		if (err) { res.send('erreur_pad'); return false }
 		if (resultat === 1) {
 			db.hgetall('pads:' + id, function (err, pad) {
-				if (err) { res.send('erreur_pad') }
+				if (err) { res.send('erreur_pad'); return false }
 				if (pad.id === id && pad.token === token) {
 					const blocsPad = new Promise(function (resolveMain) {
 						const donneesBlocs = []
@@ -199,53 +201,56 @@ app.post('/api/recuperer-donnees-pad', function (req, res) {
 								const donneesBloc = new Promise(function (resolve) {
 									db.hgetall('pad-' + id + ':' + bloc, function (err, donnees) {
 										if (err) { resolve() }
-										db.exists('utilisateurs:' + donnees.identifiant, function (err, resultat) {
-											if (err) { resolve(donnees) }
-											if (resultat === 1) {
-												db.hgetall('utilisateurs:' + donnees.identifiant, function (err, utilisateur) {
-													if (err) { resolve(donnees) }
-													donnees.nom = utilisateur.nom
-													db.hget('couleurs:' + donnees.identifiant, 'pad' + id, function (err, couleur) {
-														if (err) { resolve(donnees) }
-														donnees.couleur = couleur
-														db.zcard('commentaires:' + bloc, function (err, commentaires) {
-															if (err) { resolve(donnees) }
-															donnees.commentaires = commentaires
-															db.zrange('evaluations:' + bloc, 0, -1, function (err, evaluations) {
-																if (err) { resolve(donnees) }
-																const donneesEvaluations = []
-																evaluations.forEach(function (evaluation) {
-																	donneesEvaluations.push(JSON.parse(evaluation))
-																})
-																donnees.evaluations = donneesEvaluations
+										db.zcard('commentaires:' + bloc, function (err, commentaires) {
+											if (err) { resolve() }
+											donnees.commentaires = commentaires
+											db.zrange('evaluations:' + bloc, 0, -1, function (err, evaluations) {
+												if (err) { resolve() }
+												const donneesEvaluations = []
+												evaluations.forEach(function (evaluation) {
+													donneesEvaluations.push(JSON.parse(evaluation))
+												})
+												donnees.evaluations = donneesEvaluations
+												db.exists('utilisateurs:' + donnees.identifiant, function (err, resultat) {
+													if (err) { resolve() }
+													if (resultat === 1) {
+														db.hgetall('utilisateurs:' + donnees.identifiant, function (err, utilisateur) {
+															if (err) { resolve() }
+															donnees.nom = utilisateur.nom
+															db.hget('couleurs:' + donnees.identifiant, 'pad' + id, function (err, couleur) {
+																if (err || couleur === null) {
+																	donnees.couleur = ''
+																} else {
+																	donnees.couleur = couleur
+																}
 																resolve(donnees)
 															})
 														})
-													})
-												})
-											} else {
-												db.hget('noms:' + donnees.identifiant, 'nom', function (err, nom) {
-													if (err) { resolve(donnees) }
-													donnees.nom = nom
-													db.hget('couleurs:' + donnees.identifiant, 'pad' + id, function (err, couleur) {
-														if (err) { resolve(donnees) }
-														donnees.couleur = couleur
-														db.zcard('commentaires:' + bloc, function (err, commentaires) {
-															if (err) { resolve(donnees) }
-															donnees.commentaires = commentaires
-															db.zrange('evaluations:' + bloc, 0, -1, function (err, evaluations) {
-																if (err) { resolve(donnees) }
-																const donneesEvaluations = []
-																evaluations.forEach(function (evaluation) {
-																	donneesEvaluations.push(JSON.parse(evaluation))
+													} else {
+														db.exists('noms:' + donnees.identifiant, function (err, resultat) {
+															if (err) { resolve() }
+															if (resultat === 1) {
+																db.hget('noms:' + donnees.identifiant, 'nom', function (err, nom) {
+																	if (err) { resolve() }
+																	donnees.nom = nom
+																	db.hget('couleurs:' + donnees.identifiant, 'pad' + id, function (err, couleur) {
+																		if (err || couleur === null) {
+																			donnees.couleur = ''
+																		} else {
+																			donnees.couleur = couleur
+																		}
+																		resolve(donnees)
+																	})
 																})
-																donnees.evaluations = donneesEvaluations
+															} else {
+																donnees.nom = ''
+																donnees.couleur = ''
 																resolve(donnees)
-															})
+															}
 														})
-													})
+													}
 												})
-											}
+											})
 										})
 									})
 								})
@@ -270,20 +275,32 @@ app.post('/api/recuperer-donnees-pad', function (req, res) {
 												if (err) { resolve() }
 												entree.nom = utilisateur.nom
 												db.hget('couleurs:' + entree.identifiant, 'pad' + id, function (err, couleur) {
-													if (err) { resolve() }
-													entree.couleur = couleur
+													if (err || couleur === null) {
+														entree.couleur = ''
+													} else {
+														entree.couleur = couleur
+													}
 													resolve(entree)
 												})
 											})
 										} else {
-											db.hget('noms:' + entree.identifiant, 'nom', function (err, nom) {
+											db.exists('noms:' + entree.identifiant, function (err, resultat) {
 												if (err) { resolve() }
-												entree.nom = nom
-												db.hget('couleurs:' + entree.identifiant, 'pad' + id, function (err, couleur) {
-													if (err) { resolve() }
-													entree.couleur = couleur
+												if (resultat === 1) {
+													db.hget('noms:' + entree.identifiant, 'nom', function (err, nom) {
+														if (err) { resolve() }
+														entree.nom = nom
+														db.hget('couleurs:' + entree.identifiant, 'pad' + id, function (err, couleur) {
+															if (err) { resolve() }
+															entree.couleur = couleur
+															resolve(entree)
+														})
+													})
+												} else {
+													entree.nom = ''
+													entree.couleur = ''
 													resolve(entree)
-												})
+												}
 											})
 										}
 									})
@@ -299,9 +316,42 @@ app.post('/api/recuperer-donnees-pad', function (req, res) {
 						if (pad.colonnes) {
 							pad.colonnes = JSON.parse(pad.colonnes)
 						}
+						// Définir la même couleur pour les utilisateurs qui ne sont plus dans la base de données
+						const utilisateursSansCouleur = []
+						const couleurs = []
+						blocs.forEach(function (bloc) {
+							if ((bloc.couleur === '' || bloc.couleur === null) && utilisateursSansCouleur.includes(bloc.identifiant) === false) {
+								utilisateursSansCouleur.push(bloc.identifiant)
+							}
+						})
+						activite.forEach(function (item) {
+							if ((item.couleur === '' || item.couleur === null) && utilisateursSansCouleur.includes(item.identifiant) === false) {
+								utilisateursSansCouleur.push(item.identifiant)
+							}
+						})
+						utilisateursSansCouleur.forEach(function () {
+							const couleur = choisirCouleur()
+							couleurs.push(couleur)
+						})
+						console.log(utilisateursSansCouleur)
+						console.log(couleurs)
+						blocs.forEach(function (bloc, indexBloc) {
+							if (utilisateursSansCouleur.includes(bloc.identifiant) === true) {
+								const index = utilisateursSansCouleur.indexOf(bloc.identifiant)
+								blocs[indexBloc].couleur = couleurs[index]
+							}
+						})
+						activite.forEach(function (item, indexItem) {
+							if (utilisateursSansCouleur.includes(item.identifiant) === true) {
+								const index = utilisateursSansCouleur.indexOf(item.identifiant)
+								activite[indexItem].couleur = couleurs[index]
+							}
+						})
+						console.log(blocs)
+						console.log(activite)
 						if (pad.identifiant !== identifiant && statut === 'utilisateur') {
 							db.smembers('pads-rejoints:' + identifiant, function (err, padsRejoints) {
-								if (err) { res.send('erreur_pad') }
+								if (err) { res.send('erreur_pad'); return false }
 								let padDejaRejoint = false
 								for (const padRejoint of padsRejoints) {
 									if (padRejoint === id) {
@@ -343,10 +393,10 @@ app.post('/api/creer-pad', function (req, res) {
 		const date = moment().format()
 		const couleur = choisirCouleur()
 		db.exists('pad', function (err, resultat) {
-			if (err) { res.send('erreur_creation') }
+			if (err) { res.send('erreur_creation'); return false }
 			if (resultat === 1) {
 				db.get('pad', function (err, resultat) {
-					if (err) { res.send('erreur_creation') }
+					if (err) { res.send('erreur_creation'); return false }
 					const id = parseInt(resultat) + 1
 					const multi = db.multi()
 					multi.incr('pad')
@@ -396,7 +446,7 @@ app.post('/api/creer-pad-sans-compte', function (req, res) {
 	const token = Math.random().toString(16).slice(2)
 	const date = moment().format()
 	db.get('pad', function (err, resultat) {
-		if (err) { res.send('erreur_creation') }
+		if (err) { res.send('erreur_creation'); return false }
 		const id = parseInt(resultat) + 1
 		const multi = db.multi()
 		multi.incr('pad')
@@ -429,7 +479,7 @@ app.post('/api/modifier-mot-de-passe-pad', function (req, res) {
 	if (req.session.identifiant && req.session.identifiant === identifiant) {
 		const pad = req.body.pad
 		db.hgetall('pads:' + pad, function (err, donnees) {
-			if (err) { res.send('erreur') }
+			if (err) { res.send('erreur'); return false }
 			if (bcrypt.compareSync(req.body.motdepasse, donnees.motdepasse)) {
 				const hash = bcrypt.hashSync(req.body.nouveaumotdepasse, 10)
 				db.hmset('pads:' + pad, 'motdepasse', hash)
@@ -448,13 +498,13 @@ app.post('/api/dupliquer-pad', function (req, res) {
 	if (req.session.identifiant && req.session.identifiant === identifiant) {
 		const pad = req.body.padId
 		db.get('pad', function (err, resultat) {
-			if (err) { res.send('erreur_duplication') }
+			if (err) { res.send('erreur_duplication'); return false }
 			const id = parseInt(resultat) + 1
 			db.hgetall('pads:' + pad, function (err, donnees) {
-				if (err) { res.send('erreur_duplication') }
+				if (err) { res.send('erreur_duplication'); return false }
 				const donneesBlocs = []
 				db.zrange('blocs:' + pad, 0, -1, function (err, blocs) {
-					if (err) { res.send('erreur_duplication') }
+					if (err) { res.send('erreur_duplication'); return false }
 					for (const bloc of blocs) {
 						const donneesBloc = new Promise(function (resolve) {
 							db.hgetall('pad-' + pad + ':' + bloc, function (err, donnees) {
@@ -462,7 +512,7 @@ app.post('/api/dupliquer-pad', function (req, res) {
 								const date = moment().format()
 								const multi = db.multi()
 								const blocId = 'bloc-id-' + (new Date()).getTime() + Math.random().toString(16).slice(10)
-								multi.hmset('pad-' + id + ':' + blocId, 'id', donnees.id, 'bloc', blocId, 'titre', donnees.titre, 'texte', donnees.texte, 'media', donnees.media, 'iframe', donnees.iframe, 'type', donnees.type, 'source', donnees.source, 'vignette', donnees.vignette, 'date', date, 'identifiant', identifiant, 'commentaires', 0, 'evaluations', 0, 'colonne', donnees.colonne)
+								multi.hmset('pad-' + id + ':' + blocId, 'id', donnees.id, 'bloc', blocId, 'titre', donnees.titre, 'texte', donnees.texte, 'media', donnees.media, 'iframe', donnees.iframe, 'type', donnees.type, 'source', donnees.source, 'vignette', donnees.vignette, 'date', date, 'identifiant', donnees.identifiant, 'commentaires', 0, 'evaluations', 0, 'colonne', donnees.colonne)
 								multi.zadd('blocs:' + id, donnees.id, blocId)
 								multi.exec(function () {
 									resolve(blocId)
@@ -475,15 +525,26 @@ app.post('/api/dupliquer-pad', function (req, res) {
 						const token = Math.random().toString(16).slice(2)
 						const date = moment().format()
 						const couleur = choisirCouleur()
+						const code = Math.floor(1000 + Math.random() * 9000)
+						let registreActivite = 'active'
+						let conversation = 'desactivee'
+						if (donnees.registreActivite) {
+							registreActivite = donnees.registreActivite
+						}
+						if (donnees.conversation) {
+							conversation = donnees.conversation
+						}
 						const multi = db.multi()
 						multi.incr('pad')
-						multi.hmset('pads:' + id, 'id', id, 'token', token, 'titre', 'Copie de ' + donnees.titre, 'identifiant', identifiant, 'fond', donnees.fond, 'acces', donnees.acces, 'contributions', donnees.contributions, 'affichage', donnees.affichage, 'fichiers', donnees.fichiers, 'liens', donnees.liens, 'documents', donnees.documents, 'commentaires', donnees.commentaires, 'evaluations', donnees.evaluations, 'date', date, 'colonnes', donnees.colonnes, 'bloc', donnees.bloc, 'activite', 0)
+						multi.hmset('pads:' + id, 'id', id, 'token', token, 'titre', 'Copie de ' + donnees.titre, 'identifiant', identifiant, 'fond', donnees.fond, 'acces', donnees.acces, 'code', code, 'contributions', donnees.contributions, 'affichage', donnees.affichage, 'registreActivite', registreActivite, 'conversation', conversation, 'fichiers', donnees.fichiers, 'liens', donnees.liens, 'documents', donnees.documents, 'commentaires', donnees.commentaires, 'evaluations', donnees.evaluations, 'date', date, 'colonnes', donnees.colonnes, 'bloc', donnees.bloc, 'activite', 0)
 						multi.sadd('pads-crees:' + identifiant, id)
 						multi.sadd('utilisateurs-pads:' + id, identifiant)
 						multi.hmset('couleurs:' + identifiant, 'pad' + id, couleur)
 						multi.exec(function () {
-							fs.copySync(path.join(__dirname, '..', '/static/fichiers/' + pad), path.join(__dirname, '..', '/static/fichiers/' + id))
-							res.json({ id: id, token: token, titre: 'Copie de ' + donnees.titre, identifiant: identifiant, fond: donnees.fond, acces: donnees.acces, contributions: donnees.contributions, affichage: donnees.affichage, fichiers: donnees.fichiers, liens: donnees.liens, documents: donnees.documents, commentaires: donnees.commentaires, evaluations: donnees.evaluations, date: date, colonnes: donnees.colonnes, bloc: donnees.bloc, activite: 0 })
+							if (fs.existsSync(path.join(__dirname, '..', '/static/fichiers/' + pad))) {
+								fs.copySync(path.join(__dirname, '..', '/static/fichiers/' + pad), path.join(__dirname, '..', '/static/fichiers/' + id))
+							}
+							res.json({ id: id, token: token, titre: 'Copie de ' + donnees.titre, identifiant: identifiant, fond: donnees.fond, acces: donnees.acces, code: code, contributions: donnees.contributions, affichage: donnees.affichage, registreActivite: registreActivite, conversation: conversation, fichiers: donnees.fichiers, liens: donnees.liens, documents: donnees.documents, commentaires: donnees.commentaires, evaluations: donnees.evaluations, date: date, colonnes: donnees.colonnes, bloc: donnees.bloc, activite: 0 })
 						})
 					})
 				})
@@ -494,15 +555,221 @@ app.post('/api/dupliquer-pad', function (req, res) {
 	}
 })
 
+app.post('/api/exporter-pad', function (req, res) {
+	const identifiant = req.body.identifiant
+	if (req.session.identifiant && req.session.identifiant === identifiant) {
+		const id = req.body.padId
+		const donneesPad = new Promise(function (resolveMain) {
+			db.hgetall('pads:' + id, function (err, resultats) {
+				if (err) { resolveMain() }
+				resolveMain(resultats)
+			})
+		})
+		const blocsPad = new Promise(function (resolveMain) {
+			const donneesBlocs = []
+			db.zrange('blocs:' + id, 0, -1, function (err, blocs) {
+				if (err) { resolveMain(donneesBlocs) }
+				for (const bloc of blocs) {
+					const donneesBloc = new Promise(function (resolve) {
+						db.hgetall('pad-' + id + ':' + bloc, function (err, donnees) {
+							if (err) { resolve() }
+							const donneesCommentaires = []
+							db.zrange('commentaires:' + bloc, 0, -1, function (err, commentaires) {
+								if (err) { resolve(donnees) }
+								for (let commentaire of commentaires) {
+									donneesCommentaires.push(JSON.parse(commentaire))
+								}
+								donnees.commentaires = donneesCommentaires.length
+								donnees.listeCommentaires = donneesCommentaires
+								db.zrange('evaluations:' + bloc, 0, -1, function (err, evaluations) {
+									if (err) { resolve(donnees) }
+									const donneesEvaluations = []
+									evaluations.forEach(function (evaluation) {
+										donneesEvaluations.push(JSON.parse(evaluation))
+									})
+									donnees.evaluations = donneesEvaluations.length
+									donnees.listeEvaluations = donneesEvaluations
+									resolve(donnees)
+								})
+							})
+						})
+					})
+					donneesBlocs.push(donneesBloc)
+				}
+				Promise.all(donneesBlocs).then(function (resultat) {
+					resolveMain(resultat)
+				})
+			})
+		})
+		const activitePad = new Promise(function (resolveMain) {
+			const donneesEntrees = []
+			db.zrange('activite:' + id, 0, -1, function (err, entrees) {
+				if (err) { resolveMain(donneesEntrees) }
+				for (let entree of entrees) {
+					entree = JSON.parse(entree)
+					const donneesEntree = new Promise(function (resolve) {
+						db.exists('utilisateurs:' + entree.identifiant, function (err, resultat) {
+							if (err) { resolve() }
+							resolve(entree)
+						})
+					})
+					donneesEntrees.push(donneesEntree)
+				}
+				Promise.all(donneesEntrees).then(function (resultat) {
+					resolveMain(resultat)
+				})
+			})
+		})
+		Promise.all([donneesPad, blocsPad, activitePad]).then(function (donnees) {
+			if (donnees.length > 0 && donnees[0].id) {
+				const parametres = {}
+				parametres.pad = donnees[0]
+				parametres.blocs = donnees[1]
+				parametres.activite = donnees[2]
+				const chemin = path.join(__dirname, '..', '/static/temp')
+				fs.mkdirpSync(path.normalize(chemin + '/' + id))
+				fs.mkdirpSync(path.normalize(chemin + '/' + id + '/fichiers'))
+				fs.writeFileSync(path.normalize(chemin + '/' + id + '/donnees.json'), JSON.stringify(parametres, '', 4), 'utf8')
+				parametres.blocs.forEach(function (bloc) {
+					if (bloc && bloc.media !== '' && bloc.type !== 'embed' && fs.existsSync(path.join(__dirname, '..', '/static/fichiers/' + id + '/' + bloc.media))) {
+						fs.copySync(path.join(__dirname, '..', '/static/fichiers/' + id + '/' + bloc.media), path.normalize(chemin + '/' + id + '/fichiers/' + bloc.media, { overwrite: true }))
+					}
+					if (bloc && bloc.vignette !== '' && bloc.vignette.substring(1, 9) === 'fichiers' && fs.existsSync(path.join(__dirname, '..', '/static/fichiers/' + id + '/' + bloc.vignette))) {
+						fs.copySync(path.join(__dirname, '..', '/static/fichiers/' + id + '/' + bloc.vignette), path.normalize(chemin + '/' + id + '/fichiers/' + bloc.vignette, { overwrite: true }))
+					}
+				})
+				const archiveId = Math.floor((Math.random() * 100000) + 1)
+				const sortie = fs.createWriteStream(path.normalize(chemin + '/pad-' + id + '_' + archiveId + '.zip'))
+				const archive = archiver('zip', {
+					zlib: { level: 9 }
+				})
+				sortie.on('finish', function () {
+					fs.removeSync(path.normalize(chemin + '/' + id))
+					res.send('pad-' + id + '_' + archiveId + '.zip')
+				})
+				archive.pipe(sortie)
+				archive.directory(path.normalize(chemin + '/' + id), false)
+				archive.finalize()
+			} else {
+				res.send('erreur_export')
+			}
+		})
+	} else {
+		res.send('non_connecte')
+	}
+})
+
+app.post('/api/importer-pad', function (req, res) {
+	const identifiant = req.session.identifiant
+	if (!identifiant) {
+		res.send('non_connecte')
+	} else {
+		televerserArchive(req, res, async function (err) {
+			if (err) { res.send('erreur_import'); return false }
+			try {
+				const donnees = JSON.parse(req.body.donnees)
+				const parametres = JSON.parse(req.body.parametres)
+				const archive = req.file
+				const source = path.join(__dirname, '..', '/static/temp/' + archive.filename)
+				const cible = path.join(__dirname, '..', '/static/temp/archive-' + Math.floor((Math.random() * 100000) + 1))
+				await extract(source, { dir: cible })
+				db.get('pad', function (err, resultat) {
+					if (err) { res.send('erreur_import'); return false }
+					const id = parseInt(resultat) + 1
+					const chemin = path.join(__dirname, '..', '/static/fichiers/' + id)
+					const donneesBlocs = []
+					fs.mkdirpSync(chemin)
+					for (const bloc of donnees.blocs) {
+						const donneesBloc = new Promise(function (resolve) {
+							const date = moment().format()
+							let commentaires = 0
+							let evaluations = 0
+							if (parametres.commentaires === true) {
+								commentaires = bloc.commentaires
+							}
+							if (parametres.evaluations === true) {
+								evaluations = bloc.evaluations
+							}
+							const multi = db.multi()
+							const blocId = 'bloc-id-' + (new Date()).getTime() + Math.random().toString(16).slice(10)
+							multi.hmset('pad-' + id + ':' + blocId, 'id', bloc.id, 'bloc', blocId, 'titre', bloc.titre, 'texte', bloc.texte, 'media', bloc.media, 'iframe', bloc.iframe, 'type', bloc.type, 'source', bloc.source, 'vignette', bloc.vignette, 'date', date, 'identifiant', bloc.identifiant, 'commentaires', commentaires, 'evaluations', evaluations, 'colonne', bloc.colonne)
+							multi.zadd('blocs:' + id, bloc.id, blocId)
+							if (parametres.commentaires === true) {
+								for (const commentaire of bloc.listeCommentaires) {
+									multi.zadd('commentaires:' + blocId, commentaire.id, JSON.stringify(commentaire))
+								}
+							}
+							if (parametres.evaluations === true) {
+								for (const evaluation of bloc.listeEvaluations) {
+									multi.zadd('evaluations:' + blocId, evaluation.id, JSON.stringify(evaluation))
+								}
+							}
+							multi.exec(function () {
+								if (bloc && bloc.media !== '' && bloc.type !== 'embed' && fs.existsSync(path.normalize(cible + '/fichiers/' + bloc.media))) {
+									fs.copySync(path.normalize(cible + '/fichiers/' + bloc.media), path.normalize(chemin + '/' + bloc.media, { overwrite: true }))
+								}
+								if (bloc && bloc.vignette !== '' && bloc.vignette.substring(1, 9) === 'fichiers' && fs.existsSync(path.normalize(cible + '/fichiers/' + bloc.vignette))) {
+									fs.copySync(path.normalize(cible + '/fichiers/' + bloc.vignette), path.normalize(chemin + '/' + bloc.vignette, { overwrite: true }))
+								}
+								resolve({ bloc: bloc.bloc, blocId: blocId })
+							})
+						})
+						donneesBlocs.push(donneesBloc)
+					}
+					Promise.all(donneesBlocs).then(function (blocs) {
+						const token = Math.random().toString(16).slice(2)
+						const date = moment().format()
+						const couleur = choisirCouleur()
+						const code = Math.floor(1000 + Math.random() * 9000)
+						let registreActivite = 'active'
+						let conversation = 'desactivee'
+						let activiteId = 0
+						if (donnees.pad.registreActivite) {
+							registreActivite = donnees.pad.registreActivite
+						}
+						if (donnees.conversation) {
+							conversation = donnees.pad.conversation
+						}
+						if (parametres.activite === true) {
+							activiteId = donnees.pad.activite
+						}
+						const multi = db.multi()
+						multi.incr('pad')
+						multi.hmset('pads:' + id, 'id', id, 'token', token, 'titre', donnees.pad.titre, 'identifiant', identifiant, 'fond', donnees.pad.fond, 'acces', donnees.pad.acces, 'code', code, 'contributions', donnees.pad.contributions, 'affichage', donnees.pad.affichage, 'registreActivite', registreActivite, 'conversation', conversation, 'fichiers', donnees.pad.fichiers, 'liens', donnees.pad.liens, 'documents', donnees.pad.documents, 'commentaires', donnees.pad.commentaires, 'evaluations', donnees.pad.evaluations, 'date', date, 'colonnes', donnees.pad.colonnes, 'bloc', donnees.pad.bloc, 'activite', activiteId)
+						multi.sadd('pads-crees:' + identifiant, id)
+						multi.sadd('utilisateurs-pads:' + id, identifiant)
+						multi.hmset('couleurs:' + identifiant, 'pad' + id, couleur)
+						if (parametres.activite === true) {
+							for (const activite of donnees.activite) {
+								blocs.forEach(function (item) {
+									if (activite.bloc === item.bloc) {
+										activite.bloc = item.blocId
+									}
+								})
+								multi.zadd('activite:' + id, activite.id, JSON.stringify(activite))
+							}
+						}
+						multi.exec(function () {
+							res.json({ id: id, token: token, titre: donnees.pad.titre, identifiant: identifiant, fond: donnees.pad.fond, acces: donnees.pad.acces, code: code, contributions: donnees.pad.contributions, affichage: donnees.pad.affichage, registreActivite: registreActivite, conversation: conversation, fichiers: donnees.pad.fichiers, liens: donnees.pad.liens, documents: donnees.pad.documents, commentaires: donnees.pad.commentaires, evaluations: donnees.pad.evaluations, date: date, colonnes: donnees.pad.colonnes, bloc: donnees.pad.bloc, activite: activiteId })
+						})
+					})
+				})
+			} catch (err) {
+				res.send('erreur_import')
+			}
+		})
+	}
+})
+
 app.post('/api/supprimer-pad', function (req, res) {
 	const identifiant = req.body.identifiant
 	if (req.session.identifiant && req.session.identifiant === identifiant) {
 		const pad = req.body.padId
 		db.hgetall('pads:' + pad, function (err, resultat) {
-			if (err) { res.send('erreur_suppression') }
+			if (err) { res.send('erreur_suppression'); return false }
 			if (resultat.identifiant === identifiant) {
 				db.zrange('blocs:' + pad, 0, -1, function (err, blocs) {
-					if (err) { res.send('erreur_suppression') }
+					if (err) { res.send('erreur_suppression'); return false }
 					const multi = db.multi()
 					for (let i = 0; i < blocs.length; i++) {
 						multi.del('commentaires:' + blocs[i])
@@ -514,7 +781,7 @@ app.post('/api/supprimer-pad', function (req, res) {
 					multi.del('activite:' + pad)
 					multi.srem('pads-crees:' + identifiant, pad)
 					multi.smembers('utilisateurs-pads:' + pad, function (err, utilisateurs) {
-						if (err) { res.send('erreur_suppression') }
+						if (err) { res.send('erreur_suppression'); return false }
 						for (let j = 0; j < utilisateurs.length; j++) {
 							db.srem('pads-rejoints:' + utilisateurs[j], pad)
 							db.srem('pads-utilisateurs:' + utilisateurs[j], pad)
@@ -555,7 +822,7 @@ app.post('/api/modifier-mot-de-passe', function (req, res) {
 	const identifiant = req.body.identifiant
 	if (req.session.identifiant && req.session.identifiant === identifiant) {
 		db.hgetall('utilisateurs:' + identifiant, function (err, donnees) {
-			if (err) { res.send('erreur') }
+			if (err) { res.send('erreur'); return false }
 			if (bcrypt.compareSync(req.body.motdepasse, donnees.motdepasse)) {
 				const hash = bcrypt.hashSync(req.body.nouveaumotdepasse, 10)
 				db.hmset('utilisateurs:' + identifiant, 'motdepasse', hash)
@@ -573,7 +840,7 @@ app.post('/api/supprimer-compte', function (req, res) {
 	const identifiant = req.body.identifiant
 	if (req.session.identifiant && req.session.identifiant === identifiant) {
 		db.smembers('pads-crees:' + identifiant, function (err, pads) {
-			if (err) { res.send('erreur') }
+			if (err) { res.send('erreur'); return false }
 			const donneesPads = []
 			for (const pad of pads) {
 				const donneesPad = new Promise(function (resolve) {
@@ -608,7 +875,7 @@ app.post('/api/supprimer-compte', function (req, res) {
 			}
 			Promise.all(donneesPads).then(function () {
 				db.smembers('pads-utilisateurs:' + identifiant, function (err, pads) {
-					if (err) { res.send('erreur') }
+					if (err) { res.send('erreur'); return false }
 					const donneesBlocs = []
 					const donneesActivites = []
 					const donneesCommentaires = []
@@ -621,7 +888,7 @@ app.post('/api/supprimer-compte', function (req, res) {
 									db.hgetall('pad-' + pad + ':' + blocs[i], function (err, donnees) {
 										if (err) { resolve() }
 										if (donnees.identifiant === identifiant) {
-											if (donnees.media !== '') {
+											if (donnees.media !== '' && donnees.type !== 'embed') {
 												supprimerFichier(pad, donnees.media)
 											}
 											if (donnees.vignette !== '' && donnees.vignette.substring(1, 9) === 'fichiers') {
@@ -730,7 +997,7 @@ app.post('/api/supprimer-compte', function (req, res) {
 app.post('/api/verifier-mot-de-passe', function (req, res) {
 	const pad = req.body.pad
 	db.hgetall('pads:' + pad, function (err, donnees) {
-		if (err) { res.send('erreur') }
+		if (err) { res.send('erreur'); return false }
 		if (bcrypt.compareSync(req.body.motdepasse, donnees.motdepasse)) {
 			res.send('motdepasse_correct')
 		} else {
@@ -742,7 +1009,7 @@ app.post('/api/verifier-mot-de-passe', function (req, res) {
 app.post('/api/verifier-code-acces', function (req, res) {
 	const pad = req.body.pad
 	db.hgetall('pads:' + pad, function (err, donnees) {
-		if (err) { res.send('erreur') }
+		if (err) { res.send('erreur'); return false }
 		if (req.body.code === donnees.code) {
 			if (!req.session.acces) {
 				req.session.acces = []
@@ -774,7 +1041,8 @@ app.post('/api/televerser-fichier', function (req, res) {
 	if (!identifiant) {
 		res.send('non_connecte')
 	} else {
-		televerser(req, res, function () {
+		televerser(req, res, function (err) {
+			if (err) { res.send('erreur_televersement'); return false }
 			const fichier = req.file
 			const pad = req.body.pad
 			let mimetype = fichier.mimetype
@@ -786,7 +1054,7 @@ app.post('/api/televerser-fichier', function (req, res) {
 						kernel: sharp.kernel.nearest,
 						fit: 'inside'
 					}).toBuffer((err, buffer) => {
-						if (err) { res.send('erreur_televersement') }
+						if (err) { res.send('erreur_televersement'); return false }
 						fs.writeFile(chemin, buffer, function() {
 							res.json({ fichier: fichier.filename, mimetype: mimetype })
 						})
@@ -796,7 +1064,7 @@ app.post('/api/televerser-fichier', function (req, res) {
 						kernel: sharp.kernel.nearest,
 						fit: 'inside'
 					}).toBuffer((err, buffer) => {
-						if (err) { res.send('erreur_televersement') }
+						if (err) { res.send('erreur_televersement'); return false }
 						fs.writeFile(chemin, buffer, function() {
 							res.json({ fichier: fichier.filename, mimetype: mimetype })
 						})
@@ -828,7 +1096,8 @@ app.post('/api/televerser-vignette', function (req, res) {
 	if (!identifiant) {
 		res.send('non_connecte')
 	} else {
-		televerser(req, res, function () {
+		televerser(req, res, function (err) {
+			if (err) { res.send('erreur_televersement'); return false }
 			const fichier = req.file
 			const pad = req.body.pad
 			const chemin = path.join(__dirname, '..', '/static/fichiers/' + pad + '/' + fichier.filename)
@@ -838,7 +1107,7 @@ app.post('/api/televerser-vignette', function (req, res) {
 					kernel: sharp.kernel.nearest,
 					fit: 'inside'
 				}).toBuffer((err, buffer) => {
-					if (err) { res.send('erreur_televersement') }
+					if (err) { res.send('erreur_televersement'); return false }
 					fs.writeFile(chemin, buffer, function() {
 						res.send('/fichiers/' + pad + '/' + fichier.filename)
 					})
@@ -848,7 +1117,7 @@ app.post('/api/televerser-vignette', function (req, res) {
 					kernel: sharp.kernel.nearest,
 					fit: 'inside'
 				}).toBuffer((err, buffer) => {
-					if (err) { res.send('erreur_televersement') }
+					if (err) { res.send('erreur_televersement'); return false }
 					fs.writeFile(chemin, buffer, function() {
 						res.send('/fichiers/' + pad + '/' + fichier.filename)
 					})
@@ -863,7 +1132,8 @@ app.post('/api/televerser-fond', function (req, res) {
 	if (!identifiant) {
 		res.send('non_connecte')
 	} else {
-		televerser(req, res, function () {
+		televerser(req, res, function (err) {
+			if (err) { res.send('erreur_televersement'); return false }
 			const fichier = req.file
 			const pad = req.body.pad
 			const chemin = path.join(__dirname, '..', '/static/fichiers/' + pad + '/' + fichier.filename)
@@ -873,7 +1143,7 @@ app.post('/api/televerser-fond', function (req, res) {
 					kernel: sharp.kernel.nearest,
 					fit: 'inside'
 				}).toBuffer((err, buffer) => {
-					if (err) { res.send('erreur_televersement') }
+					if (err) { res.send('erreur_televersement'); return false }
 					fs.writeFile(chemin, buffer, function() {
 						res.send('/fichiers/' + pad + '/' + fichier.filename)
 					})
@@ -883,7 +1153,7 @@ app.post('/api/televerser-fond', function (req, res) {
 					kernel: sharp.kernel.nearest,
 					fit: 'inside'
 				}).toBuffer((err, buffer) => {
-					if (err) { res.send('erreur_televersement') }
+					if (err) { res.send('erreur_televersement'); return false }
 					fs.writeFile(chemin, buffer, function() {
 						res.send('/fichiers/' + pad + '/' + fichier.filename)
 					})
@@ -925,8 +1195,9 @@ io.on('connection', function (socket) {
 			})
 			utilisateurs.push(donneesUtilisateur)
 		}
-		Promise.all(utilisateurs).then(function (resultat) {
-			io.in(socket.room).emit('connexion', resultat)
+		Promise.all(utilisateurs).then(function (resultats) {
+			const utilisateursConnectes = resultats.filter((v, i, a) => a.findIndex(t => (t.identifiant === v.identifiant)) === i)
+			io.in(socket.room).emit('connexion', utilisateursConnectes)
 		})
 	})
 
@@ -939,7 +1210,7 @@ io.on('connection', function (socket) {
 	})
 
 	socket.on('ajouterbloc', function (bloc, pad, token, titre, texte, media, iframe, type, source, vignette, couleur, colonne) {
-		if (socket.identifiant !== '' && socket.identifiant !== undefined) {
+		if (socket.identifiant !== '' && socket.identifiant !== undefined && socket.room === 'pad-' + pad) {
 			const identifiant = socket.identifiant
 			const nom = socket.nom
 			db.hgetall('pads:' + pad, function (err, resultat) {
@@ -965,7 +1236,7 @@ io.on('connection', function (socket) {
 	})
 
 	socket.on('modifierbloc', function (bloc, pad, token, titre, texte, media, iframe, type, source, vignette, couleur, colonne) {
-		if (socket.identifiant !== '' && socket.identifiant !== undefined) {
+		if (socket.identifiant !== '' && socket.identifiant !== undefined && socket.room === 'pad-' + pad) {
 			db.hgetall('pads:' + pad, function (err, donnees) {
 				if (donnees.id === pad && donnees.token === token) {
 					const proprietaire = donnees.identifiant
@@ -995,7 +1266,7 @@ io.on('connection', function (socket) {
 	})
 
 	socket.on('deplacerbloc', function (items, colonnes, pad, affichage) {
-		if (socket.identifiant !== '' && socket.identifiant !== undefined) {
+		if (socket.identifiant !== '' && socket.identifiant !== undefined && socket.room === 'pad-' + pad) {
 			const donneesBlocs = []
 			for (let i = 0; i < items.length; i++) {
 				const donneeBloc = new Promise(function (resolve) {
@@ -1022,7 +1293,7 @@ io.on('connection', function (socket) {
 	})
 
 	socket.on('supprimerbloc', function (bloc, pad, token, titre, couleur, colonne) {
-		if (socket.identifiant !== '' && socket.identifiant !== undefined) {
+		if (socket.identifiant !== '' && socket.identifiant !== undefined && socket.room === 'pad-' + pad) {
 			db.hgetall('pads:' + pad, function (err, donnees) {
 				if (err) { socket.emit('erreur'); return false }
 				if (donnees.id === pad && donnees.token === token) {
@@ -1032,7 +1303,7 @@ io.on('connection', function (socket) {
 						if (resultat === 1) {
 							db.hgetall('pad-' + pad + ':' + bloc, function (err, objet) {
 								if (err) { socket.emit('erreur'); return false }
-								if (objet.media !== '') {
+								if (objet.media !== '' && objet.type !== 'embed') {
 									supprimerFichier(pad, objet.media)
 								}
 								if (objet.vignette !== '' && objet.vignette.substring(1, 9) === 'fichiers') {
@@ -1078,7 +1349,7 @@ io.on('connection', function (socket) {
 	})
 
 	socket.on('commenterbloc', function (bloc, pad, titre, texte, couleur) {
-		if (socket.identifiant !== '' && socket.identifiant !== undefined) {
+		if (socket.identifiant !== '' && socket.identifiant !== undefined && socket.room === 'pad-' + pad) {
 			db.hgetall('pad-' + pad + ':' + bloc, function (err, donnees) {
 				const identifiant = socket.identifiant
 				const nom = socket.nom
@@ -1156,10 +1427,18 @@ io.on('connection', function (socket) {
 								resolve(commentaire)
 							})
 						} else {
-							db.hget('noms:' + identifiant, 'nom', function (err, nom) {
+							db.exists('noms:' + identifiant, function (err, resultat) {
 								if (err) { resolve() }
-								commentaire.nom = nom
-								resolve(commentaire)
+								if (resultat === 1) {
+									db.hget('noms:' + identifiant, 'nom', function (err, nom) {
+										if (err) { resolve() }
+										commentaire.nom = nom
+										resolve(commentaire)
+									})
+								} else {
+									commentaire.nom = ''
+									resolve(commentaire)
+								}
 							})
 						}
 					})
@@ -1173,7 +1452,7 @@ io.on('connection', function (socket) {
 	})
 
 	socket.on('evaluerbloc', function (bloc, pad, titre, etoiles, couleur) {
-		if (socket.identifiant !== '' && socket.identifiant !== undefined) {
+		if (socket.identifiant !== '' && socket.identifiant !== undefined && socket.room === 'pad-' + pad) {
 			db.hgetall('pad-' + pad + ':' + bloc, function (err, donnees) {
 				if (err) { socket.emit('erreur'); return false }
 				const identifiant = socket.identifiant
@@ -1258,7 +1537,7 @@ io.on('connection', function (socket) {
 	})
 
 	socket.on('modifiercouleur', function (pad, couleur) {
-		if (socket.identifiant !== '' && socket.identifiant !== undefined) {
+		if (socket.identifiant !== '' && socket.identifiant !== undefined && socket.room === 'pad-' + pad) {
 			const identifiant = socket.identifiant
 			db.hmset('couleurs:' + identifiant, 'pad' + pad, couleur, function (err) {
 				if (err) { socket.emit('erreur'); return false }
@@ -1272,7 +1551,7 @@ io.on('connection', function (socket) {
 	})
 
 	socket.on('modifiertitre', function (pad, titre) {
-		if (socket.identifiant !== '' && socket.identifiant !== undefined) {
+		if (socket.identifiant !== '' && socket.identifiant !== undefined && socket.room === 'pad-' + pad) {
 			db.hmset('pads:' + pad, 'titre', titre, function (err) {
 				if (err) { socket.emit('erreur'); return false }
 				io.in(socket.room).emit('modifiertitre', titre)
@@ -1285,7 +1564,7 @@ io.on('connection', function (socket) {
 	})
 
 	socket.on('modifieracces', function (pad, acces) {
-		if (socket.identifiant !== '' && socket.identifiant !== undefined) {
+		if (socket.identifiant !== '' && socket.identifiant !== undefined && socket.room === 'pad-' + pad) {
 			db.hgetall('pads:' + pad, function (err, donnees) {
 				if (err) { socket.emit('erreur'); return false }
 				let code = ''
@@ -1307,7 +1586,7 @@ io.on('connection', function (socket) {
 	})
 
 	socket.on('modifiercontributions', function (pad, contributions) {
-		if (socket.identifiant !== '' && socket.identifiant !== undefined) {
+		if (socket.identifiant !== '' && socket.identifiant !== undefined && socket.room === 'pad-' + pad) {
 			db.hmset('pads:' + pad, 'contributions', contributions, function (err) {
 				if (err) { socket.emit('erreur'); return false }
 				io.in(socket.room).emit('modifiercontributions', contributions)
@@ -1320,7 +1599,7 @@ io.on('connection', function (socket) {
 	})
 
 	socket.on('modifieraffichage', function (pad, affichage) {
-		if (socket.identifiant !== '' && socket.identifiant !== undefined) {
+		if (socket.identifiant !== '' && socket.identifiant !== undefined && socket.room === 'pad-' + pad) {
 			db.hmset('pads:' + pad, 'affichage', affichage, function (err) {
 				if (err) { socket.emit('erreur'); return false }
 				io.in(socket.room).emit('modifieraffichage', affichage)
@@ -1333,7 +1612,7 @@ io.on('connection', function (socket) {
 	})
 
 	socket.on('modifierfond', function (pad, fond, ancienfond) {
-		if (socket.identifiant !== '' && socket.identifiant !== undefined) {
+		if (socket.identifiant !== '' && socket.identifiant !== undefined && socket.room === 'pad-' + pad) {
 			db.hmset('pads:' + pad, 'fond', fond, function (err) {
 				if (err) { socket.emit('erreur'); return false }
 				io.in(socket.room).emit('modifierfond', fond)
@@ -1350,7 +1629,7 @@ io.on('connection', function (socket) {
 	})
 
 	socket.on('modifiercouleurfond', function (pad, fond, ancienfond) {
-		if (socket.identifiant !== '' && socket.identifiant !== undefined) {
+		if (socket.identifiant !== '' && socket.identifiant !== undefined && socket.room === 'pad-' + pad) {
 			db.hmset('pads:' + pad, 'fond', fond, function (err) {
 				if (err) { socket.emit('erreur'); return false }
 				io.in(socket.room).emit('modifiercouleurfond', fond)
@@ -1367,7 +1646,7 @@ io.on('connection', function (socket) {
 	})
 
 	socket.on('modifieractivite', function (pad, statut) {
-		if (socket.identifiant !== '' && socket.identifiant !== undefined) {
+		if (socket.identifiant !== '' && socket.identifiant !== undefined && socket.room === 'pad-' + pad) {
 			db.hmset('pads:' + pad, 'registreActivite', statut, function () {
 				io.in(socket.room).emit('modifieractivite', statut)
 				socket.handshake.session.cookie.expires = new Date(Date.now() + (3600 * 24 * 7 * 1000))
@@ -1379,7 +1658,7 @@ io.on('connection', function (socket) {
 	})
 
 	socket.on('modifierconversation', function (pad, statut) {
-		if (socket.identifiant !== '' && socket.identifiant !== undefined) {
+		if (socket.identifiant !== '' && socket.identifiant !== undefined && socket.room === 'pad-' + pad) {
 			db.hmset('pads:' + pad, 'conversation', statut, function () {
 				io.in(socket.room).emit('modifierconversation', statut)
 				socket.handshake.session.cookie.expires = new Date(Date.now() + (3600 * 24 * 7 * 1000))
@@ -1391,7 +1670,7 @@ io.on('connection', function (socket) {
 	})
 
 	socket.on('modifierfichiers', function (pad, statut) {
-		if (socket.identifiant !== '' && socket.identifiant !== undefined) {
+		if (socket.identifiant !== '' && socket.identifiant !== undefined && socket.room === 'pad-' + pad) {
 			db.hmset('pads:' + pad, 'fichiers', statut, function () {
 				io.in(socket.room).emit('modifierfichiers', statut)
 				socket.handshake.session.cookie.expires = new Date(Date.now() + (3600 * 24 * 7 * 1000))
@@ -1403,7 +1682,7 @@ io.on('connection', function (socket) {
 	})
 
 	socket.on('modifierliens', function (pad, statut) {
-		if (socket.identifiant !== '' && socket.identifiant !== undefined) {
+		if (socket.identifiant !== '' && socket.identifiant !== undefined && socket.room === 'pad-' + pad) {
 			db.hmset('pads:' + pad, 'liens', statut, function () {
 				io.in(socket.room).emit('modifierliens', statut)
 				socket.handshake.session.cookie.expires = new Date(Date.now() + (3600 * 24 * 7 * 1000))
@@ -1415,7 +1694,7 @@ io.on('connection', function (socket) {
 	})
 
 	socket.on('modifierdocuments', function (pad, statut) {
-		if (socket.identifiant !== '' && socket.identifiant !== undefined) {
+		if (socket.identifiant !== '' && socket.identifiant !== undefined && socket.room === 'pad-' + pad) {
 			db.hmset('pads:' + pad, 'documents', statut, function () {
 				io.in(socket.room).emit('modifierdocuments', statut)
 				socket.handshake.session.cookie.expires = new Date(Date.now() + (3600 * 24 * 7 * 1000))
@@ -1427,7 +1706,7 @@ io.on('connection', function (socket) {
 	})
 
 	socket.on('modifiercommentaires', function (pad, statut) {
-		if (socket.identifiant !== '' && socket.identifiant !== undefined) {
+		if (socket.identifiant !== '' && socket.identifiant !== undefined && socket.room === 'pad-' + pad) {
 			db.hmset('pads:' + pad, 'commentaires', statut, function () {
 				io.in(socket.room).emit('modifiercommentaires', statut)
 				socket.handshake.session.cookie.expires = new Date(Date.now() + (3600 * 24 * 7 * 1000))
@@ -1439,7 +1718,7 @@ io.on('connection', function (socket) {
 	})
 
 	socket.on('modifierevaluations', function (pad, statut) {
-		if (socket.identifiant !== '' && socket.identifiant !== undefined) {
+		if (socket.identifiant !== '' && socket.identifiant !== undefined && socket.room === 'pad-' + pad) {
 			db.hmset('pads:' + pad, 'evaluations', statut, function () {
 				io.in(socket.room).emit('modifierevaluations', statut)
 				socket.handshake.session.cookie.expires = new Date(Date.now() + (3600 * 24 * 7 * 1000))
@@ -1474,7 +1753,7 @@ io.on('connection', function (socket) {
 	})
 
 	socket.on('reinitialiseractivite', function (pad) {
-		if (socket.identifiant !== '' && socket.identifiant !== undefined) {
+		if (socket.identifiant !== '' && socket.identifiant !== undefined && socket.room === 'pad-' + pad) {
 			db.del('activite:' + pad, function () {
 				io.in(socket.room).emit('reinitialiseractivite')
 				socket.handshake.session.cookie.expires = new Date(Date.now() + (3600 * 24 * 7 * 1000))
@@ -1486,7 +1765,7 @@ io.on('connection', function (socket) {
 	})
 
 	socket.on('ajoutercolonne', function (pad, titre, colonnes, couleur) {
-		if (socket.identifiant !== '' && socket.identifiant !== undefined) {
+		if (socket.identifiant !== '' && socket.identifiant !== undefined && socket.room === 'pad-' + pad) {
 			const identifiant = socket.identifiant
 			const nom = socket.nom
 			const date = moment().format()
@@ -1502,7 +1781,7 @@ io.on('connection', function (socket) {
 	})
 
 	socket.on('modifiercolonne', function (pad, colonnes) {
-		if (socket.identifiant !== '' && socket.identifiant !== undefined) {
+		if (socket.identifiant !== '' && socket.identifiant !== undefined && socket.room === 'pad-' + pad) {
 			db.hmset('pads:' + pad, 'colonnes', JSON.stringify(colonnes), function () {
 				io.in(socket.room).emit('modifiercolonne', colonnes)
 				socket.handshake.session.cookie.expires = new Date(Date.now() + (3600 * 24 * 7 * 1000))
@@ -1514,7 +1793,7 @@ io.on('connection', function (socket) {
 	})
 
 	socket.on('supprimercolonne', function (pad, titre, colonne, colonnes, blocsSupprimes, items, couleur) {
-		if (socket.identifiant !== '' && socket.identifiant !== undefined) {
+		if (socket.identifiant !== '' && socket.identifiant !== undefined && socket.room === 'pad-' + pad) {
 			db.hmset('pads:' + pad, 'colonnes', JSON.stringify(colonnes), function () {
 				const donneesBlocsSupprimes = []
 				for (const blocSupprime of blocsSupprimes) {
@@ -1524,7 +1803,7 @@ io.on('connection', function (socket) {
 							if (resultat === 1) {
 								db.hgetall('pad-' + pad + ':' + blocSupprime, function (err, objet) {
 									if (err) { resolve() }
-									if (objet.media !== '') {
+									if (objet.media !== '' && objet.type !== 'embed') {
 										supprimerFichier(pad, objet.media)
 									}
 									if (objet.bloc === blocSupprime) {
@@ -1720,6 +1999,24 @@ const televerser = multer({
 			nom = v.replaceAll(nom, '\'', '')
 			nom = v.replaceAll(nom, '#', '')
 			nom = v.replaceAll(nom, '.', '') + '_' + Math.random().toString(36).substring(2) + extension
+			callback(null, nom)
+		}
+	})
+}).single('fichier')
+
+const televerserArchive = multer({
+	storage: multer.diskStorage({
+		destination: function (req, fichier, callback) {
+			const chemin = path.join(__dirname, '..', '/static/temp/')
+			callback(null, chemin)
+		},
+		filename: function (req, fichier, callback) {
+			const info = path.parse(fichier.originalname)
+			const extension = info.ext.toLowerCase()
+			let nom = v.latinise(info.name.toLowerCase())
+			nom = v.replaceAll(nom, ' ', '-')
+			nom = v.replaceAll(nom, '\'', '')
+			nom = nom + '_' + Math.random().toString(36).substring(2) + extension
 			callback(null, nom)
 		}
 	})

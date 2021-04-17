@@ -686,6 +686,7 @@
 	border-top: 0.7rem solid #00ced1;
 }
 
+#iframe .html,
 #iframe {
 	width: 100%;
 	height: 40rem;

@@ -65,6 +65,18 @@
     height: 100%;
 }
 
+.jsPanel .jsPanel-content .html {
+    display: flex;
+	justify-content: center;
+	align-items: center;
+	width: 100%;
+    height: 100%;
+}
+
+.jsPanel .jsPanel-content .html blockquote {
+    font-size: 16px;
+}
+
 .jsPanel-headerbar {
 	box-sizing: border-box;
 	display: flex;

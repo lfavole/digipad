@@ -229,6 +229,9 @@
 				</div>
 			</div>
 			<div class="conteneur conteneur-bouton" v-if="statut === 'auteur'">
+				<span role="button" tabindex="0" class="bouton-bleu" @click="afficherExporterPad">{{ $t('exporterPad') }}</span>
+			</div>
+			<div class="conteneur conteneur-bouton" v-if="statut === 'auteur'">
 				<span role="button" tabindex="0" class="bouton-rouge" @click="afficherSupprimerPad">{{ $t('supprimerPad') }}</span>
 			</div>
 		</div>
@@ -502,8 +505,8 @@
 			<div class="conteneur">
 				<div class="contenu">
 					<label for="champ-nom-colonne">{{ $t('nomColonne') }}</label>
-					<input id="champ-nom-colonne" type="text" maxlength="48" :value="titreColonne" @input="titreColonne = $event.target.value" @keydown.enter="ajouterColonne" v-if="modeColonne === 'creation'">
-					<input id="champ-nom-colonne" type="text" maxlength="48" :value="titreColonne" @input="titreColonne = $event.target.value" @keydown.enter="modifierColonne" v-else>
+					<input id="champ-nom-colonne" type="text" maxlength="96" :value="titreColonne" @input="titreColonne = $event.target.value" @keydown.enter="ajouterColonne" v-if="modeColonne === 'creation'">
+					<input id="champ-nom-colonne" type="text" maxlength="96" :value="titreColonne" @input="titreColonne = $event.target.value" @keydown.enter="modifierColonne" v-else>
 					<div class="actions">
 						<span role="button" tabindex="0" class="bouton" @click="ajouterColonne" v-if="modeColonne === 'creation'">{{ $t('valider') }}</span>
 						<span role="button" tabindex="0" class="bouton" @click="modifierColonne" v-else>{{ $t('valider') }}</span>
@@ -522,7 +525,7 @@
 			<div class="conteneur ascenseur">
 				<div class="contenu">
 					<label for="champ-titre">{{ $t('titre') }}</label>
-					<input id="champ-titre" type="text" maxlength="72" :placeholder="$t('ajouterTitre')" :value="titre" @input="titre = $event.target.value">
+					<input id="champ-titre" type="text" maxlength="96" :placeholder="$t('ajouterTitre')" :value="titre" @input="titre = $event.target.value">
 					<label>{{ $t('texte') }}</label>
 					<div id="texte" />
 					<div class="televerser fichier" v-show="media === '' && !chargementLien" v-if="pad.fichiers === 'actives'">
@@ -553,7 +556,8 @@
 					<label v-show="media !== ''" v-else>{{ $t('documentCollaboratif') }}</label>
 					<div id="media" v-show="media !== ''" v-if="iframe !== ''">
 						<div id="iframe" :class="{'youtube': source === 'YouTube' || source === 'Vimeo' || source === 'Dailymotion'}">
-							<iframe :src="iframe" allowfullscreen />
+							<iframe :src="iframe" allowfullscreen v-if="verifierURL(iframe) === true" />
+							<div class="html" v-else v-html="iframe" />
 						</div>
 						<div class="action">
 							<span role="button" class="bouton supprimer" @click="supprimerLien">{{ $t('supprimer') }}</span>
@@ -654,7 +658,8 @@
 					</div>
 					<div class="media" :class="definirTypeMedia()" v-else>
 						<div class="conteneur-iframe">
-							<iframe :src="donneesBloc.iframe" allowfullscreen />
+							<iframe :src="donneesBloc.iframe" allowfullscreen v-if="verifierURL(donneesBloc.iframe) === true" />
+							<div class="html" v-else v-html="donneesBloc.iframe" />
 						</div>
 					</div>
 				</div>
@@ -870,6 +875,7 @@
 						<span role="button" tabindex="0" class="bouton" @click="supprimerPad" v-if="typeConfirmation === 'supprimer-pad'">{{ $t('oui') }}</span>
 						<span role="button" tabindex="0" class="bouton" @click="reinitialiserMessages" v-else-if="typeConfirmation === 'reinitialiser-messages'">{{ $t('oui') }}</span>
 						<span role="button" tabindex="0" class="bouton" @click="reinitialiserActivite" v-else-if="typeConfirmation === 'reinitialiser-activite'">{{ $t('oui') }}</span>
+						<span role="button" tabindex="0" class="bouton" @click="exporterPad" v-else-if="typeConfirmation === 'exporter-pad'">{{ $t('oui') }}</span>
 					</div>
 				</div>
 			</div>
