@@ -511,6 +511,9 @@ app.post('/api/dupliquer-pad', function (req, res) {
 							db.hgetall('pad-' + pad + ':' + bloc, function (err, donnees) {
 								if (err) { resolve() }
 								const date = moment().format()
+								if (donnees.vignette !== '') {
+									donnees.vignette = donnees.vignette.replace('/fichiers/' + pad, '/fichiers/' + id)
+								}
 								const multi = db.multi()
 								const blocId = 'bloc-id-' + (new Date()).getTime() + Math.random().toString(16).slice(10)
 								multi.hmset('pad-' + id + ':' + blocId, 'id', donnees.id, 'bloc', blocId, 'titre', donnees.titre, 'texte', donnees.texte, 'media', donnees.media, 'iframe', donnees.iframe, 'type', donnees.type, 'source', donnees.source, 'vignette', donnees.vignette, 'date', date, 'identifiant', donnees.identifiant, 'commentaires', 0, 'evaluations', 0, 'colonne', donnees.colonne)
@@ -668,13 +671,13 @@ app.post('/api/importer-pad', function (req, res) {
 		televerserArchive(req, res, async function (err) {
 			if (err) { res.send('erreur_import'); return false }
 			try {
-				const donnees = JSON.parse(req.body.donnees)
+				const source = path.join(__dirname, '..', '/static/temp/' + req.file.filename)
+				const cible = path.join(__dirname, '..', '/static/temp/archive-' + Math.floor((Math.random() * 100000) + 1))
+				await extract(source, { dir: cible })
+				const donnees = await fs.readJson(path.normalize(cible + '/donnees.json'))
 				const parametres = JSON.parse(req.body.parametres)
+				// Vérification des clés des données
 				if (donnees.hasOwnProperty('pad') && donnees.hasOwnProperty('blocs') && donnees.hasOwnProperty('activite') && donnees.pad.hasOwnProperty('id') && donnees.pad.hasOwnProperty('token') && donnees.pad.hasOwnProperty('titre') && donnees.pad.hasOwnProperty('identifiant') && donnees.pad.hasOwnProperty('fond') && donnees.pad.hasOwnProperty('acces') && donnees.pad.hasOwnProperty('contributions') && donnees.pad.hasOwnProperty('affichage') && donnees.pad.hasOwnProperty('fichiers') && donnees.pad.hasOwnProperty('liens') && donnees.pad.hasOwnProperty('documents') && donnees.pad.hasOwnProperty('commentaires') && donnees.pad.hasOwnProperty('evaluations') && donnees.pad.hasOwnProperty('date') && donnees.pad.hasOwnProperty('colonnes') && donnees.pad.hasOwnProperty('bloc') && donnees.pad.hasOwnProperty('activite')) {
-					const archive = req.file
-					const source = path.join(__dirname, '..', '/static/temp/' + archive.filename)
-					const cible = path.join(__dirname, '..', '/static/temp/archive-' + Math.floor((Math.random() * 100000) + 1))
-					await extract(source, { dir: cible })
 					db.get('pad', function (err, resultat) {
 						if (err) { res.send('erreur_import'); return false }
 						const id = parseInt(resultat) + 1
@@ -775,14 +778,19 @@ app.post('/api/importer-pad', function (req, res) {
 								}
 							}
 							multi.exec(function () {
+								fs.removeSync(source)
+								fs.removeSync(cible)
 								res.json({ id: id, token: token, titre: donnees.pad.titre, identifiant: identifiant, fond: donnees.pad.fond, acces: donnees.pad.acces, code: code, contributions: donnees.pad.contributions, affichage: donnees.pad.affichage, registreActivite: registreActivite, conversation: conversation, fichiers: donnees.pad.fichiers, liens: donnees.pad.liens, documents: donnees.pad.documents, commentaires: donnees.pad.commentaires, evaluations: donnees.pad.evaluations, date: date, colonnes: donnees.pad.colonnes, bloc: donnees.pad.bloc, activite: activiteId })
 							})
 						})
 					})
 				} else {
+					fs.removeSync(source)
+					fs.removeSync(cible)
 					res.send('donnees_corrompues')
 				}
 			} catch (err) {
+				fs.removeSync(path.join(__dirname, '..', '/static/temp/' + req.file.filename))
 				res.send('erreur_import')
 			}
 		})

@@ -251,7 +251,6 @@
 <script>
 import axios from 'axios'
 import saveAs from 'file-saver'
-import JSZip from 'jszip'
 import chargement from '../../components/chargement.vue'
 
 export default {
@@ -382,43 +381,35 @@ export default {
 			const champ = document.querySelector('#importer-pad')
 			const extension = champ.files[0].name.substring(champ.files[0].name.lastIndexOf('.') + 1).toLowerCase()
 			if (champ.files && champ.files[0] && extension === 'zip') {
-				const zip = new JSZip()
-				zip.loadAsync(champ.files[0]).then(function (archive) {
-					if (archive.files['donnees.json'] && archive.files['donnees.json'] !== '') {
-						archive.files['donnees.json'].async('string').then(function (donneesJson) {
-							const formulaire = new FormData()
-							formulaire.append('donnees', donneesJson)
-							formulaire.append('parametres', JSON.stringify(this.parametresImport))
-							formulaire.append('fichier', champ.files[0])
-							axios.post(this.hote + '/api/importer-pad', formulaire, {
-								headers: {
-									'Content-Type': 'multipart/form-data'
-								},
-								onUploadProgress: function (progression) {
-									const pourcentage = parseInt(Math.round((progression.loaded * 100) / progression.total))
-									this.progressionImport = pourcentage
-								}.bind(this)
-							}).then(function (reponse) {
-								const donnees = reponse.data
-								if (donnees === 'non_connecte') {
-									this.$router.push('/')
-								} else if (donnees === 'erreur_import') {
-									this.fermerModaleImporterPad()
-									this.$store.dispatch('modifierAlerte', this.$t('erreurImportPad'))
-								} else if (donnees === 'donnees_corrompues') {
-									this.fermerModaleImporterPad()
-									this.$store.dispatch('modifierAlerte', this.$t('donneesCorrompuesImportPad'))
-								} else {
-									this.padsCrees.push(donnees)
-									this.$store.dispatch('modifierMessage', this.$t('padImporte'))
-									this.fermerModaleImporterPad()
-								}
-							}.bind(this)).catch(function () {
-								this.fermerModaleImporterPad()
-								this.$store.dispatch('modifierAlerte', this.$t('erreurCommunicationServeur'))
-							}.bind(this))
-						}.bind(this))
+				const formulaire = new FormData()
+				formulaire.append('parametres', JSON.stringify(this.parametresImport))
+				formulaire.append('fichier', champ.files[0])
+				axios.post(this.hote + '/api/importer-pad', formulaire, {
+					headers: {
+						'Content-Type': 'multipart/form-data'
+					},
+					onUploadProgress: function (progression) {
+						const pourcentage = parseInt(Math.round((progression.loaded * 100) / progression.total))
+						this.progressionImport = pourcentage
+					}.bind(this)
+				}).then(function (reponse) {
+					const donnees = reponse.data
+					if (donnees === 'non_connecte') {
+						this.$router.push('/')
+					} else if (donnees === 'erreur_import') {
+						this.fermerModaleImporterPad()
+						this.$store.dispatch('modifierAlerte', this.$t('erreurImportPad'))
+					} else if (donnees === 'donnees_corrompues') {
+						this.fermerModaleImporterPad()
+						this.$store.dispatch('modifierAlerte', this.$t('donneesCorrompuesImportPad'))
+					} else {
+						this.padsCrees.push(donnees)
+						this.$store.dispatch('modifierMessage', this.$t('padImporte'))
+						this.fermerModaleImporterPad()
 					}
+				}.bind(this)).catch(function () {
+					this.fermerModaleImporterPad()
+					this.$store.dispatch('modifierAlerte', this.$t('erreurCommunicationServeur'))
 				}.bind(this))
 			} else {
 				this.$store.dispatch('modifierAlerte', this.$t('formatFichierPasAccepte'))
