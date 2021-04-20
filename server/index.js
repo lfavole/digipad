@@ -205,58 +205,62 @@ app.post('/api/recuperer-donnees-pad', function (req, res) {
 							for (const bloc of blocs) {
 								const donneesBloc = new Promise(function (resolve) {
 									db.hgetall('pad-' + id + ':' + bloc, function (err, donnees) {
-										if (err) { resolve() }
-										db.zcard('commentaires:' + bloc, function (err, commentaires) {
-											if (err) { resolve() }
-											donnees.commentaires = commentaires
-											db.zrange('evaluations:' + bloc, 0, -1, function (err, evaluations) {
-												if (err) { resolve() }
-												const donneesEvaluations = []
-												evaluations.forEach(function (evaluation) {
-													donneesEvaluations.push(JSON.parse(evaluation))
-												})
-												donnees.evaluations = donneesEvaluations
-												db.exists('utilisateurs:' + donnees.identifiant, function (err, resultat) {
-													if (err) { resolve() }
-													if (resultat === 1) {
-														db.hgetall('utilisateurs:' + donnees.identifiant, function (err, utilisateur) {
-															if (err) { resolve() }
-															donnees.nom = utilisateur.nom
-															db.hget('couleurs:' + donnees.identifiant, 'pad' + id, function (err, couleur) {
-																if (err || couleur === null) {
-																	donnees.couleur = ''
-																} else {
-																	donnees.couleur = couleur
-																}
-																resolve(donnees)
-															})
-														})
-													} else {
-														db.exists('noms:' + donnees.identifiant, function (err, resultat) {
-															if (err) { resolve() }
-															if (resultat === 1) {
-																db.hget('noms:' + donnees.identifiant, 'nom', function (err, nom) {
-																	if (err) { resolve() }
-																	donnees.nom = nom
-																	db.hget('couleurs:' + donnees.identifiant, 'pad' + id, function (err, couleur) {
-																		if (err || couleur === null) {
-																			donnees.couleur = ''
-																		} else {
-																			donnees.couleur = couleur
-																		}
-																		resolve(donnees)
-																	})
+										if (err) { resolve({}) }
+										if (donnees && Object.keys(donnees).length > 0) {
+											db.zcard('commentaires:' + bloc, function (err, commentaires) {
+												if (err) { resolve({}) }
+												donnees.commentaires = commentaires
+												db.zrange('evaluations:' + bloc, 0, -1, function (err, evaluations) {
+													if (err) { resolve({}) }
+													const donneesEvaluations = []
+													evaluations.forEach(function (evaluation) {
+														donneesEvaluations.push(JSON.parse(evaluation))
+													})
+													donnees.evaluations = donneesEvaluations
+													db.exists('utilisateurs:' + donnees.identifiant, function (err, resultat) {
+														if (err) { resolve({}) }
+														if (resultat === 1) {
+															db.hgetall('utilisateurs:' + donnees.identifiant, function (err, utilisateur) {
+																if (err) { resolve({}) }
+																donnees.nom = utilisateur.nom
+																db.hget('couleurs:' + donnees.identifiant, 'pad' + id, function (err, couleur) {
+																	if (err || couleur === null) {
+																		donnees.couleur = ''
+																	} else {
+																		donnees.couleur = couleur
+																	}
+																	resolve(donnees)
 																})
-															} else {
-																donnees.nom = ''
-																donnees.couleur = ''
-																resolve(donnees)
-															}
-														})
-													}
+															})
+														} else {
+															db.exists('noms:' + donnees.identifiant, function (err, resultat) {
+																if (err) { resolve({}) }
+																if (resultat === 1) {
+																	db.hget('noms:' + donnees.identifiant, 'nom', function (err, nom) {
+																		if (err) { resolve({}) }
+																		donnees.nom = nom
+																		db.hget('couleurs:' + donnees.identifiant, 'pad' + id, function (err, couleur) {
+																			if (err || couleur === null) {
+																				donnees.couleur = ''
+																			} else {
+																				donnees.couleur = couleur
+																			}
+																			resolve(donnees)
+																		})
+																	})
+																} else {
+																	donnees.nom = ''
+																	donnees.couleur = ''
+																	resolve(donnees)
+																}
+															})
+														}
+													})
 												})
 											})
-										})
+										} else {
+											resolve({})
+										}
 									})
 								})
 								donneesBlocs.push(donneesBloc)
@@ -274,10 +278,10 @@ app.post('/api/recuperer-donnees-pad', function (req, res) {
 								entree = JSON.parse(entree)
 								const donneesEntree = new Promise(function (resolve) {
 									db.exists('utilisateurs:' + entree.identifiant, function (err, resultat) {
-										if (err) { resolve() }
+										if (err) { resolve({}) }
 										if (resultat === 1) {
 											db.hgetall('utilisateurs:' + entree.identifiant, function (err, utilisateur) {
-												if (err) { resolve() }
+												if (err) { resolve({}) }
 												entree.nom = utilisateur.nom
 												db.hget('couleurs:' + entree.identifiant, 'pad' + id, function (err, couleur) {
 													if (err || couleur === null) {
@@ -290,13 +294,13 @@ app.post('/api/recuperer-donnees-pad', function (req, res) {
 											})
 										} else {
 											db.exists('noms:' + entree.identifiant, function (err, resultat) {
-												if (err) { resolve() }
+												if (err) { resolve({}) }
 												if (resultat === 1) {
 													db.hget('noms:' + entree.identifiant, 'nom', function (err, nom) {
-														if (err) { resolve() }
+														if (err) { resolve({}) }
 														entree.nom = nom
 														db.hget('couleurs:' + entree.identifiant, 'pad' + id, function (err, couleur) {
-															if (err) { resolve() }
+															if (err) { resolve({}) }
 															entree.couleur = couleur
 															resolve(entree)
 														})
@@ -324,10 +328,16 @@ app.post('/api/recuperer-donnees-pad', function (req, res) {
 						// Définir la même couleur pour les utilisateurs qui ne sont plus dans la base de données
 						const utilisateursSansCouleur = []
 						const couleurs = []
+						blocs = blocs.filter(function (element) {
+							return Object.keys(element).length > 0
+						})
 						blocs.forEach(function (bloc) {
 							if ((bloc.couleur === '' || bloc.couleur === null) && utilisateursSansCouleur.includes(bloc.identifiant) === false) {
 								utilisateursSansCouleur.push(bloc.identifiant)
 							}
+						})
+						activite = activite.filter(function (element) {
+							return Object.keys(element).length > 0
 						})
 						activite.forEach(function (item) {
 							if ((item.couleur === '' || item.couleur === null) && utilisateursSansCouleur.includes(item.identifiant) === false) {
@@ -2031,10 +2041,12 @@ const televerser = multer({
 			const info = path.parse(fichier.originalname)
 			const extension = info.ext.toLowerCase()
 			let nom = v.latinise(info.name.toLowerCase())
-			nom = v.replaceAll(nom, ' ', '-')
-			nom = v.replaceAll(nom, '\'', '')
-			nom = v.replaceAll(nom, '#', '')
-			nom = v.replaceAll(nom, '.', '') + '_' + Math.random().toString(36).substring(2) + extension
+			nom = nom.replace(/\ /gi, '-')
+			nom = nom.replace(/[^0-9a-z_\-]/gi, '')
+			if (nom.length > 100) {
+				nom = nom.substring(0, 100)
+			}
+			nom = nom + '_' + Math.random().toString(36).substring(2) + extension
 			callback(null, nom)
 		}
 	})
@@ -2050,8 +2062,11 @@ const televerserArchive = multer({
 			const info = path.parse(fichier.originalname)
 			const extension = info.ext.toLowerCase()
 			let nom = v.latinise(info.name.toLowerCase())
-			nom = v.replaceAll(nom, ' ', '-')
-			nom = v.replaceAll(nom, '\'', '')
+			nom = nom.replace(/\ /gi, '-')
+			nom = nom.replace(/[^0-9a-z_\-]/gi, '')
+			if (nom.length > 100) {
+				nom = nom.substring(0, 100)
+			}
 			nom = nom + '_' + Math.random().toString(36).substring(2) + extension
 			callback(null, nom)
 		}
