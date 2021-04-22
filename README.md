@@ -45,6 +45,6 @@ ETHERPAD_API_KEY (clé API Etherpad)
 https://digipad.app
 
 
-### THANKS AND CREDITS
-Italian translation by Paolo Mauri (https://gitlab.com/maupao)
-Spanish translation by Fernando S. Delgado Trujillo (https://gitlab.com/fersdt)
+### Remerciements et crédits
+Traduction en italien par Paolo Mauri (https://gitlab.com/maupao)
+Traduction en espagnol par Fernando S. Delgado Trujillo (https://gitlab.com/fersdt)
