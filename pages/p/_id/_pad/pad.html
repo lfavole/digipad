@@ -127,7 +127,7 @@
 					<span class="icone" role="button" :title="$t('afficherCode')" @click="afficherCodeAcces" v-else><i class="material-icons">visibility</i></span>
 				</div>
 			</div>
-			<div class="conteneur">
+			<div class="conteneur" v-if="pad.acces !== 'prive'">
 				<label>{{ $t('contributions') }}</label>
 				<label class="bouton-radio">{{ $t('ouvertes') }}
 					<input type="radio" name="contributions" :checked="pad.contributions === 'ouvertes'" @change="modifierContributions('ouvertes')">
