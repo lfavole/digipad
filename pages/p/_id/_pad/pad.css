@@ -1355,11 +1355,26 @@
 	margin-bottom: 0;
 }
 
-.menu .conteneur .fonds label {
-	font-size: 24px;
-	text-align: center;
-	margin-bottom: 0;
-	font-weight: 400;
+.menu .conteneur .fonds input[type="color"] {
+	width: 3.5rem;
+	height: 3.5rem;
+	padding: 0;
+	border: none;
+	cursor: pointer;
+}
+
+.menu .conteneur .fonds input[type="color"]::-moz-color-swatch {
+	border: 1px solid #ddd;
+	border-radius: 50%;
+}
+
+.menu .conteneur .fonds input[type="color"]::-webkit-color-swatch {
+	border: 1px solid #ddd;
+	border-radius: 50%;
+}
+
+.menu .conteneur .fonds input[type="color"]::-webkit-color-swatch-wrapper {
+	padding: 0;
 }
 
 #codeqr .contenu {

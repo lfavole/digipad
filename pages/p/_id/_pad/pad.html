@@ -159,9 +159,9 @@
 					<span v-for="(imageFond, indexImageFond) in fonds" @click="modifierFond(imageFond)" :key="indexImageFond">
 						<img :src="'/img/vignettes/' + imageFond" :alt="'Fond' + (indexImageFond + 1)">
 					</span>
-					<span>
-						<label for="couleur-fond" :title="$t('selectionnerCouleur')"><i class="material-icons">colorize</i></label>
-						<input type="color" id="couleur-fond" @change="modifierCouleurFond" style="display: none;">
+					<span class="couleur-personnalisee">
+						<input type="color" :value="pad.fond" @change="modifierCouleurFond" :title="$t('selectionnerCouleur')" v-if="pad.fond.substring(0, 1) === '#'">
+						<input type="color" value="#ffffff" @change="modifierCouleurFond" :title="$t('selectionnerCouleur')" v-else>
 					</span>
 				</div>
 			</div>
