@@ -27,7 +27,7 @@ npm run build
 pm2 start
 ```
 
-### Fichier .env nécessaire à la racine avant compilation avec 7 variables
+### Variables d'environnement pour la mise en production (fichier .env à la racine)
 ```
 DOMAIN (protocole + domaine. ex : https://digipad.app)
 HOST (IP du serveur de production)
