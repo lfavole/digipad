@@ -97,7 +97,7 @@
 				<section class="pads" v-show="onglet === 'pads-rejoints' && !recherche">
 					<div class="conteneur-pads" v-if="padsRejoints.length > 0">
 						<div class="pad" v-for="(pad, indexPad) in padsRejoints" :key="indexPad">
-							<div class="conteneur" :class="{'fond-personnalise': pad.fond.substring(1, 9) === 'fichiers'}" :style="{'background-image': 'url(' + pad.fond + ')'}" @click="ouvrirPad(pad)">
+							<div class="conteneur" :class="{'fond-personnalise': pad.fond.substring(1, 9) === 'fichiers'}" :style="definirFond(pad.fond)" @click="ouvrirPad(pad)">
 								<div class="meta">
 									<span class="titre">{{ pad.titre }}</span>
 									<span class="date">{{ $t('creeLe') }} {{ $formaterDate(pad.date, langue) }} {{ $t('par') }} {{ pad.nom }}</span>
@@ -121,7 +121,7 @@
 				<section class="pads" v-if="recherche">
 					<div class="conteneur-pads" v-if="resultats.length > 0">
 						<div class="pad" v-for="(pad, indexPad) in resultats" :key="'pad_' + indexPad">
-							<div class="conteneur" :class="{'fond-personnalise': pad.fond.substring(1, 9) === 'fichiers'}" :style="{'background-image': 'url(' + pad.fond + ')'}" @click="ouvrirPad(pad)">
+							<div class="conteneur" :class="{'fond-personnalise': pad.fond.substring(1, 9) === 'fichiers'}" :style="definirFond(pad.fond)" @click="ouvrirPad(pad)">
 								<div class="meta">
 									<span class="titre">{{ pad.titre }}</span>
 									<span class="date">{{ $t('creeLe') }} {{ $formaterDate(pad.date, langue) }} {{ $t('par') }} {{ pad.nom }}</span>
