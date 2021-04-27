@@ -519,7 +519,7 @@ app.post('/api/dupliquer-pad', function (req, res) {
 					for (const bloc of blocs) {
 						const donneesBloc = new Promise(function (resolve) {
 							db.hgetall('pad-' + pad + ':' + bloc, function (err, donnees) {
-								if (err) { resolve() }
+								if (err) { resolve({}) }
 								const date = moment().format()
 								if (donnees.vignette !== '') {
 									donnees.vignette = donnees.vignette.replace('/fichiers/' + pad, '/fichiers/' + id)
@@ -575,7 +575,7 @@ app.post('/api/exporter-pad', function (req, res) {
 		const id = req.body.padId
 		const donneesPad = new Promise(function (resolveMain) {
 			db.hgetall('pads:' + id, function (err, resultats) {
-				if (err) { resolveMain() }
+				if (err) { resolveMain({}) }
 				resolveMain(resultats)
 			})
 		})
@@ -586,7 +586,7 @@ app.post('/api/exporter-pad', function (req, res) {
 				for (const bloc of blocs) {
 					const donneesBloc = new Promise(function (resolve) {
 						db.hgetall('pad-' + id + ':' + bloc, function (err, donnees) {
-							if (err) { resolve() }
+							if (err) { resolve({}) }
 							const donneesCommentaires = []
 							db.zrange('commentaires:' + bloc, 0, -1, function (err, commentaires) {
 								if (err) { resolve(donnees) }
@@ -623,7 +623,7 @@ app.post('/api/exporter-pad', function (req, res) {
 					entree = JSON.parse(entree)
 					const donneesEntree = new Promise(function (resolve) {
 						db.exists('utilisateurs:' + entree.identifiant, function (err, resultat) {
-							if (err) { resolve() }
+							if (err) { resolve({}) }
 							resolve(entree)
 						})
 					})
@@ -645,10 +645,10 @@ app.post('/api/exporter-pad', function (req, res) {
 				fs.mkdirpSync(path.normalize(chemin + '/' + id + '/fichiers'))
 				fs.writeFileSync(path.normalize(chemin + '/' + id + '/donnees.json'), JSON.stringify(parametres, '', 4), 'utf8')
 				for (const bloc of parametres.blocs) {
-					if (bloc.media !== '' && bloc.type !== 'embed' && fs.existsSync(path.join(__dirname, '..', '/static/fichiers/' + id + '/' + bloc.media))) {
+					if (Object.keys(bloc).length > 0 && bloc.media !== '' && bloc.type !== 'embed' && fs.existsSync(path.join(__dirname, '..', '/static/fichiers/' + id + '/' + bloc.media))) {
 						fs.copySync(path.join(__dirname, '..', '/static/fichiers/' + id + '/' + bloc.media), path.normalize(chemin + '/' + id + '/fichiers/' + bloc.media, { overwrite: true }))
 					}
-					if (bloc.vignette !== '' && bloc.vignette.substring(1, 9) === 'fichiers' && fs.existsSync(path.join(__dirname, '..', '/static' + bloc.vignette))) {
+					if (Object.keys(bloc).length > 0 && bloc.vignette !== '' && bloc.vignette.substring(1, 9) === 'fichiers' && fs.existsSync(path.join(__dirname, '..', '/static' + bloc.vignette))) {
 						fs.copySync(path.join(__dirname, '..', '/static' + bloc.vignette), path.normalize(chemin + '/' + id + '/fichiers/' + bloc.vignette.replace('/fichiers/' + id + '/', ''), { overwrite: true }))
 					}
 				}
