@@ -850,6 +850,9 @@ export default {
 			}
 			this.modeColonne = type
 			this.modaleColonne = true
+			this.$nextTick(function () {
+				document.querySelector('#champ-nom-colonne').focus()
+			})
 		},
 		ajouterColonne () {
 			if (this.titreColonne !== '') {
