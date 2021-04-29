@@ -109,7 +109,7 @@
 					<input type="radio" name="acces" :checked="pad.acces === 'public'" @change="modifierAcces('public')">
 					<span class="coche" />
 				</label>
-				<label class="bouton-radio">{{ $t('prive') }}
+				<label class="bouton-radio" v-if="statut === 'utilisateur'">{{ $t('prive') }}
 					<input type="radio" name="acces" :checked="pad.acces === 'prive'" @change="modifierAcces('prive')">
 					<span class="coche" />
 				</label>
