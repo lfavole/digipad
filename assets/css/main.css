@@ -731,6 +731,12 @@ label.bouton-bleu {
     border: 1px solid #ddd;
 }
 
+#codeqr #qr img {
+	max-width: 100%;
+	height: auto;
+	max-height: 60vh;
+}
+
 @keyframes fonduEntrant {
     from { opacity: 0; }
     to   { opacity: 1; }
