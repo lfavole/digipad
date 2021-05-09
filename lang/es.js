@@ -163,7 +163,7 @@ export default {
 	emoticones: 'Émoticonos',
 	erreurTeleversementFichier: 'Error al cargar el archivo.',
 	formatFichierPasAccepte: 'No se acepta este formato de archivo.',
-	tailleMaximale50: 'El tamaño máximo autorizado es de 50 MB.',
+	tailleMaximale20: 'El tamaño máximo autorizado es de 20 MB.',
 	tailleMaximale3: 'El tamaño máximo autorizado es de 3 MB.',
 	erreurRecuperationContenu: 'Error en la recuperación del contenido.',
 	erreurTeleversementVignette: 'Error al cargar la minuatura.',

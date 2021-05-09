@@ -163,7 +163,7 @@ export default {
 	emoticones: 'Émoticônes',
 	erreurTeleversementFichier: 'Erreur lors du téléversement du fichier.',
 	formatFichierPasAccepte: 'Ce format de fichier n\'est pas accepté.',
-	tailleMaximale50: 'La taille maximale autorisée est 50 Mo.',
+	tailleMaximale20: 'La taille maximale autorisée est 20 Mo.',
 	tailleMaximale3: 'La taille maximale autorisée est 3 Mo.',
 	erreurRecuperationContenu: 'Erreur lors de la récupération du contenu.',
 	erreurTeleversementVignette: 'Erreur lors du téléversement de la vignette.',

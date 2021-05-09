@@ -966,7 +966,7 @@ export default {
 			const champ = document.querySelector('#televerser-fichier')
 			const formats = ['jpg', 'jpeg', 'png', 'gif', 'mp4', 'm4v', 'mp3', 'm4a', 'ogg', 'wav', 'pdf', 'ppt', 'pptx', 'odp', 'doc', 'docx', 'odt']
 			const extension = champ.files[0].name.substring(champ.files[0].name.lastIndexOf('.') + 1).toLowerCase()
-			if (champ.files && champ.files[0] && formats.includes(extension) && champ.files[0].size < 52428800) {
+			if (champ.files && champ.files[0] && formats.includes(extension) && champ.files[0].size < 20480000) {
 				const fichier = champ.files[0]
 				const formulaire = new FormData()
 				formulaire.append('pad', this.pad.id)
@@ -1049,8 +1049,8 @@ export default {
 			} else {
 				if (formats.includes(extension) === false) {
 					this.$store.dispatch('modifierAlerte', this.$t('formatFichierPasAccepte'))
-				} else if (champ.files[0].size > 52428800) {
-					this.$store.dispatch('modifierAlerte', this.$t('tailleMaximale50'))
+				} else if (champ.files[0].size > 20480000) {
+					this.$store.dispatch('modifierAlerte', this.$t('tailleMaximale20'))
 				}
 				champ.value = ''
 			}
