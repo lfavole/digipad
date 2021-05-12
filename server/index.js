@@ -1951,9 +1951,9 @@ function recupererDonnees (identifiant) {
 			for (const pad of pads) {
 				const donneePad = new Promise(function (resolve) {
 					db.hgetall('pads:' + pad, function (err, donnees) {
-						if (err) { resolve() }
+						if (err) { resolve({}) }
 						db.hgetall('utilisateurs:' + donnees.identifiant, function (err, utilisateur) {
-							if (err) { resolve() }
+							if (err) { resolve({}) }
 							if (utilisateur.nom === '') {
 								donnees.nom = donnees.identifiant
 							} else {
@@ -1978,9 +1978,9 @@ function recupererDonnees (identifiant) {
 			for (const pad of pads) {
 				const donneePad = new Promise(function (resolve) {
 					db.hgetall('pads:' + pad, function (err, donnees) {
-						if (err) { resolve() }
+						if (err) { resolve({}) }
 						db.hgetall('utilisateurs:' + donnees.identifiant, function (err, utilisateur) {
-							if (err) { resolve() }
+							if (err) { resolve({}) }
 							if (utilisateur.nom === '') {
 								donnees.nom = donnees.identifiant
 							} else {
