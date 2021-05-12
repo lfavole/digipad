@@ -61,7 +61,7 @@ export const actions = {
 		commit('modifierNom', donnees.nom)
 		commit('modifierLangue', donnees.langue)
 		commit('modifierStatut', donnees.statut)
-		if (donnees.acces) {
+		if (donnees.hasOwnProperty('acces')) {
 			commit('modifierAcces', donnees.acces)
 		}
 	},
