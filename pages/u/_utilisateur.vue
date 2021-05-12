@@ -393,19 +393,17 @@ export default {
 						this.progressionImport = pourcentage
 					}.bind(this)
 				}).then(function (reponse) {
+					this.fermerModaleImporterPad()
 					const donnees = reponse.data
 					if (donnees === 'non_connecte') {
 						this.$router.push('/')
 					} else if (donnees === 'erreur_import') {
-						this.fermerModaleImporterPad()
 						this.$store.dispatch('modifierAlerte', this.$t('erreurImportPad'))
 					} else if (donnees === 'donnees_corrompues') {
-						this.fermerModaleImporterPad()
 						this.$store.dispatch('modifierAlerte', this.$t('donneesCorrompuesImportPad'))
 					} else {
 						this.padsCrees.push(donnees)
 						this.$store.dispatch('modifierMessage', this.$t('padImporte'))
-						this.fermerModaleImporterPad()
 					}
 				}.bind(this)).catch(function () {
 					this.fermerModaleImporterPad()
@@ -446,17 +444,16 @@ export default {
 				padId: this.padId,
 				identifiant: this.identifiant
 			}).then(function (reponse) {
+				this.chargement = false
 				const donnees = reponse.data
 				if (donnees === 'non_connecte') {
 					this.$router.push('/')
 				} else if (donnees === 'erreur_duplication') {
-					this.chargement = false
 					this.$store.dispatch('modifierAlerte', this.$t('erreurDuplicationPad'))
 				} else {
 					this.padsCrees.push(donnees)
 					this.$store.dispatch('modifierMessage', this.$t('padDuplique'))
 					this.padId = ''
-					this.chargement = false
 				}
 			}.bind(this)).catch(function () {
 				this.chargement = false
@@ -470,16 +467,15 @@ export default {
 				padId: this.padId,
 				identifiant: this.identifiant
 			}).then(function (reponse) {
+				this.chargement = false
 				const donnees = reponse.data
 				if (donnees === 'non_connecte') {
 					this.$router.push('/')
 				} else if (donnees === 'erreur_export') {
-					this.chargement = false
 					this.$store.dispatch('modifierAlerte', this.$t('erreurExportPad'))
 				} else {
 					saveAs('/temp/' + donnees, 'pad-' + this.padId + '.zip')
 					this.padId = ''
-					this.chargement = false
 				}
 			}.bind(this)).catch(function () {
 				this.chargement = false
@@ -493,11 +489,11 @@ export default {
 				padId: this.padId,
 				identifiant: this.identifiant
 			}).then(function (reponse) {
+				this.chargement = false
 				const donnees = reponse.data
 				if (donnees === 'non_connecte') {
 					this.$router.push('/')
 				} else if (donnees === 'erreur_suppression') {
-					this.chargement = false
 					this.$store.dispatch('modifierAlerte', this.$t('erreurSuppressionPad'))
 				} else {
 					this.padsCrees.forEach(function (pad, index) {
@@ -512,7 +508,6 @@ export default {
 					}.bind(this))
 					this.$store.dispatch('modifierMessage', this.$t('padSupprime'))
 					this.padId = ''
-					this.chargement = false
 				}
 			}.bind(this)).catch(function () {
 				this.chargement = false
@@ -528,13 +523,13 @@ export default {
 					identifiant: this.identifiant,
 					nom: nom
 				}).then(function (reponse) {
+					this.chargement = false
 					const donnees = reponse.data
 					if (donnees === 'non_connecte') {
 						this.$router.push('/')
 					} else {
 						this.$store.dispatch('modifierNom', nom)
 						this.$store.dispatch('modifierMessage', this.$t('nomModifie'))
-						this.chargement = false
 					}
 				}.bind(this)).catch(function () {
 					this.chargement = false
@@ -558,19 +553,17 @@ export default {
 					motdepasse: motDePasse,
 					nouveaumotdepasse: nouveauMotDePasse
 				}).then(function (reponse) {
+					this.chargement = false
 					const donnees = reponse.data
 					if (donnees === 'non_connecte') {
 						this.$router.push('/')
 					} else if (donnees === 'motdepasse_incorrect') {
-						this.chargement = false
 						this.$store.dispatch('modifierAlerte', this.$t('motDePasseActuelPasCorrect'))
 					} else if (donnees === 'erreur') {
-						this.chargement = false
 						this.$store.dispatch('modifierAlerte', this.$t('erreurCommunicationServeur'))
 					} else {
 						this.$store.dispatch('modifierMessage', this.$t('motDePasseModifie'))
 						this.fermerModaleMotDePasse()
-						this.chargement = false
 					}
 				}.bind(this)).catch(function () {
 					this.chargement = false
@@ -593,6 +586,7 @@ export default {
 					identifiant: this.identifiant,
 					langue: langue
 				}).then(function (reponse) {
+					this.chargement = false
 					const donnees = reponse.data
 					if (donnees === 'non_connecte') {
 						this.$router.push('/')
@@ -600,7 +594,6 @@ export default {
 						this.$i18n.setLocale(langue)
 						this.$store.dispatch('modifierLangue', langue)
 						this.$store.dispatch('modifierMessage', this.$t('langueModifiee'))
-						this.chargement = false
 					}
 				}.bind(this)).catch(function () {
 					this.chargement = false
@@ -616,11 +609,11 @@ export default {
 			this.chargement = true
 			const identifiant = this.identifiant
 			axios.post(this.hote + '/api/supprimer-compte', {
-				identifiant: this.identifiant
+				identifiant: identifiant
 			}).then(function (reponse) {
+				this.chargement = false
 				const donnees = reponse.data
 				if (donnees === 'erreur') {
-					this.chargement = false
 					this.$store.dispatch('modifierAlerte', this.$t('erreurCommunicationServeur'))
 				} else {
 					this.$socket.emit('deconnexion', identifiant)

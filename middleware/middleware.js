@@ -4,7 +4,6 @@ export default function (context) {
 	if (context.req && context.req.session && context.req.session.identifiant !== '' && context.req.session.identifiant !== undefined) {
 		const donnees = {}
 		donnees.identifiant = context.req.session.identifiant
-		donnees.motdepasse = context.req.session.motdepasse
 		donnees.nom = context.req.session.nom
 		donnees.langue = context.req.session.langue
 		donnees.statut = context.req.session.statut

@@ -372,7 +372,7 @@ export default {
 			this.modifierCaracteristique(this.identifiant, 'identifiant', donnees.identifiant)
 			this.modifierCaracteristique(donnees.identifiant, 'nom', donnees.nom)
 			this.modifierCaracteristique(donnees.identifiant, 'couleur', donnees.couleur)
-			this.$store.dispatch('modifierUtilisateur', { identifiant: donnees.identifiant, nom: donnees.nom, motdepasse: '', langue: donnees.langue, statut: 'auteur' })
+			this.$store.dispatch('modifierUtilisateur', { identifiant: donnees.identifiant, nom: donnees.nom, langue: donnees.langue, statut: 'auteur' })
 			this.$store.dispatch('modifierMessage', this.$t('padDebloque'))
 		},
 		deconnecte: function () {

@@ -122,7 +122,7 @@ app.post('/api/inscription', function (req, res) {
 	const identifiant = req.body.identifiant
 	const motdepasse = req.body.motdepasse
 	db.exists('utilisateurs:' + identifiant, function (err, reponse) {
-		if (err) { res.send('erreur') }
+		if (err) { res.send('erreur'); return false  }
 		if (reponse === 0) {
 			const hash = bcrypt.hashSync(motdepasse, 10)
 			const date = moment().format()
@@ -134,7 +134,7 @@ app.post('/api/inscription', function (req, res) {
 				req.session.langue = 'fr'
 				req.session.statut = 'utilisateur'
 				req.session.cookie.expires = new Date(Date.now() + (3600 * 24 * 7 * 1000))
-				res.json({ identifiant: identifiant, motdepasse: hash, nom: '', langue: 'fr', statut: 'utilisateur' })
+				res.json({ identifiant: identifiant, nom: '', langue: 'fr', statut: 'utilisateur' })
 			})
 		} else {
 			res.send('utilisateur_existe_deja')
