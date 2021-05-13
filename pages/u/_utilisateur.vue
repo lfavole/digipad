@@ -250,6 +250,7 @@
 
 <script>
 import axios from 'axios'
+import imagesLoaded from 'imagesloaded'
 import saveAs from 'file-saver'
 import chargement from '../../components/chargement.vue'
 
@@ -331,7 +332,15 @@ export default {
 		if (this.identifiant === '' || this.statut === 'invite') {
 			this.$router.push('/')
 		}
+		this.$nuxt.$loading.start()
 		this.$i18n.setLocale(this.langue)
+	},
+	mounted () {
+		imagesLoaded('#pads', { background: true }, function () {
+			setTimeout(function () {
+				this.$nuxt.$loading.finish()
+			}.bind(this), 100)
+		}.bind(this))
 	},
 	methods: {
 		definirFond (fond) {
