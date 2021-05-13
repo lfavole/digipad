@@ -932,11 +932,11 @@ label.bouton-bleu {
 
 .chargement {
 	display: inline-block;
-	border: 0.7rem solid #ddd;
-	border-top: 0.7rem solid #00ced1;
+	border: 7px solid #ddd;
+	border-top: 7px solid #00ced1;
 	border-radius: 50%;
-	width: 4.5rem;
-	height: 4.5rem;
+	width: 40px;
+	height: 40px;
 	animation: rotation 0.7s linear infinite;
 }
   
@@ -951,7 +951,7 @@ label.bouton-bleu {
     -moz-appearance: none;
 	border: none;
 	background-color: #00ced1;
-	height: 0.7rem;
+	height: 7px;
 	font-size: 0;
 	line-height: 1;
 }
