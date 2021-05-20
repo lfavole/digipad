@@ -2520,7 +2520,14 @@ export default {
 	},
 	head () {
 		return {
-			title: this.pad.hasOwnProperty('titre') ? this.pad.titre + ' - Digipad' : 'Digipad'
+			title: this.pad.hasOwnProperty('titre') ? this.pad.titre + ' - Digipad' : 'Digipad',
+			meta: [
+				{
+					hid: 'robots',
+					name: 'robots',
+					content: 'noindex, nofollow'
+				}
+			]
 		}
 	}
 }
