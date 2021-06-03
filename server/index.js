@@ -516,7 +516,7 @@ app.post('/api/dupliquer-pad', function (req, res) {
 				const donneesBlocs = []
 				db.zrange('blocs:' + pad, 0, -1, function (err, blocs) {
 					if (err) { res.send('erreur_duplication'); return false }
-					for (const bloc of blocs) {
+					for (const [indexBloc, bloc] of blocs.entries()) {
 						const donneesBloc = new Promise(function (resolve) {
 							db.hgetall('pad-' + pad + ':' + bloc, function (err, donnees) {
 								if (err) { resolve({}) }
@@ -527,7 +527,7 @@ app.post('/api/dupliquer-pad', function (req, res) {
 								const multi = db.multi()
 								const blocId = 'bloc-id-' + (new Date()).getTime() + Math.random().toString(16).slice(10)
 								multi.hmset('pad-' + id + ':' + blocId, 'id', donnees.id, 'bloc', blocId, 'titre', donnees.titre, 'texte', donnees.texte, 'media', donnees.media, 'iframe', donnees.iframe, 'type', donnees.type, 'source', donnees.source, 'vignette', donnees.vignette, 'date', date, 'identifiant', donnees.identifiant, 'commentaires', 0, 'evaluations', 0, 'colonne', donnees.colonne)
-								multi.zadd('blocs:' + id, donnees.id, blocId)
+								multi.zadd('blocs:' + id, indexBloc, blocId)
 								multi.exec(function () {
 									resolve(blocId)
 								})
