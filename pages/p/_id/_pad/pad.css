@@ -18,12 +18,14 @@
 }
 
 #code-acces,
+#copier-code,
 #copier-lien {
 	display: flex;
 	justify-content: center;
 	align-items: center;
 }
 
+#copier-code input,
 #code-acces input {
 	display: block;
 	width: calc(100% - 34px);
@@ -37,6 +39,7 @@
 }
 
 #code-acces span i,
+#copier-code span i,
 #copier-lien span i {
 	font-size: 24px;
 	cursor: pointer;
@@ -46,6 +49,7 @@
 	margin-left: 10px;
 }
 
+#copier-code span i:active,
 #copier-lien span i:active {
 	opacity: 0.8;
 }

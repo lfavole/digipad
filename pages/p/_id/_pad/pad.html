@@ -95,6 +95,13 @@
 				</div>
 			</div>
 			<div class="conteneur">
+				<label>{{ $t('codeIntegration') }}</label>
+				<div id="copier-code">
+					<input type="text" disabled :value="'<iframe src=&quot;' + hote + '/p/' + pad.id + '/' + pad.token + '&quot; frameborder=&quot;0&quot; width=&quot;100%&quot; height=&quot;500&quot;></iframe>'">
+					<span class="icone lien" role="button" :title="$t('copierCode')"><i class="material-icons">content_copy</i></span>
+				</div>
+			</div>
+			<div class="conteneur">
 				<label>{{ $t('langue') }}</label>
 				<div id="langues">
 					<span role="button" :class="{'selectionne': langue === 'fr'}" @click="modifierLangue('fr')">FR</span>
@@ -413,7 +420,7 @@
 		</transition>
 
 		<transition name="fondu">
-			<draggable id="blocs" :class="{'mur': pad.affichage === 'mur', 'flux-vertical': pad.affichage === 'flux-vertical'}" v-model="blocs" draggable=".bloc" :sort="true" :animation="250" :swap-threshold="0.5" :force-fallback="true" :fallback-tolerance="10" :scroll-sensitivity="convertirRem(4)" :scroll-speed="25" @end="deplacerBloc" v-if="(pad.affichage === 'mur' || pad.affichage === 'flux-vertical') && action === 'organiser'">
+			<draggable id="blocs" :class="{'mur': pad.affichage === 'mur', 'flux-vertical': pad.affichage === 'flux-vertical'}" v-model="blocs" draggable=".bloc" :sort="true" :animation="250" :swap-threshold="0.5" :force-fallback="true" :fallback-tolerance="10" :scroll-sensitivity="convertirRem(4)" :scroll-speed="convertirRem(4)" @start="demarrerDeplacerBloc" @end="deplacerBloc" v-if="(pad.affichage === 'mur' || pad.affichage === 'flux-vertical') && action === 'organiser'">
 				<div :id="item.bloc" class="bloc" v-for="(item, indexItem) in blocs" :style="{'border-color': item.couleur}" :data-bloc="item.bloc" :key="'bloc' + indexItem">
 					<div class="contenu">
 						<div class="titre" v-if="item.titre !== ''" :style="{'background': eclaircirCouleur(item.couleur)}">
@@ -453,7 +460,7 @@
 							<span>{{ col }}</span>
 						</div>
 					</div>
-					<draggable class="conteneur-colonne ascenseur" v-model="colonnes[indexCol]" group="colonne" draggable=".bloc" :sort="true" :animation="250" :swap-threshold="0.5" :force-fallback="true" :fallback-tolerance="10" :scroll-sensitivity="convertirRem(4)" :scroll-speed="25" :data-index="indexCol" @end="deplacerBloc">
+					<draggable class="conteneur-colonne ascenseur" v-model="colonnes[indexCol]" group="colonne" draggable=".bloc" :sort="true" :animation="250" :swap-threshold="0.5" :force-fallback="true" :fallback-tolerance="10" :scroll-sensitivity="convertirRem(4)" :scroll-speed="convertirRem(4)" :data-index="indexCol" @start="demarrerDeplacerBloc" @end="deplacerBloc">
 						<div :id="item.bloc" class="bloc" v-for="(item, indexItem) in colonnes[indexCol]" :style="{'border-color': item.couleur}" :data-bloc="item.bloc" :key="'bloc' + indexItem">
 							<div class="contenu">
 								<div class="titre" v-if="item.titre !== ''" :style="{'background': eclaircirCouleur(item.couleur)}">

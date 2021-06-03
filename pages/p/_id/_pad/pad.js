@@ -38,10 +38,6 @@ export default {
 			this.utilisateur = donnees.identifiant
 			if (this.pad.affichage === 'colonnes') {
 				this.colonnes[donnees.colonne].push(donnees)
-				this.$nextTick(function () {
-					const colonne = document.querySelector('#colonne' + donnees.colonne + ' .conteneur-colonne')
-					colonne.scrollTop = colonne.scrollHeight
-				})
 			}
 			this.blocs.push(donnees)
 			this.activite.unshift({ bloc: donnees.bloc, identifiant: donnees.identifiant, nom: donnees.nom, titre: donnees.titre, date: donnees.date, couleur: donnees.couleur, type: 'bloc-ajoute' })
@@ -52,6 +48,24 @@ export default {
 					bloc.classList.remove('anime')
 				})
 			})
+			if (this.utilisateur === this.identifiant) {
+				if (this.pad.affichage === 'colonnes') {
+					this.$nextTick(function () {
+						const colonne = document.querySelector('#colonne' + donnees.colonne + ' .conteneur-colonne')
+						colonne.scrollTop = colonne.scrollHeight
+					})
+				} else if (this.pad.affichage === 'mur') {
+					this.$nextTick(function () {
+						const bloc = document.querySelector('#' + donnees.bloc)
+						bloc.scrollIntoView()
+					})
+				} else if (this.pad.affichage === 'flux-vertical') {
+					this.$nextTick(function () {
+						const pad = document.querySelector('#pad')
+						pad.scrollTop = pad.scrollHeight
+					})
+				}
+			}
 		},
 		modifierbloc: function (donnees) {
 			this.action = 'modifier'
@@ -607,6 +621,15 @@ export default {
 			clipboardLien.on('success', function () {
 				this.$store.dispatch('modifierMessage', this.$t('lienCopie'))
 			}.bind(this))
+			const iframe = '<iframe src="' + this.hote + '/p/' + this.pad.id + '/' + this.pad.token + '" frameborder="0" width="100%" height="500"></iframe>'
+			const clipboardCode = new ClipboardJS('#copier-code span', {
+				text: function () {
+					return iframe
+				}
+			})
+			clipboardCode.on('success', function () {
+				this.$store.dispatch('modifierMessage', this.$t('codeCopie'))
+			}.bind(this))
 			// eslint-disable-next-line
 			this.codeqr = new QRCode('qr', {
 				text: lien,
@@ -920,8 +943,10 @@ export default {
 				this.source = item.source
 				if (item.vignette && item.vignette !== '') {
 					this.vignette = item.vignette
+					this.vignetteDefaut = this.vignette
 				} else if (item.type !== 'image' && (!item.vignette || item.vignette === '')) {
 					this.vignette = this.definirVignette(item)
+					this.vignetteDefaut = this.vignette
 				}
 			}
 			if (this.pad.affichage === 'colonnes') {
@@ -1247,11 +1272,6 @@ export default {
 			}.bind(this))
 		},
 		ajouterVignette () {
-			if (this.mode === 'creation' && this.vignette !== '' && this.vignette.substring(1, 9) === 'fichiers') {
-				this.$socket.emit('supprimervignette', this.vignette)
-			} else if (this.mode === 'edition' && this.vignette !== '' && this.vignette.substring(1, 9) === 'fichiers') {
-				this.vignettes.push(this.vignette)
-			}
 			const champ = document.querySelector('#televerser-vignette')
 			const formats = ['jpg', 'jpeg', 'png', 'gif']
 			const extension = champ.files[0].name.substring(champ.files[0].name.lastIndexOf('.') + 1).toLowerCase()
@@ -1269,6 +1289,9 @@ export default {
 						this.progressionVignette = pourcentage
 					}.bind(this)
 				}).then(function (reponse) {
+					if (this.vignette !== '' && this.vignette.substring(1, 9) === 'fichiers') {
+						this.vignettes.push(this.vignette)
+					}
 					const donnees = reponse.data
 					if (donnees === 'non_connecte') {
 						this.$router.push('/')
@@ -1309,6 +1332,11 @@ export default {
 			if (vignette.substring(1, 9) === 'fichiers') {
 				this.$socket.emit('supprimervignette', vignette)
 			}
+			this.vignettes.forEach(function (item, index) {
+				if (item === this.vignetteDefaut) {
+					this.vignettes.splice(index, 1)
+				}
+			}.bind(this))
 		},
 		ajouterBloc () {
 			this.bloc = 'bloc-id-' + (new Date()).getTime() + Math.random().toString(16).slice(10)
@@ -1360,11 +1388,17 @@ export default {
 			this.titreModale = ''
 			if (this.mode === 'creation' && this.media !== '' && this.lien === '') {
 				this.$socket.emit('supprimerfichier', { pad: this.pad.id, fichier: this.media, vignette: this.vignette })
-			} else if (this.mode === 'edition' && this.vignette !== '' && this.vignette.substring(1, 9) === 'fichiers') {
-				this.$socket.emit('supprimervignette', this.vignette)
 			}
 			if (this.fichiers.length > 0) {
 				this.$socket.emit('supprimerfichiers', { pad: this.pad.id, fichiers: this.fichiers })
+			}
+			this.vignettes.forEach(function (item, index) {
+				if (item === this.vignetteDefaut) {
+					this.vignettes.splice(index, 1)
+				}
+			}.bind(this))
+			if (this.vignette !== this.vignetteDefaut && this.vignette.substring(1, 9) === 'fichiers') {
+				this.vignettes.push(this.vignette)
 			}
 			if (this.vignettes.length > 0) {
 				this.$socket.emit('supprimervignettes', this.vignettes)
@@ -1963,8 +1997,17 @@ export default {
 			this.bloc = ''
 			this.titre = ''
 		},
+		demarrerDeplacerBloc () {
+			if (this.pad.affichage === 'colonnes') {
+				this.desactiverDefilementHorizontal()
+				this.defilement = false
+				this.depart = 0
+				this.distance = 0
+			}
+		},
 		deplacerBloc (event) {
 			if (this.pad.affichage === 'colonnes') {
+				this.activerDefilementHorizontal()
 				const blocs = []
 				this.colonnes.forEach(function (colonne, index) {
 					colonne.forEach(function (bloc) {
@@ -2010,6 +2053,7 @@ export default {
 				const id = element.getAttribute('data-bloc')
 				if (document.querySelector('#' + id)) {
 					document.querySelector('#' + id).classList.add('actif')
+					document.querySelector('#' + id).scrollIntoView()
 				}
 			}
 		},
@@ -2515,6 +2559,17 @@ export default {
 			}
 			if (this.fichiers.length > 0) {
 				this.$socket.emit('supprimerfichiers', { pad: this.pad.id, fichiers: this.fichiers })
+			}
+			this.vignettes.forEach(function (item, index) {
+				if (item === this.vignetteDefaut) {
+					this.vignettes.splice(index, 1)
+				}
+			}.bind(this))
+			if (this.vignette !== this.vignetteDefaut && this.vignette.substring(1, 9) === 'fichiers') {
+				this.vignettes.push(this.vignette)
+			}
+			if (this.vignettes.length > 0) {
+				this.$socket.emit('supprimervignettes', this.vignettes)
 			}
 		}
 	},
