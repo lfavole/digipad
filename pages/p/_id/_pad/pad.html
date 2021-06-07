@@ -21,7 +21,7 @@
 		<span id="motdepasse" role="button" @click="afficherModaleMotDePasse" v-if="pad.motdepasse && pad.identifiant !== identifiant && statut !== 'utilisateur'" :title="$t('motDePassePad')"><i class="material-icons">vpn_key</i></span>
 		<span id="options" role="button" @click="afficherOptions" v-if="pad.identifiant === identifiant" :title="$t('parametresPad')"><i class="material-icons">settings</i></span>
 		<span id="options" role="button" @click="afficherOptions" v-else-if="pad.identifiant !== identifiant && statut !== 'utilisateur'" :title="$t('parametresPad')"><i class="material-icons">language</i></span>
-		<span id="organisation" role="button" :class="{'desactive': blocs.length < 2}" @click="activerModeOrganiser" v-if="pad.identifiant === identifiant && action !== 'organiser'" :title="$t('modeOrganiser')"><i class="material-icons">sort</i></span>
+		<span id="organisation" role="button" :class="{'desactive': definirClasseOrganiser() === false}" @click="activerModeOrganiser" v-if="pad.identifiant === identifiant && action !== 'organiser'" :title="$t('modeOrganiser')"><i class="material-icons">sort</i></span>
 		<span id="organisation" role="button" class="actif" @click="desactiverModeOrganiser" v-if="pad.identifiant === identifiant && action === 'organiser'" :title="$t('finModeOrganiser')"><i class="material-icons">sort</i></span>
 		<span id="diaporama" role="button" :class="{'desactive': blocs.length === 0}" @click="afficherModaleDiaporama" :title="$t('modeDiaporama')"><i class="material-icons">slideshow</i></span>
 		<span id="deconnexion" role="button" @click="deconnexion" v-if="statut === 'utilisateur'" :title="$t('deconnexion')"><i class="material-icons">power_settings_new</i></span>
@@ -46,6 +46,7 @@
 					<li v-else-if="entree.type === 'bloc-evalue'" :data-bloc="entree.bloc" :key="indexEntree"><span :style="{'color': entree.couleur}"> {{ definirNom(entree) }}</span> <span v-if="entree.titre !== ''" v-html="$t('aEvalueCapsule', { titre: entree.titre })" /><span v-else v-html="$t('aEvalueUneCapsule')" /> {{ $formaterDateRelative(entree.date, langue) }}.</li>
 					<li v-else-if="entree.type === 'colonne-ajoutee' && pad.affichage === 'colonnes'" :key="indexEntree"><span :style="{'color': entree.couleur}"> {{ definirNom(entree) }}</span> <span v-html="$t('aAjouteColonne', { titre: entree.titre })" /> {{ $formaterDateRelative(entree.date, langue) }}.</li>
 					<li v-else-if="entree.type === 'colonne-supprimee' && pad.affichage === 'colonnes'" :key="indexEntree"><span :style="{'color': entree.couleur}"> {{ definirNom(entree) }}</span> <span v-html="$t('aSupprimeColonne', { titre: entree.titre })" /> {{ $formaterDateRelative(entree.date, langue) }}.</li>
+					<li v-else-if="entree.type === 'colonne-deplacee' && pad.affichage === 'colonnes'" :key="indexEntree"><span :style="{'color': entree.couleur}"> {{ definirNom(entree) }}</span> <span v-html="$t('aDeplaceColonne', { titre: entree.titre })" /> {{ $formaterDateRelative(entree.date, langue) }}.</li>
 				</template>
 			</ul>
 		</div>
@@ -458,6 +459,10 @@
 					<div class="bloc haut">
 						<div class="titre-colonne">
 							<span>{{ col }}</span>
+						</div>
+						<div class="menu-colonne" v-if="pad.identifiant === identifiant">
+							<span role="button" class="bouton gauche" @click="deplacerColonne('gauche', indexCol)" v-if="indexCol > 0"><i class="material-icons">arrow_back</i></span>
+							<span role="button" class="bouton droite" @click="deplacerColonne('droite', indexCol)" v-if="indexCol < (pad.colonnes.length - 1)"><i class="material-icons">arrow_forward</i></span>
 						</div>
 					</div>
 					<draggable class="conteneur-colonne ascenseur" v-model="colonnes[indexCol]" group="colonne" draggable=".bloc" :sort="true" :animation="250" :swap-threshold="0.5" :force-fallback="true" :fallback-tolerance="10" :scroll-sensitivity="convertirRem(4)" :scroll-speed="convertirRem(4)" :data-index="indexCol" @start="demarrerDeplacerBloc" @end="deplacerBloc">

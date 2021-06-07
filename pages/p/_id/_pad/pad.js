@@ -367,16 +367,59 @@ export default {
 			this.chargement = false
 		},
 		supprimercolonne: function (donnees) {
-			this.blocs = donnees.blocs
+			this.colonnes.splice(parseInt(donnees.colonne), 1)
+			const blocs = []
+			this.colonnes.forEach(function (colonne, index) {
+				colonne.forEach(function (bloc) {
+					bloc.colonne = index
+				})
+				blocs.push(...colonne)
+			})
+			this.pad.colonnes = donnees.colonnes
+			this.blocs = blocs
 			this.activite.unshift({ identifiant: donnees.identifiant, nom: donnees.nom, titre: donnees.titre, date: donnees.date, couleur: donnees.couleur, type: 'colonne-supprimee' })
 			if (this.pad.identifiant === this.identifiant) {
 				this.$store.dispatch('modifierMessage', this.$t('colonneSupprimee'))
 			} else {
-				this.pad.colonnes = donnees.colonnes
-				this.colonnes.splice(donnees.colonne, 1)
-				if (this.modaleBloc && this.colonne === donnees.colonne) {
+				if (this.modaleBloc && parseInt(this.colonne) === parseInt(donnees.colonne)) {
 					this.fermerModaleBlocSansEnregistrement()
 					this.$store.dispatch('modifierMessage', this.$t('colonneActuelleSupprimee'))
+				}
+			}
+			this.chargement = false
+		},
+		deplacercolonne: function (donnees) {
+			const blocs = []
+			const donneesColonnes = this.colonnes[parseInt(donnees.colonne)]
+			if (donnees.direction === 'gauche') {
+				this.colonnes.splice((parseInt(donnees.colonne) - 1), 0, donneesColonnes)
+				this.colonnes.splice((parseInt(donnees.colonne) + 1), 1)
+			} else if (donnees.direction === 'droite') {
+				const donneesColonneDeplacee = this.colonnes[parseInt(donnees.colonne) + 1]
+				this.colonnes.splice((parseInt(donnees.colonne) + 1), 0, donneesColonnes)
+				this.colonnes.splice(parseInt(donnees.colonne), 1, donneesColonneDeplacee)
+				this.colonnes.splice((parseInt(donnees.colonne) + 2), 1)
+			}
+			this.colonnes.forEach(function (colonne, index) {
+				colonne.forEach(function (bloc) {
+					bloc.colonne = index
+				})
+				blocs.push(...colonne)
+			})
+			this.pad.colonnes = donnees.colonnes
+			this.blocs = blocs
+			this.activite.unshift({ identifiant: donnees.identifiant, nom: donnees.nom, titre: donnees.titre, date: donnees.date, couleur: donnees.couleur, type: 'colonne-deplacee' })
+			if (this.pad.identifiant === this.identifiant) {
+				this.$store.dispatch('modifierMessage', this.$t('colonneDeplacee'))
+			} else {
+				if (this.modaleBloc && parseInt(this.colonne) === parseInt(donnees.colonne) && donnees.direction === 'gauche') {
+					this.colonne = parseInt(donnees.colonne) - 1
+				} else if (this.modaleBloc && parseInt(this.colonne) === parseInt(donnees.colonne) && donnees.direction === 'droite') {
+					this.colonne = parseInt(donnees.colonne) + 1
+				} else if (this.modaleBloc && parseInt(this.colonne) === (parseInt(donnees.colonne) - 1) && donnees.direction === 'gauche') {
+					this.colonne = parseInt(donnees.colonne)
+				} else if (this.modaleBloc && parseInt(this.colonne) === (parseInt(donnees.colonne) + 1) && donnees.direction === 'droite') {
+					this.colonne = parseInt(donnees.colonne)
 				}
 			}
 			this.chargement = false
@@ -880,18 +923,14 @@ export default {
 		ajouterColonne () {
 			if (this.titreColonne !== '') {
 				this.chargement = true
-				const colonnes = JSON.parse(JSON.stringify(this.pad.colonnes))
-				colonnes.push(this.titreColonne)
-				this.$socket.emit('ajoutercolonne', this.pad.id, this.titreColonne, colonnes, this.couleur)
+				this.$socket.emit('ajoutercolonne', this.pad.id, this.titreColonne, this.couleur)
 				this.fermerModaleColonne()
 			}
 		},
 		modifierColonne () {
 			if (this.titreColonne !== '') {
 				this.chargement = true
-				const colonnes = JSON.parse(JSON.stringify(this.pad.colonnes))
-				colonnes[this.colonne] = this.titreColonne
-				this.$socket.emit('modifiercolonne', this.pad.id, colonnes)
+				this.$socket.emit('modifiercolonne', this.pad.id, this.titreColonne, this.colonne)
 				this.fermerModaleColonne()
 			}
 		},
@@ -905,20 +944,7 @@ export default {
 		supprimerColonne () {
 			this.modaleConfirmer = false
 			this.chargement = true
-			const blocsColonne = []
-			this.colonnes[this.colonne].forEach(function (item) {
-				blocsColonne.push(item.bloc)
-			})
-			this.colonnes.splice(this.colonne, 1)
-			const blocs = []
-			this.colonnes.forEach(function (colonne, index) {
-				colonne.forEach(function (bloc) {
-					bloc.colonne = index
-				})
-				blocs.push(...colonne)
-			})
-			this.pad.colonnes.splice(this.colonne, 1)
-			this.$socket.emit('supprimercolonne', this.pad.id, this.titreColonne, this.colonne, this.pad.colonnes, blocsColonne, blocs, this.couleur)
+			this.$socket.emit('supprimercolonne', this.pad.id, this.titreColonne, this.colonne, this.couleur)
 			this.fermerModaleColonne()
 		},
 		fermerModaleColonne () {
@@ -927,6 +953,10 @@ export default {
 			this.titreColonne = ''
 			this.modeColonne = ''
 			this.colonne = 0
+		},
+		deplacerColonne (direction, colonne) {
+			this.chargement = true
+			this.$socket.emit('deplacercolonne', this.pad.id, this.pad.colonnes[colonne], direction, colonne, this.couleur)
 		},
 		ouvrirModaleBloc (mode, item, colonne) {
 			this.mode = mode
@@ -1620,8 +1650,15 @@ export default {
 			const delta = (x - this.depart) * 1.5
 			pad.scrollLeft = this.distance - delta
 		},
+		definirClasseOrganiser () {
+			if (this.blocs.length > 1 || (this.pad.affichage === 'colonnes' && this.pad.colonnes.length > 1)) {
+				return true
+			} else {
+				return false
+			}
+		},
 		activerModeOrganiser () {
-			if (this.blocs.length > 1) {
+			if (this.blocs.length > 1 || (this.pad.affichage === 'colonnes' && this.pad.colonnes.length > 1)) {
 				this.menuActivite = false
 				this.menuChat = false
 				this.menuOptions = false
@@ -2006,6 +2043,7 @@ export default {
 			}
 		},
 		deplacerBloc (event) {
+			this.chargement = true
 			if (this.pad.affichage === 'colonnes') {
 				this.activerDefilementHorizontal()
 				const blocs = []

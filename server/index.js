@@ -1316,15 +1316,22 @@ io.on('connection', function (socket) {
 			const donneesBlocs = []
 			for (let i = 0; i < items.length; i++) {
 				const donneeBloc = new Promise(function (resolve) {
-					const multi = db.multi()
-					multi.zrem('blocs:' + pad, items[i].bloc)
-					multi.zadd('blocs:' + pad, (i + 1), items[i].bloc)
-					if (affichage === 'colonnes') {
-						multi.hmset('pad-' + pad + ':' + items[i].bloc, 'colonne', items[i].colonne)
-					}
-					multi.exec(function (err) {
+					db.exists('pad-' + pad + ':' + items[i].bloc, function (err, resultat) {
 						if (err) { resolve() }
-						resolve(i)
+						if (resultat === 1) {
+							const multi = db.multi()
+							multi.zrem('blocs:' + pad, items[i].bloc)
+							multi.zadd('blocs:' + pad, (i + 1), items[i].bloc)
+							if (affichage === 'colonnes') {
+								multi.hmset('pad-' + pad + ':' + items[i].bloc, 'colonne', items[i].colonne)
+							}
+							multi.exec(function (err) {
+								if (err) { resolve() }
+								resolve(i)
+							})
+						} else {
+							resolve()
+						}
 					})
 				})
 				donneesBlocs.push(donneeBloc)
@@ -1810,85 +1817,208 @@ io.on('connection', function (socket) {
 		}
 	})
 
-	socket.on('ajoutercolonne', function (pad, titre, colonnes, couleur) {
+	socket.on('ajoutercolonne', function (pad, titre, couleur) {
 		if (socket.identifiant !== '' && socket.identifiant !== undefined && socket.room === 'pad-' + pad) {
 			const identifiant = socket.identifiant
 			const nom = socket.nom
 			const date = moment().format()
-			db.hmset('pads:' + pad, 'colonnes', JSON.stringify(colonnes), function () {
-				io.in(socket.room).emit('ajoutercolonne', { identifiant: identifiant, nom: nom, titre: titre, colonnes: colonnes, date: date, couleur: couleur })
-				enregistrerActivite(pad, { identifiant: identifiant, titre: titre, date: date, couleur: couleur, type: 'colonne-ajoutee' })
-				socket.handshake.session.cookie.expires = new Date(Date.now() + (3600 * 24 * 7 * 1000))
-				socket.handshake.session.save()
+			db.hgetall('pads:' + pad, function (err, donnees) {
+				if (err) { socket.emit('erreur'); return false }
+				const colonnes = JSON.parse(donnees.colonnes)
+				colonnes.push(titre)
+				db.hmset('pads:' + pad, 'colonnes', JSON.stringify(colonnes), function () {
+					io.in(socket.room).emit('ajoutercolonne', { identifiant: identifiant, nom: nom, titre: titre, colonnes: colonnes, date: date, couleur: couleur })
+					enregistrerActivite(pad, { identifiant: identifiant, titre: titre, date: date, couleur: couleur, type: 'colonne-ajoutee' })
+					socket.handshake.session.cookie.expires = new Date(Date.now() + (3600 * 24 * 7 * 1000))
+					socket.handshake.session.save()
+				})
 			})
 		} else {
 			socket.emit('deconnecte')
 		}
 	})
 
-	socket.on('modifiercolonne', function (pad, colonnes) {
+	socket.on('modifiercolonne', function (pad, titre, index) {
 		if (socket.identifiant !== '' && socket.identifiant !== undefined && socket.room === 'pad-' + pad) {
-			db.hmset('pads:' + pad, 'colonnes', JSON.stringify(colonnes), function () {
-				io.in(socket.room).emit('modifiercolonne', colonnes)
-				socket.handshake.session.cookie.expires = new Date(Date.now() + (3600 * 24 * 7 * 1000))
-				socket.handshake.session.save()
+			db.hgetall('pads:' + pad, function (err, donnees) {
+				if (err) { socket.emit('erreur'); return false }
+				const colonnes = JSON.parse(donnees.colonnes)
+				colonnes[index] = titre
+				db.hmset('pads:' + pad, 'colonnes', JSON.stringify(colonnes), function () {
+					io.in(socket.room).emit('modifiercolonne', colonnes)
+					socket.handshake.session.cookie.expires = new Date(Date.now() + (3600 * 24 * 7 * 1000))
+					socket.handshake.session.save()
+				})
 			})
 		} else {
 			socket.emit('deconnecte')
 		}
 	})
 
-	socket.on('supprimercolonne', function (pad, titre, colonne, colonnes, blocsSupprimes, items, couleur) {
+	socket.on('supprimercolonne', function (pad, titre, colonne, couleur) {
 		if (socket.identifiant !== '' && socket.identifiant !== undefined && socket.room === 'pad-' + pad) {
-			db.hmset('pads:' + pad, 'colonnes', JSON.stringify(colonnes), function () {
-				const donneesBlocsSupprimes = []
-				for (const blocSupprime of blocsSupprimes) {
-					const donneesBlocSupprime = new Promise(function (resolve) {
-						db.exists('pad-' + pad + ':' + blocSupprime, function (err, resultat) {
-							if (err) { resolve() }
-							if (resultat === 1) {
-								db.hgetall('pad-' + pad + ':' + blocSupprime, function (err, objet) {
+			db.hgetall('pads:' + pad, function (err, donnees) {
+				if (err) { socket.emit('erreur'); return false }
+				const colonnes = JSON.parse(donnees.colonnes)
+				colonnes.splice(colonne, 1)
+				const donneesBlocs = []
+				db.zrange('blocs:' + pad, 0, -1, function (err, blocs) {
+					if (err) { socket.emit('erreur'); return false }
+					for (const bloc of blocs) {
+						const donneesBloc = new Promise(function (resolve) {
+							db.hgetall('pad-' + pad + ':' + bloc, function (err, resultat) {
+								if (err) { resolve({}) }
+								resolve(resultat)
+							})
+						})
+						donneesBlocs.push(donneesBloc)
+					}
+					Promise.all(donneesBlocs).then(function (blocs) {
+						const blocsSupprimes = []
+						const blocsRestants = []
+						blocs.forEach(function (item) {
+							if (parseInt(item.colonne) === parseInt(colonne)) {
+								blocsSupprimes.push(item.bloc)
+							} else {
+								blocsRestants.push(item)
+							}
+						})
+						const donneesBlocsSupprimes = []
+						for (const blocSupprime of blocsSupprimes) {
+							const donneesBlocSupprime = new Promise(function (resolve) {
+								db.exists('pad-' + pad + ':' + blocSupprime, function (err, resultat) {
 									if (err) { resolve() }
-									if (objet.media !== '' && objet.type !== 'embed') {
-										supprimerFichier(pad, objet.media)
-									}
-									if (objet.bloc === blocSupprime) {
-										const multi = db.multi()
-										multi.del('pad-' + pad + ':' + blocSupprime)
-										multi.zrem('blocs:' + pad, blocSupprime)
-										multi.del('commentaires:' + blocSupprime)
-										multi.del('evaluations:' + blocSupprime)
-										multi.exec(function (err) {
+									if (resultat === 1) {
+										db.hgetall('pad-' + pad + ':' + blocSupprime, function (err, objet) {
 											if (err) { resolve() }
-											resolve('supprime')
+											if (objet.media !== '' && objet.type !== 'embed') {
+												supprimerFichier(pad, objet.media)
+											}
+											if (objet.bloc === blocSupprime) {
+												const multi = db.multi()
+												multi.del('pad-' + pad + ':' + blocSupprime)
+												multi.zrem('blocs:' + pad, blocSupprime)
+												multi.del('commentaires:' + blocSupprime)
+												multi.del('evaluations:' + blocSupprime)
+												multi.exec(function (err) {
+													if (err) { resolve() }
+													resolve('supprime')
+												})
+											} else {
+												resolve()
+											}
 										})
 									} else {
 										resolve()
 									}
 								})
-							}
+							})
+							donneesBlocsSupprimes.push(donneesBlocSupprime)
+						}
+						const donneesBlocsRestants = []
+						for (let i = 0; i < blocsRestants.length; i++) {
+							const donneeBloc = new Promise(function (resolve) {
+								if (parseInt(blocsRestants[i].colonne) > parseInt(colonne)) {
+									db.hmset('pad-' + pad + ':' + blocsRestants[i].bloc, 'colonne', (parseInt(blocsRestants[i].colonne) - 1), function (err) {
+										if (err) { resolve() }
+										resolve(i)
+									})
+								} else {
+									resolve(i)
+								}
+							})
+							donneesBlocsRestants.push(donneeBloc)
+						}
+						Promise.all([donneesBlocsSupprimes, donneesBlocsRestants]).then(function () {
+							db.hmset('pads:' + pad, 'colonnes', JSON.stringify(colonnes), function () {
+								const identifiant = socket.identifiant
+								const nom = socket.nom
+								const date = moment().format()
+								io.in(socket.room).emit('supprimercolonne', { identifiant: identifiant, nom: nom, titre: titre, colonne: colonne, colonnes: colonnes, date: date, couleur: couleur })
+								enregistrerActivite(pad, { identifiant: identifiant, titre: titre, date: date, couleur: couleur, type: 'colonne-supprimee' })
+								socket.handshake.session.cookie.expires = new Date(Date.now() + (3600 * 24 * 7 * 1000))
+								socket.handshake.session.save()
+							})
 						})
 					})
-					donneesBlocsSupprimes.push(donneesBlocSupprime)
+				})
+			})
+		} else {
+			socket.emit('deconnecte')
+		}
+	})
+
+	socket.on('deplacercolonne', function (pad, titre, direction, colonne, couleur) {
+		if (socket.identifiant !== '' && socket.identifiant !== undefined && socket.room === 'pad-' + pad) {
+			db.hgetall('pads:' + pad, function (err, donnees) {
+				if (err) { socket.emit('erreur'); return false }
+				const colonnes = JSON.parse(donnees.colonnes)
+				if (direction === 'gauche') {
+					colonnes.splice((parseInt(colonne) - 1), 0, titre)
+					colonnes.splice((parseInt(colonne) + 1), 1)
+				} else if (direction === 'droite') {
+					const titreDeplace = colonnes[parseInt(colonne) + 1]
+					colonnes.splice((parseInt(colonne) + 1), 0, titre)
+					colonnes.splice(parseInt(colonne), 1, titreDeplace)
+					colonnes.splice((parseInt(colonne) + 2), 1)
 				}
 				const donneesBlocs = []
-				for (let i = 0; i < items.length; i++) {
-					const donneeBloc = new Promise(function (resolve) {
-						db.hmset('pad-' + pad + ':' + items[i].bloc, 'colonne', items[i].colonne, function (err) {
-							if (err) { resolve() }
-							resolve(i)
+				db.zrange('blocs:' + pad, 0, -1, function (err, blocs) {
+					if (err) { socket.emit('erreur'); return false }
+					for (const bloc of blocs) {
+						const donneesBloc = new Promise(function (resolve) {
+							db.hgetall('pad-' + pad + ':' + bloc, function (err, resultat) {
+								if (err) { resolve({}) }
+								resolve(resultat)
+							})
+						})
+						donneesBlocs.push(donneesBloc)
+					}
+					Promise.all(donneesBlocs).then(function (blocs) {
+						const donneesBlocsDeplaces = []
+						for (const item of blocs) {
+							const donneesBlocDeplace = new Promise(function (resolve) {
+								db.exists('pad-' + pad + ':' + item.bloc, function (err, resultat) {
+									if (err) { resolve() }
+									if (resultat === 1 && parseInt(item.colonne) === parseInt(colonne) && direction === 'gauche') {
+										db.hmset('pad-' + pad + ':' + item.bloc, 'colonne', (parseInt(colonne) - 1), function (err) {
+											if (err) { resolve() }
+											resolve('deplace')
+										})
+									} else if (resultat === 1 && parseInt(item.colonne) === parseInt(colonne) && direction === 'droite') {
+										db.hmset('pad-' + pad + ':' + item.bloc, 'colonne', (parseInt(colonne) + 1), function (err) {
+											if (err) { resolve() }
+											resolve('deplace')
+										})
+									} else if (resultat === 1 && parseInt(item.colonne) === (parseInt(colonne) - 1) && direction === 'gauche') {
+										db.hmset('pad-' + pad + ':' + item.bloc, 'colonne', parseInt(colonne), function (err) {
+											if (err) { resolve() }
+											resolve('deplace')
+										})
+									} else if (resultat === 1 && parseInt(item.colonne) === (parseInt(colonne) + 1) && direction === 'droite') {
+										db.hmset('pad-' + pad + ':' + item.bloc, 'colonne', parseInt(colonne), function (err) {
+											if (err) { resolve() }
+											resolve('deplace')
+										})
+									} else {
+										resolve()
+									}
+								})
+							})
+							donneesBlocsDeplaces.push(donneesBlocDeplace)
+						}
+						Promise.all(donneesBlocsDeplaces).then(function () {
+							db.hmset('pads:' + pad, 'colonnes', JSON.stringify(colonnes), function () {
+								const identifiant = socket.identifiant
+								const nom = socket.nom
+								const date = moment().format()
+								io.in(socket.room).emit('deplacercolonne', { identifiant: identifiant, nom: nom, titre: titre, direction: direction, colonne: colonne, colonnes: colonnes, date: date, couleur: couleur })
+								enregistrerActivite(pad, { identifiant: identifiant, titre: titre, date: date, couleur: couleur, type: 'colonne-deplacee' })
+								socket.handshake.session.cookie.expires = new Date(Date.now() + (3600 * 24 * 7 * 1000))
+								socket.handshake.session.save()
+							})
 						})
 					})
-					donneesBlocs.push(donneeBloc)
-				}
-				Promise.all([donneesBlocsSupprimes, donneesBlocs]).then(function () {
-					const identifiant = socket.identifiant
-					const nom = socket.nom
-					const date = moment().format()
-					io.in(socket.room).emit('supprimercolonne', { identifiant: identifiant, nom: nom, titre: titre, colonne: colonne, colonnes: colonnes, blocs: items, date: date, couleur: couleur })
-					enregistrerActivite(pad, { identifiant: identifiant, titre: titre, date: date, couleur: couleur, type: 'colonne-supprimee' })
-					socket.handshake.session.cookie.expires = new Date(Date.now() + (3600 * 24 * 7 * 1000))
-					socket.handshake.session.save()
 				})
 			})
 		} else {

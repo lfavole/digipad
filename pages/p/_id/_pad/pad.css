@@ -256,6 +256,16 @@
 	cursor: pointer;
 }
 
+.organiser #blocs.colonnes .bloc.haut .menu-colonne .bouton {
+	color: #fff;
+	cursor: pointer;
+	margin-right: 0;
+}
+
+.organiser #blocs.colonnes .bloc.haut .menu-colonne .bouton.gauche + .bouton.droite {
+	margin-left: 0.7rem;
+}
+
 #blocs.colonnes .bloc.haut:hover .menu-colonne {
 	display: block;
 }
