@@ -198,6 +198,10 @@ app.post('/api/recuperer-donnees-pad', function (req, res) {
 			db.hgetall('pads:' + id, function (err, pad) {
 				if (err) { res.send('erreur_pad'); return false }
 				if (pad.id === id && pad.token === token) {
+					let nombreColonnes = 0
+					if (pad.colonnes) {
+						nombreColonnes = JSON.parse(pad.colonnes).length
+					}
 					const blocsPad = new Promise(function (resolveMain) {
 						const donneesBlocs = []
 						db.zrange('blocs:' + id, 0, -1, function (err, blocs) {
@@ -207,6 +211,18 @@ app.post('/api/recuperer-donnees-pad', function (req, res) {
 									db.hgetall('pad-' + id + ':' + bloc, function (err, donnees) {
 										if (err) { resolve({}) }
 										if (donnees && Object.keys(donnees).length > 0) {
+											// Pour résoudre le problème des capsules qui sont référencées dans une colonne inexistante
+											if (parseInt(donnees.colonne) >= nombreColonnes) {
+												donnees.colonne = nombreColonnes - 1
+											}
+											// Pour homogénéité des paramètres avec modération activée
+											if (!donnees.hasOwnProperty('visibilite')) {
+												donnees.visibilite = 'visible'
+											}
+											// Ne pas ajouter les capsules en attente de modération
+											if (pad.contributions === 'moderees' && donnees.visibilite === 'masquee' && donnees.identifiant !== identifiant && pad.identifiant !== identifiant) {
+												resolve({})
+											}
 											db.zcard('commentaires:' + bloc, function (err, commentaires) {
 												if (err) { resolve({}) }
 												donnees.commentaires = commentaires
@@ -524,9 +540,13 @@ app.post('/api/dupliquer-pad', function (req, res) {
 								if (donnees.vignette !== '') {
 									donnees.vignette = donnees.vignette.replace('/fichiers/' + pad, '/fichiers/' + id)
 								}
+								let visibilite = 'visible'
+								if (donnees.hasOwnProperty('visibilite')) {
+									visibilite = donnees.visibilite
+								}
 								const multi = db.multi()
 								const blocId = 'bloc-id-' + (new Date()).getTime() + Math.random().toString(16).slice(10)
-								multi.hmset('pad-' + id + ':' + blocId, 'id', donnees.id, 'bloc', blocId, 'titre', donnees.titre, 'texte', donnees.texte, 'media', donnees.media, 'iframe', donnees.iframe, 'type', donnees.type, 'source', donnees.source, 'vignette', donnees.vignette, 'date', date, 'identifiant', donnees.identifiant, 'commentaires', 0, 'evaluations', 0, 'colonne', donnees.colonne)
+								multi.hmset('pad-' + id + ':' + blocId, 'id', donnees.id, 'bloc', blocId, 'titre', donnees.titre, 'texte', donnees.texte, 'media', donnees.media, 'iframe', donnees.iframe, 'type', donnees.type, 'source', donnees.source, 'vignette', donnees.vignette, 'date', date, 'identifiant', donnees.identifiant, 'commentaires', 0, 'evaluations', 0, 'colonne', donnees.colonne, 'visibilite', visibilite)
 								multi.zadd('blocs:' + id, indexBloc, blocId)
 								multi.exec(function () {
 									resolve(blocId)
@@ -709,9 +729,13 @@ app.post('/api/importer-pad', function (req, res) {
 									if (bloc.vignette !== '') {
 										bloc.vignette = bloc.vignette.replace('/fichiers/' + donnees.pad.id, '/fichiers/' + id)
 									}
+									let visibilite = 'visible'
+									if (bloc.hasOwnProperty('visibilite')) {
+										visibilite = bloc.visibilite
+									}
 									const multi = db.multi()
 									const blocId = 'bloc-id-' + (new Date()).getTime() + Math.random().toString(16).slice(10)
-									multi.hmset('pad-' + id + ':' + blocId, 'id', bloc.id, 'bloc', blocId, 'titre', bloc.titre, 'texte', bloc.texte, 'media', bloc.media, 'iframe', bloc.iframe, 'type', bloc.type, 'source', bloc.source, 'vignette', bloc.vignette, 'date', date, 'identifiant', bloc.identifiant, 'commentaires', commentaires, 'evaluations', evaluations, 'colonne', bloc.colonne)
+									multi.hmset('pad-' + id + ':' + blocId, 'id', bloc.id, 'bloc', blocId, 'titre', bloc.titre, 'texte', bloc.texte, 'media', bloc.media, 'iframe', bloc.iframe, 'type', bloc.type, 'source', bloc.source, 'vignette', bloc.vignette, 'date', date, 'identifiant', bloc.identifiant, 'commentaires', commentaires, 'evaluations', evaluations, 'colonne', bloc.colonne, 'visibilite', visibilite)
 									multi.zadd('blocs:' + id, indexBloc, blocId)
 									if (parametres.commentaires === true) {
 										for (const commentaire of bloc.listeCommentaires) {
@@ -1266,11 +1290,17 @@ io.on('connection', function (socket) {
 				if (resultat.id === pad && resultat.token === token) {
 					const date = moment().format()
 					const multi = db.multi()
-					multi.hmset('pad-' + pad + ':' + bloc, 'id', id, 'bloc', bloc, 'titre', titre, 'texte', texte, 'media', media, 'iframe', iframe, 'type', type, 'source', source, 'vignette', vignette, 'date', date, 'identifiant', identifiant, 'commentaires', 0, 'evaluations', 0, 'colonne', colonne)
+					let visibilite = 'visible'
+					if (resultat.contributions === 'moderees' && resultat.identifiant !== identifiant) {
+						visibilite = 'masquee'
+					}
+					multi.hmset('pad-' + pad + ':' + bloc, 'id', id, 'bloc', bloc, 'titre', titre, 'texte', texte, 'media', media, 'iframe', iframe, 'type', type, 'source', source, 'vignette', vignette, 'date', date, 'identifiant', identifiant, 'commentaires', 0, 'evaluations', 0, 'colonne', colonne, 'visibilite', visibilite)
 					multi.zadd('blocs:' + pad, id, bloc)
 					multi.exec(function () {
-						io.in(socket.room).emit('ajouterbloc', { bloc: bloc, titre: titre, texte: texte, media: media, iframe: iframe, type: type, source: source, vignette: vignette, identifiant: identifiant, nom: nom, date: date, couleur: couleur, commentaires: 0, evaluations: [], colonne: colonne })
-						enregistrerActivite(pad, { bloc: bloc, identifiant: identifiant, titre: titre, date: date, couleur: couleur, type: 'bloc-ajoute' })
+						io.in(socket.room).emit('ajouterbloc', { bloc: bloc, titre: titre, texte: texte, media: media, iframe: iframe, type: type, source: source, vignette: vignette, identifiant: identifiant, nom: nom, date: date, couleur: couleur, commentaires: 0, evaluations: [], colonne: colonne, visibilite: visibilite })
+						if (visibilite === 'visible') {
+							enregistrerActivite(pad, { bloc: bloc, identifiant: identifiant, titre: titre, date: date, couleur: couleur, type: 'bloc-ajoute' })
+						}
 						socket.handshake.session.cookie.expires = new Date(Date.now() + (3600 * 24 * 7 * 1000))
 						socket.handshake.session.save()
 					})
@@ -1294,13 +1324,49 @@ io.on('connection', function (socket) {
 								const identifiant = socket.identifiant
 								const nom = socket.nom
 								if (objet.identifiant === identifiant || proprietaire === identifiant) {
+									let visibilite = 'visible'
+									if (objet.hasOwnProperty('visibilite')) {
+										visibilite = objet.visibilite
+									}
 									const date = moment().format()
 									db.hmset('pad-' + pad + ':' + bloc, 'titre', titre, 'texte', texte, 'media', media, 'iframe', iframe, 'type', type, 'source', source, 'vignette', vignette, 'modifie', date)
-									io.in(socket.room).emit('modifierbloc', { bloc: bloc, titre: titre, texte: texte, media: media, iframe: iframe, type: type, source: source, vignette: vignette, identifiant: identifiant, nom: nom, modifie: date, couleur: couleur, colonne: colonne })
-									enregistrerActivite(pad, { bloc: bloc, identifiant: identifiant, titre: titre, date: date, couleur: couleur, type: 'bloc-modifie' })
+									io.in(socket.room).emit('modifierbloc', { bloc: bloc, titre: titre, texte: texte, media: media, iframe: iframe, type: type, source: source, vignette: vignette, identifiant: identifiant, nom: nom, modifie: date, couleur: couleur, colonne: colonne, visibilite: visibilite })
+									if (visibilite !== 'masquee') {
+										enregistrerActivite(pad, { bloc: bloc, identifiant: identifiant, titre: titre, date: date, couleur: couleur, type: 'bloc-modifie' })
+									}
 									socket.handshake.session.cookie.expires = new Date(Date.now() + (3600 * 24 * 7 * 1000))
 									socket.handshake.session.save()
 								}
+							})
+						}
+					})
+				}
+			})
+		} else {
+			socket.emit('deconnecte')
+		}
+	})
+
+	socket.on('autoriserbloc', function (pad, token, item) {
+		if (socket.identifiant !== '' && socket.identifiant !== undefined && socket.room === 'pad-' + pad) {
+			const identifiant = socket.identifiant
+			const nom = socket.nom
+			db.hgetall('pads:' + pad, function (err, donnees) {
+				if (donnees.id === pad && donnees.token === token) {
+					db.exists('pad-' + pad + ':' + item.bloc, function (err, resultat) {
+						if (err) { socket.emit('erreur'); return false }
+						if (resultat === 1) {
+							const date = moment().format()
+							const multi = db.multi()
+							if (item.hasOwnProperty('modifie')) {
+								multi.hdel('pad-' + pad + ':' + item.bloc, 'modifie')
+							}
+							multi.hmset('pad-' + pad + ':' + item.bloc, 'visibilite', 'visible', 'date', date)
+							multi.exec(function (err) {
+								io.in(socket.room).emit('autoriserbloc', { bloc: item.bloc, titre: item.titre, texte: item.texte, media: item.media, iframe: item.iframe, type: item.type, source: item.source, vignette: item.vignette, identifiant: item.identifiant, nom: item.nom, date: date, couleur: item.couleur, commentaires: 0, evaluations: [], colonne: item.colonne, visibilite: 'visible' })
+								enregistrerActivite(pad, { bloc: item.bloc, identifiant: item.identifiant, titre: item.titre, date: date, couleur: item.couleur, type: 'bloc-ajoute' })
+								socket.handshake.session.cookie.expires = new Date(Date.now() + (3600 * 24 * 7 * 1000))
+								socket.handshake.session.save()
 							})
 						}
 					})
@@ -1638,11 +1704,11 @@ io.on('connection', function (socket) {
 		}
 	})
 
-	socket.on('modifiercontributions', function (pad, contributions) {
+	socket.on('modifiercontributions', function (pad, contributions, contributionsPrecedentes) {
 		if (socket.identifiant !== '' && socket.identifiant !== undefined && socket.room === 'pad-' + pad) {
 			db.hmset('pads:' + pad, 'contributions', contributions, function (err) {
 				if (err) { socket.emit('erreur'); return false }
-				io.in(socket.room).emit('modifiercontributions', contributions)
+				io.in(socket.room).emit('modifiercontributions', { contributions: contributions, contributionsPrecedentes: contributionsPrecedentes })
 				socket.handshake.session.cookie.expires = new Date(Date.now() + (3600 * 24 * 7 * 1000))
 				socket.handshake.session.save()
 			})
@@ -1817,21 +1883,17 @@ io.on('connection', function (socket) {
 		}
 	})
 
-	socket.on('ajoutercolonne', function (pad, titre, couleur) {
+	socket.on('ajoutercolonne', function (pad, titre, colonnes, couleur) {
 		if (socket.identifiant !== '' && socket.identifiant !== undefined && socket.room === 'pad-' + pad) {
 			const identifiant = socket.identifiant
 			const nom = socket.nom
 			const date = moment().format()
-			db.hgetall('pads:' + pad, function (err, donnees) {
-				if (err) { socket.emit('erreur'); return false }
-				const colonnes = JSON.parse(donnees.colonnes)
-				colonnes.push(titre)
-				db.hmset('pads:' + pad, 'colonnes', JSON.stringify(colonnes), function () {
-					io.in(socket.room).emit('ajoutercolonne', { identifiant: identifiant, nom: nom, titre: titre, colonnes: colonnes, date: date, couleur: couleur })
-					enregistrerActivite(pad, { identifiant: identifiant, titre: titre, date: date, couleur: couleur, type: 'colonne-ajoutee' })
-					socket.handshake.session.cookie.expires = new Date(Date.now() + (3600 * 24 * 7 * 1000))
-					socket.handshake.session.save()
-				})
+			colonnes.push(titre)
+			db.hmset('pads:' + pad, 'colonnes', JSON.stringify(colonnes), function () {
+				io.in(socket.room).emit('ajoutercolonne', { identifiant: identifiant, nom: nom, titre: titre, colonnes: colonnes, date: date, couleur: couleur })
+				enregistrerActivite(pad, { identifiant: identifiant, titre: titre, date: date, couleur: couleur, type: 'colonne-ajoutee' })
+				socket.handshake.session.cookie.expires = new Date(Date.now() + (3600 * 24 * 7 * 1000))
+				socket.handshake.session.save()
 			})
 		} else {
 			socket.emit('deconnecte')

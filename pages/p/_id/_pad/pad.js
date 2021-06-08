@@ -36,34 +36,38 @@ export default {
 		ajouterbloc: function (donnees) {
 			this.action = 'ajouter'
 			this.utilisateur = donnees.identifiant
-			if (this.pad.affichage === 'colonnes') {
-				this.colonnes[donnees.colonne].push(donnees)
-			}
-			this.blocs.push(donnees)
-			this.activite.unshift({ bloc: donnees.bloc, identifiant: donnees.identifiant, nom: donnees.nom, titre: donnees.titre, date: donnees.date, couleur: donnees.couleur, type: 'bloc-ajoute' })
-			this.$nextTick(function () {
-				const bloc = document.querySelector('#' + donnees.bloc)
-				bloc.classList.add('anime')
-				bloc.addEventListener('animationend', function () {
-					bloc.classList.remove('anime')
-				})
-			})
-			if (this.utilisateur === this.identifiant) {
+			if (this.pad.contributions !== 'moderees' || (this.pad.contributions === 'moderees' && ((this.utilisateur === this.identifiant) || (this.pad.identifiant === donnees.identifiant) || (this.pad.identifiant === this.identifiant)))) {
 				if (this.pad.affichage === 'colonnes') {
-					this.$nextTick(function () {
-						const colonne = document.querySelector('#colonne' + donnees.colonne + ' .conteneur-colonne')
-						colonne.scrollTop = colonne.scrollHeight
+					this.colonnes[donnees.colonne].push(donnees)
+				}
+				this.blocs.push(donnees)
+				if (this.pad.contributions !== 'moderees' || (this.pad.contributions === 'moderees' && this.pad.identifiant === donnees.identifiant)) {
+					this.activite.unshift({ bloc: donnees.bloc, identifiant: donnees.identifiant, nom: donnees.nom, titre: donnees.titre, date: donnees.date, couleur: donnees.couleur, type: 'bloc-ajoute' })
+				}
+				this.$nextTick(function () {
+					const bloc = document.querySelector('#' + donnees.bloc)
+					bloc.classList.add('anime')
+					bloc.addEventListener('animationend', function () {
+						bloc.classList.remove('anime')
 					})
-				} else if (this.pad.affichage === 'mur') {
-					this.$nextTick(function () {
-						const bloc = document.querySelector('#' + donnees.bloc)
-						bloc.scrollIntoView()
-					})
-				} else if (this.pad.affichage === 'flux-vertical') {
-					this.$nextTick(function () {
-						const pad = document.querySelector('#pad')
-						pad.scrollTop = pad.scrollHeight
-					})
+				})
+				if (this.utilisateur === this.identifiant) {
+					if (this.pad.affichage === 'colonnes') {
+						this.$nextTick(function () {
+							const colonne = document.querySelector('#colonne' + donnees.colonne + ' .conteneur-colonne')
+							colonne.scrollTop = colonne.scrollHeight
+						})
+					} else if (this.pad.affichage === 'mur') {
+						this.$nextTick(function () {
+							const bloc = document.querySelector('#' + donnees.bloc)
+							bloc.scrollIntoView()
+						})
+					} else if (this.pad.affichage === 'flux-vertical') {
+						this.$nextTick(function () {
+							const pad = document.querySelector('#pad')
+							pad.scrollTop = pad.scrollHeight
+						})
+					}
 				}
 			}
 		},
@@ -72,17 +76,69 @@ export default {
 			if (this.pad.affichage === 'colonnes') {
 				this.colonnes[donnees.colonne].forEach(function (item, index) {
 					if (item.bloc === donnees.bloc) {
-						this.colonnes[donnees.colonne][index] = { bloc: donnees.bloc, identifiant: item.identifiant, nom: item.nom, titre: donnees.titre, texte: donnees.texte, media: donnees.media, iframe: donnees.iframe, type: donnees.type, source: donnees.source, vignette: donnees.vignette, date: item.date, modifie: donnees.modifie, couleur: item.couleur, commentaires: item.commentaires, evaluations: item.evaluations, colonne: item.colonne }
+						this.colonnes[donnees.colonne][index] = { bloc: donnees.bloc, identifiant: item.identifiant, nom: item.nom, titre: donnees.titre, texte: donnees.texte, media: donnees.media, iframe: donnees.iframe, type: donnees.type, source: donnees.source, vignette: donnees.vignette, date: item.date, modifie: donnees.modifie, couleur: item.couleur, commentaires: item.commentaires, evaluations: item.evaluations, colonne: item.colonne, visibilite: donnees.visibilite }
 					}
 				}.bind(this))
 			}
 			this.blocs.forEach(function (item, index) {
 				if (item.bloc === donnees.bloc) {
 					this.utilisateur = donnees.identifiant
-					this.blocs.splice(index, 1, { bloc: donnees.bloc, identifiant: item.identifiant, nom: item.nom, titre: donnees.titre, texte: donnees.texte, media: donnees.media, iframe: donnees.iframe, type: donnees.type, source: donnees.source, vignette: donnees.vignette, date: item.date, modifie: donnees.modifie, couleur: item.couleur, commentaires: item.commentaires, evaluations: item.evaluations, colonne: item.colonne })
+					this.blocs.splice(index, 1, { bloc: donnees.bloc, identifiant: item.identifiant, nom: item.nom, titre: donnees.titre, texte: donnees.texte, media: donnees.media, iframe: donnees.iframe, type: donnees.type, source: donnees.source, vignette: donnees.vignette, date: item.date, modifie: donnees.modifie, couleur: item.couleur, commentaires: item.commentaires, evaluations: item.evaluations, colonne: item.colonne, visibilite: donnees.visibilite })
 				}
 			}.bind(this))
-			this.activite.unshift({ bloc: donnees.bloc, identifiant: donnees.identifiant, nom: donnees.nom, titre: donnees.titre, date: donnees.date, couleur: donnees.couleur, type: 'bloc-modifie' })
+			if (donnees.visibilite === 'visible') {
+				this.activite.unshift({ bloc: donnees.bloc, identifiant: donnees.identifiant, nom: donnees.nom, titre: donnees.titre, date: donnees.date, couleur: donnees.couleur, type: 'bloc-modifie' })
+			}
+		},
+		autoriserbloc: function (donnees) {
+			if ((donnees.identifiant === this.identifiant) || (this.pad.identifiant === donnees.identifiant) || (this.pad.identifiant === this.identifiant)) {
+				if (this.pad.affichage === 'colonnes') {
+					this.colonnes.forEach(function (colonne, indexColonne) {
+						colonne.forEach(function (item, index) {
+							if (item.bloc === donnees.bloc) {
+								this.colonnes[indexColonne][index].visibilite = 'visible'
+								this.colonnes[indexColonne][index].date = donnees.date
+								if (this.colonnes[indexColonne][index].hasOwnProperty('modifie')) {
+									delete this.colonnes[indexColonne][index].modifie
+								}
+							}
+						}.bind(this))
+					}.bind(this))
+				}
+				this.blocs.forEach(function (item, index) {
+					if (item.bloc === donnees.bloc) {
+						this.blocs[index].visibilite = 'visible'
+						this.blocs[index].date = donnees.date
+						if (this.blocs[index].hasOwnProperty('modifie')) {
+							delete this.blocs[index].modifie
+						}
+					}
+				}.bind(this))
+				this.chargement = false
+			} else {
+				if (this.pad.affichage === 'colonnes') {
+					this.colonnes[donnees.colonne].push(donnees)
+				}
+				this.blocs.push(donnees)
+			}
+			this.activite.unshift({ bloc: donnees.bloc, identifiant: donnees.identifiant, nom: donnees.nom, titre: donnees.titre, date: donnees.date, couleur: donnees.couleur, type: 'bloc-ajoute' })
+			this.$nextTick(function () {
+				const bloc = document.querySelector('#' + donnees.bloc)
+				bloc.classList.add('anime')
+				bloc.addEventListener('animationend', function () {
+					bloc.classList.remove('anime')
+				})
+			})
+			if (this.pad.identifiant === this.identifiant) {
+				this.$store.dispatch('modifierMessage', this.$t('capsuleValidee'))
+			} else if (donnees.identifiant === this.identifiant) {
+				this.$store.dispatch('modifierMessage', this.$t('capsulePubliee', { titre: donnees.titre }))
+			}
+			if (this.modaleDiaporama) {
+				this.$nextTick(function () {
+					this.chargerDiapositive()
+				}.bind(this))
+			}
 		},
 		deplacerbloc: function (donnees) {
 			this.utilisateur = donnees.identifiant
@@ -248,11 +304,14 @@ export default {
 				}
 			}
 		},
-		modifiercontributions: function (contributions) {
-			this.pad.contributions = contributions
+		modifiercontributions: function (donnees) {
+			this.pad.contributions = donnees.contributions
 			this.chargement = false
 			if (this.pad.identifiant === this.identifiant) {
 				this.$store.dispatch('modifierMessage', this.$t('statutPadModifie'))
+			}
+			if (this.pad.identifiant !== this.identifiant && donnees.contributionsPrecedentes === 'moderees') {
+				this.$store.dispatch('modifierMessage', this.$t('rechargerPage'))
 			}
 		},
 		modifieraffichage: function (affichage) {
@@ -923,7 +982,7 @@ export default {
 		ajouterColonne () {
 			if (this.titreColonne !== '') {
 				this.chargement = true
-				this.$socket.emit('ajoutercolonne', this.pad.id, this.titreColonne, this.couleur)
+				this.$socket.emit('ajoutercolonne', this.pad.id, this.titreColonne, this.pad.colonnes, this.couleur)
 				this.fermerModaleColonne()
 			}
 		},
@@ -1389,6 +1448,10 @@ export default {
 				}
 			}
 		},
+		autoriserBloc (bloc) {
+			this.chargement = true
+			this.$socket.emit('autoriserbloc', this.pad.id, this.pad.token, bloc)
+		},
 		fermerModaleBloc () {
 			this.modaleBloc = false
 			this.mode = ''
@@ -1701,7 +1764,9 @@ export default {
 				if (this.pad.commentaires === 'actives') {
 					this.$socket.emit('commentaires', donneesBloc.bloc, 'diapositive')
 				} else {
-					this.chargerDiapositive()
+					this.$nextTick(function () {
+						this.chargerDiapositive()
+					}.bind(this))
 				}
 			}
 		},
@@ -2240,7 +2305,7 @@ export default {
 		},
 		modifierContributions (contributions) {
 			if (this.pad.contributions !== contributions) {
-				this.$socket.emit('modifiercontributions', this.pad.id, contributions)
+				this.$socket.emit('modifiercontributions', this.pad.id, contributions, this.pad.contributions)
 				this.chargement = true
 			}
 		},

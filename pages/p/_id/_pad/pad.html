@@ -145,6 +145,10 @@
 					<input type="radio" name="contributions" :checked="pad.contributions === 'fermees'" @change="modifierContributions('fermees')">
 					<span class="coche" />
 				</label>
+				<label class="bouton-radio">{{ $t('moderees') }}
+					<input type="radio" name="contributions" :checked="pad.contributions === 'moderees'" @change="modifierContributions('moderees')">
+					<span class="coche" />
+				</label>
 			</div>
 			<div class="conteneur">
 				<label>{{ $t('affichage') }}</label>
@@ -318,6 +322,10 @@
 							<span class="media-type" v-if="item.media !== ''"><i class="material-icons">{{ definirIconeMedia(item) }}</i></span>
 							<span role="button" class="bouton supprimer" @click="afficherSupprimerBloc(item.bloc, item.titre, 0)" v-if="item.identifiant === identifiant || pad.identifiant === identifiant"><i class="material-icons">delete</i></span>
 						</div>
+						<div class="moderation" v-if="pad.contributions === 'moderees' && item.visibilite === 'masquee'">
+							<span role="button" class="bouton" @click="autoriserBloc(item)" v-if="pad.identifiant === identifiant">{{ $t('validerCapsule') }}</span>
+							<span class="bouton" v-else-if="item.identifiant === identifiant">{{ $t('enAttenteModeration') }}</span>
+						</div>
 					</div>
 				</div>
 			</masonry>
@@ -353,6 +361,10 @@
 							<span role="button" class="bouton info" :data-description="definirDescription(item)"><i class="material-icons">info</i></span>
 							<span class="media-type" v-if="item.media !== ''"><i class="material-icons">{{ definirIconeMedia(item) }}</i></span>
 							<span role="button" class="bouton supprimer" @click="afficherSupprimerBloc(item.bloc, item.titre, 0)" v-if="item.identifiant === identifiant || pad.identifiant === identifiant"><i class="material-icons">delete</i></span>
+						</div>
+						<div class="moderation" v-if="pad.contributions === 'moderees' && item.visibilite === 'masquee'">
+							<span role="button" class="bouton" @click="autoriserBloc(item)" v-if="pad.identifiant === identifiant">{{ $t('validerCapsule') }}</span>
+							<span class="bouton" v-else-if="item.identifiant === identifiant">{{ $t('enAttenteModeration') }}</span>
 						</div>
 					</div>
 				</div>
@@ -401,10 +413,14 @@
 									<span class="media-type" v-if="item.media !== ''"><i class="material-icons">{{ definirIconeMedia(item) }}</i></span>
 									<span role="button" class="bouton supprimer" @click="afficherSupprimerBloc(item.bloc, item.titre, indexCol)" v-if="item.identifiant === identifiant || pad.identifiant === identifiant"><i class="material-icons">delete</i></span>
 								</div>
+								<div class="moderation" v-if="pad.contributions === 'moderees' && item.visibilite === 'masquee'">
+									<span role="button" class="bouton" @click="autoriserBloc(item)" v-if="pad.identifiant === identifiant">{{ $t('validerCapsule') }}</span>
+									<span class="bouton" v-else-if="item.identifiant === identifiant">{{ $t('enAttenteModeration') }}</span>
+								</div>
 							</div>
 						</div>
 					</div>
-					<div class="ajouter" v-if="accesAutorise && (pad.identifiant === identifiant || pad.contributions === 'ouvertes')">
+					<div class="ajouter" v-if="accesAutorise && (pad.identifiant === identifiant || pad.contributions !== 'fermees')">
 						<span role="button" @click="ouvrirModaleBloc('creation', '', indexCol)">
 							<i class="material-icons">add</i>
 						</span>
@@ -447,6 +463,9 @@
 							<span role="button" class="bouton" v-if="pad.commentaires === 'actives'"><i class="material-icons">comment</i><span class="badge">{{ item.commentaires }}</span></span>
 							<span role="button" class="bouton info" :data-description="definirDescription(item)"><i class="material-icons">info</i></span>
 							<span class="media-type" v-if="item.media !== ''"><i class="material-icons">{{ definirIconeMedia(item) }}</i></span>
+						</div>
+						<div class="moderation" v-if="pad.contributions === 'moderees' && item.visibilite === 'masquee'">
+							<span role="button" class="bouton" @click="autoriserBloc(item)">{{ $t('validerCapsule') }}</span>
 						</div>
 					</div>
 				</div>
@@ -492,6 +511,9 @@
 									<span role="button" class="bouton info" :data-description="definirDescription(item)"><i class="material-icons">info</i></span>
 									<span class="media-type" v-if="item.media !== ''"><i class="material-icons">{{ definirIconeMedia(item) }}</i></span>
 								</div>
+								<div class="moderation" v-if="pad.contributions === 'moderees' && item.visibilite === 'masquee'">
+									<span role="button" class="bouton" @click="autoriserBloc(item)">{{ $t('validerCapsule') }}</span>
+								</div>
 							</div>
 						</div>
 					</draggable>
@@ -503,7 +525,7 @@
 	<div id="pad" :style="{'background': '#00ced1'}" v-else />
 
 	<transition name="fondu">
-		<span role="button" id="ajouter" @click="ouvrirModaleBloc('creation', '', 0)" v-if="accesAutorise && ((pad.affichage === 'mur' || pad.affichage === 'flux-vertical') && ((pad.identifiant === identifiant && action !== 'organiser') || (pad.identifiant !== identifiant && pad.contributions === 'ouvertes')))">
+		<span role="button" id="ajouter" @click="ouvrirModaleBloc('creation', '', 0)" v-if="accesAutorise && ((pad.affichage === 'mur' || pad.affichage === 'flux-vertical') && ((pad.identifiant === identifiant && action !== 'organiser') || (pad.identifiant !== identifiant && pad.contributions !== 'fermees')))">
 			<i class="material-icons">add</i>
 		</span>
 	</transition>
@@ -642,7 +664,7 @@
 				<span class="titre"><span>{{ donneesBloc.titre }}</span> <span>{{ $t('par') }} {{ definirNom(donneesBloc) }}</span></span>
 				<span role="button" class="fermer" @click="fermerModaleDiaporama"><i class="material-icons">close</i></span>
 			</div>
-			<div class="contenu ascenseur">
+			<div class="contenu ascenseur" :class="{'vide': donneesBloc.texte === '' && donneesBloc.media === '' && pad.evaluations === 'desactivees' && pad.commentaires === 'desactives' && ((pad.contributions !== 'moderees') || (pad.contributions === 'moderees' && donneesBloc.visibilite === 'visible'))}">
 				<div class="conteneur" v-if="donneesBloc.texte !== ''">
 					<div class="texte" v-html="donneesBloc.texte" />
 				</div>
@@ -674,6 +696,10 @@
 							<div class="html" v-else v-html="donneesBloc.iframe" />
 						</div>
 					</div>
+				</div>
+				<div class="conteneur conteneur-moderation" v-if="pad.contributions === 'moderees' && donneesBloc.visibilite === 'masquee'">
+					<span role="button" class="bouton" @click="autoriserBloc(donneesBloc)" v-if="pad.identifiant === identifiant">{{ $t('validerCapsule') }}</span>
+					<span class="bouton" v-else-if="donneesBloc.identifiant === identifiant">{{ $t('enAttenteModeration') }}</span>
 				</div>
 				<div class="conteneur conteneur-evaluations" v-if="pad.evaluations === 'activees'">
 					<label>{{ $t('evaluations') }}</label>

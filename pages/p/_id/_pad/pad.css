@@ -476,6 +476,43 @@
     text-align: center;
 }
 
+#diapositive .conteneur-moderation .bouton,
+#blocs .bloc .moderation .bouton {
+	display: block;
+    padding: 0.9rem;
+    text-align: center;
+	font-size: 12px;
+	color: #e32f6c;
+    border: 1px solid #e32f6c;
+    line-height: 1;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-indent: 1px;
+    border-radius: 4px;
+    text-transform: uppercase;
+    transition: all ease-in 0.1s;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+	cursor: default;
+}
+
+#blocs .bloc .moderation .bouton {
+	margin: 0 0.7rem 0.7rem;
+}
+
+#diapositive .conteneur-moderation .bouton[role="button"],
+#blocs .bloc .moderation .bouton[role="button"] {
+	cursor: pointer;
+}
+
+#diapositive .conteneur-moderation .bouton[role="button"]:hover,
+#blocs .bloc .moderation .bouton[role="button"]:hover {
+	background: #e32f6c;
+	color: #fff;
+	text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.3);
+}
+
 #bloc {
 	height: 90%;
 	max-width: 75rem;
@@ -801,6 +838,10 @@
 	font-size: 1.7rem;
 }
 
+#diapositive .media {
+	font-size: 0;
+}
+
 #diapositive .media audio {
 	width: 100%;
 }
@@ -878,8 +919,10 @@
 	position: absolute;
     top: calc(50% - 3.5rem);
     font-size: 7rem;
+	height: 7rem;
     color: #fff;
 	text-shadow: 2px 2px 2px rgba(0, 0, 0, 0.4);
+	line-height: 1;
 	cursor: pointer;
 }
 
@@ -1550,6 +1593,7 @@
 	#precedent {
 		top: calc(50% - 2rem);
 		font-size: 4rem;
+		height: 4rem;
 	}
 
 	.modale .section-etoiles .annuler {
