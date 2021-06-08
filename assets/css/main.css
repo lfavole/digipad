@@ -709,8 +709,12 @@ label.bouton-bleu {
 }
 
 .modale-diapositive .contenu {
-    padding: 2rem 2rem 0 2rem;
     width: 100%;
+	padding: 2rem 2rem 0 2rem;
+}
+
+.modale-diapositive .contenu.vide {
+	padding: 0;
 }
 
 .modale-diapositive .contenu .conteneur {
