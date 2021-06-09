@@ -240,23 +240,26 @@
 	top: 0;
 	right: 0;
 	line-height: 1;
-	font-size: 24px;
+	font-size: 0;
     padding: 3px 1rem;
     background: rgba(0, 0, 0, 0.25);
 }
 
 #blocs.colonnes .bloc.haut .menu-colonne .bouton:first-child {
+	font-size: 24px;
 	color: #fff;
 	margin-right: 0.7rem;
 	cursor: pointer;
 }
 
 #blocs.colonnes .bloc.haut .menu-colonne .bouton.supprimer {
+	font-size: 24px;
 	color: #ff6259;
 	cursor: pointer;
 }
 
 .organiser #blocs.colonnes .bloc.haut .menu-colonne .bouton {
+	font-size: 24px;
 	color: #fff;
 	cursor: pointer;
 	margin-right: 0;
@@ -946,10 +949,35 @@
 	padding: 1rem;
 	font-size: 1.5rem;
     border: 1px solid #ddd;
-    border-radius: 0.4rem;
+    border-radius: 4px;
     line-height: 1.4;
     margin-bottom: 1.5rem;
     cursor: default;
+}
+
+#entrees li {
+	position: relative;
+}
+
+#entrees li .menu-entree {
+	display: none;
+	position: absolute;
+	top: 0;
+	right: 0;
+	line-height: 1;
+	font-size: 24px;
+	padding: 3px 1rem;
+	background: rgba(0, 0, 0, 0.25);
+	border-top-right-radius: 4px;
+}
+
+#entrees li:hover .menu-entree {
+	display: block;
+}
+
+#entrees li .menu-entree span.supprimer {
+	color: #ff6259;
+	cursor: pointer;
 }
 
 #conversation .contenu {
@@ -1118,10 +1146,10 @@
 	top: 0.2rem;
 	right: 0;
 	text-align: right;
-	width: 58px;
+	width: calc(48px + 2.7rem);
 	line-height: 1;
 	font-size: 0;
-	padding: 3px;
+	padding: 3px 1rem;
 	background: rgba(0, 0, 0, 0.25);
 	border-radius: 2px;
 	z-index: 10;
@@ -1139,7 +1167,7 @@
 }
 
 .commentaires li .action span:last-child {
-	margin-left: 4px;
+	margin-left: 0.7rem;
 }
 
 .commentaires li .texte {

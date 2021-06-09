@@ -42,7 +42,7 @@ export default {
 				}
 				this.blocs.push(donnees)
 				if (this.pad.contributions !== 'moderees' || (this.pad.contributions === 'moderees' && this.pad.identifiant === donnees.identifiant)) {
-					this.activite.unshift({ bloc: donnees.bloc, identifiant: donnees.identifiant, nom: donnees.nom, titre: donnees.titre, date: donnees.date, couleur: donnees.couleur, type: 'bloc-ajoute' })
+					this.activite.unshift({ id: donnees.activiteId, bloc: donnees.bloc, identifiant: donnees.identifiant, nom: donnees.nom, titre: donnees.titre, date: donnees.date, couleur: donnees.couleur, type: 'bloc-ajoute' })
 				}
 				this.$nextTick(function () {
 					const bloc = document.querySelector('#' + donnees.bloc)
@@ -87,7 +87,7 @@ export default {
 				}
 			}.bind(this))
 			if (donnees.visibilite === 'visible') {
-				this.activite.unshift({ bloc: donnees.bloc, identifiant: donnees.identifiant, nom: donnees.nom, titre: donnees.titre, date: donnees.date, couleur: donnees.couleur, type: 'bloc-modifie' })
+				this.activite.unshift({ id: donnees.activiteId, bloc: donnees.bloc, identifiant: donnees.identifiant, nom: donnees.nom, titre: donnees.titre, date: donnees.date, couleur: donnees.couleur, type: 'bloc-modifie' })
 			}
 		},
 		autoriserbloc: function (donnees) {
@@ -121,7 +121,7 @@ export default {
 				}
 				this.blocs.push(donnees)
 			}
-			this.activite.unshift({ bloc: donnees.bloc, identifiant: donnees.identifiant, nom: donnees.nom, titre: donnees.titre, date: donnees.date, couleur: donnees.couleur, type: 'bloc-ajoute' })
+			this.activite.unshift({ id: donnees.activiteId, bloc: donnees.bloc, identifiant: donnees.identifiant, nom: donnees.nom, titre: donnees.titre, date: donnees.date, couleur: donnees.couleur, type: 'bloc-ajoute' })
 			this.$nextTick(function () {
 				const bloc = document.querySelector('#' + donnees.bloc)
 				bloc.classList.add('anime')
@@ -157,6 +157,7 @@ export default {
 					document.querySelector('#' + blocId).classList.add('actif')
 				}
 			}.bind(this))
+			this.chargement = false
 		},
 		supprimerbloc: function (donnees) {
 			this.action = 'supprimer'
@@ -173,7 +174,7 @@ export default {
 					this.blocs.splice(index, 1)
 				}
 			}.bind(this))
-			this.activite.unshift({ bloc: donnees.bloc, identifiant: donnees.identifiant, nom: donnees.nom, titre: donnees.titre, date: donnees.date, couleur: donnees.couleur, type: 'bloc-supprime' })
+			this.activite.unshift({ id: donnees.activiteId, bloc: donnees.bloc, identifiant: donnees.identifiant, nom: donnees.nom, titre: donnees.titre, date: donnees.date, couleur: donnees.couleur, type: 'bloc-supprime' })
 		},
 		commenterbloc: function (donnees) {
 			const blocs = this.blocs
@@ -183,10 +184,10 @@ export default {
 				}
 			})
 			this.blocs = blocs
-			if (this.modaleCommentaires && this.bloc === donnees.bloc) {
+			if ((this.modaleCommentaires && this.bloc === donnees.bloc) || (this.modaleDiaporama && this.donneesBloc.bloc === donnees.bloc)) {
 				this.commentaires.unshift({ id: donnees.id, identifiant: donnees.identifiant, nom: donnees.nom, texte: donnees.texte, date: donnees.date })
 			}
-			this.activite.unshift({ bloc: donnees.bloc, identifiant: donnees.identifiant, nom: donnees.nom, titre: donnees.titre, date: donnees.date, couleur: donnees.couleur, type: 'bloc-commente' })
+			this.activite.unshift({ id: donnees.activiteId, bloc: donnees.bloc, identifiant: donnees.identifiant, nom: donnees.nom, titre: donnees.titre, date: donnees.date, couleur: donnees.couleur, type: 'bloc-commente' })
 		},
 		modifiercommentaire: function (donnees) {
 			const commentaires = this.commentaires
@@ -234,7 +235,7 @@ export default {
 				}
 			})
 			this.blocs = blocs
-			this.activite.unshift({ bloc: donnees.bloc, identifiant: donnees.identifiant, nom: donnees.nom, titre: donnees.titre, date: donnees.date, couleur: donnees.couleur, type: 'bloc-evalue' })
+			this.activite.unshift({ id: donnees.activiteId, bloc: donnees.bloc, identifiant: donnees.identifiant, nom: donnees.nom, titre: donnees.titre, date: donnees.date, couleur: donnees.couleur, type: 'bloc-evalue' })
 		},
 		modifierevaluation: function (donnees) {
 			this.chargement = false
@@ -409,10 +410,21 @@ export default {
 				this.$store.dispatch('modifierMessage', this.$t('activiteSupprimee'))
 			}
 		},
+		supprimeractivite: function (id) {
+			this.activite.forEach(function (activite, index) {
+				if (activite.id === id) {
+					this.activite.splice(index, 1)
+				}
+			}.bind(this))
+			this.chargement = false
+			if (this.pad.identifiant === this.identifiant) {
+				this.$store.dispatch('modifierMessage', this.$t('entreeActiviteSupprimee'))
+			}
+		},
 		ajoutercolonne: function (donnees) {
 			this.colonnes.push([])
 			this.pad.colonnes = donnees.colonnes
-			this.activite.unshift({ identifiant: donnees.identifiant, nom: donnees.nom, titre: donnees.titre, date: donnees.date, couleur: donnees.couleur, type: 'colonne-ajoutee' })
+			this.activite.unshift({ id: donnees.activiteId, identifiant: donnees.identifiant, nom: donnees.nom, titre: donnees.titre, date: donnees.date, couleur: donnees.couleur, type: 'colonne-ajoutee' })
 			if (this.pad.identifiant === this.identifiant) {
 				this.$store.dispatch('modifierMessage', this.$t('colonneAjoutee'))
 			}
@@ -436,7 +448,7 @@ export default {
 			})
 			this.pad.colonnes = donnees.colonnes
 			this.blocs = blocs
-			this.activite.unshift({ identifiant: donnees.identifiant, nom: donnees.nom, titre: donnees.titre, date: donnees.date, couleur: donnees.couleur, type: 'colonne-supprimee' })
+			this.activite.unshift({ id: donnees.activiteId, identifiant: donnees.identifiant, nom: donnees.nom, titre: donnees.titre, date: donnees.date, couleur: donnees.couleur, type: 'colonne-supprimee' })
 			if (this.pad.identifiant === this.identifiant) {
 				this.$store.dispatch('modifierMessage', this.$t('colonneSupprimee'))
 			} else {
@@ -467,7 +479,7 @@ export default {
 			})
 			this.pad.colonnes = donnees.colonnes
 			this.blocs = blocs
-			this.activite.unshift({ identifiant: donnees.identifiant, nom: donnees.nom, titre: donnees.titre, date: donnees.date, couleur: donnees.couleur, type: 'colonne-deplacee' })
+			this.activite.unshift({ id: donnees.activiteId, identifiant: donnees.identifiant, nom: donnees.nom, titre: donnees.titre, date: donnees.date, couleur: donnees.couleur, type: 'colonne-deplacee' })
 			if (this.pad.identifiant === this.identifiant) {
 				this.$store.dispatch('modifierMessage', this.$t('colonneDeplacee'))
 			} else {
@@ -2232,6 +2244,10 @@ export default {
 			this.chargement = true
 			this.menuActivite = false
 			this.fermerModaleConfirmer()
+		},
+		supprimerActivite (id) {
+			this.$socket.emit('supprimeractivite', this.pad.id, id)
+			this.chargement = true
 		},
 		modifierTitre () {
 			const titre = document.querySelector('#titre-pad').value

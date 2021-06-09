@@ -4,49 +4,89 @@
 			<span id="logo" />
 		</span>
 		<span id="titre">{{ pad.titre }}</span>
-		<div id="conteneur-header-droit" @click="afficherUtilisateurs">
+		<div id="conteneur-header-droit" :title="$t('utilisateursConnectes')" @click="afficherUtilisateurs">
 			<i class="material-icons">people_alt</i>
 			<span class="badge">{{ utilisateurs.length }}</span>
 		</div>
 	</header>
 
 	<nav id="nav">
-		<span id="compte" role="button" @click="allerCompte" v-if="statut === 'utilisateur'" :title="$t('compteUtilisateur')"><i class="material-icons">arrow_back</i></span>
-		<span id="accueil" role="button" @click="allerAccueil" v-else><i class="material-icons" :title="$t('accueil')">home</i></span>
-		<span id="activite" role="button" @click="afficherActivite" :title="$t('activitePad')" v-if="accesAutorise && (!pad.registreActivite || (pad.registreActivite && pad.registreActivite === 'active'))"><i class="material-icons">schedule</i></span>
-		<span id="chat" @click="afficherChat" :title="$t('conversation')" v-if="accesAutorise && (!pad.conversation || (pad.conversation && pad.conversation === 'activee'))">
+		<span id="compte" role="button" tabindex="0" :title="$t('compteUtilisateur')" @click="allerCompte" v-if="statut === 'utilisateur'"><i class="material-icons">arrow_back</i></span>
+		<span id="accueil" role="button" tabindex="0" :title="$t('accueil')" @click="allerAccueil" v-else><i class="material-icons">home</i></span>
+		<span id="activite" role="button" tabindex="0" :title="$t('activitePad')" @click="afficherActivite" v-if="accesAutorise && (!pad.registreActivite || (pad.registreActivite && pad.registreActivite === 'active'))"><i class="material-icons">schedule</i></span>
+		<span id="chat" :title="$t('conversation')" @click="afficherChat" v-if="accesAutorise && (!pad.conversation || (pad.conversation && pad.conversation === 'activee'))">
 			<i class="material-icons">chat</i>
 			<span class="badge" v-if="nouveauxMessages > 0">{{ nouveauxMessages }}</span>
 		</span>
-		<span id="motdepasse" role="button" @click="afficherModaleMotDePasse" v-if="pad.motdepasse && pad.identifiant !== identifiant && statut !== 'utilisateur'" :title="$t('motDePassePad')"><i class="material-icons">vpn_key</i></span>
-		<span id="options" role="button" @click="afficherOptions" v-if="pad.identifiant === identifiant" :title="$t('parametresPad')"><i class="material-icons">settings</i></span>
-		<span id="options" role="button" @click="afficherOptions" v-else-if="pad.identifiant !== identifiant && statut !== 'utilisateur'" :title="$t('parametresPad')"><i class="material-icons">language</i></span>
-		<span id="organisation" role="button" :class="{'desactive': definirClasseOrganiser() === false}" @click="activerModeOrganiser" v-if="pad.identifiant === identifiant && action !== 'organiser'" :title="$t('modeOrganiser')"><i class="material-icons">sort</i></span>
-		<span id="organisation" role="button" class="actif" @click="desactiverModeOrganiser" v-if="pad.identifiant === identifiant && action === 'organiser'" :title="$t('finModeOrganiser')"><i class="material-icons">sort</i></span>
-		<span id="diaporama" role="button" :class="{'desactive': blocs.length === 0}" @click="afficherModaleDiaporama" :title="$t('modeDiaporama')"><i class="material-icons">slideshow</i></span>
-		<span id="deconnexion" role="button" @click="deconnexion" v-if="statut === 'utilisateur'" :title="$t('deconnexion')"><i class="material-icons">power_settings_new</i></span>
-		<span id="deconnexion" role="button" @click="afficherSeDeconnecterPad" v-else-if="statut === 'auteur'" :title="$t('seDeconnecterPad')"><i class="material-icons">power_settings_new</i></span>
+		<span id="motdepasse" role="button" tabindex="0" :title="$t('motDePassePad')" @click="afficherModaleMotDePasse" v-if="pad.motdepasse && pad.identifiant !== identifiant && statut !== 'utilisateur'"><i class="material-icons">vpn_key</i></span>
+		<span id="options" role="button" tabindex="0" :title="$t('parametresPad')" @click="afficherOptions" v-if="pad.identifiant === identifiant"><i class="material-icons">settings</i></span>
+		<span id="options" role="button" tabindex="0" :title="$t('parametresPad')" @click="afficherOptions" v-else-if="pad.identifiant !== identifiant && statut !== 'utilisateur'"><i class="material-icons">language</i></span>
+		<span id="organisation" role="button" tabindex="0" :title="$t('modeOrganiser')" :class="{'desactive': definirClasseOrganiser() === false}" @click="activerModeOrganiser" v-if="pad.identifiant === identifiant && action !== 'organiser'"><i class="material-icons">sort</i></span>
+		<span id="organisation" role="button" tabindex="0" :title="$t('finModeOrganiser')" class="actif" @click="desactiverModeOrganiser" v-if="pad.identifiant === identifiant && action === 'organiser'"><i class="material-icons">sort</i></span>
+		<span id="diaporama" role="button" tabindex="0" :title="$t('modeDiaporama')" :class="{'desactive': blocs.length === 0}" @click="afficherModaleDiaporama"><i class="material-icons">slideshow</i></span>
+		<span id="deconnexion" role="button" tabindex="0" :title="$t('deconnexion')" @click="deconnexion" v-if="statut === 'utilisateur'"><i class="material-icons">power_settings_new</i></span>
+		<span id="deconnexion" role="button" tabindex="0" :title="$t('seDeconnecterPad')" @click="afficherSeDeconnecterPad" v-else-if="statut === 'auteur'"><i class="material-icons">power_settings_new</i></span>
 	</nav>
 
 	<div class="menu gauche" :class="{'ouvert': menuActivite}">
 		<div class="en-tete">
 			<span class="titre">{{ $t('activitePad') }}</span>
 			<span class="action">
-				<span class="reinitialiser" @click="afficherReinitialiserActivite" v-if="pad.identifiant === identifiant && activite.length > 0"><i class="material-icons">autorenew</i></span>
-				<span role="button" class="fermer" @click="menuActivite = false"><i class="material-icons">close</i></span>
+				<span role="button" tabindex="0" :title="$t('reinitialiserActivite')" class="reinitialiser" @click="afficherReinitialiserActivite" v-if="pad.identifiant === identifiant && activite.length > 0"><i class="material-icons">autorenew</i></span>
+				<span role="button" tabindex="0" class="fermer" @click="menuActivite = false"><i class="material-icons">close</i></span>
 			</span>
 		</div>
 		<div class="contenu ascenseur">
 			<ul id="entrees">
 				<template v-for="(entree, indexEntree) in activite">
-					<li v-if="entree.type === 'bloc-ajoute'" :data-bloc="entree.bloc" :key="indexEntree"><span :style="{'color': entree.couleur}"> {{ definirNom(entree) }}</span> <span v-if="entree.titre !== ''" v-html="$t('aCreeCapsule', { titre: entree.titre })" /><span v-else v-html="$t('aCreeUneCapsule')" /> {{ $formaterDateRelative(entree.date, langue) }}.</li>
-					<li v-else-if="entree.type === 'bloc-supprime'" :data-bloc="entree.bloc" :key="indexEntree"><span :style="{'color': entree.couleur}"> {{ definirNom(entree) }}</span> <span v-if="entree.titre !== ''" v-html="$t('aSupprimeCapsule', { titre: entree.titre })" /><span v-else v-html="$t('aSupprimeUneCapsule')" /> {{ $formaterDateRelative(entree.date, langue) }}.</li>
-					<li v-else-if="entree.type === 'bloc-modifie'" :data-bloc="entree.bloc" :key="indexEntree"><span :style="{'color': entree.couleur}"> {{ definirNom(entree) }}</span> <span v-if="entree.titre !== ''" v-html="$t('aModifieCapsule', { titre: entree.titre })" /><span v-else v-html="$t('aModifieUneCapsule')" /> {{ $formaterDateRelative(entree.date, langue) }}.</li>
-					<li v-else-if="entree.type === 'bloc-commente'" :data-bloc="entree.bloc" :key="indexEntree"><span :style="{'color': entree.couleur}"> {{ definirNom(entree) }}</span> <span v-if="entree.titre !== ''" v-html="$t('aCommenteCapsule', { titre: entree.titre })" /><span v-else v-html="$t('aCommenteUneCapsule')" /> {{ $formaterDateRelative(entree.date, langue) }}.</li>
-					<li v-else-if="entree.type === 'bloc-evalue'" :data-bloc="entree.bloc" :key="indexEntree"><span :style="{'color': entree.couleur}"> {{ definirNom(entree) }}</span> <span v-if="entree.titre !== ''" v-html="$t('aEvalueCapsule', { titre: entree.titre })" /><span v-else v-html="$t('aEvalueUneCapsule')" /> {{ $formaterDateRelative(entree.date, langue) }}.</li>
-					<li v-else-if="entree.type === 'colonne-ajoutee' && pad.affichage === 'colonnes'" :key="indexEntree"><span :style="{'color': entree.couleur}"> {{ definirNom(entree) }}</span> <span v-html="$t('aAjouteColonne', { titre: entree.titre })" /> {{ $formaterDateRelative(entree.date, langue) }}.</li>
-					<li v-else-if="entree.type === 'colonne-supprimee' && pad.affichage === 'colonnes'" :key="indexEntree"><span :style="{'color': entree.couleur}"> {{ definirNom(entree) }}</span> <span v-html="$t('aSupprimeColonne', { titre: entree.titre })" /> {{ $formaterDateRelative(entree.date, langue) }}.</li>
-					<li v-else-if="entree.type === 'colonne-deplacee' && pad.affichage === 'colonnes'" :key="indexEntree"><span :style="{'color': entree.couleur}"> {{ definirNom(entree) }}</span> <span v-html="$t('aDeplaceColonne', { titre: entree.titre })" /> {{ $formaterDateRelative(entree.date, langue) }}.</li>
+					<li v-if="entree.type === 'bloc-ajoute'" :data-bloc="entree.bloc" :key="indexEntree">
+						<div class="conteneur-entree"><span :style="{'color': entree.couleur}"> {{ definirNom(entree) }}</span> <span v-if="entree.titre !== ''" v-html="$t('aCreeCapsule', { titre: entree.titre })" /><span v-else v-html="$t('aCreeUneCapsule')" /> {{ $formaterDateRelative(entree.date, langue) }}.</div>
+						<div class="menu-entree" v-if="pad.identifiant === identifiant">
+							<span role="button" tabindex="0" class="bouton supprimer" :title="$t('supprimerEntree')" @click="supprimerActivite(entree.id)"><i class="material-icons">delete</i></span>
+						</div>
+					</li>
+					<li v-else-if="entree.type === 'bloc-supprime'" :data-bloc="entree.bloc" :key="indexEntree">
+						<div class="conteneur-entree"><span :style="{'color': entree.couleur}"> {{ definirNom(entree) }}</span> <span v-if="entree.titre !== ''" v-html="$t('aSupprimeCapsule', { titre: entree.titre })" /><span v-else v-html="$t('aSupprimeUneCapsule')" /> {{ $formaterDateRelative(entree.date, langue) }}.</div>
+						<div class="menu-entree" v-if="pad.identifiant === identifiant">
+							<span role="button" tabindex="0" class="bouton supprimer" :title="$t('supprimerEntree')" @click="supprimerActivite(entree.id)"><i class="material-icons">delete</i></span>
+						</div>
+					</li>
+					<li v-else-if="entree.type === 'bloc-modifie'" :data-bloc="entree.bloc" :key="indexEntree">
+						<div class="conteneur-entree"><span :style="{'color': entree.couleur}"> {{ definirNom(entree) }}</span> <span v-if="entree.titre !== ''" v-html="$t('aModifieCapsule', { titre: entree.titre })" /><span v-else v-html="$t('aModifieUneCapsule')" /> {{ $formaterDateRelative(entree.date, langue) }}.</div>
+						<div class="menu-entree" v-if="pad.identifiant === identifiant">
+							<span role="button" tabindex="0" class="bouton supprimer" :title="$t('supprimerEntree')" @click="supprimerActivite(entree.id)"><i class="material-icons">delete</i></span>
+						</div>
+					</li>
+					<li v-else-if="entree.type === 'bloc-commente'" :data-bloc="entree.bloc" :key="indexEntree">
+						<div class="conteneur-entree"><span :style="{'color': entree.couleur}"> {{ definirNom(entree) }}</span> <span v-if="entree.titre !== ''" v-html="$t('aCommenteCapsule', { titre: entree.titre })" /><span v-else v-html="$t('aCommenteUneCapsule')" /> {{ $formaterDateRelative(entree.date, langue) }}.</div>
+						<div class="menu-entree" v-if="pad.identifiant === identifiant">
+							<span role="button" tabindex="0" class="bouton supprimer" :title="$t('supprimerEntree')" @click="supprimerActivite(entree.id)"><i class="material-icons">delete</i></span>
+						</div>
+					</li>
+					<li v-else-if="entree.type === 'bloc-evalue'" :data-bloc="entree.bloc" :key="indexEntree">
+						<div class="conteneur-entree"><span :style="{'color': entree.couleur}"> {{ definirNom(entree) }}</span> <span v-if="entree.titre !== ''" v-html="$t('aEvalueCapsule', { titre: entree.titre })" /><span v-else v-html="$t('aEvalueUneCapsule')" /> {{ $formaterDateRelative(entree.date, langue) }}.</div>
+						<div class="menu-entree" v-if="pad.identifiant === identifiant">
+							<span role="button" tabindex="0" class="bouton supprimer" :title="$t('supprimerEntree')" @click="supprimerActivite(entree.id)"><i class="material-icons">delete</i></span>
+						</div>
+					</li>
+					<li v-else-if="entree.type === 'colonne-ajoutee' && pad.affichage === 'colonnes'" :key="indexEntree">
+						<div class="conteneur-entree"><span :style="{'color': entree.couleur}"> {{ definirNom(entree) }}</span> <span v-html="$t('aAjouteColonne', { titre: entree.titre })" /> {{ $formaterDateRelative(entree.date, langue) }}.</div>
+						<div class="menu-entree" v-if="pad.identifiant === identifiant">
+							<span role="button" tabindex="0" class="bouton supprimer" :title="$t('supprimerEntree')" @click="supprimerActivite(entree.id)"><i class="material-icons">delete</i></span>
+						</div>
+					</li>
+					<li v-else-if="entree.type === 'colonne-supprimee' && pad.affichage === 'colonnes'" :key="indexEntree">
+						<div class="conteneur-entree"><span :style="{'color': entree.couleur}"> {{ definirNom(entree) }}</span> <span v-html="$t('aSupprimeColonne', { titre: entree.titre })" /> {{ $formaterDateRelative(entree.date, langue) }}.</div>
+						<div class="menu-entree" v-if="pad.identifiant === identifiant">
+							<span role="button" tabindex="0" class="bouton supprimer" :title="$t('supprimerEntree')" @click="supprimerActivite(entree.id)"><i class="material-icons">delete</i></span>
+						</div>
+					</li>
+					<li v-else-if="entree.type === 'colonne-deplacee' && pad.affichage === 'colonnes'" :key="indexEntree">
+						<div class="conteneur-entree"><span :style="{'color': entree.couleur}"> {{ definirNom(entree) }}</span> <span v-html="$t('aDeplaceColonne', { titre: entree.titre })" /> {{ $formaterDateRelative(entree.date, langue) }}.</div>
+						<div class="menu-entree" v-if="pad.identifiant === identifiant">
+							<span role="button" tabindex="0" class="bouton supprimer" :title="$t('supprimerEntree')" @click="supprimerActivite(entree.id)"><i class="material-icons">delete</i></span>
+						</div>
+					</li>
 				</template>
 			</ul>
 		</div>
@@ -57,7 +97,7 @@
 			<span class="titre">{{ $t('conversation') }}</span>
 			<span class="action">
 				<span class="reinitialiser" @click="afficherReinitialiserMessages" v-if="pad.identifiant === identifiant && messages.length > 0"><i class="material-icons">autorenew</i></span>
-				<span role="button" class="fermer" @click="menuChat = false"><i class="material-icons">close</i></span>
+				<span role="button" tabindex="0" class="fermer" @click="menuChat = false"><i class="material-icons">close</i></span>
 			</span>
 		</div>
 		<div class="contenu ascenseur">
@@ -74,7 +114,7 @@
 	<div class="menu gauche" :class="{'ouvert': menuOptions}" v-if="pad.identifiant === identifiant">
 		<div class="en-tete">
 			<span class="titre">{{ $t('parametresPad') }}</span>
-			<span role="button" class="fermer" @click="fermerMenuOptions"><i class="material-icons">close</i></span>
+			<span role="button" tabindex="0" class="fermer" @click="fermerMenuOptions"><i class="material-icons">close</i></span>
 		</div>
 		<div class="contenu ascenseur">
 			<div class="conteneur">
@@ -91,24 +131,24 @@
 				<label>{{ $t('lienEtCodeQR') }}</label>
 				<div id="copier-lien">
 					<input type="text" disabled :value="hote + '/p/' + pad.id + '/' + pad.token">
-					<span class="icone lien" role="button" :title="$t('copierLien')"><i class="material-icons">content_copy</i></span>
-					<span class="icone codeqr" role="button" :title="$t('afficherCodeQR')" @click="afficherCodeQR"><i class="material-icons">qr_code</i></span>
+					<span class="icone lien" role="button" tabindex="0" :title="$t('copierLien')"><i class="material-icons">content_copy</i></span>
+					<span class="icone codeqr" role="button" tabindex="0" :title="$t('afficherCodeQR')" @click="afficherCodeQR"><i class="material-icons">qr_code</i></span>
 				</div>
 			</div>
 			<div class="conteneur">
 				<label>{{ $t('codeIntegration') }}</label>
 				<div id="copier-code">
 					<input type="text" disabled :value="'<iframe src=&quot;' + hote + '/p/' + pad.id + '/' + pad.token + '&quot; frameborder=&quot;0&quot; width=&quot;100%&quot; height=&quot;500&quot;></iframe>'">
-					<span class="icone lien" role="button" :title="$t('copierCode')"><i class="material-icons">content_copy</i></span>
+					<span class="icone lien" role="button" tabindex="0" :title="$t('copierCode')"><i class="material-icons">content_copy</i></span>
 				</div>
 			</div>
 			<div class="conteneur">
 				<label>{{ $t('langue') }}</label>
 				<div id="langues">
-					<span role="button" :class="{'selectionne': langue === 'fr'}" @click="modifierLangue('fr')">FR</span>
-					<span role="button" :class="{'selectionne': langue === 'es'}" @click="modifierLangue('es')">ES</span>
-					<span role="button" :class="{'selectionne': langue === 'it'}" @click="modifierLangue('it')">IT</span>
-					<span role="button" :class="{'selectionne': langue === 'en'}" @click="modifierLangue('en')">EN</span>
+					<span role="button" tabindex="0" :class="{'selectionne': langue === 'fr'}" @click="modifierLangue('fr')">FR</span>
+					<span role="button" tabindex="0" :class="{'selectionne': langue === 'es'}" @click="modifierLangue('es')">ES</span>
+					<span role="button" tabindex="0" :class="{'selectionne': langue === 'it'}" @click="modifierLangue('it')">IT</span>
+					<span role="button" tabindex="0" :class="{'selectionne': langue === 'en'}" @click="modifierLangue('en')">EN</span>
 				</div>
 			</div>
 			<div class="conteneur">
@@ -131,8 +171,8 @@
 				<div id="code-acces">
 					<input type="text" disabled :value="pad.code" v-if="codeVisible">
 					<input type="password" disabled :value="pad.code" v-else>
-					<span class="icone" role="button" :title="$t('masquerCode')" @click="masquerCodeAcces" v-if="codeVisible"><i class="material-icons">visibility_off</i></span>
-					<span class="icone" role="button" :title="$t('afficherCode')" @click="afficherCodeAcces" v-else><i class="material-icons">visibility</i></span>
+					<span class="icone" role="button" tabindex="0" :title="$t('masquerCode')" @click="masquerCodeAcces" v-if="codeVisible"><i class="material-icons">visibility_off</i></span>
+					<span class="icone" role="button" tabindex="0" :title="$t('afficherCode')" @click="afficherCodeAcces" v-else><i class="material-icons">visibility</i></span>
 				</div>
 			</div>
 			<div class="conteneur" v-if="pad.acces !== 'prive'">
@@ -251,15 +291,15 @@
 	<div class="menu gauche" :class="{'ouvert': menuOptions}" v-else-if="pad.identifiant !== identifiant && statut !== 'utilisateur'">
 		<div class="en-tete">
 			<span class="titre">{{ $t('languePad') }}</span>
-			<span role="button" class="fermer" @click="fermerMenuOptions"><i class="material-icons">close</i></span>
+			<span role="button" tabindex="0" class="fermer" @click="fermerMenuOptions"><i class="material-icons">close</i></span>
 		</div>
 		<div class="contenu">
 			<div class="conteneur">
 				<div id="langues">
-					<span role="button" :class="{'selectionne': langue === 'fr'}" @click="modifierLangue('fr')">FR</span>
-					<span role="button" :class="{'selectionne': langue === 'es'}" @click="modifierLangue('es')">ES</span>
-					<span role="button" :class="{'selectionne': langue === 'it'}" @click="modifierLangue('it')">IT</span>
-					<span role="button" :class="{'selectionne': langue === 'en'}" @click="modifierLangue('en')">EN</span>
+					<span role="button" tabindex="0" :class="{'selectionne': langue === 'fr'}" @click="modifierLangue('fr')">FR</span>
+					<span role="button" tabindex="0" :class="{'selectionne': langue === 'es'}" @click="modifierLangue('es')">ES</span>
+					<span role="button" tabindex="0" :class="{'selectionne': langue === 'it'}" @click="modifierLangue('it')">IT</span>
+					<span role="button" tabindex="0" :class="{'selectionne': langue === 'en'}" @click="modifierLangue('en')">EN</span>
 				</div>
 			</div>
 		</div>
@@ -268,7 +308,7 @@
 	<div class="menu droite" :class="{'ouvert': menuUtilisateurs}">
 		<div class="en-tete">
 			<span class="titre">{{ $t('utilisateursConnectes') }}</span>
-			<span role="button" class="fermer" @click="menuUtilisateurs = false"><i class="material-icons">close</i></span>
+			<span role="button" tabindex="0" class="fermer" @click="menuUtilisateurs = false"><i class="material-icons">close</i></span>
 		</div>
 		<div class="contenu ascenseur">
 			<ul id="utilisateurs">
@@ -276,7 +316,7 @@
 					<li class="moi" v-if="utilisateurConnecte.identifiant === identifiant" :key="indexUtilisateurConnecte">
 						<span class="utilisateur" v-if="statut === 'utilisateur'">{{ definirNom(utilisateurConnecte) }} ({{ $t('moi') }})</span>
 						<span class="utilisateur invite" @click="afficherModifierNom" v-else>{{ definirNom(utilisateurConnecte) }} ({{ $t('moi') }})</span>
-						<span role="button" class="couleur" :style="{'background': utilisateurConnecte.couleur}" @click="listeCouleurs = !listeCouleurs" />
+						<span role="button" tabindex="0" class="couleur" :style="{'background': utilisateurConnecte.couleur}" @click="listeCouleurs = !listeCouleurs" />
 						<div class="couleurs" v-if="listeCouleurs">
 							<span :class="{'actif': couleur === couleurUtilisateur}" v-for="(couleurUtilisateur, indexCouleurUtilisateur) in couleurs" :style="{'background': couleurUtilisateur }" @click="modifierCouleur(couleurUtilisateur)" :key="indexCouleurUtilisateur" />
 						</div>
@@ -312,18 +352,18 @@
 								<i class="material-icons" :class="{'evalue': verifierUtilisateurEvaluation(item.evaluations) === true}" v-for="etoile in (5 - definirEvaluationCapsule(item.evaluations))" :key="'etoilevide_' + etoile">star_outline</i>
 								<span>({{ item.evaluations.length }})</span>
 							</span>
-							<span role="button" class="bouton" :style="{'color': couleur}" @click="ouvrirModaleEvaluations(item.bloc, item.titre, '')" v-if="verifierUtilisateurEvaluation(item.evaluations) === false"><i class="material-icons">add_comment</i></span>
-							<span role="button" class="bouton" :style="{'color': couleur}" @click="ouvrirModaleEvaluations(item.bloc, item.titre, item.evaluations)" v-else><i class="material-icons">rate_review</i></span>
+							<span role="button" tabindex="0" class="bouton" :title="$t('evaluerCapsule')" :style="{'color': couleur}" @click="ouvrirModaleEvaluations(item.bloc, item.titre, '')" v-if="verifierUtilisateurEvaluation(item.evaluations) === false"><i class="material-icons">add_comment</i></span>
+							<span role="button" tabindex="0" class="bouton" :title="$t('evaluerCapsule')" :style="{'color': couleur}" @click="ouvrirModaleEvaluations(item.bloc, item.titre, item.evaluations)" v-else><i class="material-icons">rate_review</i></span>
 						</div>
 						<div class="action" :style="{'color': item.couleur}">
-							<span role="button" class="bouton" @click="ouvrirModaleBloc('edition', item, 0)" v-if="item.identifiant === identifiant || pad.identifiant === identifiant"><i class="material-icons">edit</i></span>
-							<span role="button" class="bouton" @click="ouvrirModaleCommentaires(item.bloc, item.titre)" v-if="pad.commentaires === 'actives'"><i class="material-icons">comment</i><span class="badge">{{ item.commentaires }}</span></span>
-							<span role="button" class="bouton info" :data-description="definirDescription(item)"><i class="material-icons">info</i></span>
+							<span role="button" tabindex="0" class="bouton" :title="$t('modifierCapsule')" @click="ouvrirModaleBloc('edition', item, 0)" v-if="item.identifiant === identifiant || pad.identifiant === identifiant"><i class="material-icons">edit</i></span>
+							<span role="button" tabindex="0" class="bouton" :title="$t('commenterCapsule')" @click="ouvrirModaleCommentaires(item.bloc, item.titre)" v-if="pad.commentaires === 'actives'"><i class="material-icons">comment</i><span class="badge">{{ item.commentaires }}</span></span>
+							<span role="button" tabindex="0" class="bouton info" :title="$t('informationsCapsule')" :data-description="definirDescription(item)"><i class="material-icons">info</i></span>
 							<span class="media-type" v-if="item.media !== ''"><i class="material-icons">{{ definirIconeMedia(item) }}</i></span>
-							<span role="button" class="bouton supprimer" @click="afficherSupprimerBloc(item.bloc, item.titre, 0)" v-if="item.identifiant === identifiant || pad.identifiant === identifiant"><i class="material-icons">delete</i></span>
+							<span role="button" tabindex="0" class="bouton supprimer" :title="$t('supprimerCapsule')" @click="afficherSupprimerBloc(item.bloc, item.titre, 0)" v-if="item.identifiant === identifiant || pad.identifiant === identifiant"><i class="material-icons">delete</i></span>
 						</div>
 						<div class="moderation" v-if="pad.contributions === 'moderees' && item.visibilite === 'masquee'">
-							<span role="button" class="bouton" @click="autoriserBloc(item)" v-if="pad.identifiant === identifiant">{{ $t('validerCapsule') }}</span>
+							<span role="button" tabindex="0" class="bouton" @click="autoriserBloc(item)" v-if="pad.identifiant === identifiant">{{ $t('validerCapsule') }}</span>
 							<span class="bouton" v-else-if="item.identifiant === identifiant">{{ $t('enAttenteModeration') }}</span>
 						</div>
 					</div>
@@ -352,18 +392,18 @@
 								<i class="material-icons" :class="{'evalue': verifierUtilisateurEvaluation(item.evaluations) === true}" v-for="etoile in (5 - definirEvaluationCapsule(item.evaluations))" :key="'etoilevide_' + etoile">star_outline</i>
 								<span>({{ item.evaluations.length }})</span>
 							</span>
-							<span role="button" class="bouton" :style="{'color': couleur}" @click="ouvrirModaleEvaluations(item.bloc, item.titre, '')" v-if="verifierUtilisateurEvaluation(item.evaluations) === false"><i class="material-icons">add_comment</i></span>
-							<span role="button" class="bouton" :style="{'color': couleur}" @click="ouvrirModaleEvaluations(item.bloc, item.titre, item.evaluations)" v-else><i class="material-icons">rate_review</i></span>
+							<span role="button" tabindex="0" class="bouton" :title="$t('evaluerCapsule')" :style="{'color': couleur}" @click="ouvrirModaleEvaluations(item.bloc, item.titre, '')" v-if="verifierUtilisateurEvaluation(item.evaluations) === false"><i class="material-icons">add_comment</i></span>
+							<span role="button" tabindex="0" class="bouton" :title="$t('evaluerCapsule')" :style="{'color': couleur}" @click="ouvrirModaleEvaluations(item.bloc, item.titre, item.evaluations)" v-else><i class="material-icons">rate_review</i></span>
 						</div>
 						<div class="action" :style="{'color': item.couleur}">
-							<span role="button" class="bouton" @click="ouvrirModaleBloc('edition', item, 0)" v-if="item.identifiant === identifiant || pad.identifiant === identifiant"><i class="material-icons">edit</i></span>
-							<span role="button" class="bouton" @click="ouvrirModaleCommentaires(item.bloc, item.titre)" v-if="pad.commentaires === 'actives'"><i class="material-icons">comment</i><span class="badge">{{ item.commentaires }}</span></span>
-							<span role="button" class="bouton info" :data-description="definirDescription(item)"><i class="material-icons">info</i></span>
+							<span role="button" tabindex="0" class="bouton" :title="$t('modifierCapsule')" @click="ouvrirModaleBloc('edition', item, 0)" v-if="item.identifiant === identifiant || pad.identifiant === identifiant"><i class="material-icons">edit</i></span>
+							<span role="button" tabindex="0" class="bouton" :title="$t('commenterCapsule')" @click="ouvrirModaleCommentaires(item.bloc, item.titre)" v-if="pad.commentaires === 'actives'"><i class="material-icons">comment</i><span class="badge">{{ item.commentaires }}</span></span>
+							<span role="button" tabindex="0" class="bouton info" :title="$t('informationsCapsule')" :data-description="definirDescription(item)"><i class="material-icons">info</i></span>
 							<span class="media-type" v-if="item.media !== ''"><i class="material-icons">{{ definirIconeMedia(item) }}</i></span>
-							<span role="button" class="bouton supprimer" @click="afficherSupprimerBloc(item.bloc, item.titre, 0)" v-if="item.identifiant === identifiant || pad.identifiant === identifiant"><i class="material-icons">delete</i></span>
+							<span role="button" tabindex="0" class="bouton supprimer" :title="$t('supprimerCapsule')" @click="afficherSupprimerBloc(item.bloc, item.titre, 0)" v-if="item.identifiant === identifiant || pad.identifiant === identifiant"><i class="material-icons">delete</i></span>
 						</div>
 						<div class="moderation" v-if="pad.contributions === 'moderees' && item.visibilite === 'masquee'">
-							<span role="button" class="bouton" @click="autoriserBloc(item)" v-if="pad.identifiant === identifiant">{{ $t('validerCapsule') }}</span>
+							<span role="button" tabindex="0" class="bouton" @click="autoriserBloc(item)" v-if="pad.identifiant === identifiant">{{ $t('validerCapsule') }}</span>
 							<span class="bouton" v-else-if="item.identifiant === identifiant">{{ $t('enAttenteModeration') }}</span>
 						</div>
 					</div>
@@ -379,8 +419,8 @@
 							<span>{{ col }}</span>
 						</div>
 						<div class="menu-colonne" v-if="pad.identifiant === identifiant">
-							<span role="button" class="bouton" @click="ouvrirModaleColonne('edition', indexCol)"><i class="material-icons">edit</i></span>
-							<span role="button" class="bouton supprimer" @click="afficherSupprimerColonne(indexCol)"><i class="material-icons">delete</i></span>
+							<span role="button" tabindex="0" class="bouton" :title="$t('modifierColonne')" @click="ouvrirModaleColonne('edition', indexCol)"><i class="material-icons">edit</i></span>
+							<span role="button" tabindex="0" class="bouton supprimer" :title="$t('supprimerColonne')" @click="afficherSupprimerColonne(indexCol)"><i class="material-icons">delete</i></span>
 						</div>
 					</div>
 					<div class="conteneur-colonne ascenseur" v-if="colonnes[indexCol].length > 0">
@@ -403,25 +443,25 @@
 										<i class="material-icons" :class="{'evalue': verifierUtilisateurEvaluation(item.evaluations) === true}" v-for="etoile in (5 - definirEvaluationCapsule(item.evaluations))" :key="'etoilevide_' + etoile">star_outline</i>
 										<span>({{ item.evaluations.length }})</span>
 									</span>
-									<span role="button" class="bouton" :style="{'color': couleur}" @click="ouvrirModaleEvaluations(item.bloc, item.titre, '')" v-if="verifierUtilisateurEvaluation(item.evaluations) === false"><i class="material-icons">add_comment</i></span>
-									<span role="button" class="bouton" :style="{'color': couleur}" @click="ouvrirModaleEvaluations(item.bloc, item.titre, item.evaluations)" v-else><i class="material-icons">rate_review</i></span>
+									<span role="button" tabindex="0" class="bouton" :title="$t('evaluerCapsule')" :style="{'color': couleur}" @click="ouvrirModaleEvaluations(item.bloc, item.titre, '')" v-if="verifierUtilisateurEvaluation(item.evaluations) === false"><i class="material-icons">add_comment</i></span>
+									<span role="button" tabindex="0" class="bouton" :title="$t('evaluerCapsule')" :style="{'color': couleur}" @click="ouvrirModaleEvaluations(item.bloc, item.titre, item.evaluations)" v-else><i class="material-icons">rate_review</i></span>
 								</div>
 								<div class="action" :style="{'color': item.couleur}">
-									<span role="button" class="bouton" @click="ouvrirModaleBloc('edition', item, indexCol)" v-if="item.identifiant === identifiant || pad.identifiant === identifiant"><i class="material-icons">edit</i></span>
-									<span role="button" class="bouton" @click="ouvrirModaleCommentaires(item.bloc, item.titre)" v-if="pad.commentaires === 'actives'"><i class="material-icons">comment</i><span class="badge">{{ item.commentaires }}</span></span>
-									<span role="button" class="bouton info" :data-description="definirDescription(item)"><i class="material-icons">info</i></span>
+									<span role="button" tabindex="0" class="bouton" :title="$t('modifierCapsule')" @click="ouvrirModaleBloc('edition', item, indexCol)" v-if="item.identifiant === identifiant || pad.identifiant === identifiant"><i class="material-icons">edit</i></span>
+									<span role="button" tabindex="0" class="bouton" :title="$t('commenterCapsule')" @click="ouvrirModaleCommentaires(item.bloc, item.titre)" v-if="pad.commentaires === 'actives'"><i class="material-icons">comment</i><span class="badge">{{ item.commentaires }}</span></span>
+									<span role="button" tabindex="0" class="bouton info" :title="$t('informationsCapsule')" :data-description="definirDescription(item)"><i class="material-icons">info</i></span>
 									<span class="media-type" v-if="item.media !== ''"><i class="material-icons">{{ definirIconeMedia(item) }}</i></span>
-									<span role="button" class="bouton supprimer" @click="afficherSupprimerBloc(item.bloc, item.titre, indexCol)" v-if="item.identifiant === identifiant || pad.identifiant === identifiant"><i class="material-icons">delete</i></span>
+									<span role="button" tabindex="0" class="bouton supprimer" :title="$t('supprimerCapsule')" @click="afficherSupprimerBloc(item.bloc, item.titre, indexCol)" v-if="item.identifiant === identifiant || pad.identifiant === identifiant"><i class="material-icons">delete</i></span>
 								</div>
 								<div class="moderation" v-if="pad.contributions === 'moderees' && item.visibilite === 'masquee'">
-									<span role="button" class="bouton" @click="autoriserBloc(item)" v-if="pad.identifiant === identifiant">{{ $t('validerCapsule') }}</span>
+									<span role="button" tabindex="0" class="bouton" @click="autoriserBloc(item)" v-if="pad.identifiant === identifiant">{{ $t('validerCapsule') }}</span>
 									<span class="bouton" v-else-if="item.identifiant === identifiant">{{ $t('enAttenteModeration') }}</span>
 								</div>
 							</div>
 						</div>
 					</div>
 					<div class="ajouter" v-if="accesAutorise && (pad.identifiant === identifiant || pad.contributions !== 'fermees')">
-						<span role="button" @click="ouvrirModaleBloc('creation', '', indexCol)">
+						<span role="button" tabindex="0" :title="$t('ajouterCapsule')" @click="ouvrirModaleBloc('creation', '', indexCol)">
 							<i class="material-icons">add</i>
 						</span>
 					</div>
@@ -460,12 +500,12 @@
 							</span>
 						</div>
 						<div class="action" :style="{'color': item.couleur}">
-							<span role="button" class="bouton" v-if="pad.commentaires === 'actives'"><i class="material-icons">comment</i><span class="badge">{{ item.commentaires }}</span></span>
-							<span role="button" class="bouton info" :data-description="definirDescription(item)"><i class="material-icons">info</i></span>
+							<span role="button" tabindex="0" class="bouton" :title="$t('commenterCapsule')" @click="ouvrirModaleCommentaires(item.bloc, item.titre)" v-if="pad.commentaires === 'actives'"><i class="material-icons">comment</i><span class="badge">{{ item.commentaires }}</span></span>
+							<span role="button" tabindex="0" class="bouton info" :title="$t('informationsCapsule')" :data-description="definirDescription(item)"><i class="material-icons">info</i></span>
 							<span class="media-type" v-if="item.media !== ''"><i class="material-icons">{{ definirIconeMedia(item) }}</i></span>
 						</div>
 						<div class="moderation" v-if="pad.contributions === 'moderees' && item.visibilite === 'masquee'">
-							<span role="button" class="bouton" @click="autoriserBloc(item)">{{ $t('validerCapsule') }}</span>
+							<span role="button" tabindex="0" class="bouton" @click="autoriserBloc(item)">{{ $t('validerCapsule') }}</span>
 						</div>
 					</div>
 				</div>
@@ -480,8 +520,8 @@
 							<span>{{ col }}</span>
 						</div>
 						<div class="menu-colonne" v-if="pad.identifiant === identifiant">
-							<span role="button" class="bouton gauche" @click="deplacerColonne('gauche', indexCol)" v-if="indexCol > 0"><i class="material-icons">arrow_back</i></span>
-							<span role="button" class="bouton droite" @click="deplacerColonne('droite', indexCol)" v-if="indexCol < (pad.colonnes.length - 1)"><i class="material-icons">arrow_forward</i></span>
+							<span role="button" tabindex="0" class="bouton gauche" :title="$t('deplacerGauche')" @click="deplacerColonne('gauche', indexCol)" v-if="indexCol > 0"><i class="material-icons">arrow_back</i></span>
+							<span role="button" tabindex="0" class="bouton droite" :title="$t('deplacerDroite')" @click="deplacerColonne('droite', indexCol)" v-if="indexCol < (pad.colonnes.length - 1)"><i class="material-icons">arrow_forward</i></span>
 						</div>
 					</div>
 					<draggable class="conteneur-colonne ascenseur" v-model="colonnes[indexCol]" group="colonne" draggable=".bloc" :sort="true" :animation="250" :swap-threshold="0.5" :force-fallback="true" :fallback-tolerance="10" :scroll-sensitivity="convertirRem(4)" :scroll-speed="convertirRem(4)" :data-index="indexCol" @start="demarrerDeplacerBloc" @end="deplacerBloc">
@@ -507,12 +547,12 @@
 									</span>
 								</div>
 								<div class="action" :style="{'color': item.couleur}">
-									<span role="button" class="bouton" v-if="pad.commentaires === 'actives'"><i class="material-icons">comment</i><span class="badge">{{ item.commentaires }}</span></span>
-									<span role="button" class="bouton info" :data-description="definirDescription(item)"><i class="material-icons">info</i></span>
+									<span role="button" tabindex="0" class="bouton" :title="$t('commenterCapsule')" @click="ouvrirModaleCommentaires(item.bloc, item.titre)" v-if="pad.commentaires === 'actives'"><i class="material-icons">comment</i><span class="badge">{{ item.commentaires }}</span></span>
+									<span role="button" tabindex="0" class="bouton info" :title="$t('informationsCapsule')" :data-description="definirDescription(item)"><i class="material-icons">info</i></span>
 									<span class="media-type" v-if="item.media !== ''"><i class="material-icons">{{ definirIconeMedia(item) }}</i></span>
 								</div>
 								<div class="moderation" v-if="pad.contributions === 'moderees' && item.visibilite === 'masquee'">
-									<span role="button" class="bouton" @click="autoriserBloc(item)">{{ $t('validerCapsule') }}</span>
+									<span role="button" tabindex="0" class="bouton" @click="autoriserBloc(item)">{{ $t('validerCapsule') }}</span>
 								</div>
 							</div>
 						</div>
@@ -525,7 +565,7 @@
 	<div id="pad" :style="{'background': '#00ced1'}" v-else />
 
 	<transition name="fondu">
-		<span role="button" id="ajouter" @click="ouvrirModaleBloc('creation', '', 0)" v-if="accesAutorise && ((pad.affichage === 'mur' || pad.affichage === 'flux-vertical') && ((pad.identifiant === identifiant && action !== 'organiser') || (pad.identifiant !== identifiant && pad.contributions !== 'fermees')))">
+		<span role="button" tabindex="0" id="ajouter" :title="$t('ajouterCapsule')" @click="ouvrirModaleBloc('creation', '', 0)" v-if="accesAutorise && ((pad.affichage === 'mur' || pad.affichage === 'flux-vertical') && ((pad.identifiant === identifiant && action !== 'organiser') || (pad.identifiant !== identifiant && pad.contributions !== 'fermees')))">
 			<i class="material-icons">add</i>
 		</span>
 	</transition>
@@ -534,7 +574,7 @@
 		<div class="modale">
 			<div class="en-tete">
 				<span class="titre">{{ titreModaleColonne }}</span>
-				<span role="button" class="fermer" @click="fermerModaleColonne"><i class="material-icons">close</i></span>
+				<span role="button" tabindex="0" class="fermer" @click="fermerModaleColonne"><i class="material-icons">close</i></span>
 			</div>
 			<div class="conteneur">
 				<div class="contenu">
@@ -554,7 +594,7 @@
 		<div id="bloc" class="modale">
 			<div class="en-tete">
 				<span class="titre">{{ titreModale }}</span>
-				<span role="button" class="fermer" @click="fermerModaleBlocSansEnregistrement"><i class="material-icons">close</i></span>
+				<span role="button" tabindex="0" class="fermer" @click="fermerModaleBlocSansEnregistrement"><i class="material-icons">close</i></span>
 			</div>
 			<div class="conteneur ascenseur">
 				<div class="contenu">
@@ -575,7 +615,7 @@
 					</div>
 					<div id="ajouter-lien" v-show="media === '' && progressionFichier === 0" v-if="pad.liens === 'actives'">
 						<input type="text" :value="lien" @input="lien = $event.target.value" :placeholder="$t('ajouterLien')" @keydown.enter="ajouterLien" v-if="!chargementLien">
-						<span role="button" tabindex="0" class="bouton rechercher" @click="ajouterLien" v-if="!chargementLien"><i class="material-icons">search</i></span>
+						<span role="button" tabindex="0" class="bouton rechercher" :title="$t('valider')" @click="ajouterLien" v-if="!chargementLien"><i class="material-icons">search</i></span>
 						<div class="conteneur-chargement" v-else>
 							<div class="chargement" />
 						</div>
@@ -594,8 +634,8 @@
 							<div class="html" v-else v-html="iframe" />
 						</div>
 						<div class="action">
-							<span role="button" class="bouton supprimer" @click="supprimerLien">{{ $t('supprimer') }}</span>
-							<span role="button" class="bouton convertir" @click="convertirEnLien" v-if="lien !== ''">{{ $t('convertirEnLien') }}</span>
+							<span role="button" tabindex="0" class="bouton supprimer" @click="supprimerLien">{{ $t('supprimer') }}</span>
+							<span role="button" tabindex="0" class="bouton convertir" @click="convertirEnLien" v-if="lien !== ''">{{ $t('convertirEnLien') }}</span>
 							<span class="information" v-if="lien !== ''">
 								<i class="material-icons">info</i>
 								<span v-html="$t('infoErreurLien')" />
@@ -662,7 +702,7 @@
 		<div id="diapositive" class="modale-diapositive" :style="{'border-color': donneesBloc.couleur}" v-show="!chargement">
 			<div class="en-tete">
 				<span class="titre"><span>{{ donneesBloc.titre }}</span> <span>{{ $t('par') }} {{ definirNom(donneesBloc) }}</span></span>
-				<span role="button" class="fermer" @click="fermerModaleDiaporama"><i class="material-icons">close</i></span>
+				<span role="button" tabindex="0" class="fermer" @click="fermerModaleDiaporama"><i class="material-icons">close</i></span>
 			</div>
 			<div class="contenu ascenseur" :class="{'vide': donneesBloc.texte === '' && donneesBloc.media === '' && pad.evaluations === 'desactivees' && pad.commentaires === 'desactives' && ((pad.contributions !== 'moderees') || (pad.contributions === 'moderees' && donneesBloc.visibilite === 'visible'))}">
 				<div class="conteneur" v-if="donneesBloc.texte !== ''">
@@ -698,7 +738,7 @@
 					</div>
 				</div>
 				<div class="conteneur conteneur-moderation" v-if="pad.contributions === 'moderees' && donneesBloc.visibilite === 'masquee'">
-					<span role="button" class="bouton" @click="autoriserBloc(donneesBloc)" v-if="pad.identifiant === identifiant">{{ $t('validerCapsule') }}</span>
+					<span role="button" tabindex="0" class="bouton" @click="autoriserBloc(donneesBloc)" v-if="pad.identifiant === identifiant">{{ $t('validerCapsule') }}</span>
 					<span class="bouton" v-else-if="donneesBloc.identifiant === identifiant">{{ $t('enAttenteModeration') }}</span>
 				</div>
 				<div class="conteneur conteneur-evaluations" v-if="pad.evaluations === 'activees'">
@@ -709,8 +749,8 @@
 							<i class="material-icons" :class="{'evalue': verifierUtilisateurEvaluation(donneesBloc.evaluations) === true}" v-for="etoile in (5 - definirEvaluationCapsule(donneesBloc.evaluations))" :key="'etoilevide_' + etoile">star_outline</i>
 							<span>({{ donneesBloc.evaluations.length }})</span>
 						</span>
-						<span role="button" class="bouton" :style="{'color': couleur}" @click="ouvrirModaleEvaluations(donneesBloc.bloc, donneesBloc.titre, '')" v-if="verifierUtilisateurEvaluation(donneesBloc.evaluations) === false"><i class="material-icons">add_comment</i></span>
-						<span role="button" class="bouton" :style="{'color': couleur}" @click="ouvrirModaleEvaluations(donneesBloc.bloc, donneesBloc.titre, donneesBloc.evaluations)" v-else><i class="material-icons">rate_review</i></span>
+						<span role="button" tabindex="0" class="bouton" :title="$t('evaluerCapsule')" :style="{'color': couleur}" @click="ouvrirModaleEvaluations(donneesBloc.bloc, donneesBloc.titre, '')" v-if="verifierUtilisateurEvaluation(donneesBloc.evaluations) === false"><i class="material-icons">add_comment</i></span>
+						<span role="button" tabindex="0" class="bouton" :title="$t('evaluerCapsule')" :style="{'color': couleur}" @click="ouvrirModaleEvaluations(donneesBloc.bloc, donneesBloc.titre, donneesBloc.evaluations)" v-else><i class="material-icons">rate_review</i></span>
 					</div>
 				</div>
 				<div class="conteneur conteneur-commentaires" v-if="pad.commentaires === 'actives'">
@@ -719,14 +759,14 @@
 						<li :class="{'edition': editionCommentaire && commentaireId === entreeCommentaire.id}" v-for="(entreeCommentaire, indexEntreeCommentaire) in commentaires" :key="indexEntreeCommentaire">
 							<span class="meta" :class="{'auteur': entreeCommentaire.identifiant === identifiant || pad.identifiant === identifiant}">par {{ definirNom(entreeCommentaire) }}, {{ $formaterDateRelative(entreeCommentaire.date, langue) }}</span>
 							<div class="action" v-if="entreeCommentaire.identifiant === identifiant || pad.identifiant === identifiant">
-								<span role="button" @click="afficherModifierCommentaire(entreeCommentaire.id, entreeCommentaire.texte)" v-if="!editionCommentaire && commentaireId !== entreeCommentaire.id"><i class="material-icons">edit</i></span>
-								<span role="button" @click="annulerModifierCommentaire" v-else-if="editionCommentaire && commentaireId === entreeCommentaire.id"><i class="material-icons">close</i></span>
-								<span role="button" @click="afficherSupprimerCommentaire(entreeCommentaire.id)"><i class="material-icons">delete</i></span>
+								<span role="button" tabindex="0" :title="$t('modifierCommentaire')" @click="afficherModifierCommentaire(entreeCommentaire.id, entreeCommentaire.texte)" v-if="!editionCommentaire && commentaireId !== entreeCommentaire.id"><i class="material-icons">edit</i></span>
+								<span role="button" tabindex="0" :title="$t('annuler')" @click="annulerModifierCommentaire" v-else-if="editionCommentaire && commentaireId === entreeCommentaire.id"><i class="material-icons">close</i></span>
+								<span role="button" tabindex="0" :title="$t('supprimerCommentaire')" @click="afficherSupprimerCommentaire(entreeCommentaire.id)"><i class="material-icons">delete</i></span>
 							</div>
 							<div class="texte" v-if="(commentaireId !== entreeCommentaire.id) || (commentaireId === entreeCommentaire.id && modaleConfirmer)" v-html="entreeCommentaire.texte" />
 							<div class="texte" v-else-if="editionCommentaire && commentaireId === entreeCommentaire.id">
 								<div id="commentaire-modifie" />
-								<button @click="modifierCommentaire"><i class="material-icons">edit</i></button>
+								<button :title="$t('publier')" @click="modifierCommentaire"><i class="material-icons">edit</i></button>
 								<emojis v-if="emojis === 'modifier'" :type="emojis" :diaporama="modaleDiaporama" @emoji="insererEmoji" />
 							</div>
 						</li>
@@ -736,7 +776,7 @@
 					</div>
 					<div class="ecrire-commentaire">
 						<div id="commentaire" />
-						<button @click="envoyerCommentaire"><i class="material-icons">send</i></button>
+						<button :title="$t('publier')" @click="envoyerCommentaire"><i class="material-icons">send</i></button>
 						<emojis v-if="emojis === 'ecrire'" :type="emojis" :diaporama="modaleDiaporama" @emoji="insererEmoji" />
 					</div>
 				</div>
@@ -750,20 +790,20 @@
 		<div id="discussion" class="modale">
 			<div class="en-tete">
 				<span class="titre">{{ $t('commentairesCapsule') }}</span>
-				<span role="button" class="fermer" @click="fermerModaleCommentaire"><i class="material-icons">close</i></span>
+				<span role="button" tabindex="0" class="fermer" @click="fermerModaleCommentaire"><i class="material-icons">close</i></span>
 			</div>
 			<ul class="commentaires ascenseur">
 				<li :class="{'edition': editionCommentaire && commentaireId === entreeCommentaire.id}" v-for="(entreeCommentaire, indexEntreeCommentaire) in commentaires" :key="indexEntreeCommentaire">
 					<span class="meta" :class="{'auteur': entreeCommentaire.identifiant === identifiant || pad.identifiant === identifiant}">par {{ definirNom(entreeCommentaire) }}, {{ $formaterDateRelative(entreeCommentaire.date, langue) }}</span>
 					<div class="action" v-if="entreeCommentaire.identifiant === identifiant || pad.identifiant === identifiant">
-						<span role="button" @click="afficherModifierCommentaire(entreeCommentaire.id, entreeCommentaire.texte)" v-if="!editionCommentaire && commentaireId !== entreeCommentaire.id"><i class="material-icons">edit</i></span>
-						<span role="button" @click="annulerModifierCommentaire" v-else-if="editionCommentaire && commentaireId === entreeCommentaire.id"><i class="material-icons">close</i></span>
-						<span role="button" @click="afficherSupprimerCommentaire(entreeCommentaire.id)"><i class="material-icons">delete</i></span>
+						<span role="button" tabindex="0" :title="$t('modifierCommentaire')" @click="afficherModifierCommentaire(entreeCommentaire.id, entreeCommentaire.texte)" v-if="!editionCommentaire && commentaireId !== entreeCommentaire.id"><i class="material-icons">edit</i></span>
+						<span role="button" tabindex="0" :title="$t('annuler')" @click="annulerModifierCommentaire" v-else-if="editionCommentaire && commentaireId === entreeCommentaire.id"><i class="material-icons">close</i></span>
+						<span role="button" tabindex="0" :title="$t('supprimerCommentaire')" @click="afficherSupprimerCommentaire(entreeCommentaire.id)"><i class="material-icons">delete</i></span>
 					</div>
 					<div class="texte" v-if="(commentaireId !== entreeCommentaire.id) || (commentaireId === entreeCommentaire.id && modaleConfirmer)" v-html="entreeCommentaire.texte" />
 					<div class="texte" v-else-if="editionCommentaire && commentaireId === entreeCommentaire.id">
 						<div id="commentaire-modifie" />
-						<button @click="modifierCommentaire"><i class="material-icons">edit</i></button>
+						<button :title="$t('publier')" @click="modifierCommentaire"><i class="material-icons">edit</i></button>
 						<emojis v-if="emojis === 'modifier'" :type="emojis" :diaporama="modaleDiaporama" @emoji="insererEmoji" />
 					</div>
 				</li>
@@ -773,7 +813,7 @@
 			</ul>
 			<div class="ecrire-commentaire">
 				<div id="commentaire" />
-				<button @click="envoyerCommentaire"><i class="material-icons">send</i></button>
+				<button :title="$t('publier')" @click="envoyerCommentaire"><i class="material-icons">send</i></button>
 				<emojis v-if="emojis === 'ecrire'" :type="emojis" :diaporama="modaleDiaporama" @emoji="insererEmoji" />
 			</div>
 		</div>
@@ -783,7 +823,7 @@
 		<div class="modale">
 			<div class="en-tete">
 				<span class="titre">{{ $t('evaluerCapsule') }}</span>
-				<span role="button" class="fermer" @click="fermerModaleEvaluations"><i class="material-icons">close</i></span>
+				<span role="button" tabindex="0" class="fermer" @click="fermerModaleEvaluations"><i class="material-icons">close</i></span>
 			</div>
 			<div class="conteneur">
 				<div class="contenu">
@@ -815,7 +855,7 @@
 		<div class="modale">
 			<div class="en-tete">
 				<span class="titre">{{ $t('modifierNom') }}</span>
-				<span role="button" class="fermer" @click="fermerModaleModifierNom"><i class="material-icons">close</i></span>
+				<span role="button" tabindex="0" class="fermer" @click="fermerModaleModifierNom"><i class="material-icons">close</i></span>
 			</div>
 			<div class="conteneur">
 				<div class="contenu">
@@ -833,7 +873,7 @@
 		<div class="modale">
 			<div class="en-tete">
 				<span class="titre">{{ $t('motDePassePad') }}</span>
-				<span role="button" class="fermer" @click="fermerModaleMotDePasse"><i class="material-icons">close</i></span>
+				<span role="button" tabindex="0" class="fermer" @click="fermerModaleMotDePasse"><i class="material-icons">close</i></span>
 			</div>
 			<div class="conteneur">
 				<div class="contenu">
@@ -851,7 +891,7 @@
 		<div id="motdepasse" class="modale">
 			<div class="en-tete">
 				<span class="titre">{{ $t('modifierMotDePassePad') }}</span>
-				<span role="button" class="fermer" @click="fermerModaleModifierMotDePasse"><i class="material-icons">close</i></span>
+				<span role="button" tabindex="0" class="fermer" @click="fermerModaleModifierMotDePasse"><i class="material-icons">close</i></span>
 			</div>
 			<div class="conteneur">
 				<div class="contenu">
@@ -871,7 +911,7 @@
 		<div id="codeqr" class="modale">
 			<div class="en-tete">
 				<span class="titre">{{ $t('codeQR') }}</span>
-				<span role="button" class="fermer" @click="fermerModaleCodeQR"><i class="material-icons">close</i></span>
+				<span role="button" tabindex="0" class="fermer" @click="fermerModaleCodeQR"><i class="material-icons">close</i></span>
 			</div>
 			<div class="conteneur">
 				<div class="contenu">

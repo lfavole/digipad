@@ -8,25 +8,25 @@
 		</header>
 
 		<nav id="nav">
-			<span role="button" id="compte" @click="menu = !menu" :title="$t('parametresCompte')"><i class="material-icons">account_circle</i></span>
-			<span role="button" id="recherche" @click="recherche = !recherche" :title="$t('recherche')"><i class="material-icons">search</i></span>
-			<span role="button" id="informations" :title="$t('nouveautesEtFAQ')"><a href="https://drive.infomaniak.com/app/share/139248/eb7c3ad0-a36f-45f2-8125-3e2c59cce1fc/preview/text/4259" target="_blank"><i class="material-icons">help_outline</i></a></span>
-			<span role="button" id="deconnexion" @click="deconnexion" :title="$t('deconnexion')"><i class="material-icons">power_settings_new</i></span>
+			<span role="button" tabindex="0" id="compte" @click="menu = !menu" :title="$t('parametresCompte')"><i class="material-icons">account_circle</i></span>
+			<span role="button" tabindex="0" id="recherche" @click="recherche = !recherche" :title="$t('recherche')"><i class="material-icons">search</i></span>
+			<span role="button" tabindex="0" id="informations" :title="$t('nouveautesEtFAQ')"><a href="https://drive.infomaniak.com/app/share/139248/eb7c3ad0-a36f-45f2-8125-3e2c59cce1fc/preview/text/4259" target="_blank"><i class="material-icons">help_outline</i></a></span>
+			<span role="button" tabindex="0" id="deconnexion" @click="deconnexion" :title="$t('deconnexion')"><i class="material-icons">power_settings_new</i></span>
 		</nav>
 
 		<div class="menu gauche" :class="{'ouvert': menu}">
 			<div class="en-tete">
 				<span class="titre">{{ $t('parametresCompte') }}</span>
-				<span role="button" class="fermer" @click="menu = false"><i class="material-icons">close</i></span>
+				<span role="button" tabindex="0" class="fermer" @click="menu = false"><i class="material-icons">close</i></span>
 			</div>
 			<div class="contenu ascenseur">
 				<div class="conteneur">
 					<label>{{ $t('langue') }}</label>
 					<div id="langues">
-						<span role="button" :class="{'selectionne': langue === 'fr'}" @click="modifierLangue('fr')">FR</span>
-						<span role="button" :class="{'selectionne': langue === 'es'}" @click="modifierLangue('es')">ES</span>
-						<span role="button" :class="{'selectionne': langue === 'it'}" @click="modifierLangue('it')">IT</span>
-						<span role="button" :class="{'selectionne': langue === 'en'}" @click="modifierLangue('en')">EN</span>
+						<span role="button" tabindex="0" :class="{'selectionne': langue === 'fr'}" @click="modifierLangue('fr')">FR</span>
+						<span role="button" tabindex="0" :class="{'selectionne': langue === 'es'}" @click="modifierLangue('es')">ES</span>
+						<span role="button" tabindex="0" :class="{'selectionne': langue === 'it'}" @click="modifierLangue('it')">IT</span>
+						<span role="button" tabindex="0" :class="{'selectionne': langue === 'en'}" @click="modifierLangue('en')">EN</span>
 					</div>
 				</div>
 				<div class="conteneur">
@@ -58,7 +58,7 @@
 			</div>
 			<div class="conteneur recherche" v-if="recherche">
 				<input type="text" id="rechercher" maxlength="48" :placeholder="$t('rechercherPads')" @input="requete = $event.target.value">
-				<span role="button" @click="recherche = false"><i class="material-icons">close</i></span>
+				<span role="button" tabindex="0" @click="recherche = false"><i class="material-icons">close</i></span>
 			</div>
 		</div>
 
@@ -148,7 +148,7 @@
 			<div id="motdepasse" class="modale">
 				<div class="en-tete">
 					<span class="titre">{{ $t('modifierMotDePasse') }}</span>
-					<span role="button" class="fermer" @click="fermerModaleMotDePasse"><i class="material-icons">close</i></span>
+					<span role="button" tabindex="0" class="fermer" @click="fermerModaleMotDePasse"><i class="material-icons">close</i></span>
 				</div>
 				<div class="conteneur">
 					<div class="contenu">
@@ -188,7 +188,7 @@
 			<div id="import" class="modale">
 				<div class="en-tete">
 					<span class="titre">{{ $t('importerPad') }}</span>
-					<span role="button" class="fermer" @click="fermerModaleImporterPad"><i class="material-icons">close</i></span>
+					<span role="button" tabindex="0" class="fermer" @click="fermerModaleImporterPad"><i class="material-icons">close</i></span>
 				</div>
 				<div class="conteneur">
 					<div class="contenu">

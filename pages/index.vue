@@ -2,10 +2,10 @@
 	<main id="page">
 		<div id="accueil" :style="{'background-image': 'url(./img/fond.jpg)'}">
 			<div id="langues">
-				<span class="bouton" role="button" :class="{'selectionne': langue === 'fr'}" @click="modifierLangue('fr')">FR</span>
-				<span class="bouton" role="button" :class="{'selectionne': langue === 'es'}" @click="modifierLangue('es')">ES</span>
-				<span class="bouton" role="button" :class="{'selectionne': langue === 'it'}" @click="modifierLangue('it')">IT</span>
-				<span class="bouton" role="button" :class="{'selectionne': langue === 'en'}" @click="modifierLangue('en')">EN</span>
+				<span class="bouton" role="button" tabindex="0" :class="{'selectionne': langue === 'fr'}" @click="modifierLangue('fr')">FR</span>
+				<span class="bouton" role="button" tabindex="0" :class="{'selectionne': langue === 'es'}" @click="modifierLangue('es')">ES</span>
+				<span class="bouton" role="button" tabindex="0" :class="{'selectionne': langue === 'it'}" @click="modifierLangue('it')">IT</span>
+				<span class="bouton" role="button" tabindex="0" :class="{'selectionne': langue === 'en'}" @click="modifierLangue('en')">EN</span>
 			</div>
 			<div id="masque" />
 			<div id="conteneur">
@@ -33,7 +33,7 @@
 			<div id="creation" class="modale">
 				<div class="en-tete">
 					<span class="titre">{{ $t('creerPad') }}</span>
-					<span role="button" class="fermer" @click="fermerModaleCreer"><i class="material-icons">close</i></span>
+					<span role="button" tabindex="0" class="fermer" @click="fermerModaleCreer"><i class="material-icons">close</i></span>
 				</div>
 				<div class="conteneur">
 					<div class="contenu">
@@ -57,7 +57,7 @@
 			<div id="connexion" class="modale">
 				<div class="en-tete">
 					<span class="titre">{{ $t('seConnecter') }}</span>
-					<span role="button" class="fermer" @click="fermerModaleConnexion"><i class="material-icons">close</i></span>
+					<span role="button" tabindex="0" class="fermer" @click="fermerModaleConnexion"><i class="material-icons">close</i></span>
 				</div>
 				<div class="conteneur">
 					<div class="contenu">

@@ -10,7 +10,7 @@
 					<div class="contenu">
 						<div class="message" v-html="alerte" />
 						<div class="actions">
-							<span class="bouton" role="button" tabindex="0" @click="reinitialiserAlerte">Fermer</span>
+							<span class="bouton" role="button" tabindex="0" @click="reinitialiserAlerte">{{ $t('fermer') }}</span>
 						</div>
 					</div>
 				</div>
