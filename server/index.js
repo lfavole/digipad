@@ -2139,20 +2139,30 @@ io.on('connection', function (socket) {
 	})
 
 	socket.on('debloquerpad', function (pad, identifiant) {
-		db.hgetall('utilisateurs:' + identifiant, function (err, utilisateur) {
+		db.exists('utilisateurs:' + identifiant, function (err, resultat) {
 			if (err) { socket.emit('erreur'); return false }
-			db.hget('couleurs:' + identifiant, 'pad' + pad, function (err, couleur) {
-				if (err) { socket.emit('erreur'); return false }
-				socket.identifiant = identifiant
-				socket.handshake.session.identifiant = identifiant
-				socket.nom = utilisateur.nom
-				socket.handshake.session.nom = utilisateur.nom
-				socket.handshake.session.statut = 'auteur'
-				socket.handshake.session.langue = utilisateur.langue
-				socket.handshake.session.cookie.expires = new Date(Date.now() + (3600 * 24 * 7 * 1000))
-				socket.handshake.session.save()
-				socket.emit('debloquerpad', { identifiant: identifiant, nom: utilisateur.nom, langue: utilisateur.langue, couleur: couleur })
-			})
+			if (resultat === 1) {
+				let couleur = choisirCouleur()
+				db.hgetall('utilisateurs:' + identifiant, function (err, utilisateur) {
+					if (err) { socket.emit('erreur'); return false }
+					db.hget('couleurs:' + identifiant, 'pad' + pad, function (err, col) {
+						if (!err && col !== null) {
+							couleur = col
+						}
+						socket.identifiant = identifiant
+						socket.handshake.session.identifiant = identifiant
+						socket.nom = utilisateur.nom
+						socket.handshake.session.nom = utilisateur.nom
+						socket.handshake.session.statut = 'auteur'
+						socket.handshake.session.langue = utilisateur.langue
+						socket.handshake.session.cookie.expires = new Date(Date.now() + (3600 * 24 * 7 * 1000))
+						socket.handshake.session.save()
+						socket.emit('debloquerpad', { identifiant: identifiant, nom: utilisateur.nom, langue: utilisateur.langue, couleur: couleur })
+					})
+				})
+			} else {
+				socket.emit('erreur')
+			}
 		})
 	})
 
@@ -2204,17 +2214,35 @@ function recupererDonnees (identifiant) {
 			if (err) { resolveMain(donneesPads) }
 			for (const pad of pads) {
 				const donneePad = new Promise(function (resolve) {
-					db.hgetall('pads:' + pad, function (err, donnees) {
+					db.exists('pads:' + pad, function (err, resultat) {
 						if (err) { resolve({}) }
-						db.hgetall('utilisateurs:' + donnees.identifiant, function (err, utilisateur) {
-							if (err) { resolve({}) }
-							if (utilisateur.nom === '') {
-								donnees.nom = donnees.identifiant
-							} else {
-								donnees.nom = utilisateur.nom
-							}
-							resolve(donnees)
-						})
+						if (resultat === 1) {
+							db.hgetall('pads:' + pad, function (err, donnees) {
+								if (err) { resolve({}) }
+								db.exists('utilisateurs:' + donnees.identifiant, function (err, resultat) {
+									if (err) {
+										donnees.nom = donnees.identifiant
+										resolve(donnees)
+									}
+									if (resultat === 1) {
+										db.hgetall('utilisateurs:' + donnees.identifiant, function (err, utilisateur) {
+											if (err) { resolve({}) }
+											if (utilisateur.nom === '') {
+												donnees.nom = donnees.identifiant
+											} else {
+												donnees.nom = utilisateur.nom
+											}
+											resolve(donnees)
+										})
+									} else {
+										donnees.nom = donnees.identifiant
+										resolve(donnees)
+									}
+								})
+							})
+						} else {
+							resolve({})
+						}
 					})
 				})
 				donneesPads.push(donneePad)
@@ -2231,17 +2259,35 @@ function recupererDonnees (identifiant) {
 			if (err) { resolveMain(donneesPads) }
 			for (const pad of pads) {
 				const donneePad = new Promise(function (resolve) {
-					db.hgetall('pads:' + pad, function (err, donnees) {
+					db.exists('pads:' + pad, function (err, resultat) {
 						if (err) { resolve({}) }
-						db.hgetall('utilisateurs:' + donnees.identifiant, function (err, utilisateur) {
-							if (err) { resolve({}) }
-							if (utilisateur.nom === '') {
-								donnees.nom = donnees.identifiant
-							} else {
-								donnees.nom = utilisateur.nom
-							}
-							resolve(donnees)
-						})
+						if (resultat === 1) {
+							db.hgetall('pads:' + pad, function (err, donnees) {
+								if (err) { resolve({}) }
+								db.exists('utilisateurs:' + donnees.identifiant, function (err, resultat) {
+									if (err) { resolve({}) }
+									if (resultat === 1) {
+										db.hgetall('utilisateurs:' + donnees.identifiant, function (err, utilisateur) {
+											if (err) {
+												donnees.nom = donnees.identifiant
+												resolve(donnees)
+											}
+											if (utilisateur.nom === '') {
+												donnees.nom = donnees.identifiant
+											} else {
+												donnees.nom = utilisateur.nom
+											}
+											resolve(donnees)
+										})
+									} else {
+										donnees.nom = donnees.identifiant
+										resolve(donnees)
+									}
+								})
+							})
+						} else {
+							resolve({})
+						}
 					})
 				})
 				donneesPads.push(donneePad)
