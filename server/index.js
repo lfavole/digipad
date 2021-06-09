@@ -1289,6 +1289,7 @@ io.on('connection', function (socket) {
 				db.hincrby('pads:' + pad, 'bloc', 1)
 				if (resultat.id === pad && resultat.token === token) {
 					const date = moment().format()
+					const activiteId = parseInt(resultat.activite) + 1
 					const multi = db.multi()
 					let visibilite = 'visible'
 					if (resultat.contributions === 'moderees' && resultat.identifiant !== identifiant) {
@@ -1296,11 +1297,13 @@ io.on('connection', function (socket) {
 					}
 					multi.hmset('pad-' + pad + ':' + bloc, 'id', id, 'bloc', bloc, 'titre', titre, 'texte', texte, 'media', media, 'iframe', iframe, 'type', type, 'source', source, 'vignette', vignette, 'date', date, 'identifiant', identifiant, 'commentaires', 0, 'evaluations', 0, 'colonne', colonne, 'visibilite', visibilite)
 					multi.zadd('blocs:' + pad, id, bloc)
+					if (visibilite === 'visible') {
+						// Enregistrer entrée du registre d'activité
+						multi.hincrby('pads:' + pad, 'activite', 1)
+						multi.zadd('activite:' + pad, activiteId, JSON.stringify({ id: activiteId, bloc: bloc, identifiant: identifiant, titre: titre, date: date, couleur: couleur, type: 'bloc-ajoute' }))
+					}
 					multi.exec(function () {
-						io.in(socket.room).emit('ajouterbloc', { bloc: bloc, titre: titre, texte: texte, media: media, iframe: iframe, type: type, source: source, vignette: vignette, identifiant: identifiant, nom: nom, date: date, couleur: couleur, commentaires: 0, evaluations: [], colonne: colonne, visibilite: visibilite })
-						if (visibilite === 'visible') {
-							enregistrerActivite(pad, { bloc: bloc, identifiant: identifiant, titre: titre, date: date, couleur: couleur, type: 'bloc-ajoute' })
-						}
+						io.in(socket.room).emit('ajouterbloc', { bloc: bloc, titre: titre, texte: texte, media: media, iframe: iframe, type: type, source: source, vignette: vignette, identifiant: identifiant, nom: nom, date: date, couleur: couleur, commentaires: 0, evaluations: [], colonne: colonne, visibilite: visibilite, activiteId: activiteId })
 						socket.handshake.session.cookie.expires = new Date(Date.now() + (3600 * 24 * 7 * 1000))
 						socket.handshake.session.save()
 					})
@@ -1329,13 +1332,23 @@ io.on('connection', function (socket) {
 										visibilite = objet.visibilite
 									}
 									const date = moment().format()
-									db.hmset('pad-' + pad + ':' + bloc, 'titre', titre, 'texte', texte, 'media', media, 'iframe', iframe, 'type', type, 'source', source, 'vignette', vignette, 'modifie', date)
-									io.in(socket.room).emit('modifierbloc', { bloc: bloc, titre: titre, texte: texte, media: media, iframe: iframe, type: type, source: source, vignette: vignette, identifiant: identifiant, nom: nom, modifie: date, couleur: couleur, colonne: colonne, visibilite: visibilite })
 									if (visibilite !== 'masquee') {
-										enregistrerActivite(pad, { bloc: bloc, identifiant: identifiant, titre: titre, date: date, couleur: couleur, type: 'bloc-modifie' })
+										// Enregistrer entrée du registre d'activité
+										const activiteId = parseInt(donnees.activite) + 1
+										const multi = db.multi()
+										multi.hmset('pad-' + pad + ':' + bloc, 'titre', titre, 'texte', texte, 'media', media, 'iframe', iframe, 'type', type, 'source', source, 'vignette', vignette, 'modifie', date)
+										multi.hincrby('pads:' + pad, 'activite', 1)
+										multi.zadd('activite:' + pad, activiteId, JSON.stringify({ id: activiteId, bloc: bloc, identifiant: identifiant, titre: titre, date: date, couleur: couleur, type: 'bloc-modifie' }))
+										multi.exec(function () {
+											io.in(socket.room).emit('modifierbloc', { bloc: bloc, titre: titre, texte: texte, media: media, iframe: iframe, type: type, source: source, vignette: vignette, identifiant: identifiant, nom: nom, modifie: date, couleur: couleur, colonne: colonne, visibilite: visibilite, activiteId: activiteId })
+											socket.handshake.session.cookie.expires = new Date(Date.now() + (3600 * 24 * 7 * 1000))
+											socket.handshake.session.save()
+										})
+									} else {
+										io.in(socket.room).emit('modifierbloc', { bloc: bloc, titre: titre, texte: texte, media: media, iframe: iframe, type: type, source: source, vignette: vignette, identifiant: identifiant, nom: nom, modifie: date, couleur: couleur, colonne: colonne, visibilite: visibilite })
+										socket.handshake.session.cookie.expires = new Date(Date.now() + (3600 * 24 * 7 * 1000))
+										socket.handshake.session.save()
 									}
-									socket.handshake.session.cookie.expires = new Date(Date.now() + (3600 * 24 * 7 * 1000))
-									socket.handshake.session.save()
 								}
 							})
 						}
@@ -1357,14 +1370,17 @@ io.on('connection', function (socket) {
 						if (err) { socket.emit('erreur'); return false }
 						if (resultat === 1) {
 							const date = moment().format()
+							const activiteId = parseInt(donnees.activite) + 1
 							const multi = db.multi()
 							if (item.hasOwnProperty('modifie')) {
 								multi.hdel('pad-' + pad + ':' + item.bloc, 'modifie')
 							}
 							multi.hmset('pad-' + pad + ':' + item.bloc, 'visibilite', 'visible', 'date', date)
-							multi.exec(function (err) {
-								io.in(socket.room).emit('autoriserbloc', { bloc: item.bloc, titre: item.titre, texte: item.texte, media: item.media, iframe: item.iframe, type: item.type, source: item.source, vignette: item.vignette, identifiant: item.identifiant, nom: item.nom, date: date, couleur: item.couleur, commentaires: 0, evaluations: [], colonne: item.colonne, visibilite: 'visible' })
-								enregistrerActivite(pad, { bloc: item.bloc, identifiant: item.identifiant, titre: item.titre, date: date, couleur: item.couleur, type: 'bloc-ajoute' })
+							// Enregistrer entrée du registre d'activité
+							multi.hincrby('pads:' + pad, 'activite', 1)
+							multi.zadd('activite:' + pad, activiteId, JSON.stringify({ id: activiteId, bloc: item.bloc, identifiant: item.identifiant, titre: item.titre, date: date, couleur: item.couleur, type: 'bloc-ajoute' }))
+							multi.exec(function () {
+								io.in(socket.room).emit('autoriserbloc', { bloc: item.bloc, titre: item.titre, texte: item.texte, media: item.media, iframe: item.iframe, type: item.type, source: item.source, vignette: item.vignette, identifiant: item.identifiant, nom: item.nom, date: date, couleur: item.couleur, commentaires: 0, evaluations: [], colonne: item.colonne, visibilite: 'visible', activiteId: activiteId })
 								socket.handshake.session.cookie.expires = new Date(Date.now() + (3600 * 24 * 7 * 1000))
 								socket.handshake.session.save()
 							})
@@ -1444,15 +1460,18 @@ io.on('connection', function (socket) {
 								const identifiant = socket.identifiant
 								const nom = socket.nom
 								if (objet.bloc === bloc && (objet.identifiant === identifiant || proprietaire === identifiant)) {
+									const date = moment().format()
+									const activiteId = parseInt(donnees.activite) + 1
 									const multi = db.multi()
 									multi.del('pad-' + pad + ':' + bloc)
 									multi.zrem('blocs:' + pad, bloc)
 									multi.del('commentaires:' + bloc)
 									multi.del('evaluations:' + bloc)
+									// Enregistrer entrée du registre d'activité
+									multi.hincrby('pads:' + pad, 'activite', 1)
+									multi.zadd('activite:' + pad, activiteId, JSON.stringify({ id: activiteId, bloc: bloc, identifiant: identifiant, titre: titre, date: date, couleur: couleur, type: 'bloc-supprime' }))
 									multi.exec(function () {
-										const date = moment().format()
-										io.in(socket.room).emit('supprimerbloc', { bloc: bloc, identifiant: identifiant, nom: nom, titre: titre, date: date, couleur: couleur, colonne: colonne })
-										enregistrerActivite(pad, { bloc: bloc, identifiant: identifiant, titre: titre, date: date, couleur: couleur, type: 'bloc-supprime' })
+										io.in(socket.room).emit('supprimerbloc', { bloc: bloc, identifiant: identifiant, nom: nom, titre: titre, date: date, couleur: couleur, colonne: colonne, activiteId: activiteId })
 										socket.handshake.session.cookie.expires = new Date(Date.now() + (3600 * 24 * 7 * 1000))
 										socket.handshake.session.save()
 									})
@@ -1469,22 +1488,29 @@ io.on('connection', function (socket) {
 
 	socket.on('commenterbloc', function (bloc, pad, titre, texte, couleur) {
 		if (socket.identifiant !== '' && socket.identifiant !== undefined && socket.room === 'pad-' + pad) {
-			db.hgetall('pad-' + pad + ':' + bloc, function (err, donnees) {
-				const identifiant = socket.identifiant
-				const nom = socket.nom
-				const date = moment().format()
-				const id = parseInt(donnees.commentaires) + 1
-				const multi = db.multi()
-				const commentaire = { id: id, identifiant: identifiant, date: date, texte: texte }
-				multi.hincrby('pad-' + pad + ':' + bloc, 'commentaires', 1)
-				multi.zadd('commentaires:' + bloc, id, JSON.stringify(commentaire))
-				multi.exec(function () {
+			db.hgetall('pads:' + pad, function (err, resultat) {
+				if (err) { socket.emit('erreur'); return false }
+				db.hgetall('pad-' + pad + ':' + bloc, function (err, donnees) {
+					if (err) { socket.emit('erreur'); return false }
 					db.zcard('commentaires:' + bloc, function (err, commentaires) {
 						if (err) { socket.emit('erreur'); return false }
-						io.in(socket.room).emit('commenterbloc', { id: id, bloc: bloc, identifiant: identifiant, nom: nom, texte: texte, titre: titre, date: date, couleur: couleur, commentaires: commentaires })
-						enregistrerActivite(pad, { bloc: bloc, identifiant: identifiant, titre: titre, date: date, couleur: couleur, type: 'bloc-commente' })
-						socket.handshake.session.cookie.expires = new Date(Date.now() + (3600 * 24 * 7 * 1000))
-						socket.handshake.session.save()
+						const identifiant = socket.identifiant
+						const nom = socket.nom
+						const date = moment().format()
+						const activiteId = parseInt(resultat.activite) + 1
+						const commentaireId = parseInt(donnees.commentaires) + 1
+						const multi = db.multi()
+						const commentaire = { id: commentaireId, identifiant: identifiant, date: date, texte: texte }
+						multi.hincrby('pad-' + pad + ':' + bloc, 'commentaires', 1)
+						multi.zadd('commentaires:' + bloc, commentaireId, JSON.stringify(commentaire))
+						// Enregistrer entrée du registre d'activité
+						multi.hincrby('pads:' + pad, 'activite', 1)
+						multi.zadd('activite:' + pad, activiteId, JSON.stringify({ id: activiteId, bloc: bloc, identifiant: identifiant, titre: titre, date: date, couleur: couleur, type: 'bloc-commente' }))
+						multi.exec(function () {
+							io.in(socket.room).emit('commenterbloc', { id: commentaireId, bloc: bloc, identifiant: identifiant, nom: nom, texte: texte, titre: titre, date: date, couleur: couleur, commentaires: parseInt(commentaires) + 1, activiteId: activiteId })
+							socket.handshake.session.cookie.expires = new Date(Date.now() + (3600 * 24 * 7 * 1000))
+							socket.handshake.session.save()
+						})
 					})
 				})
 			})
@@ -1572,21 +1598,27 @@ io.on('connection', function (socket) {
 
 	socket.on('evaluerbloc', function (bloc, pad, titre, etoiles, couleur) {
 		if (socket.identifiant !== '' && socket.identifiant !== undefined && socket.room === 'pad-' + pad) {
-			db.hgetall('pad-' + pad + ':' + bloc, function (err, donnees) {
+			db.hgetall('pads:' + pad, function (err, resultat) {
 				if (err) { socket.emit('erreur'); return false }
-				const identifiant = socket.identifiant
-				const nom = socket.nom
-				const date = moment().format()
-				const id = parseInt(donnees.evaluations) + 1
-				const multi = db.multi()
-				const evaluation = { id: id, identifiant: identifiant, date: date, etoiles: etoiles }
-				multi.hincrby('pad-' + pad + ':' + bloc, 'evaluations', 1)
-				multi.zadd('evaluations:' + bloc, id, JSON.stringify(evaluation))
-				multi.exec(function () {
-					io.in(socket.room).emit('evaluerbloc', { id: id, bloc: bloc, identifiant: identifiant, nom: nom, titre: titre, date: date, couleur: couleur, evaluation: evaluation })
-					enregistrerActivite(pad, { bloc: bloc, identifiant: identifiant, titre: titre, date: date, couleur: couleur, type: 'bloc-evalue' })
-					socket.handshake.session.cookie.expires = new Date(Date.now() + (3600 * 24 * 7 * 1000))
-					socket.handshake.session.save()
+				db.hgetall('pad-' + pad + ':' + bloc, function (err, donnees) {
+					if (err) { socket.emit('erreur'); return false }
+					const identifiant = socket.identifiant
+					const nom = socket.nom
+					const date = moment().format()
+					const activiteId = parseInt(resultat.activite) + 1
+					const evaluationId = parseInt(donnees.evaluations) + 1
+					const evaluation = { id: evaluationId, identifiant: identifiant, date: date, etoiles: etoiles }
+					const multi = db.multi()
+					multi.hincrby('pad-' + pad + ':' + bloc, 'evaluations', 1)
+					multi.zadd('evaluations:' + bloc, evaluationId, JSON.stringify(evaluation))
+					// Enregistrer entrée du registre d'activité
+					multi.hincrby('pads:' + pad, 'activite', 1)
+					multi.zadd('activite:' + pad, activiteId, JSON.stringify({ id: activiteId, bloc: bloc, identifiant: identifiant, titre: titre, date: date, couleur: couleur, type: 'bloc-evalue' }))
+					multi.exec(function () {
+						io.in(socket.room).emit('evaluerbloc', { id: evaluationId, bloc: bloc, identifiant: identifiant, nom: nom, titre: titre, date: date, couleur: couleur, evaluation: evaluation, activiteId: activiteId })
+						socket.handshake.session.cookie.expires = new Date(Date.now() + (3600 * 24 * 7 * 1000))
+						socket.handshake.session.save()
+					})
 				})
 			})
 		} else {
@@ -1885,15 +1917,23 @@ io.on('connection', function (socket) {
 
 	socket.on('ajoutercolonne', function (pad, titre, colonnes, couleur) {
 		if (socket.identifiant !== '' && socket.identifiant !== undefined && socket.room === 'pad-' + pad) {
-			const identifiant = socket.identifiant
-			const nom = socket.nom
-			const date = moment().format()
-			colonnes.push(titre)
-			db.hmset('pads:' + pad, 'colonnes', JSON.stringify(colonnes), function () {
-				io.in(socket.room).emit('ajoutercolonne', { identifiant: identifiant, nom: nom, titre: titre, colonnes: colonnes, date: date, couleur: couleur })
-				enregistrerActivite(pad, { identifiant: identifiant, titre: titre, date: date, couleur: couleur, type: 'colonne-ajoutee' })
-				socket.handshake.session.cookie.expires = new Date(Date.now() + (3600 * 24 * 7 * 1000))
-				socket.handshake.session.save()
+			db.hgetall('pads:' + pad, function (err, resultat) {
+				if (err) { socket.emit('erreur'); return false }
+				const identifiant = socket.identifiant
+				const nom = socket.nom
+				const date = moment().format()
+				const activiteId = parseInt(resultat.activite) + 1
+				colonnes.push(titre)
+				const multi = db.multi()
+				multi.hmset('pads:' + pad, 'colonnes', JSON.stringify(colonnes))
+				// Enregistrer entrée du registre d'activité
+				multi.hincrby('pads:' + pad, 'activite', 1)
+				multi.zadd('activite:' + pad, activiteId, JSON.stringify({ id: activiteId, identifiant: identifiant, titre: titre, date: date, couleur: couleur, type: 'colonne-ajoutee' }))
+				multi.exec(function () {
+					io.in(socket.room).emit('ajoutercolonne', { identifiant: identifiant, nom: nom, titre: titre, colonnes: colonnes, date: date, couleur: couleur, activiteId: activiteId })
+					socket.handshake.session.cookie.expires = new Date(Date.now() + (3600 * 24 * 7 * 1000))
+					socket.handshake.session.save()
+				})
 			})
 		} else {
 			socket.emit('deconnecte')
@@ -1992,12 +2032,17 @@ io.on('connection', function (socket) {
 							donneesBlocsRestants.push(donneeBloc)
 						}
 						Promise.all([donneesBlocsSupprimes, donneesBlocsRestants]).then(function () {
-							db.hmset('pads:' + pad, 'colonnes', JSON.stringify(colonnes), function () {
-								const identifiant = socket.identifiant
-								const nom = socket.nom
-								const date = moment().format()
-								io.in(socket.room).emit('supprimercolonne', { identifiant: identifiant, nom: nom, titre: titre, colonne: colonne, colonnes: colonnes, date: date, couleur: couleur })
-								enregistrerActivite(pad, { identifiant: identifiant, titre: titre, date: date, couleur: couleur, type: 'colonne-supprimee' })
+							const identifiant = socket.identifiant
+							const nom = socket.nom
+							const date = moment().format()
+							const activiteId = parseInt(donnees.activite) + 1
+							const multi = db.multi()
+							multi.hmset('pads:' + pad, 'colonnes', JSON.stringify(colonnes))
+							// Enregistrer entrée du registre d'activité
+							multi.hincrby('pads:' + pad, 'activite', 1)
+							multi.zadd('activite:' + pad, activiteId, JSON.stringify({ id: activiteId, identifiant: identifiant, titre: titre, date: date, couleur: couleur, type: 'colonne-supprimee' }))
+							multi.exec(function () {
+								io.in(socket.room).emit('supprimercolonne', { identifiant: identifiant, nom: nom, titre: titre, colonne: colonne, colonnes: colonnes, date: date, couleur: couleur, activiteId: activiteId })
 								socket.handshake.session.cookie.expires = new Date(Date.now() + (3600 * 24 * 7 * 1000))
 								socket.handshake.session.save()
 							})
@@ -2070,12 +2115,17 @@ io.on('connection', function (socket) {
 							donneesBlocsDeplaces.push(donneesBlocDeplace)
 						}
 						Promise.all(donneesBlocsDeplaces).then(function () {
-							db.hmset('pads:' + pad, 'colonnes', JSON.stringify(colonnes), function () {
-								const identifiant = socket.identifiant
-								const nom = socket.nom
-								const date = moment().format()
-								io.in(socket.room).emit('deplacercolonne', { identifiant: identifiant, nom: nom, titre: titre, direction: direction, colonne: colonne, colonnes: colonnes, date: date, couleur: couleur })
-								enregistrerActivite(pad, { identifiant: identifiant, titre: titre, date: date, couleur: couleur, type: 'colonne-deplacee' })
+							const identifiant = socket.identifiant
+							const nom = socket.nom
+							const date = moment().format()
+							const activiteId = parseInt(donnees.activite) + 1
+							const multi = db.multi()
+							multi.hmset('pads:' + pad, 'colonnes', JSON.stringify(colonnes))
+							// Enregistrer entrée du registre d'activité
+							multi.hincrby('pads:' + pad, 'activite', 1)
+							multi.zadd('activite:' + pad, activiteId, JSON.stringify({ id: activiteId, identifiant: identifiant, titre: titre, date: date, couleur: couleur, type: 'colonne-deplacee' }))
+							multi.exec(function () {
+								io.in(socket.room).emit('deplacercolonne', { identifiant: identifiant, nom: nom, titre: titre, direction: direction, colonne: colonne, colonnes: colonnes, date: date, couleur: couleur, activiteId: activiteId })
 								socket.handshake.session.cookie.expires = new Date(Date.now() + (3600 * 24 * 7 * 1000))
 								socket.handshake.session.save()
 							})
@@ -2104,6 +2154,18 @@ io.on('connection', function (socket) {
 				socket.emit('debloquerpad', { identifiant: identifiant, nom: utilisateur.nom, langue: utilisateur.langue, couleur: couleur })
 			})
 		})
+	})
+
+	socket.on('supprimeractivite', function (pad, id) {
+		if (socket.identifiant !== '' && socket.identifiant !== undefined && socket.room === 'pad-' + pad) {
+			db.zremrangebyscore('activite:' + pad, id, id, function () {
+				io.in(socket.room).emit('supprimeractivite', id)
+				socket.handshake.session.cookie.expires = new Date(Date.now() + (3600 * 24 * 7 * 1000))
+				socket.handshake.session.save()
+			})
+		} else {
+			socket.emit('deconnecte')
+		}
 	})
 
 	socket.on('supprimerfichier', function (donnees) {
@@ -2190,18 +2252,6 @@ function recupererDonnees (identifiant) {
 		})
 	})
 	return Promise.all([donneesPadsCrees, donneesPadsRejoints])
-}
-
-function enregistrerActivite (pad, donnees) {
-	db.hgetall('pads:' + pad, function (err, resultat) {
-		if (err) { return false }
-		const id = parseInt(resultat.activite) + 1
-		donnees.id = id
-		const multi = db.multi()
-		multi.hincrby('pads:' + pad, 'activite', 1)
-		multi.zadd('activite:' + pad, id, JSON.stringify(donnees))
-		multi.exec()
-	})
 }
 
 function choisirCouleur () {
