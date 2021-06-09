@@ -2226,7 +2226,10 @@ function recupererDonnees (identifiant) {
 									}
 									if (resultat === 1) {
 										db.hgetall('utilisateurs:' + donnees.identifiant, function (err, utilisateur) {
-											if (err) { resolve({}) }
+											if (err) {
+												donnees.nom = donnees.identifiant
+												resolve(donnees)
+											}
 											if (utilisateur.nom === '') {
 												donnees.nom = donnees.identifiant
 											} else {
@@ -2265,7 +2268,10 @@ function recupererDonnees (identifiant) {
 							db.hgetall('pads:' + pad, function (err, donnees) {
 								if (err) { resolve({}) }
 								db.exists('utilisateurs:' + donnees.identifiant, function (err, resultat) {
-									if (err) { resolve({}) }
+									if (err) {
+										donnees.nom = donnees.identifiant
+										resolve(donnees)
+									}
 									if (resultat === 1) {
 										db.hgetall('utilisateurs:' + donnees.identifiant, function (err, utilisateur) {
 											if (err) {
