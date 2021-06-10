@@ -768,9 +768,24 @@ label.bouton-bleu {
 
 .boutons-editeur-commentaire button,
 .boutons-editeur button {
+	width: 24px;
 	font-size: 24px;
+	text-align: center;
 	color: #222;
-	margin-right: 1.4rem;
+	margin-right: 1.2rem;
+}
+
+.boutons-editeur-commentaire button:last-child,
+.boutons-editeur button:last-child {
+	margin-right: 0;
+}
+
+.boutons-editeur-commentaire button label[for="couleur-texte-commentaire-modifie"],
+.boutons-editeur-commentaire button label[for="couleur-texte-commentaire"],
+.boutons-editeur button label[for="couleur-texte"] {
+	font-size: 19px!important;
+	margin: 0!important;
+	line-height: 24px!important;
 }
 
 #diapositive .ecrire-commentaire .boutons-editeur-commentaire,
@@ -790,6 +805,9 @@ label.bouton-bleu {
 	min-height: 9rem;
 	top: 0;
 	outline: 0;
+	user-select: text!important;
+	-webkit-user-select: text!important;
+	-webkit-touch-callout: default!important;
 }
 
 .contenu-editeur:lang(fr):empty:before {
@@ -802,12 +820,25 @@ label.bouton-bleu {
 	color: #aaa;
 }
 
+.contenu-editeur:lang(it):empty:before {
+	content: 'Aggiungere testo...';
+	color: #aaa;
+}
+
+.contenu-editeur:lang(es):empty:before {
+	content: 'Añadir texto...';
+	color: #aaa;
+}
+
 .contenu-editeur-commentaire {
 	padding: 10px 15px;
 	font-size: 16px;
 	height: calc(100% - (25px + 1rem));
 	overflow: auto;
 	outline: 0;
+	user-select: text!important;
+	-webkit-user-select: text!important;
+	-webkit-touch-callout: default!important;
 }
 
 .contenu-editeur-commentaire:lang(fr):empty:before {
@@ -820,11 +851,27 @@ label.bouton-bleu {
 	color: #aaa;
 }
 
+.contenu-editeur-commentaire:lang(it):empty:before {
+	content: 'Il tuo commento...';
+	color: #aaa;
+}
+
+.contenu-editeur-commentaire:lang(es):empty:before {
+	content: 'Tu comentario...';
+	color: #aaa;
+}
+
 .contenu-editeur-commentaire strong,
 .contenu-editeur-commentaire b,
 .contenu-editeur strong,
 .contenu-editeur b {
 	font-weight: bold;
+}
+
+.contenu-editeur-commentaire a,
+.contenu-editeur a {
+	color: #00a1e3;
+	text-decoration: underline;
 }
 
 /* Tooltip
@@ -1088,8 +1135,9 @@ label.bouton-bleu {
 
 /* Pad
 –––––––––––––––––––––––––––––––––––––––––––––––––– */
-#diapositive .texte,
-#diapositive .texte *,
+#diapositive .conteneur-texte,
+#diapositive .conteneur-texte *,
+#blocs .bloc .titre span,
 #blocs .bloc .texte,
 #blocs .bloc .texte * {
 	user-select: text!important;
@@ -1101,7 +1149,8 @@ label.bouton-bleu {
 .commentaires li:not(.edition) .texte a,
 #diapositive .texte a,
 #blocs .bloc .texte a {
-	color: #3fc5fc;
+	color: #00a1e3;
+	text-decoration: underline;
 }
 
 #iframe.youtube iframe {
@@ -1135,6 +1184,13 @@ label.bouton-bleu {
 
 #diapositive .media.embed .conteneur-iframe iframe {
 	height: 45rem;
+}
+
+@media screen and (max-width: 359px) {
+	.boutons-editeur-commentaire button,
+	.boutons-editeur button {
+		margin-right: 1rem;
+	}
 }
 
 @media screen and (max-width: 575px) {
