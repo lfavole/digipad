@@ -8,10 +8,10 @@
 		</header>
 
 		<nav id="nav">
-			<span role="button" tabindex="0" id="compte" @click="menu = !menu" :title="$t('parametresCompte')"><i class="material-icons">account_circle</i></span>
-			<span role="button" tabindex="0" id="recherche" @click="recherche = !recherche" :title="$t('recherche')"><i class="material-icons">search</i></span>
-			<span role="button" tabindex="0" id="informations" :title="$t('nouveautesEtFAQ')"><a href="https://drive.infomaniak.com/app/share/139248/eb7c3ad0-a36f-45f2-8125-3e2c59cce1fc/preview/text/4259" target="_blank"><i class="material-icons">help_outline</i></a></span>
-			<span role="button" tabindex="0" id="deconnexion" @click="deconnexion" :title="$t('deconnexion')"><i class="material-icons">power_settings_new</i></span>
+			<span id="compte" role="button" tabindex="0" :title="$t('parametresCompte')" @click="menu = !menu"><i class="material-icons">account_circle</i></span>
+			<span id="recherche" role="button" tabindex="0" :title="$t('recherche')" :class="{'active': recherche}" @click="recherche = !recherche"><i class="material-icons">search</i></span>
+			<span id="informations" role="button" tabindex="0" :title="$t('nouveautesEtFAQ')"><a href="https://drive.infomaniak.com/app/share/139248/eb7c3ad0-a36f-45f2-8125-3e2c59cce1fc/preview/text/4259" target="_blank"><i class="material-icons">help_outline</i></a></span>
+			<span id="deconnexion" role="button" tabindex="0" :title="$t('deconnexion')" @click="deconnexion"><i class="material-icons">power_settings_new</i></span>
 		</nav>
 
 		<div class="menu gauche" :class="{'ouvert': menu}">
@@ -701,7 +701,7 @@ export default {
 	background: #e9e9e9;
 }
 
-#informations {
+#recherche.active {
 	color: #fdcc33;
 }
 
