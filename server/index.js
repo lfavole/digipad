@@ -840,29 +840,54 @@ app.post('/api/supprimer-pad', function (req, res) {
 			if (resultat.identifiant === identifiant) {
 				db.zrange('blocs:' + pad, 0, -1, function (err, blocs) {
 					if (err) { res.send('erreur_suppression'); return false }
-					const multi = db.multi()
-					for (let i = 0; i < blocs.length; i++) {
-						multi.del('commentaires:' + blocs[i])
-						multi.del('evaluations:' + blocs[i])
-						multi.del('pad-' + pad + ':' + blocs[i])
+					const donneesBlocs = []
+					for (const bloc of blocs) {
+						const donneesBloc = new Promise(function (resolve) {
+							db.hgetall('pad-' + pad + ':' + bloc, function (err, donnees) {
+								if (err) { resolve() }
+								const etherpad = process.env.ETHERPAD
+								const etherpadApi = process.env.ETHERPAD_API_KEY
+								let etherpadId, url
+								if (donnees.iframe !== '' && donnees.iframe.includes(etherpad)) {
+									etherpadId = donnees.iframe.replace(etherpad + '/p/', '')
+									url = etherpad + '/api/1/deletePad?apikey=' + etherpadApi + '&padID=' + etherpadId
+									axios.get(url)
+								}
+								if (donnees.media !== '' && donnees.media.includes(etherpad)) {
+									etherpadId = donnees.media.replace(etherpad + '/p/', '')
+									url = etherpad + '/api/1/deletePad?apikey=' + etherpadApi + '&padID=' + etherpadId
+									axios.get(url)
+								}
+								resolve(bloc)
+							})
+						})
+						donneesBlocs.push(donneesBloc)
 					}
-					multi.del('blocs:' + pad)
-					multi.del('pads:' + pad)
-					multi.del('activite:' + pad)
-					multi.srem('pads-crees:' + identifiant, pad)
-					multi.smembers('utilisateurs-pads:' + pad, function (err, utilisateurs) {
-						if (err) { res.send('erreur_suppression'); return false }
-						for (let j = 0; j < utilisateurs.length; j++) {
-							db.srem('pads-rejoints:' + utilisateurs[j], pad)
-							db.srem('pads-utilisateurs:' + utilisateurs[j], pad)
-							db.hdel('couleurs:' + utilisateurs[j], 'pad' + pad)
+					Promise.all(donneesBlocs).then(function () {
+						const multi = db.multi()
+						for (let i = 0; i < blocs.length; i++) {
+							multi.del('commentaires:' + blocs[i])
+							multi.del('evaluations:' + blocs[i])
+							multi.del('pad-' + pad + ':' + blocs[i])
 						}
-					})
-					multi.del('utilisateurs-pads:' + pad)
-					multi.exec(function () {
-						const chemin = path.join(__dirname, '..', '/static/fichiers/' + pad)
-						fs.removeSync(chemin)
-						res.send('pad_supprime')
+						multi.del('blocs:' + pad)
+						multi.del('pads:' + pad)
+						multi.del('activite:' + pad)
+						multi.srem('pads-crees:' + identifiant, pad)
+						multi.smembers('utilisateurs-pads:' + pad, function (err, utilisateurs) {
+							if (err) { res.send('erreur_suppression'); return false }
+							for (let j = 0; j < utilisateurs.length; j++) {
+								db.srem('pads-rejoints:' + utilisateurs[j], pad)
+								db.srem('pads-utilisateurs:' + utilisateurs[j], pad)
+								db.hdel('couleurs:' + utilisateurs[j], 'pad' + pad)
+							}
+						})
+						multi.del('utilisateurs-pads:' + pad)
+						multi.exec(function () {
+							const chemin = path.join(__dirname, '..', '/static/fichiers/' + pad)
+							fs.removeSync(chemin)
+							res.send('pad_supprime')
+						})
 					})
 				})
 			} else {
@@ -913,31 +938,56 @@ app.post('/api/supprimer-compte', function (req, res) {
 			if (err) { res.send('erreur'); return false }
 			const donneesPads = []
 			for (const pad of pads) {
-				const donneesPad = new Promise(function (resolve) {
+				const donneesPad = new Promise(function (resolveMain) {
 					db.zrange('blocs:' + pad, 0, -1, function (err, blocs) {
-						if (err) { resolve() }
-						const multi = db.multi()
-						for (let i = 0; i < blocs.length; i++) {
-							multi.del('commentaires:' + blocs[i])
-							multi.del('evaluations:' + blocs[i])
-							multi.del('pad-' + pad + ':' + blocs[i])
+						if (err) { resolveMain() }
+						const donneesBlocs = []
+						for (const bloc of blocs) {
+							const donneesBloc = new Promise(function (resolve) {
+								db.hgetall('pad-' + pad + ':' + bloc, function (err, donnees) {
+									if (err) { resolve() }
+									const etherpad = process.env.ETHERPAD
+									const etherpadApi = process.env.ETHERPAD_API_KEY
+									let etherpadId, url
+									if (donnees.iframe !== '' && donnees.iframe.includes(etherpad)) {
+										etherpadId = donnees.iframe.replace(etherpad + '/p/', '')
+										url = etherpad + '/api/1/deletePad?apikey=' + etherpadApi + '&padID=' + etherpadId
+										axios.get(url)
+									}
+									if (donnees.media !== '' && donnees.media.includes(etherpad)) {
+										etherpadId = donnees.media.replace(etherpad + '/p/', '')
+										url = etherpad + '/api/1/deletePad?apikey=' + etherpadApi + '&padID=' + etherpadId
+										axios.get(url)
+									}
+									resolve(bloc)
+								})
+							})
+							donneesBlocs.push(donneesBloc)
 						}
-						multi.del('blocs:' + pad)
-						multi.del('pads:' + pad)
-						multi.del('activite:' + pad)
-						multi.smembers('utilisateurs-pads:' + pad, function (err, utilisateurs) {
-							if (err) { resolve() }
-							for (let j = 0; j < utilisateurs.length; j++) {
-								db.srem('pads-rejoints:' + utilisateurs[j], pad)
-								db.srem('pads-utilisateurs:' + utilisateurs[j], pad)
-								db.hdel('couleurs:' + utilisateurs[j], 'pad' + pad)
+						Promise.all(donneesBlocs).then(function () {
+							const multi = db.multi()
+							for (let i = 0; i < blocs.length; i++) {
+								multi.del('commentaires:' + blocs[i])
+								multi.del('evaluations:' + blocs[i])
+								multi.del('pad-' + pad + ':' + blocs[i])
 							}
-						})
-						multi.del('utilisateurs-pads:' + pad)
-						multi.exec(function () {
-							const chemin = path.join(__dirname, '..', '/static/fichiers/' + pad)
-							fs.removeSync(chemin)
-							resolve(pad)
+							multi.del('blocs:' + pad)
+							multi.del('pads:' + pad)
+							multi.del('activite:' + pad)
+							multi.smembers('utilisateurs-pads:' + pad, function (err, utilisateurs) {
+								if (err) { resolveMain() }
+								for (let j = 0; j < utilisateurs.length; j++) {
+									db.srem('pads-rejoints:' + utilisateurs[j], pad)
+									db.srem('pads-utilisateurs:' + utilisateurs[j], pad)
+									db.hdel('couleurs:' + utilisateurs[j], 'pad' + pad)
+								}
+							})
+							multi.del('utilisateurs-pads:' + pad)
+							multi.exec(function () {
+								const chemin = path.join(__dirname, '..', '/static/fichiers/' + pad)
+								fs.removeSync(chemin)
+								resolveMain(pad)
+							})
 						})
 					})
 				})
@@ -2307,7 +2357,7 @@ function recupererDonnees (identifiant) {
 }
 
 function choisirCouleur () {
-	const couleurs = ['#fdcc33', '#048eca', '#00a885', '#f39c12', '#9b59b6', '#4a69bd', '#7f8fa6', '#e32f6c', '#6e6363', '#f8a5c2', '#ff5e57', '#4b6584', '#79b95e', '#25b3c2', '#be9d6b']
+	const couleurs = ['#f76707', '#f59f00', '#74b816', '#37b24d', '#0ca678', '#1098ad', '#1c7ed6', '#4263eb', '#7048e8', '#ae3ec9', '#d6336c', '#f03e3e', '#495057']
 	const couleur = couleurs[Math.floor(Math.random() * couleurs.length)]
 	return couleur
 }
