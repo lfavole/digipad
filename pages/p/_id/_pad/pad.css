@@ -17,13 +17,13 @@
 
 #champ-recherche input {
 	display: block;
-	width: calc(100% - (1.4rem + 24px));
+	width: calc(100% - (2.2rem + 24px));
 	font-size: 16px;
 	border: 1px solid #ddd;
 	background: rgba(255, 255, 255, 0.95);
 	border-radius: 4px;
 	padding: 0.2rem 1rem;
-	margin: 0.4rem 0.7rem;
+	margin: 0.4rem 0.7rem 0.4rem 1.5rem;
 }
 
 #champ-recherche span {
@@ -847,7 +847,6 @@
 }
 
 #recherche #navigation span {
-	user-select: none;
 	cursor: pointer;
 }
 
@@ -1100,8 +1099,7 @@
 	flex-wrap: wrap;
 	width: calc(100% + 2px);
     position: absolute;
-    padding: 1rem 0 0 0;
-    font-size: 1.5rem;
+    padding: 1rem 0.5rem 0;
     border: 1px solid #ddd;
     top: 5rem;
     left: -1px;
@@ -1110,16 +1108,19 @@
 }
 
 #utilisateurs li.moi .couleurs span {
-	width: 3rem;
-	height: 3rem;
-	margin: 0 1rem 1rem;
-    border-radius: 50%;
+	width: 2.5rem;
+	height: 2.5rem;
+	margin: 0 0.5rem 1rem;
 	border: 1px solid #ddd;
 	cursor: pointer;
 }
 
-#utilisateurs li.moi .couleurs span.actif {
-	border: 4px solid #242f3d;
+#utilisateurs li.moi .couleurs span.couleur-personnalisee {
+	border: 0;
+}
+
+#utilisateurs li.moi .couleurs span:not(.couleur-personnalisee).actif {
+	border: 2px solid #242f3d;
 }
 
 #utilisateurs li .utilisateur {
@@ -1346,7 +1347,6 @@
 	cursor: pointer;
 	font-size: 16px;
 	font-weight: 400;
-	user-select: none;
 	margin-bottom: 1rem;
 	line-height: 2.2rem;
 }
@@ -1486,16 +1486,28 @@
 	cursor: pointer;
 }
 
-.menu .conteneur .fonds input[type="color"]::-moz-color-swatch {
-	border: 1px solid #ddd;
-	border-radius: 50%;
+.menu .couleurs input[type="color"] {
+	width: 2.5rem;
+	height: 2.5rem;
+	padding: 0;
+	border: none;
+	cursor: pointer;
 }
 
+.menu .couleurs input[type="color"]::-moz-color-swatch,
+.menu .conteneur .fonds input[type="color"]::-moz-color-swatch,
+.menu .couleurs input[type="color"]::-webkit-color-swatch,
 .menu .conteneur .fonds input[type="color"]::-webkit-color-swatch {
 	border: 1px solid #ddd;
 	border-radius: 50%;
 }
 
+.menu .couleurs .actif input[type="color"]::-moz-color-swatch,
+.menu .couleurs .actif input[type="color"]::-webkit-color-swatch {
+	border: 2px solid #242f3d;
+}
+
+.menu .couleurs input[type="color"]::-webkit-color-swatch-wrapper,
 .menu .conteneur .fonds input[type="color"]::-webkit-color-swatch-wrapper {
 	padding: 0;
 }
@@ -1548,6 +1560,12 @@
 	.ecrire-commentaire button,
 	.commentaires li .texte button {
 		width: 4rem;
+	}
+}
+
+@media screen and (min-width: 360px) and (max-width: 399px) {
+	#champ-recherche {
+		width: 235px;
 	}
 }
 

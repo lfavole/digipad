@@ -119,7 +119,7 @@ export default {
 	ajouterTitre: 'Aggiungere un titolo...',
 	texte: 'Testo',
 	ajouterFichier: 'Aggiungere un file',
-	ajouterLien: 'Aggiungere un link (Youtube, LearningApps, Google Drive, ecc.) o cercare un\'immagine...',
+	ajouterLien: 'Aggiungere un link (YouTube, LearningApps, Google Drive, ecc.) o cercare un\'immagine...',
 	creerDocCollaboratif: 'Creare un documento condiviso',
 	media: 'Media',
 	supprimer: 'Eliminare',

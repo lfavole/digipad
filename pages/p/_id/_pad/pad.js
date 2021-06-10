@@ -589,7 +589,7 @@ export default {
 			modaleModifierNom: false,
 			nomUtilisateur: '',
 			couleur: '',
-			couleurs: ['#fdcc33', '#048eca', '#00a885', '#f39c12', '#9b59b6', '#4a69bd', '#7f8fa6', '#e32f6c', '#6e6363', '#f8a5c2', '#ff5e57', '#4b6584', '#79b95e', '#25b3c2', '#be9d6b'],
+			couleurs: ['#f76707', '#f59f00', '#74b816', '#37b24d', '#0ca678', '#1098ad', '#1c7ed6', '#4263eb', '#7048e8', '#ae3ec9', '#d6336c', '#f03e3e', '#495057'],
 			listeCouleurs: false,
 			panneaux: [],
 			fonds: ['fond1.png', 'fond2.png', 'fond3.png', 'fond4.png', 'fond5.png', 'fond6.png', 'fond7.png', 'fond8.png', 'fond9.png', 'fond10.png', 'fond11.png'],
@@ -1112,12 +1112,23 @@ export default {
 				const editeur = pell.init({
 					element: document.querySelector('#texte'),
 					onChange: function (html) {
-						const texte = linkifyHtml(html, {
+						let texte = html.replace(/(<a [^>]*)(target="[^"]*")([^>]*>)/gi, '$1$3')
+						texte = texte.replace(/(<a [^>]*)(>)/gi, '$1 target="_blank"$2')
+						texte = linkifyHtml(texte, {
 							defaultProtocol: 'https'
 						})
 						this.texte = texte
 					}.bind(this),
-					actions: [{ name: 'gras', title: that.$t('gras'), icon: '<i class="material-icons">format_bold</i>', result: () => pell.exec('bold') }, { name: 'italique', title: that.$t('italique'), icon: '<i class="material-icons">format_italic</i>', result: () => pell.exec('italic') }, { name: 'souligne', title: that.$t('souligne'), icon: '<i class="material-icons">format_underlined</i>', result: () => pell.exec('underline') }, { name: 'barre', title: that.$t('barre'), icon: '<i class="material-icons">format_strikethrough</i>', result: () => pell.exec('strikethrough') }, { name: 'listeordonnee', title: that.$t('listeOrdonnee'), icon: '<i class="material-icons">format_list_numbered</i>', result: () => pell.exec('insertOrderedList') }, { name: 'liste', title: that.$t('liste'), icon: '<i class="material-icons">format_list_bulleted</i>', result: () => pell.exec('insertUnorderedList') }],
+					actions: [
+						{ name: 'gras', title: that.$t('gras'), icon: '<i class="material-icons">format_bold</i>', result: () => pell.exec('bold') },
+						{ name: 'italique', title: that.$t('italique'), icon: '<i class="material-icons">format_italic</i>', result: () => pell.exec('italic') },
+						{ name: 'souligne', title: that.$t('souligne'), icon: '<i class="material-icons">format_underlined</i>', result: () => pell.exec('underline') },
+						{ name: 'barre', title: that.$t('barre'), icon: '<i class="material-icons">format_strikethrough</i>', result: () => pell.exec('strikethrough') },
+						{ name: 'listeordonnee', title: that.$t('listeOrdonnee'), icon: '<i class="material-icons">format_list_numbered</i>', result: () => pell.exec('insertOrderedList') },
+						{ name: 'liste', title: that.$t('liste'), icon: '<i class="material-icons">format_list_bulleted</i>', result: () => pell.exec('insertUnorderedList') },
+						{ name: 'couleur', title: that.$t('couleurTexte'), icon: '<label for="couleur-texte"><i class="material-icons">format_color_text</i></label><input id="couleur-texte" type="color" style="display: none;">', result: () => undefined },
+						{ name: 'lien', title: that.$t('lien'), icon: '<i class="material-icons">link</i>', result: () => { const url = window.prompt(that.$t('adresseLien')); if (url) { pell.exec('createLink', url) } } }
+					],
 					classes: { actionbar: 'boutons-editeur', button: 'bouton-editeur', content: 'contenu-editeur', selected: 'bouton-actif' }
 				})
 				editeur.content.innerHTML = this.texte
@@ -1133,7 +1144,20 @@ export default {
 				document.querySelector('#texte .contenu-editeur').addEventListener('blur', function () {
 					document.querySelector('#texte').classList.remove('focus')
 				})
+				document.querySelector('#couleur-texte').addEventListener('change', this.modifierCouleurTexte)
 			}.bind(this))
+		},
+		modifierCouleurTexte (event) {
+			pell.exec('foreColor', event.target.value)
+			document.querySelector('#texte .bouton-editeur label[for="couleur-texte"]').style.color = event.target.value
+		},
+		modifierCouleurCommentaire (event) {
+			pell.exec('foreColor', event.target.value)
+			document.querySelector('#commentaire .bouton-editeur label[for="couleur-texte-commentaire"]').style.color = event.target.value
+		},
+		modifierCouleurCommentaireModifie (event) {
+			pell.exec('foreColor', event.target.value)
+			document.querySelector('#commentaire-modifie .bouton-editeur label[for="couleur-texte-commentaire-modifie"]').style.color = event.target.value
 		},
 		ajouterFichier () {
 			const champ = document.querySelector('#televerser-fichier')
@@ -1979,12 +2003,15 @@ export default {
 			this.commentaireId = id
 			this.commentaireModifie = texte
 			this.editionCommentaire = true
+			this.emojis = ''
 			this.$nextTick(function () {
-				const actions = this.definirActionsEditeur()
+				const actions = this.definirActionsEditeur('commentaire-modifie')
 				const editeur = pell.init({
 					element: document.querySelector('#commentaire-modifie'),
 					onChange: function (html) {
-						const commentaire = linkifyHtml(html, {
+						let commentaire = html.replace(/(<a [^>]*)(target="[^"]*")([^>]*>)/gi, '$1$3')
+						commentaire = commentaire.replace(/(<a [^>]*)(>)/gi, '$1 target="_blank"$2')
+						commentaire = linkifyHtml(commentaire, {
 							defaultProtocol: 'https'
 						})
 						this.commentaireModifie = commentaire
@@ -1999,6 +2026,7 @@ export default {
 					const texte = event.clipboardData.getData('text/plain')
 					pell.exec('insertText', texte)
 				}
+				document.querySelector('#couleur-texte-commentaire-modifie').addEventListener('change', this.modifierCouleurCommentaireModifie)
 			}.bind(this))
 		},
 		annulerModifierCommentaire () {
@@ -2036,11 +2064,13 @@ export default {
 		},
 		genererEditeur () {
 			if (this.editeurCommentaire === '') {
-				const actions = this.definirActionsEditeur()
+				const actions = this.definirActionsEditeur('commentaire')
 				this.editeurCommentaire = pell.init({
 					element: document.querySelector('#commentaire'),
 					onChange: function (html) {
-						const commentaire = linkifyHtml(html, {
+						let commentaire = html.replace(/(<a [^>]*)(target="[^"]*")([^>]*>)/gi, '$1$3')
+						commentaire = commentaire.replace(/(<a [^>]*)(>)/gi, '$1 target="_blank"$2')
+						commentaire = linkifyHtml(commentaire, {
 							defaultProtocol: 'https'
 						})
 						this.commentaire = commentaire
@@ -2054,23 +2084,32 @@ export default {
 					const texte = event.clipboardData.getData('text/plain')
 					pell.exec('insertText', texte)
 				}
+				document.querySelector('#couleur-texte-commentaire').addEventListener('change', this.modifierCouleurCommentaire)
 			}
 		},
-		definirActionsEditeur () {
-			let actions = [{ name: 'gras', title: this.$t('gras'), icon: '<i class="material-icons">format_bold</i>', result: () => pell.exec('bold') }, { name: 'italique', title: this.$t('italique'), icon: '<i class="material-icons">format_italic</i>', result: () => pell.exec('italic') }, { name: 'souligne', title: this.$t('souligne'), icon: '<i class="material-icons">format_underlined</i>', result: () => pell.exec('underline') }, { name: 'barre', title: this.$t('barre'), icon: '<i class="material-icons">format_strikethrough</i>', result: () => pell.exec('strikethrough') }, { name: 'emojis', title: this.$t('emoticones'), icon: '<i class="material-icons">insert_emoticon</i>', result: function () { this.afficherEmojis('ecrire') }.bind(this) }]
+		definirActionsEditeur (type) {
+			let actions = [
+				{ name: 'gras', title: this.$t('gras'), icon: '<i class="material-icons">format_bold</i>', result: () => pell.exec('bold') },
+				{ name: 'italique', title: this.$t('italique'), icon: '<i class="material-icons">format_italic</i>', result: () => pell.exec('italic') },
+				{ name: 'souligne', title: this.$t('souligne'), icon: '<i class="material-icons">format_underlined</i>', result: () => pell.exec('underline') },
+				{ name: 'barre', title: this.$t('barre'), icon: '<i class="material-icons">format_strikethrough</i>', result: () => pell.exec('strikethrough') },
+				{ name: 'couleur', title: this.$t('couleurTexte'), icon: '<label for="couleur-texte-' + type + '"><i class="material-icons">format_color_text</i></label><input id="couleur-texte-' + type + '" type="color" style="display: none;">', result: () => undefined },
+				{ name: 'lien', title: this.$t('lien'), icon: '<i class="material-icons">link</i>', result: () => { const url = window.prompt(this.$t('adresseLien')); if (url) { pell.exec('createLink', url) } } },
+				{ name: 'emojis', title: this.$t('emoticones'), icon: '<i class="material-icons">insert_emoticon</i>', result: function () { this.afficherEmojis(type) }.bind(this) }
+			]
 			if (((this.userAgent.match(/iPhone/i) || this.userAgent.match(/iPad/i) || this.userAgent.match(/iPod/i)) && this.userAgent.match(/Mobile/i)) || this.userAgent.match(/Android/i)) {
 				actions = [{ name: 'gras', title: this.$t('gras'), icon: '<i class="material-icons">format_bold</i>', result: () => pell.exec('bold') }, { name: 'italique', title: this.$t('italique'), icon: '<i class="material-icons">format_italic</i>', result: () => pell.exec('italic') }, { name: 'souligne', title: this.$t('souligne'), icon: '<i class="material-icons">format_underlined</i>', result: () => pell.exec('underline') }, { name: 'barre', title: this.$t('barre'), icon: '<i class="material-icons">format_strikethrough</i>', result: () => pell.exec('strikethrough') }]
 			}
 			return actions
 		},
 		afficherEmojis (type) {
-			if (type === 'ecrire' && this.emojis !== 'ecrire') {
-				this.emojis = 'ecrire'
-			} else if (type === 'ecrire' && this.emojis === 'ecrire') {
+			if (type === 'commentaire' && this.emojis !== 'commentaire') {
+				this.emojis = 'commentaire'
+			} else if (type === 'commentaire' && this.emojis === 'commentaire') {
 				this.emojis = ''
-			} else if (type === 'modifier' && this.emojis !== 'modifier') {
-				this.emojis = 'modifier'
-			} else if (type === 'modifier' && this.emojis === 'modifier') {
+			} else if (type === 'commentaire-modifie' && this.emojis !== 'commentaire-modifie') {
+				this.emojis = 'commentaire-modifie'
+			} else if (type === 'commentaire-modifie' && this.emojis === 'commentaire-modifie') {
 				this.emojis = ''
 			}
 		},
@@ -2084,6 +2123,7 @@ export default {
 			this.commentaireId = ''
 			this.commentaireModifie = ''
 			this.editeurCommentaire = ''
+			this.editionCommentaire = false
 			this.emojis = ''
 			this.bloc = ''
 			this.titre = ''
@@ -2309,7 +2349,6 @@ export default {
 		},
 		modifierLangue (langue) {
 			if (this.langue !== langue) {
-				this.chargement = true
 				axios.post(this.hote + '/api/modifier-langue', {
 					identifiant: this.identifiant,
 					langue: langue
@@ -2317,9 +2356,8 @@ export default {
 					this.$i18n.setLocale(langue)
 					this.$store.dispatch('modifierLangue', langue)
 					this.$store.dispatch('modifierMessage', this.$t('langueModifiee'))
-					this.chargement = false
+					document.getElementsByTagName('html')[0].setAttribute('lang', langue)
 				}.bind(this)).catch(function () {
-					this.chargement = false
 					this.$store.dispatch('modifierAlerte', this.$t('erreurCommunicationServeur'))
 				}.bind(this))
 			}

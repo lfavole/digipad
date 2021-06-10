@@ -325,6 +325,8 @@
 						<span role="button" tabindex="0" class="couleur" :style="{'background': utilisateurConnecte.couleur}" @click="listeCouleurs = !listeCouleurs" />
 						<div class="couleurs" v-if="listeCouleurs">
 							<span :class="{'actif': couleur === couleurUtilisateur}" v-for="(couleurUtilisateur, indexCouleurUtilisateur) in couleurs" :style="{'background': couleurUtilisateur }" @click="modifierCouleur(couleurUtilisateur)" :key="indexCouleurUtilisateur" />
+							<span class="couleur-personnalisee actif" :title="$t('selectionnerCouleur')" v-if="!couleurs.includes(couleur)"><input type="color" :value="couleur" @change="modifierCouleur($event.target.value)"></span>
+							<span class="couleur-personnalisee" :title="$t('selectionnerCouleur')" v-else><input type="color" value="#ffffff" @change="modifierCouleur($event.target.value)"></span>
 						</div>
 					</li>
 					<li v-else :key="indexUtilisateurConnecte">
@@ -841,10 +843,10 @@
 				<span role="button" tabindex="0" class="fermer" @click="fermerModaleDiaporama"><i class="material-icons">close</i></span>
 			</div>
 			<div class="contenu ascenseur" :class="{'vide': donneesBloc.texte === '' && donneesBloc.media === '' && pad.evaluations === 'desactivees' && pad.commentaires === 'desactives' && ((pad.contributions !== 'moderees') || (pad.contributions === 'moderees' && donneesBloc.visibilite === 'visible'))}">
-				<div class="conteneur" v-if="donneesBloc.texte !== ''">
+				<div class="conteneur conteneur-texte" v-if="donneesBloc.texte !== ''">
 					<div class="texte" v-html="donneesBloc.texte" />
 				</div>
-				<div class="conteneur" v-if="donneesBloc.media !== ''">
+				<div class="conteneur conteneur-media" v-if="donneesBloc.media !== ''">
 					<div class="media" v-if="donneesBloc.iframe === ''">
 						<img :src="'/fichiers/' + pad.id + '/' + donneesBloc.media" v-if="donneesBloc.type === 'image'">
 						<img :src="donneesBloc.media" v-else-if="donneesBloc.type === 'lien-image'">
@@ -895,7 +897,7 @@
 						<li :class="{'edition': editionCommentaire && commentaireId === entreeCommentaire.id}" v-for="(entreeCommentaire, indexEntreeCommentaire) in commentaires" :key="indexEntreeCommentaire">
 							<span class="meta" :class="{'auteur': entreeCommentaire.identifiant === identifiant || pad.identifiant === identifiant}">par {{ definirNom(entreeCommentaire) }}, {{ $formaterDateRelative(entreeCommentaire.date, langue) }}</span>
 							<div class="action" v-if="entreeCommentaire.identifiant === identifiant || pad.identifiant === identifiant">
-								<span role="button" tabindex="0" :title="$t('modifierCommentaire')" @click="afficherModifierCommentaire(entreeCommentaire.id, entreeCommentaire.texte)" v-if="!editionCommentaire && commentaireId !== entreeCommentaire.id"><i class="material-icons">edit</i></span>
+								<span role="button" tabindex="0" :title="$t('modifierCommentaire')" @click="afficherModifierCommentaire(entreeCommentaire.id, entreeCommentaire.texte)" v-if="commentaireId !== entreeCommentaire.id"><i class="material-icons">edit</i></span>
 								<span role="button" tabindex="0" :title="$t('annuler')" @click="annulerModifierCommentaire" v-else-if="editionCommentaire && commentaireId === entreeCommentaire.id"><i class="material-icons">close</i></span>
 								<span role="button" tabindex="0" :title="$t('supprimerCommentaire')" @click="afficherSupprimerCommentaire(entreeCommentaire.id)"><i class="material-icons">delete</i></span>
 							</div>
@@ -903,7 +905,7 @@
 							<div class="texte" v-else-if="editionCommentaire && commentaireId === entreeCommentaire.id">
 								<div id="commentaire-modifie" />
 								<button :title="$t('publier')" @click="modifierCommentaire"><i class="material-icons">edit</i></button>
-								<emojis v-if="emojis === 'modifier'" :type="emojis" :diaporama="modaleDiaporama" @emoji="insererEmoji" />
+								<emojis v-if="emojis === 'commentaire-modifie'" :type="emojis" :diaporama="modaleDiaporama" @emoji="insererEmoji" />
 							</div>
 						</li>
 					</ul>
@@ -913,7 +915,7 @@
 					<div class="ecrire-commentaire">
 						<div id="commentaire" />
 						<button :title="$t('publier')" @click="envoyerCommentaire"><i class="material-icons">send</i></button>
-						<emojis v-if="emojis === 'ecrire'" :type="emojis" :diaporama="modaleDiaporama" @emoji="insererEmoji" />
+						<emojis v-if="emojis === 'commentaire'" :type="emojis" :diaporama="modaleDiaporama" @emoji="insererEmoji" />
 					</div>
 				</div>
 			</div>
@@ -932,7 +934,7 @@
 				<li :class="{'edition': editionCommentaire && commentaireId === entreeCommentaire.id}" v-for="(entreeCommentaire, indexEntreeCommentaire) in commentaires" :key="indexEntreeCommentaire">
 					<span class="meta" :class="{'auteur': entreeCommentaire.identifiant === identifiant || pad.identifiant === identifiant}">par {{ definirNom(entreeCommentaire) }}, {{ $formaterDateRelative(entreeCommentaire.date, langue) }}</span>
 					<div class="action" v-if="entreeCommentaire.identifiant === identifiant || pad.identifiant === identifiant">
-						<span role="button" tabindex="0" :title="$t('modifierCommentaire')" @click="afficherModifierCommentaire(entreeCommentaire.id, entreeCommentaire.texte)" v-if="!editionCommentaire && commentaireId !== entreeCommentaire.id"><i class="material-icons">edit</i></span>
+						<span role="button" tabindex="0" :title="$t('modifierCommentaire')" @click="afficherModifierCommentaire(entreeCommentaire.id, entreeCommentaire.texte)" v-if="commentaireId !== entreeCommentaire.id"><i class="material-icons">edit</i></span>
 						<span role="button" tabindex="0" :title="$t('annuler')" @click="annulerModifierCommentaire" v-else-if="editionCommentaire && commentaireId === entreeCommentaire.id"><i class="material-icons">close</i></span>
 						<span role="button" tabindex="0" :title="$t('supprimerCommentaire')" @click="afficherSupprimerCommentaire(entreeCommentaire.id)"><i class="material-icons">delete</i></span>
 					</div>
@@ -940,7 +942,7 @@
 					<div class="texte" v-else-if="editionCommentaire && commentaireId === entreeCommentaire.id">
 						<div id="commentaire-modifie" />
 						<button :title="$t('publier')" @click="modifierCommentaire"><i class="material-icons">edit</i></button>
-						<emojis v-if="emojis === 'modifier'" :type="emojis" :diaporama="modaleDiaporama" @emoji="insererEmoji" />
+						<emojis v-if="emojis === 'commentaire-modifie'" :type="emojis" :diaporama="modaleDiaporama" @emoji="insererEmoji" />
 					</div>
 				</li>
 				<li class="vide" v-if="commentaires.length === 0">
@@ -950,7 +952,7 @@
 			<div class="ecrire-commentaire">
 				<div id="commentaire" />
 				<button :title="$t('publier')" @click="envoyerCommentaire"><i class="material-icons">send</i></button>
-				<emojis v-if="emojis === 'ecrire'" :type="emojis" :diaporama="modaleDiaporama" @emoji="insererEmoji" />
+				<emojis v-if="emojis === 'commentaire'" :type="emojis" :diaporama="modaleDiaporama" @emoji="insererEmoji" />
 			</div>
 		</div>
 	</div>
