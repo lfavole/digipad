@@ -3,6 +3,35 @@
 	height: 100%;
 }
 
+#champ-recherche {
+	position: absolute;
+	top: 0;
+	left: 4rem;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	width: 250px;
+	height: 4rem;
+	z-index: 100;
+}
+
+#champ-recherche input {
+	display: block;
+	width: calc(100% - (1.4rem + 24px));
+	font-size: 16px;
+	border: 1px solid #ddd;
+	background: rgba(255, 255, 255, 0.95);
+	border-radius: 4px;
+	padding: 0.2rem 1rem;
+	margin: 0.4rem 0.7rem;
+}
+
+#champ-recherche span {
+	font-size: 24px;
+	color: #fff;
+	cursor: pointer;
+}
+
 #nav span .badge {
 	width: 1.5rem;
     height: 1.5rem;
@@ -15,6 +44,15 @@
     color: #fff;
     line-height: 1.5rem;
     text-align: center;
+}
+
+#recherche.active {
+	color: #fdcc33;
+}
+
+#recherche.desactive {
+	color: #555;
+	cursor: default;
 }
 
 #code-acces,
@@ -1503,6 +1541,10 @@
 }
 
 @media screen and (max-width: 359px) {
+	#champ-recherche {
+		width: 200px;
+	}
+
 	.ecrire-commentaire button,
 	.commentaires li .texte button {
 		width: 4rem;

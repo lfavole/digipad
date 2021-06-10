@@ -198,6 +198,7 @@ export default {
 	supprimerCommentaire: 'Elimina il commento',
 	annuler: 'Cancella',
 	publier: 'Pubblica',
+	rechercherCapsules: 'Cerca nel pad',
 	erreurActionServeur: 'Il server ha riscontrato un errore durante questa operazione.',
 	modifierMotDePassePad: 'Modificare la password del pad',
 	seDeconnecterPad: 'Disconnettersi dal pad',

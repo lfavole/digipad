@@ -612,7 +612,9 @@ export default {
 			codeVisible: false,
 			modaleCodeAcces: false,
 			codeqr: '',
-			modaleCodeQR: false
+			modaleCodeQR: false,
+			recherche: false,
+			requete: ''
 		}
 	},
 	computed: {
@@ -642,6 +644,37 @@ export default {
 		},
 		etherpadApi () {
 			return this.$store.state.etherpadApi
+		},
+		blocsRecherche () {
+			let resultats = []
+			const blocs = this.blocs.filter(function (element) {
+				return element.titre.toLowerCase().includes(this.requete.toLowerCase()) || element.texte.toLowerCase().includes(this.requete.toLowerCase()) || element.media.toLowerCase().includes(this.requete.toLowerCase()) || element.iframe.toLowerCase().includes(this.requete.toLowerCase() || element.source.toLowerCase().includes(this.requete.toLowerCase()))
+			}.bind(this))
+			if (this.pad.affichage === 'colonnes') {
+				if (this.pad.colonnes && this.pad.colonnes.length > 0) {
+					this.pad.colonnes.forEach(function () {
+						resultats.push([])
+					})
+					blocs.forEach(function (bloc, index) {
+						if (bloc.colonne !== undefined) {
+							resultats[bloc.colonne].push(bloc)
+						} else {
+							blocs[index].colonne = 0
+							resultats[bloc.colonne].push(bloc)
+						}
+					})
+				} else {
+					this.pad.colonnes.push(this.$t('colonneSansTitre'))
+					resultats.push([])
+					blocs.forEach(function (bloc, index) {
+						blocs[index].colonne = 0
+						resultats[0].push(bloc)
+					})
+				}
+			} else {
+				resultats = blocs
+			}
+			return resultats
 		}
 	},
 	watch: {
@@ -689,6 +722,15 @@ export default {
 		},
 		page: function (page) {
 			this.rechercherImage(page)
+		},
+		recherche: function (valeur) {
+			if (valeur === true) {
+				this.$nextTick(function () {
+					document.querySelector('#champ-recherche input').focus()
+				})
+			} else {
+				this.requete = ''
+			}
 		}
 	},
 	created () {
@@ -782,6 +824,11 @@ export default {
 			if (this.source === 'digiplay') {
 				this.vignette = event.data
 				this.vignetteDefaut = event.data
+			}
+		},
+		gererRecherche () {
+			if (this.action !== 'organiser') {
+				this.recherche = !this.recherche
 			}
 		},
 		definirFond (fond) {
@@ -1090,7 +1137,7 @@ export default {
 		},
 		ajouterFichier () {
 			const champ = document.querySelector('#televerser-fichier')
-			const formats = ['jpg', 'jpeg', 'png', 'gif', 'mp4', 'm4v', 'mp3', 'm4a', 'ogg', 'wav', 'pdf', 'ppt', 'pptx', 'odp', 'doc', 'docx', 'odt']
+			const formats = ['jpg', 'jpeg', 'png', 'gif', 'mp4', 'm4v', 'mp3', 'm4a', 'ogg', 'wav', 'pdf', 'ppt', 'pptx', 'odp', 'doc', 'docx', 'odt', 'flipchart', 'notebook', 'ubz']
 			const extension = champ.files[0].name.substring(champ.files[0].name.lastIndexOf('.') + 1).toLowerCase()
 			if (champ.files && champ.files[0] && formats.includes(extension) && champ.files[0].size < 20480000) {
 				const fichier = champ.files[0]
@@ -1163,6 +1210,8 @@ export default {
 								}.bind(this))
 							}.bind(this))
 							break
+						default:
+							this.chargementMedia = false
 						}
 					}
 					this.progressionFichier = 0
@@ -1737,6 +1786,7 @@ export default {
 				this.menuActivite = false
 				this.menuChat = false
 				this.menuOptions = false
+				this.recherche = false
 				this.action = 'organiser'
 				this.$store.dispatch('modifierMessage', this.$t('modeOrganiserActive'))
 			}
@@ -1745,6 +1795,7 @@ export default {
 			this.menuActivite = false
 			this.menuChat = false
 			this.menuOptions = false
+			this.recherche = false
 			this.action = ''
 			this.$store.dispatch('modifierMessage', this.$t('modeOrganiserDesactive'))
 		},
