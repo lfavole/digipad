@@ -590,12 +590,10 @@ export default {
 		},
 		modifierLangue (langue) {
 			if (this.langue !== langue) {
-				this.chargement = true
 				axios.post(this.hote + '/api/modifier-langue', {
 					identifiant: this.identifiant,
 					langue: langue
 				}).then(function (reponse) {
-					this.chargement = false
 					const donnees = reponse.data
 					if (donnees === 'non_connecte') {
 						this.$router.push('/')
@@ -603,9 +601,9 @@ export default {
 						this.$i18n.setLocale(langue)
 						this.$store.dispatch('modifierLangue', langue)
 						this.$store.dispatch('modifierMessage', this.$t('langueModifiee'))
+						document.getElementsByTagName('html')[0].setAttribute('lang', langue)
 					}
 				}.bind(this)).catch(function () {
-					this.chargement = false
 					this.$store.dispatch('modifierAlerte', this.$t('erreurCommunicationServeur'))
 				}.bind(this))
 			}
@@ -672,7 +670,7 @@ export default {
 	display: inline-flex;
 	justify-content: center;
 	align-items: center;
-	width: 200px;
+	width: 220px;
     line-height: 1;
     font-size: 1.6rem;
     font-weight: 700;
