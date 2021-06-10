@@ -276,7 +276,6 @@ export default {
 		},
 		modifierLangue (langue) {
 			if (this.langue !== langue) {
-				this.chargement = true
 				axios.post(this.hote + '/api/modifier-langue', {
 					identifiant: this.identifiant,
 					langue: langue
@@ -284,9 +283,7 @@ export default {
 					this.$i18n.setLocale(langue)
 					this.$store.dispatch('modifierLangue', langue)
 					this.$store.dispatch('modifierMessage', this.$t('langueModifiee'))
-					this.chargement = false
 				}.bind(this)).catch(function () {
-					this.chargement = false
 					this.$store.dispatch('modifierAlerte', this.$t('erreurCommunicationServeur'))
 				}.bind(this))
 			}
