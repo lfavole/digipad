@@ -15,6 +15,7 @@ export const state = () => ({
 	langue: 'fr',
 	statut: '',
 	acces: [],
+	affichage: 'liste',
 	etherpad: etherpad,
 	etherpadApi: etherpadApi
 })
@@ -43,6 +44,9 @@ export const mutations = {
 	},
 	modifierAcces (state, acces) {
 		state.acces = acces
+	},
+	modifierAffichage (state, affichage) {
+		state.affichage = affichage
 	}
 }
 
@@ -64,6 +68,9 @@ export const actions = {
 		if (donnees.hasOwnProperty('acces')) {
 			commit('modifierAcces', donnees.acces)
 		}
+		if (donnees.hasOwnProperty('affichage')) {
+			commit('modifierAffichage', donnees.affichage)
+		}
 	},
 	modifierNom ({ commit }, nom) {
 		commit('modifierNom', nom)
@@ -71,10 +78,14 @@ export const actions = {
 	modifierLangue ({ commit }, langue) {
 		commit('modifierLangue', langue)
 	},
+	modifierAffichage ({ commit }, affichage) {
+		commit('modifierAffichage', affichage)
+	},
 	reinitialiser ({ commit }) {
 		commit('modifierIdentifiant', '')
 		commit('modifierNom', '')
 		commit('modifierLangue', 'fr')
 		commit('modifierStatut', '')
+		commit('modifierAffichage', 'liste')
 	}
 }

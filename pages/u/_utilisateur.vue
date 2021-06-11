@@ -9,7 +9,6 @@
 
 		<nav id="nav">
 			<span id="compte" role="button" tabindex="0" :title="$t('parametresCompte')" @click="menu = !menu"><i class="material-icons">account_circle</i></span>
-			<span id="recherche" role="button" tabindex="0" :title="$t('recherche')" :class="{'active': recherche}" @click="recherche = !recherche"><i class="material-icons">search</i></span>
 			<span id="informations" role="button" tabindex="0" :title="$t('nouveautesEtFAQ')"><a href="https://drive.infomaniak.com/app/share/139248/eb7c3ad0-a36f-45f2-8125-3e2c59cce1fc/preview/text/4259" target="_blank"><i class="material-icons">help_outline</i></a></span>
 			<span id="deconnexion" role="button" tabindex="0" :title="$t('deconnexion')" @click="deconnexion"><i class="material-icons">power_settings_new</i></span>
 		</nav>
@@ -44,104 +43,161 @@
 					<span role="button" tabindex="0" class="bouton-bleu" @click="afficherModaleMotDePasse">{{ $t('modifierMotDePasse') }}</span>
 				</div>
 				<div class="conteneur conteneur-bouton">
-					<span role="button" tabindex="0" class="bouton-rouge" @click="afficherModaleConfirmation('', 'supprimer-compte')">{{ $t('supprimerCompte') }}</span>
+					<span role="button" tabindex="0" class="bouton-rouge" @click="afficherModaleConfirmation($event, '', 'supprimer-compte')">{{ $t('supprimerCompte') }}</span>
 				</div>
 			</div>
 		</div>
 
-		<div id="onglets">
-			<div class="conteneur" :class="{'actif': onglet === 'pads-crees'}" @click="onglet = 'pads-crees'" v-if="!recherche">
+		<div id="onglets" class="ascenseur">
+			<div class="onglet" :class="{'actif': onglet === 'pads-crees'}" @click="onglet = 'pads-crees'">
 				<span>{{ $t('padsCrees') }}</span>
 			</div>
-			<div class="conteneur" :class="{'actif': onglet === 'pads-rejoints'}" @click="onglet = 'pads-rejoints'" v-if="!recherche">
+			<div class="onglet" :class="{'actif': onglet === 'pads-rejoints'}" @click="onglet = 'pads-rejoints'">
 				<span>{{ $t('padsRejoints') }}</span>
 			</div>
-			<div class="conteneur recherche" v-if="recherche">
-				<input type="text" id="rechercher" maxlength="48" :placeholder="$t('rechercherPads')" @input="requete = $event.target.value">
-				<span role="button" tabindex="0" @click="recherche = false"><i class="material-icons">close</i></span>
+			<div class="onglet" :class="{'actif': onglet === 'pads-favoris'}" @click="onglet = 'pads-favoris'">
+				<span>{{ $t('favoris') }}</span>
 			</div>
+			<div class="onglet" v-for="(item, indexItem) in dossiers" :class="{'actif': onglet === item.id}" @click="onglet = item.id" :key="'dossier_' + indexItem">
+				<span>{{ item.nom }}</span>
+				<div class="menu-dossier">
+					<span role="button" tabindex="0" class="bouton" :title="$t('modifierDossier')" @click="afficherModaleModifierDossier($event, item.id)"><i class="material-icons">edit</i></span>
+					<span role="button" tabindex="0" class="bouton supprimer" :title="$t('supprimerDossier')" @click="afficherModaleConfirmation($event, item.id, 'supprimer-dossier')"><i class="material-icons">delete</i></span>
+				</div>
+			</div>
+			<span class="bouton-ajouter" role="button" tabindex="0" @click="afficherModaleAjouterDossier">{{ $t('ajouterDossier') }}</span>
 		</div>
 
-		<div id="pads" class="ascenseur">
-			<transition name="fondu">
-				<section class="pads" v-show="onglet === 'pads-crees' && !recherche">
-					<div id="boutons">
-						<span id="bouton-creer" role="button" tabindex="0" @click="afficherModaleCreerPad">{{ $t('creerPad') }}</span>
-						<span id="bouton-importer" role="button" tabindex="0" @click="afficherModaleImporterPad">{{ $t('importerPad') }}</span>
+		<div id="pads" class="ascenseur" :class="affichage">
+			<div class="section">
+				<div id="boutons">
+					<span id="bouton-creer" role="button" tabindex="0" @click="afficherModaleCreerPad">{{ $t('creerPad') }}</span>
+					<span id="bouton-importer" role="button" tabindex="0" @click="afficherModaleImporterPad">{{ $t('importerPad') }}</span>
+				</div>
+				<div id="filtrer">
+					<div class="rechercher">
+						<span><i class="material-icons">search</i></span>
+						<input type="search" :value="requete" :placeholder="$t('rechercher')" @input="requete = $event.target.value">
 					</div>
-					<div class="conteneur-pads" v-if="padsCrees.length > 0">
-						<div class="pad" v-for="(pad, indexPad) in padsCrees" :key="'pad_' + indexPad">
-							<div class="conteneur" :class="{'fond-personnalise': pad.fond.substring(1, 9) === 'fichiers'}" :style="definirFond(pad.fond)" @click="ouvrirPad(pad)">
+					<div class="filtrer">
+						<span><i class="material-icons">sort</i></span>
+						<select id="champ-filtrer" @change="filtrer($event.target.value)">
+							<option value="date-asc" selected>{{ $t('dateAsc') }}</option>
+							<option value="date-desc">{{ $t('dateDesc') }}</option>
+							<option value="alpha-asc">{{ $t('alphaAsc') }}</option>
+							<option value="alpha-desc">{{ $t('alphaDesc') }}</option>
+						</select>
+					</div>
+					<div class="afficher">
+						<span role="button" tabindex="0" :title="$t('affichageListe')" @click="modifierAffichage('liste')"><i class="material-icons">view_list</i></span>
+						<span role="button" tabindex="0" :title="$t('affichageMosaique')" @click="modifierAffichage('mosaique')"><i class="material-icons">view_module</i></span>
+					</div>
+				</div>
+				<div id="actions-dossier" v-if="onglet !== 'pads-crees' && onglet !== 'pads-rejoints' && onglet !== 'pads-favoris'">
+					<div class="conteneur">
+						<label>{{ $t('actionsDossier') }}</label>
+						<span role="button" tabindex="0" class="bouton" :title="$t('modifierDossier')" @click="afficherModaleModifierDossier($event, onglet)"><i class="material-icons">edit</i></span>
+						<span role="button" tabindex="0" class="bouton supprimer" :title="$t('supprimerDossier')" @click="afficherModaleConfirmation($event, onglet, 'supprimer-dossier')"><i class="material-icons">delete</i></span>
+					</div>
+				</div>
+				<div class="pads" v-if="pads.length > 0 && requete === ''">
+					<template v-for="(pad, indexPad) in pads">
+						<div class="pad liste" v-if="affichage === 'liste'" :key="'pad_' + indexPad">
+							<a class="fond" :href="'/p/' + pad.id + '/' + pad.token" :class="{'fond-personnalise': pad.fond.substring(1, 9) === 'fichiers'}" :style="definirFond(pad.fond)" />
+							<a class="meta" :class="{'pad-rejoint': pad.identifiant !== identifiant}" :href="'/p/' + pad.id + '/' + pad.token">
+								<span class="titre">{{ pad.titre }}</span>
+								<span class="date">{{ $t('creeLe') }} {{ $formaterDate(pad.date, langue) }}</span>
+							</a>
+							<div class="actions" v-if="pad.identifiant === identifiant">
+								<span class="ajouter-favori" @click="ajouterFavori(pad)" :title="$t('ajouterFavori')" v-if="!favoris.includes(pad.id)"><i class="material-icons">star_outline</i></span>
+								<span class="supprimer-favori" @click="supprimerFavori(pad.id)" :title="$t('supprimerFavori')" v-else><i class="material-icons">star</i></span>
+								<span class="dupliquer" @click="afficherModaleConfirmation($event, pad.id, 'dupliquer')" :title="$t('dupliquerPad')"><i class="material-icons">content_copy</i></span>
+								<span class="exporter" @click="afficherModaleConfirmation($event, pad.id, 'exporter')" :title="$t('exporterPad')"><i class="material-icons">get_app</i></span>
+								<span class="supprimer" @click="afficherModaleConfirmation($event, pad.id, 'supprimer')" :title="$t('supprimerPad')"><i class="material-icons">delete</i></span>
+							</div>
+							<div class="actions" v-else>
+								<span class="ajouter-favori" @click="ajouterFavori(pad)" :title="$t('ajouterFavori')" v-if="!favoris.includes(pad.id)"><i class="material-icons">star_outline</i></span>
+								<span class="supprimer-favori" @click="supprimerFavori(pad.id)" :title="$t('supprimerFavori')" v-else><i class="material-icons">star</i></span>
+								<span class="supprimer" @click="afficherModaleConfirmation($event, pad.id, 'supprimer')"><i class="material-icons">delete</i></span>
+							</div>
+						</div>
+
+						<div class="pad mosaique" v-else :key="'pad_' + indexPad">
+							<a class="conteneur" :class="{'fond-personnalise': pad.fond.substring(1, 9) === 'fichiers'}" :style="definirFond(pad.fond)" :href="'/p/' + pad.id + '/' + pad.token">
 								<div class="meta">
 									<span class="titre">{{ pad.titre }}</span>
 									<span class="date">{{ $t('creeLe') }} {{ $formaterDate(pad.date, langue) }}</span>
 								</div>
+							</a>
+							<div class="actions" v-if="pad.identifiant === identifiant">
+								<span class="ajouter-favori" @click="ajouterFavori(pad)" :title="$t('ajouterFavori')" v-if="!favoris.includes(pad.id)"><i class="material-icons">star_outline</i></span>
+								<span class="supprimer-favori" @click="supprimerFavori(pad.id)" :title="$t('supprimerFavori')" v-else><i class="material-icons">star</i></span>
+								<span class="dupliquer" @click="afficherModaleConfirmation($event, pad.id, 'dupliquer')" :title="$t('dupliquerPad')"><i class="material-icons">content_copy</i></span>
+								<span class="exporter" @click="afficherModaleConfirmation($event, pad.id, 'exporter')" :title="$t('exporterPad')"><i class="material-icons">get_app</i></span>
+								<span class="supprimer" @click="afficherModaleConfirmation($event, pad.id, 'supprimer')" :title="$t('supprimerPad')"><i class="material-icons">delete</i></span>
 							</div>
-							<div class="action">
-								<span class="dupliquer" @click="afficherModaleConfirmation(pad.id, 'dupliquer')" :title="$t('dupliquerPad')"><i class="material-icons">content_copy</i></span>
-								<span class="exporter" @click="afficherModaleConfirmation(pad.id, 'exporter')" :title="$t('exporterPad')"><i class="material-icons">get_app</i></span>
-								<span class="supprimer" @click="afficherModaleConfirmation(pad.id, 'supprimer')" :title="$t('supprimerPad')"><i class="material-icons">delete</i></span>
+							<div class="actions" v-else>
+								<span class="ajouter-favori" @click="ajouterFavori(pad)" :title="$t('ajouterFavori')" v-if="!favoris.includes(pad.id)"><i class="material-icons">star_outline</i></span>
+								<span class="supprimer-favori" @click="supprimerFavori(pad.id)" :title="$t('supprimerFavori')" v-else><i class="material-icons">star</i></span>
+								<span class="supprimer" @click="afficherModaleConfirmation($event, pad.id, 'supprimer')"><i class="material-icons">delete</i></span>
 							</div>
 						</div>
-						<template v-if="padsCrees.length < 9">
-							<div class="pad espace" v-for="pad in (8 - padsCrees.length)" :key="'espace_' + pad" />
-						</template>
-					</div>
-					<div class="vide" v-else>
-						{{ $t('aucunPadCree') }}
-					</div>
-				</section>
-			</transition>
+					</template>
+				</div>
+				<div class="vide" v-else-if="pads.length === 0 && requete === ''">
+					<span v-if="onglet === 'pads-crees'">{{ $t('aucunPadCree') }}</span>
+					<span v-else-if="onglet === 'pads-rejoints'">{{ $t('aucunPadRejoint') }}</span>
+					<span v-else-if="onglet === 'pads-favoris'">{{ $t('aucunFavori') }}</span>
+					<span v-else>{{ $t('aucunPadDossier') }}</span>
+				</div>
+				<div class="pads" v-else-if="resultats.length > 0 && requete !== ''">
+					<template v-for="(pad, indexPad) in resultats">
+						<div class="pad liste" v-if="affichage === 'liste'" :key="'pad_' + indexPad">
+							<a class="fond" :href="'/p/' + pad.id + '/' + pad.token" :class="{'fond-personnalise': pad.fond.substring(1, 9) === 'fichiers'}" :style="definirFond(pad.fond)" />
+							<a class="meta" :class="{'pad-rejoint': pad.identifiant !== identifiant}" :href="'/p/' + pad.id + '/' + pad.token">
+								<span class="titre">{{ pad.titre }}</span>
+								<span class="date">{{ $t('creeLe') }} {{ $formaterDate(pad.date, langue) }}</span>
+							</a>
+							<div class="actions" v-if="pad.identifiant === identifiant">
+								<span class="ajouter-favori" @click="ajouterFavori(pad)" :title="$t('ajouterFavori')" v-if="!favoris.includes(pad.id)"><i class="material-icons">star_outline</i></span>
+								<span class="supprimer-favori" @click="supprimerFavori(pad.id)" :title="$t('supprimerFavori')" v-else><i class="material-icons">star</i></span>
+								<span class="dupliquer" @click="afficherModaleConfirmation($event, pad.id, 'dupliquer')" :title="$t('dupliquerPad')"><i class="material-icons">content_copy</i></span>
+								<span class="exporter" @click="afficherModaleConfirmation($event, pad.id, 'exporter')" :title="$t('exporterPad')"><i class="material-icons">get_app</i></span>
+								<span class="supprimer" @click="afficherModaleConfirmation($event, pad.id, 'supprimer')" :title="$t('supprimerPad')"><i class="material-icons">delete</i></span>
+							</div>
+							<div class="actions" v-else>
+								<span class="ajouter-favori" @click="ajouterFavori(pad)" :title="$t('ajouterFavori')" v-if="!favoris.includes(pad.id)"><i class="material-icons">star_outline</i></span>
+								<span class="supprimer-favori" @click="supprimerFavori(pad.id)" :title="$t('supprimerFavori')" v-else><i class="material-icons">star</i></span>
+								<span class="supprimer" @click="afficherModaleConfirmation($event, pad.id, 'supprimer')"><i class="material-icons">delete</i></span>
+							</div>
+						</div>
 
-			<transition name="fondu">
-				<section class="pads" v-show="onglet === 'pads-rejoints' && !recherche">
-					<div class="conteneur-pads" v-if="padsRejoints.length > 0">
-						<div class="pad" v-for="(pad, indexPad) in padsRejoints" :key="indexPad">
-							<div class="conteneur" :class="{'fond-personnalise': pad.fond.substring(1, 9) === 'fichiers'}" :style="definirFond(pad.fond)" @click="ouvrirPad(pad)">
+						<div class="pad mosaique" v-else :key="'pad_' + indexPad">
+							<a class="conteneur" :class="{'fond-personnalise': pad.fond.substring(1, 9) === 'fichiers'}" :style="definirFond(pad.fond)" :href="'/p/' + pad.id + '/' + pad.token">
 								<div class="meta">
 									<span class="titre">{{ pad.titre }}</span>
-									<span class="date">{{ $t('creeLe') }} {{ $formaterDate(pad.date, langue) }} {{ $t('par') }} {{ pad.nom }}</span>
+									<span class="date">{{ $t('creeLe') }} {{ $formaterDate(pad.date, langue) }}</span>
 								</div>
+							</a>
+							<div class="actions" v-if="pad.identifiant === identifiant">
+								<span class="ajouter-favori" @click="ajouterFavori(pad)" :title="$t('ajouterFavori')" v-if="!favoris.includes(pad.id)"><i class="material-icons">star_outline</i></span>
+								<span class="supprimer-favori" @click="supprimerFavori(pad.id)" :title="$t('supprimerFavori')" v-else><i class="material-icons">star</i></span>
+								<span class="dupliquer" @click="afficherModaleConfirmation($event, pad.id, 'dupliquer')" :title="$t('dupliquerPad')"><i class="material-icons">content_copy</i></span>
+								<span class="exporter" @click="afficherModaleConfirmation($event, pad.id, 'exporter')" :title="$t('exporterPad')"><i class="material-icons">get_app</i></span>
+								<span class="supprimer" @click="afficherModaleConfirmation($event, pad.id, 'supprimer')" :title="$t('supprimerPad')"><i class="material-icons">delete</i></span>
 							</div>
-							<div class="action">
-								<span class="supprimer" @click="afficherModaleConfirmation(pad.id, 'supprimer')"><i class="material-icons">delete</i></span>
+							<div class="actions" v-else>
+								<span class="ajouter-favori" @click="ajouterFavori(pad)" :title="$t('ajouterFavori')" v-if="!favoris.includes(pad.id)"><i class="material-icons">star_outline</i></span>
+								<span class="supprimer-favori" @click="supprimerFavori(pad.id)" :title="$t('supprimerFavori')" v-else><i class="material-icons">star</i></span>
+								<span class="supprimer" @click="afficherModaleConfirmation($event, pad.id, 'supprimer')"><i class="material-icons">delete</i></span>
 							</div>
 						</div>
-						<template v-if="padsRejoints.length < 9">
-							<div class="pad espace" v-for="pad in (8 - padsRejoints.length)" :key="'espace_' + pad" />
-						</template>
-					</div>
-					<div class="vide" v-else>
-						{{ $t('aucunPadRejoint') }}
-					</div>
-				</section>
-			</transition>
-
-			<transition name="fondu">
-				<section class="pads" v-if="recherche">
-					<div class="conteneur-pads" v-if="resultats.length > 0">
-						<div class="pad" v-for="(pad, indexPad) in resultats" :key="'pad_' + indexPad">
-							<div class="conteneur" :class="{'fond-personnalise': pad.fond.substring(1, 9) === 'fichiers'}" :style="definirFond(pad.fond)" @click="ouvrirPad(pad)">
-								<div class="meta">
-									<span class="titre">{{ pad.titre }}</span>
-									<span class="date">{{ $t('creeLe') }} {{ $formaterDate(pad.date, langue) }} {{ $t('par') }} {{ pad.nom }}</span>
-								</div>
-							</div>
-							<div class="action">
-								<span class="dupliquer" @click="afficherModaleConfirmation(pad.id, 'dupliquer')" :title="$t('dupliquerPad')" v-if="pad.identifiant === identifiant"><i class="material-icons">content_copy</i></span>
-								<span class="exporter" @click="afficherModaleConfirmation(pad.id, 'exporter')" :title="$t('exporterPad')" v-if="pad.identifiant === identifiant"><i class="material-icons">get_app</i></span>
-								<span class="supprimer" @click="afficherModaleConfirmation(pad.id, 'supprimer')" :title="$t('supprimerPad')"><i class="material-icons">delete</i></span>
-							</div>
-						</div>
-						<template v-if="resultats.length < 9">
-							<div class="pad espace" v-for="pad in (8 - resultats.length)" :key="'espace_' + pad" />
-						</template>
-					</div>
-					<div class="vide" v-else>
-						{{ $t('aucunResultat') }}
-					</div>
-				</section>
-			</transition>
+					</template>
+				</div>
+				<div class="vide" v-else-if="resultats.length === 0 && requete !== ''">
+					{{ $t('aucunResultat') }}
+				</div>
+			</div>
 		</div>
 
 		<div class="conteneur-modale" v-if="modaleMotDePasse">
@@ -224,6 +280,42 @@
 			</div>
 		</div>
 
+		<div class="conteneur-modale" v-if="modaleAjouterDossier">
+			<div id="ajout-dossier" class="modale">
+				<div class="en-tete">
+					<span class="titre">{{ $t('ajouterDossier') }}</span>
+					<span role="button" class="fermer" @click="fermerModaleAjouterDossier"><i class="material-icons">close</i></span>
+				</div>
+				<div class="conteneur">
+					<div class="contenu">
+						<label for="champ-nom-dossier">{{ $t('nomDossier') }}</label>
+						<input id="champ-nom-dossier" type="text" maxlength="48" :value="dossier" @input="dossier = $event.target.value" @keydown.enter="ajouterDossier">
+						<div class="actions">
+							<span role="button" tabindex="0" class="bouton" @click="ajouterDossier">{{ $t('valider') }}</span>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="conteneur-modale" v-if="modaleModifierDossier">
+			<div id="modification-dossier" class="modale">
+				<div class="en-tete">
+					<span class="titre">{{ $t('modifierDossier') }}</span>
+					<span role="button" class="fermer" @click="fermerModaleModifierDossier"><i class="material-icons">close</i></span>
+				</div>
+				<div class="conteneur">
+					<div class="contenu">
+						<label for="champ-nom-dossier">{{ $t('nomDossier') }}</label>
+						<input id="champ-nom-dossier" type="text" maxlength="48" :value="dossier" @input="dossier = $event.target.value" @keydown.enter="modifierDossier">
+						<div class="actions">
+							<span role="button" tabindex="0" class="bouton" @click="modifierDossier">{{ $t('valider') }}</span>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
 		<div class="conteneur-modale alerte" v-if="modaleConfirmation !== ''">
 			<div class="modale">
 				<div class="conteneur">
@@ -232,12 +324,14 @@
 						<div class="message" v-html="$t('confirmationExporterPad')" v-else-if="modaleConfirmation === 'exporter'" />
 						<div class="message" v-html="$t('confirmationSupprimerPad')" v-else-if="modaleConfirmation === 'supprimer'" />
 						<div class="message" v-html="$t('confirmationSupprimerCompte')" v-else-if="modaleConfirmation === 'supprimer-compte'" />
+						<div class="message" v-html="$t('confirmationSupprimerDossier')" v-else-if="modaleConfirmation === 'supprimer-dossier'" />
 						<div class="actions">
 							<span role="button" tabindex="0" class="bouton" @click="fermerModaleConfirmation">{{ $t('non') }}</span>
 							<span role="button" tabindex="0" class="bouton" @click="dupliquerPad" v-if="modaleConfirmation === 'dupliquer'">{{ $t('oui') }}</span>
 							<span role="button" tabindex="0" class="bouton" @click="exporterPad" v-else-if="modaleConfirmation === 'exporter'">{{ $t('oui') }}</span>
 							<span role="button" tabindex="0" class="bouton" @click="supprimerPad" v-else-if="modaleConfirmation === 'supprimer'">{{ $t('oui') }}</span>
 							<span role="button" tabindex="0" class="bouton" @click="supprimerCompte" v-else-if="modaleConfirmation === 'supprimer-compte'">{{ $t('oui') }}</span>
+							<span role="button" tabindex="0" class="bouton" @click="supprimerDossier" v-else-if="modaleConfirmation === 'supprimer-dossier'">{{ $t('oui') }}</span>
 						</div>
 					</div>
 				</div>
@@ -268,7 +362,9 @@ export default {
 		})
 		return {
 			padsCrees: data.padsCrees,
-			padsRejoints: data.padsRejoints
+			padsRejoints: data.padsRejoints,
+			padsFavoris: data.padsFavoris,
+			dossiers: data.dossiers
 		}
 	},
 	data () {
@@ -286,13 +382,20 @@ export default {
 			motDePasse: '',
 			nouveauMotDePasse: '',
 			confirmationNouveauMotDePasse: '',
-			recherche: false,
+			pads: [],
 			requete: '',
+			resultats: [],
+			filtre: 'date-asc',
+			favoris: [],
 			parametresImport: {
 				commentaires: false,
 				evaluations: false,
 				activite: false
-			}
+			},
+			modaleAjouterDossier: false,
+			modaleModifierDossier: false,
+			dossier: '',
+			dossierId: ''
 		}
 	},
 	computed: {
@@ -311,27 +414,50 @@ export default {
 		statut () {
 			return this.$store.state.statut
 		},
-		resultats () {
-			const pads = this.padsCrees.concat(this.padsRejoints)
-			const resultats = pads.filter(function (element) {
-				return element.titre.toLowerCase().includes(this.requete.toLowerCase()) || element.nom.toLowerCase().includes(this.requete.toLowerCase())
-			}.bind(this))
-			return resultats
+		affichage () {
+			return this.$store.state.affichage
 		}
 	},
 	watch: {
-		recherche: function (valeur) {
-			if (valeur === true) {
-				this.$nextTick(function () {
-					document.querySelector('#rechercher').focus()
+		onglet: function (onglet) {
+			let pads = []
+			if (onglet === 'pads-crees') {
+				pads = this.padsCrees
+			} else if (onglet === 'pads-rejoints') {
+				pads = this.padsRejoints
+			} else if (onglet === 'pads-favoris') {
+				pads = this.padsFavoris
+			} else {
+				let listePads = []
+				this.dossiers.forEach(function (dossier) {
+					if (dossier.id === onglet) {
+						listePads = dossier.pads
+					}
+				})
+				const padsTous = this.padsCrees.concat(this.padsRejoints)
+				padsTous.forEach(function (pad) {
+					if (listePads.includes(pad.id)) {
+						pads.push(pad)
+					}
 				})
 			}
+			this.pads = pads
+			this.requete = ''
+		},
+		requete: function () {
+			this.rechercher()
 		}
 	},
 	created () {
 		if (this.identifiant === '' || this.statut === 'invite') {
 			this.$router.push('/')
 		}
+		this.pads = this.padsCrees
+		const favoris = []
+		this.padsFavoris.forEach(function (pad) {
+			favoris.push(pad.id)
+		})
+		this.favoris = favoris
 		this.$nuxt.$loading.start()
 		this.$i18n.setLocale(this.langue)
 	},
@@ -411,6 +537,7 @@ export default {
 					} else if (donnees === 'donnees_corrompues') {
 						this.$store.dispatch('modifierAlerte', this.$t('donneesCorrompuesImportPad'))
 					} else {
+						this.onglet = 'pads-crees'
 						this.padsCrees.push(donnees)
 						this.$store.dispatch('modifierMessage', this.$t('padImporte'))
 					}
@@ -431,20 +558,74 @@ export default {
 			this.progressionImport = 0
 			document.querySelector('#importer-pad').value = ''
 		},
-		ouvrirPad (pad) {
-			this.$router.push('/p/' + pad.id + '/' + pad.token)
-		},
-		afficherModaleConfirmation (pad, type) {
+		afficherModaleConfirmation (event, id, type) {
+			event.preventDefault()
+			event.stopPropagation()
 			if (type === 'supprimer-compte') {
 				this.menu = false
+			} else if (type === 'supprimer-dossier') {
+				this.dossierId = id
 			} else {
-				this.padId = pad
+				this.padId = id
 			}
 			this.modaleConfirmation = type
 		},
 		fermerModaleConfirmation () {
 			this.modaleConfirmation = ''
 			this.padId = ''
+			this.dossierId = ''
+		},
+		ajouterFavori (pad) {
+			this.chargement = true
+			axios.post(this.hote + '/api/ajouter-pad-favoris', {
+				padId: pad.id,
+				identifiant: this.identifiant
+			}).then(function (reponse) {
+				this.chargement = false
+				const donnees = reponse.data
+				if (donnees === 'non_connecte') {
+					this.$router.push('/')
+				} else if (donnees === 'erreur_ajout_favori') {
+					this.$store.dispatch('modifierAlerte', this.$t('erreurAjoutFavoris'))
+				} else {
+					this.padsFavoris.push(pad)
+					this.favoris.push(pad.id)
+					this.$store.dispatch('modifierMessage', this.$t('padAjouteFavoris'))
+				}
+			}.bind(this)).catch(function () {
+				this.chargement = false
+				this.$store.dispatch('modifierAlerte', this.$t('erreurCommunicationServeur'))
+			}.bind(this))
+		},
+		supprimerFavori (padId) {
+			this.chargement = true
+			axios.post(this.hote + '/api/supprimer-pad-favoris', {
+				padId: padId,
+				identifiant: this.identifiant
+			}).then(function (reponse) {
+				this.chargement = false
+				const donnees = reponse.data
+				if (donnees === 'non_connecte') {
+					this.$router.push('/')
+				} else if (donnees === 'erreur_suppression_favori') {
+					this.$store.dispatch('modifierAlerte', this.$t('erreurSuppressionFavoris'))
+				} else {
+					this.padsFavoris.forEach(function (pad, indexPad) {
+						if (pad.id === padId) {
+							this.padsFavoris.splice(indexPad, 1)
+						}
+					}.bind(this))
+					this.favoris.forEach(function (favori, indexFavori) {
+						if (favori === padId) {
+							this.favoris.splice(indexFavori, 1)
+						}
+					}.bind(this))
+					this.$store.dispatch('modifierMessage', this.$t('padSupprimeFavoris'))
+				}
+			}.bind(this)).catch(function () {
+				this.chargement = false
+				this.$store.dispatch('modifierAlerte', this.$t('erreurCommunicationServeur'))
+			}.bind(this))
 		},
 		dupliquerPad () {
 			this.modaleConfirmation = ''
@@ -515,13 +696,72 @@ export default {
 							this.padsRejoints.splice(index, 1)
 						}
 					}.bind(this))
+					this.padsFavoris.forEach(function (pad, index) {
+						if (pad.id === this.padId) {
+							this.padsFavoris.splice(index, 1)
+						}
+					}.bind(this))
+					this.favoris.forEach(function (favori, index) {
+						if (favori === this.padId) {
+							this.favoris.splice(index, 1)
+						}
+					}.bind(this))
 					this.$store.dispatch('modifierMessage', this.$t('padSupprime'))
 					this.padId = ''
 				}
 			}.bind(this)).catch(function () {
 				this.chargement = false
+				this.padId = ''
 				this.$store.dispatch('modifierAlerte', this.$t('erreurCommunicationServeur'))
 			}.bind(this))
+		},
+		rechercher () {
+			const resultats = this.pads.filter(function (element) {
+				return element.titre.toLowerCase().includes(this.requete.toLowerCase())
+			}.bind(this))
+			this.resultats = resultats
+		},
+		filtrer (filtre) {
+			let pads = this.pads
+			if (this.requete !== '') {
+				pads = this.resultats
+			}
+			switch (filtre) {
+			case 'date-asc':
+				pads.sort(function (a, b) {
+					const dateA = new Date(a.date).getTime()
+					const dateB = new Date(b.date).getTime()
+					return dateA > dateB ? 1 : -1
+				})
+				break
+			case 'date-desc':
+				pads.sort(function (a, b) {
+					const dateA = new Date(a.date).getTime()
+					const dateB = new Date(b.date).getTime()
+					return dateA < dateB ? 1 : -1
+				})
+				break
+			case 'alpha-asc':
+				pads.sort(function (a, b) {
+					const a1 = a.titre.toLowerCase()
+					const b1 = b.titre.toLowerCase()
+					return a1 < b1 ? -1 : a1 > b1 ? 1 : 0
+				})
+				break
+			case 'alpha-desc':
+				pads.sort(function (a, b) {
+					const a1 = a.titre.toLowerCase()
+					const b1 = b.titre.toLowerCase()
+					return a1 > b1 ? -1 : a1 < b1 ? 1 : 0
+				})
+				break
+			}
+			if (this.requete === '') {
+				this.pads = pads
+			} else {
+				this.resultats = pads
+			}
+			this.filtre = filtre
 		},
 		modifierNom () {
 			const nom = document.querySelector('#nom').value
@@ -608,9 +848,141 @@ export default {
 				}.bind(this))
 			}
 		},
-		afficherModaleSupprimerCompte () {
-			this.menu = false
-			this.modaleSupprimerCompte = true
+		modifierAffichage (affichage) {
+			if (this.affichage !== affichage) {
+				this.chargement = true
+				axios.post(this.hote + '/api/modifier-affichage', {
+					identifiant: this.identifiant,
+					affichage: affichage
+				}).then(function (reponse) {
+					const donnees = reponse.data
+					if (donnees === 'non_connecte') {
+						this.$router.push('/')
+					} else {
+						this.$store.dispatch('modifierAffichage', affichage)
+						this.$store.dispatch('modifierMessage', this.$t('affichageModifie'))
+					}
+					this.chargement = false
+				}.bind(this)).catch(function () {
+					this.chargement = false
+					this.$store.dispatch('modifierAlerte', this.$t('erreurCommunicationServeur'))
+				}.bind(this))
+			}
+		},
+		afficherModaleAjouterDossier () {
+			this.modaleAjouterDossier = true
+			this.$nextTick(function () {
+				document.querySelector('#ajout-dossier input').focus()
+			})
+		},
+		ajouterDossier () {
+			if (this.dossier !== '') {
+				this.modaleAjouterDossier = false
+				this.chargement = true
+				axios.post(this.hote + '/api/ajouter-dossier', {
+					dossier: this.dossier,
+					identifiant: this.identifiant
+				}).then(function (reponse) {
+					const donnees = reponse.data
+					if (donnees === 'non_connecte') {
+						this.$router.push('/')
+					} else if (donnees === 'erreur_ajout_dossier') {
+						this.$store.dispatch('modifierAlerte', this.$t('erreurAjoutDossier'))
+					} else {
+						this.dossiers.push(donnees)
+						this.$store.dispatch('modifierMessage', this.$t('dossierAjoute'))
+					}
+					this.chargement = false
+					this.dossier = ''
+				}.bind(this)).catch(function () {
+					this.chargement = false
+					this.dossier = ''
+					this.$store.dispatch('modifierAlerte', this.$t('erreurCommunicationServeur'))
+				}.bind(this))
+			}
+		},
+		fermerModaleAjouterDossier () {
+			this.modaleAjouterDossier = false
+			this.dossier = ''
+		},
+		afficherModaleModifierDossier (event, id) {
+			event.preventDefault()
+			event.stopPropagation()
+			this.dossiers.forEach(function (dossier) {
+				if (dossier.id === id) {
+					this.dossier = dossier.nom
+				}
+			}.bind(this))
+			this.dossierId = id
+			this.modaleModifierDossier = true
+			this.$nextTick(function () {
+				document.querySelector('#modification-dossier input').focus()
+			})
+		},
+		modifierDossier () {
+			if (this.dossier !== '') {
+				this.modaleModifierDossier = false
+				this.chargement = true
+				axios.post(this.hote + '/api/modifier-dossier', {
+					dossier: this.dossier,
+					dossierId: this.dossierId,
+					identifiant: this.identifiant
+				}).then(function (reponse) {
+					const donnees = reponse.data
+					if (donnees === 'non_connecte') {
+						this.$router.push('/')
+					} else if (donnees === 'erreur_modification_dossier') {
+						this.$store.dispatch('modifierAlerte', this.$t('erreurModificationDossier'))
+					} else {
+						this.dossiers.forEach(function (dossier, index) {
+							if (dossier.id === this.dossierId) {
+								this.dossiers[index].nom = this.dossier
+							}
+						}.bind(this))
+						this.$store.dispatch('modifierMessage', this.$t('dossierModifie'))
+					}
+					this.chargement = false
+					this.fermerModaleModifierDossier()
+				}.bind(this)).catch(function () {
+					this.chargement = false
+					this.fermerModaleModifierDossier()
+					this.$store.dispatch('modifierAlerte', this.$t('erreurCommunicationServeur'))
+				}.bind(this))
+			}
+		},
+		fermerModaleModifierDossier () {
+			this.modaleModifierDossier = false
+			this.dossier = ''
+			this.dossierId = ''
+		},
+		supprimerDossier () {
+			this.modaleConfirmation = ''
+			this.chargement = true
+			axios.post(this.hote + '/api/supprimer-dossier', {
+				dossierId: this.dossierId,
+				identifiant: this.identifiant
+			}).then(function (reponse) {
+				this.chargement = false
+				const donnees = reponse.data
+				if (donnees === 'non_connecte') {
+					this.$router.push('/')
+				} else if (donnees === 'erreur_suppression_dossier') {
+					this.$store.dispatch('modifierAlerte', this.$t('erreurSuppressionDossier'))
+				} else {
+					this.dossiers.forEach(function (dossier, index) {
+						if (dossier.id === this.dossierId) {
+							this.dossiers.splice(index, 1)
+						}
+					}.bind(this))
+					this.onglet = 'pads-crees'
+					this.$store.dispatch('modifierMessage', this.$t('dossierSupprime'))
+					this.dossierId = ''
+				}
+			}.bind(this)).catch(function () {
+				this.chargement = false
+				this.dossierId = ''
+				this.$store.dispatch('modifierAlerte', this.$t('erreurCommunicationServeur'))
+			}.bind(this))
 		},
 		supprimerCompte () {
 			this.chargement = true
@@ -662,7 +1034,6 @@ export default {
 	justify-content: center;
 	flex-wrap: wrap;
 	margin-bottom: 1.5rem;
-	padding: 0 1.5rem;
 }
 
 #bouton-importer,
@@ -699,10 +1070,6 @@ export default {
 	background: #e9e9e9;
 }
 
-#recherche.active {
-	color: #fdcc33;
-}
-
 #deconnexion {
 	color: #ff6259;
 	margin-bottom: 3rem;
@@ -718,65 +1085,269 @@ export default {
 }
 
 #onglets {
-	display: flex;
-    padding-left: 4rem;
-    height: 7rem;
-	line-height: calc(7rem - 3px);
-}
-
-#onglets .conteneur {
-	display: inline-block;
-    width: calc(50% - 3rem);
-	text-align: center;
-	margin: 0 1.5rem;
-	font-size: 2rem;
-	cursor: pointer;
-}
-
-#onglets .conteneur.recherche {
-	display: flex;
-    justify-content: center;
-	width: calc(100% - 3rem);
-	height: 100%;
-	padding-top: 1.5rem;
-}
-
-#onglets .conteneur.recherche input {
-	width: 80%;
-	border-bottom: 3px solid #00ced1;
-	line-height: 1;
-}
-
-#onglets .conteneur.recherche input:focus {
-	border-color: #00ced1!important;
-}
-
-#onglets .conteneur.recherche span {
-	font-size: 24px;
-    color: #00ced1;
-	border-bottom: 3px solid #00ced1;
-	line-height: 5.5rem;
-}
-
-#onglets .conteneur.actif {
-	font-weight: 700;
-	border-bottom: 3px solid #00ced1;
-}
-
-#pads {
-	margin: 0;
-	padding-left: 4rem;
-	padding-bottom: 4rem;
-	width: 100%;
-	height: calc(100% - 11rem);
+	position: absolute;
+    top: 4rem;
+	left: 4rem;
+    height: calc(100% - 4rem);
+	width: 30rem;
+	padding: 3rem 1.5rem;
+	border-right: 1px solid #ddd;
 	overflow: auto;
 	-webkit-overflow-scrolling: touch;
 }
 
+#onglets .onglet {
+	position: relative;
+	display: block;
+	text-align: left;
+	padding-bottom: 0.5rem;
+	margin-bottom: 2rem;
+	font-size: 1.8rem;
+	border-bottom: 3px solid transparent;
+	cursor: pointer;
+}
+
+#onglets .onglet.actif {
+	font-weight: 700;
+	border-bottom: 3px solid #00ced1;
+}
+
+#onglets .bouton-ajouter {
+	display: inline-block;
+	font-weight: 700;
+	font-size: 12px;
+	text-transform: uppercase;
+	height: 32px;
+	line-height: 32px;
+	padding: 0 20px;
+	cursor: pointer;
+	color: #fff;
+	text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.3);
+	background: #00ced1;
+	border-radius: 5px;
+	letter-spacing: 1px;
+	text-indent: 1px;
+	text-align: center;
+	transition: background-color ease-in 0.1s;
+	white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+	min-width: 200px;
+	margin-bottom: 3rem;
+}
+
+#onglets .bouton-ajouter:hover {
+	background: #00acb0;
+}
+
+#onglets .onglet .menu-dossier {
+	display: none;
+	position: absolute;
+	color: #fff;
+	top: 0;
+	right: 0;
+	line-height: 1;
+	font-size: 24px;
+	padding: 3px 1rem;
+	background: rgba(0, 0, 0, 0.25);
+	border-radius: 4px;
+}
+
+#onglets .onglet:hover .menu-dossier {
+	display: block;
+}
+
+#onglets .onglet .menu-dossier span.supprimer {
+	color: #ff6259;
+	cursor: pointer;
+}
+
+#onglets .onglet .menu-dossier span + span {
+	margin-left: 0.7rem;
+}
+
+#pads {
+	position: absolute;
+    top: 4rem;
+	left: 34rem;
+	padding: 3rem 1.5rem;
+	height: calc(100% - 4rem);
+	width: calc(100% - 34rem);
+	overflow: auto;
+	-webkit-overflow-scrolling: touch;
+}
+
+#pads.liste {
+	padding: 3rem 1.5rem;
+}
+
+#pads.mosaique {
+	padding: 3rem 0.75rem;
+}
+
+.vide {
+	text-align: center;
+	font-size: 1.7rem;
+    padding: 2.5rem 0;
+    border-top: 1px dotted #ddd;
+    border-bottom: 1px dotted #ddd;
+    margin: 0 0 3rem;
+}
+
+#filtrer {
+	display: flex;
+	justify-content: flex-end;
+	align-items: center;
+	margin-bottom: 3rem;
+	width: 100%;
+	font-size: 0;
+}
+
+.mosaique #actions-dossier,
+.mosaique #filtrer {
+	padding: 0 0.75rem;
+}
+
+#filtrer .rechercher,
+#filtrer .filtrer {
+	display: flex;
+	align-items: center;
+	width: calc(50% - (24px + 2.5rem));
+}
+
+#filtrer .filtrer,
+#filtrer .rechercher {
+	margin-right: 2rem;
+}
+
+#filtrer .afficher span,
+#filtrer .filtrer span,
+#filtrer .rechercher span {
+	font-size: 24px;
+	margin-right: 1rem;
+}
+
+#filtrer .filtrer select,
+#filtrer .rechercher input {
+	width: calc(100% - (24px + 1rem));
+}
+
+#filtrer select,
+#filtrer input[type="search"] {
+	font-size: 16px;
+	border: 1px solid #ddd;
+	border-radius: 4px;
+	padding: 1rem 1.5rem;
+	text-align: left;
+}
+
+#filtrer select {
+	background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" height="14" viewBox="0 0 29 14" width="29"><path fill="%23000000" d="M9.37727 3.625l5.08154 6.93523L19.54036 3.625" /></svg>') center right no-repeat;
+	padding-right: 3rem;
+}
+
+#filtrer .afficher span {
+	cursor: pointer;
+}
+
+#filtrer .afficher span:last-child {
+	margin-right: 0;
+}
+
+#actions-dossier {
+	display: flex;
+	justify-content: flex-end;
+	align-items: center;
+	font-size: 16px;
+	margin-bottom: 3rem;
+}
+
+#actions-dossier .conteneur {
+	display: flex;
+	justify-content: flex-start;
+	align-items: center;
+	padding: 3px 1rem;
+	background: rgba(0, 0, 0, 0.25);
+	border-radius: 4px;
+}
+
+#actions-dossier span {
+	color: #fff;
+	font-size: 24px;
+	margin-left: 1.5rem;
+	cursor: pointer;
+}
+
+#actions-dossier span.supprimer {
+	color: #ff6259;
+	cursor: pointer;
+}
+
 .pads {
-    width: 100%;
-    text-align: center;
-    margin: 4rem 0 0;
+	margin-bottom: 3rem;
+}
+
+.mosaique .pads {
+	display: flex;
+	flex-wrap: wrap;
+}
+
+.pad.liste {
+	border-top: 1px solid #ddd;
+	padding: 2rem 0;
+	display: flex;
+	align-items: center;
+}
+
+.pad.liste:last-child {
+	border-bottom: 1px solid #ddd;
+}
+
+.pad.liste .fond {
+	width: 5rem;
+	height: 5rem;
+	line-height: 5rem;
+	border-radius: 50%;
+	background-size: cover;
+	background-position: center;
+	background-repeat: no-repeat;
+	margin-right: 2rem;
+}
+
+.pad.liste .meta {
+	width: calc(100% - (96px + 13.5rem));
+}
+
+.pad.liste .meta.pad-rejoint {
+	width: calc(100% - (48px + 10.5rem));
+}
+
+.pad.liste .titre {
+	font-size: 1.8rem;
+	font-weight: 700;
+}
+
+.pad.liste .date {
+	font-size: 1.2rem;
+	color: #777;
+}
+
+.pad.liste .actions {
+	display: flex;
+	margin-left: 0.5rem;
+}
+
+.pad.liste .actions span {
+	margin-left: 1.5rem;
+	font-size: 24px;
+	color: #001d1d;
+	cursor: pointer;
+}
+
+.pad.mosaique .actions span.supprimer-favori,
+.pad.liste .actions span.supprimer-favori {
+	color: #fdcc33;
 }
 
 .conteneur-pads {
@@ -785,7 +1356,7 @@ export default {
 	padding: 0 0.75rem;
 }
 
-.pad {
+.pad.mosaique {
     padding: 0 0 4rem;
 	width: calc(50% - 1.5rem);
 	height: 20rem;
@@ -795,12 +1366,7 @@ export default {
 	border-radius: 1rem;
 }
 
-.pad.espace {
-	border: 2px dashed #ddd;
-	background: #f5f5f5;
-}
-
-.pad .conteneur {
+.pad.mosaique .conteneur {
 	display: flex;
 	justify-content: center;
 	align-items: center;
@@ -812,19 +1378,20 @@ export default {
 	border-top-right-radius: 1rem;
 }
 
-.pad .conteneur.fond-personnalise {
+.pad.mosaique .conteneur.fond-personnalise {
 	background-size: cover;
 	background-repeat: no-repeat;
 	background-position: center;
 }
 
-.pad .meta {
+.pad.mosaique .meta {
 	width: 100%;
 	padding: 1.5rem;
     background: rgba(0, 0, 0, 0.55);
+	text-align: center;
 }
 
-.pad .titre {
+.pad.mosaique .titre {
 	color: #fff;
 	text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.3);
     font-size: 2rem;
@@ -832,14 +1399,14 @@ export default {
 	font-weight: 700;
 }
 
-.pad .date {
+.pad.mosaique .date {
     margin-top: 0.5rem;
     color: #ddd;
     font-size: 1.2rem;
     display: block;
 }
 
-.pad .action {
+.pad.mosaique .actions {
 	position: absolute;
 	display: flex;
 	justify-content: center;
@@ -854,31 +1421,21 @@ export default {
 	line-height: 1;
 }
 
-.pad .action span {
+.pad.mosaique .actions span {
+	color: #001d1d;
 	cursor: pointer;
 	text-align: center;
 	width: 3rem;
 	display: inline-block;
 }
 
-.pad .action span + span {
+.pad.mosaique .actions span + span {
 	margin-left: 3rem;
 }
 
-.pad .action .dupliquer {
-	color: #001d1d;
-}
-
-.pad .action .supprimer {
+.pad.liste .actions .supprimer,
+.pad.mosaique .actions .supprimer {
 	color: #ff6259;
-}
-
-#pads .vide {
-	font-size: 1.7rem;
-    padding: 2.5rem 0;
-    border-top: 1px dotted #ddd;
-    border-bottom: 1px dotted #ddd;
-    margin: 0 1.5rem 5rem;
 }
 
 #import label:not(.bouton-interrupteur) {
@@ -952,6 +1509,28 @@ export default {
 	transform: translateX(1.6rem);
 }
 
+@media screen and (max-width: 399px) {
+	#filtrer {
+		flex-wrap: wrap;
+	}
+
+	#filtrer .rechercher {
+		width: 100%;
+		margin-right: 0;
+		margin-bottom: 1.5rem;
+	}
+
+	#filtrer .filtrer {
+		width: 100%;
+		margin-right: 0;
+		margin-bottom: 1.5rem;
+	}
+
+	#filtrer .afficher {
+		line-height: 1;
+	}
+}
+
 @media screen and (orientation: landscape) and (max-height: 479px) {
 	#motdepasse {
 		height: 90%;
@@ -965,61 +1544,121 @@ export default {
 }
 
 @media screen and (max-width: 575px) {
-	#onglets {
-		height: 5rem;
-		line-height: calc(5rem - 3px);
-	}
-
-	#onglets .conteneur {
-		font-size: 1.7rem;
-	}
-
-	#onglets .conteneur.recherche {
-		padding-top: 1rem;
-	}
-
-	#onglets .conteneur.recherche span {
-		line-height: 4rem;
-	}
-
-	#pads {
-		height: calc(100% - 9rem);
+	#onglets .onglet {
+		font-size: 16px;
 	}
 
 	#pads .vide {
 		font-size: 16px;
 	}
 
-	.pads  {
-		margin: 3rem 0 0;
+	.pad.liste .titre {
+		font-size: 16px;
 	}
 
-	.pad .titre {
+	.pad.mosaique .titre {
 		font-size: 1.7rem;
 	}
 }
 
 @media screen and (max-width: 599px) {
-	.pad {
+	.pad.liste {
+		flex-wrap: wrap;
+		padding: 2rem 0 1rem;
+	}
+
+	.pad.liste .fond {
+		width: 35px;
+		height: 35px;
+		line-height: 35px;
+		margin-right: 15px;
+	}
+
+	.pad.liste .meta {
+		width: calc(100% - 50px);
+	}
+
+	.pad.liste .actions {
+		width: 100%;
+		justify-content: space-around;
+		margin-left: 0;
+		margin-top: 2rem;
+		padding-top: 1rem;
+		border-top: 1px dotted #ddd;
+	}
+
+	.pad.liste .actions span {
+		margin-left: 0;
+	}
+}
+
+@media screen and (max-width: 1023px) {
+	#onglets {
+		position: absolute;
+		top: 4rem;
+		left: 4rem;
+		height: 5rem;
+		width: calc(100% - 4rem);
+		display: flex;
+		align-items: center;
+		padding: 0 1.5rem;
+		border-bottom: 1px solid #ddd;
+	}
+
+	#onglets .onglet {
+		text-align: left;
+		padding-bottom: 0;
+		margin-right: 2rem;
+		margin-bottom: 0;
+		border-bottom: 3px solid transparent;
+		flex: 0 0 auto;
+	}
+
+	#onglets .onglet:hover .menu-dossier,
+	#onglets .onglet .menu-dossier {
+		display: none;
+	}
+
+	#onglets .bouton-ajouter {
+		margin-bottom: 0!important;
+	}
+
+	#pads {
+		position: absolute;
+		top: 9rem;
+		left: 4rem;
+		padding: 3rem 1.5rem;
+		height: calc(100% - 9rem);
+		width: calc(100% - 4rem);
+	}
+}
+
+@media screen and (min-width: 1024px) and (max-width: 1439px) {
+	#onglets {
+		width: 23rem;
+	}
+
+	#pads {
+		left: 27rem;
+		width: calc(100% - 27rem);
+	}
+}
+
+@media screen and (max-width: 599px) {
+	.pad.mosaique {
 		width: calc(100% - 1.5rem);
 	}
 }
 
-@media screen and (min-width: 600px) {
-	.pad {
+@media screen and (min-width: 600px) and (max-width: 1439px) {
+	.pad.mosaique {
 		width: calc(50% - 1.5rem);
 	}
 }
 
-@media screen and (min-width: 1120px) {
-	.pad {
-		width: calc(33.333333333% - 1.5rem);
-	}
-}
-
 @media screen and (min-width: 1440px) {
-	.pad {
-		width: calc(25% - 1.5rem);
+	.pad.mosaique {
+		width: calc(33.333333333% - 1.5rem);
 	}
 }
 </style>

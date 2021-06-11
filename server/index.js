@@ -127,14 +127,15 @@ app.post('/api/inscription', function (req, res) {
 			const hash = bcrypt.hashSync(motdepasse, 10)
 			const date = moment().format()
 			const multi = db.multi()
-			multi.hmset('utilisateurs:' + identifiant, 'id', identifiant, 'motdepasse', hash, 'date', date, 'nom', '', 'langue', 'fr')
+			multi.hmset('utilisateurs:' + identifiant, 'id', identifiant, 'motdepasse', hash, 'date', date, 'nom', '', 'langue', 'fr', 'affichage', 'liste')
 			multi.exec(function () {
 				req.session.identifiant = identifiant
 				req.session.nom = ''
 				req.session.langue = 'fr'
 				req.session.statut = 'utilisateur'
+				req.session.affichage = 'liste'
 				req.session.cookie.expires = new Date(Date.now() + (3600 * 24 * 7 * 1000))
-				res.json({ identifiant: identifiant, nom: '', langue: 'fr', statut: 'utilisateur' })
+				res.json({ identifiant: identifiant, nom: '', langue: 'fr', statut: 'utilisateur', affichage: 'liste' })
 			})
 		} else {
 			res.send('utilisateur_existe_deja')
@@ -157,8 +158,13 @@ app.post('/api/connexion', function (req, res) {
 					req.session.nom = nom
 					req.session.langue = langue
 					req.session.statut = 'utilisateur'
+					let affichage = 'liste'
+					if (donnees.hasOwnProperty('affichage')) {
+						affichage = donnees.affichage
+					}
+					req.session.affichage = affichage
 					req.session.cookie.expires = new Date(Date.now() + (3600 * 24 * 7 * 1000))
-					res.json({ identifiant: identifiant, nom: nom, langue: langue, statut: 'utilisateur' })
+					res.json({ identifiant: identifiant, nom: nom, langue: langue, statut: 'utilisateur', affichage: affichage })
 				} else {
 					res.send('erreur_connexion')
 				}
@@ -174,6 +180,7 @@ app.post('/api/deconnexion', function (req, res) {
 	req.session.nom = ''
 	req.session.langue = ''
 	req.session.statut = ''
+	req.session.affichage = ''
 	req.session.destroy()
 	res.send('deconnecte')
 })
@@ -183,7 +190,14 @@ app.post('/api/recuperer-donnees-utilisateur', function (req, res) {
 	recupererDonnees(identifiant).then(function (pads) {
 		const padsCrees = pads[0]
 		const padsRejoints = pads[1]
-		res.json({ padsCrees: padsCrees, padsRejoints: padsRejoints })
+		const padsFavoris = pads[2]
+		db.hgetall('utilisateurs:' + identifiant, function (err, donnees) {
+			if (err || !donnees.hasOwnProperty('dossiers')) {
+				res.json({ padsCrees: padsCrees, padsRejoints: padsRejoints, padsFavoris: padsFavoris, dossiers: [] })
+				return false
+			}
+			res.json({ padsCrees: padsCrees, padsRejoints: padsRejoints, padsFavoris: padsFavoris, dossiers: JSON.parse(donnees.dossiers) })
+		})
 	})
 })
 
@@ -514,6 +528,32 @@ app.post('/api/modifier-mot-de-passe-pad', function (req, res) {
 			} else {
 				res.send('motdepasse_incorrect')
 			}
+		})
+	} else {
+		res.send('non_connecte')
+	}
+})
+
+app.post('/api/ajouter-pad-favoris', function (req, res) {
+	const identifiant = req.body.identifiant
+	if (req.session.identifiant && req.session.identifiant === identifiant) {
+		const pad = req.body.padId
+		db.sadd('pads-favoris:' + identifiant, pad, function (err) {
+			if (err) { res.send('erreur_ajout_favori'); return false }
+			res.send('pad_ajoute_favoris')
+		})
+	} else {
+		res.send('non_connecte')
+	}
+})
+
+app.post('/api/supprimer-pad-favoris', function (req, res) {
+	const identifiant = req.body.identifiant
+	if (req.session.identifiant && req.session.identifiant === identifiant) {
+		const pad = req.body.padId
+		db.srem('pads-favoris:' + identifiant, pad, function (err) {
+			if (err) { res.send('erreur_suppression_favori'); return false }
+			res.send('pad_supprime_favoris')
 		})
 	} else {
 		res.send('non_connecte')
@@ -879,6 +919,7 @@ app.post('/api/supprimer-pad', function (req, res) {
 							for (let j = 0; j < utilisateurs.length; j++) {
 								db.srem('pads-rejoints:' + utilisateurs[j], pad)
 								db.srem('pads-utilisateurs:' + utilisateurs[j], pad)
+								db.srem('pads-favoris:' + utilisateurs[j], pad)
 								db.hdel('couleurs:' + utilisateurs[j], 'pad' + pad)
 							}
 						})
@@ -891,7 +932,10 @@ app.post('/api/supprimer-pad', function (req, res) {
 					})
 				})
 			} else {
-				db.srem('pads-rejoints:' + identifiant, pad, function () {
+				const multi = db.multi()
+				multi.srem('pads-rejoints:' + identifiant, pad)
+				multi.srem('pads-favoris:' + identifiant, pad)
+				multi.exec(function () {
 					res.send('pad_supprime')
 				})
 			}
@@ -979,6 +1023,7 @@ app.post('/api/supprimer-compte', function (req, res) {
 								for (let j = 0; j < utilisateurs.length; j++) {
 									db.srem('pads-rejoints:' + utilisateurs[j], pad)
 									db.srem('pads-utilisateurs:' + utilisateurs[j], pad)
+									db.srem('pads-favoris:' + utilisateurs[j], pad)
 									db.hdel('couleurs:' + utilisateurs[j], 'pad' + pad)
 								}
 							})
@@ -1093,6 +1138,7 @@ app.post('/api/supprimer-compte', function (req, res) {
 						const multi = db.multi()
 						multi.del('pads-crees:' + identifiant)
 						multi.del('pads-rejoints:' + identifiant)
+						multi.del('pads-favoris:' + identifiant)
 						multi.del('pads-utilisateurs:' + identifiant)
 						multi.del('utilisateurs:' + identifiant)
 						multi.del('couleurs:' + identifiant)
@@ -1102,6 +1148,7 @@ app.post('/api/supprimer-compte', function (req, res) {
 							req.session.nom = ''
 							req.session.langue = ''
 							req.session.statut = ''
+							req.session.affichage = ''
 							req.session.destroy()
 							res.send('compte_supprime')
 						})
@@ -1151,6 +1198,85 @@ app.post('/api/modifier-langue', function (req, res) {
 		db.hmset('utilisateurs:' + identifiant, 'langue', langue)
 		req.session.langue = langue
 		res.send('langue_modifiee')
+	} else {
+		res.send('non_connecte')
+	}
+})
+
+app.post('/api/modifier-affichage', function (req, res) {
+	const identifiant = req.body.identifiant
+	if (req.session.identifiant && req.session.identifiant === identifiant) {
+		const affichage = req.body.affichage
+		db.hmset('utilisateurs:' + identifiant, 'affichage', affichage)
+		req.session.affichage = affichage
+		res.send('affichage_modifie')
+	} else {
+		res.send('non_connecte')
+	}
+})
+
+app.post('/api/ajouter-dossier', function (req, res) {
+	const identifiant = req.body.identifiant
+	if (req.session.identifiant && req.session.identifiant === identifiant) {
+		const nom = req.body.dossier
+		db.hgetall('utilisateurs:' + identifiant, function (err, donnees) {
+			if (err) { res.send('erreur_ajout_dossier'); return false }
+			let dossiers = []
+			if (donnees.hasOwnProperty('dossiers')) {
+				dossiers = JSON.parse(donnees.dossiers)
+			}
+			const id = Math.random().toString(36).substring(2)
+			dossiers.push({ id: id, nom: nom, pads: [] })
+			db.hmset('utilisateurs:' + identifiant, 'dossiers', JSON.stringify(dossiers), function (err) {
+				if (err) { res.send('erreur_ajout_dossier'); return false }
+				res.json({ id: id, nom: nom, pads: [] })
+			})
+		})
+	} else {
+		res.send('non_connecte')
+	}
+})
+
+app.post('/api/modifier-dossier', function (req, res) {
+	const identifiant = req.body.identifiant
+	if (req.session.identifiant && req.session.identifiant === identifiant) {
+		const nom = req.body.dossier
+		const dossierId = req.body.dossierId
+		db.hgetall('utilisateurs:' + identifiant, function (err, donnees) {
+			if (err) { res.send('erreur_modification_dossier'); return false }
+			const dossiers = JSON.parse(donnees.dossiers)
+			dossiers.forEach(function (dossier, index) {
+				if (dossier.id === dossierId) {
+					dossiers[index].nom = nom
+				}
+			})
+			db.hmset('utilisateurs:' + identifiant, 'dossiers', JSON.stringify(dossiers), function (err) {
+				if (err) { res.send('erreur_modification_dossier'); return false }
+				res.send('dossier_modifie')
+			})
+		})
+	} else {
+		res.send('non_connecte')
+	}
+})
+
+app.post('/api/supprimer-dossier', function (req, res) {
+	const identifiant = req.body.identifiant
+	if (req.session.identifiant && req.session.identifiant === identifiant) {
+		const dossierId = req.body.dossierId
+		db.hgetall('utilisateurs:' + identifiant, function (err, donnees) {
+			if (err) { res.send('erreur_suppression_dossier'); return false }
+			const dossiers = JSON.parse(donnees.dossiers)
+			dossiers.forEach(function (dossier, index) {
+				if (dossier.id === dossierId) {
+					dossiers.splice(index, 1)
+				}
+			})
+			db.hmset('utilisateurs:' + identifiant, 'dossiers', JSON.stringify(dossiers), function (err) {
+				if (err) { res.send('erreur_suppression_dossier'); return false }
+				res.send('dossier_supprime')
+			})
+		})
 	} else {
 		res.send('non_connecte')
 	}
@@ -2363,7 +2489,55 @@ function recupererDonnees (identifiant) {
 			})
 		})
 	})
-	return Promise.all([donneesPadsCrees, donneesPadsRejoints])
+	// Pads favoris
+	const donneesPadsFavoris = new Promise(function (resolveMain) {
+		db.smembers('pads-favoris:' + identifiant, function (err, pads) {
+			const donneesPads = []
+			if (err) { resolveMain(donneesPads) }
+			for (const pad of pads) {
+				const donneePad = new Promise(function (resolve) {
+					db.exists('pads:' + pad, function (err, resultat) {
+						if (err) { resolve({}) }
+						if (resultat === 1) {
+							db.hgetall('pads:' + pad, function (err, donnees) {
+								if (err) { resolve({}) }
+								db.exists('utilisateurs:' + donnees.identifiant, function (err, resultat) {
+									if (err) {
+										donnees.nom = donnees.identifiant
+										resolve(donnees)
+									}
+									if (resultat === 1) {
+										db.hgetall('utilisateurs:' + donnees.identifiant, function (err, utilisateur) {
+											if (err) {
+												donnees.nom = donnees.identifiant
+												resolve(donnees)
+											}
+											if (utilisateur.nom === '') {
+												donnees.nom = donnees.identifiant
+											} else {
+												donnees.nom = utilisateur.nom
+											}
+											resolve(donnees)
+										})
+									} else {
+										donnees.nom = donnees.identifiant
+										resolve(donnees)
+									}
+								})
+							})
+						} else {
+							resolve({})
+						}
+					})
+				})
+				donneesPads.push(donneePad)
+			}
+			Promise.all(donneesPads).then(function (resultat) {
+				resolveMain(resultat)
+			})
+		})
+	})
+	return Promise.all([donneesPadsCrees, donneesPadsRejoints, donneesPadsFavoris])
 }
 
 function choisirCouleur () {
