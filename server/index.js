@@ -1443,13 +1443,13 @@ io.on('connection', function (socket) {
 		}
 	})
 
-	socket.on('deplacerbloc', function (items, colonnes, pad, affichage) {
+	socket.on('deplacerbloc', function (items, pad, affichage) {
 		if (socket.identifiant !== '' && socket.identifiant !== undefined && socket.room === 'pad-' + pad) {
 			const donneesBlocs = []
 			for (let i = 0; i < items.length; i++) {
 				const donneeBloc = new Promise(function (resolve) {
 					db.exists('pad-' + pad + ':' + items[i].bloc, function (err, resultat) {
-						if (err) { resolve() }
+						if (err) { resolve('erreur') }
 						if (resultat === 1) {
 							const multi = db.multi()
 							multi.zrem('blocs:' + pad, items[i].bloc)
@@ -1458,19 +1458,29 @@ io.on('connection', function (socket) {
 								multi.hmset('pad-' + pad + ':' + items[i].bloc, 'colonne', items[i].colonne)
 							}
 							multi.exec(function (err) {
-								if (err) { resolve() }
+								if (err) { resolve('erreur') }
 								resolve(i)
 							})
 						} else {
-							resolve()
+							resolve('erreur')
 						}
 					})
 				})
 				donneesBlocs.push(donneeBloc)
 			}
-			Promise.all(donneesBlocs).then(function () {
-				const identifiant = socket.identifiant
-				socket.to(socket.room).emit('deplacerbloc', { blocs: items, colonnes: colonnes, identifiant: identifiant })
+			Promise.all(donneesBlocs).then(function (blocs) {
+				let erreurs = 0
+				blocs.forEach(function (bloc) {
+					if (bloc === 'erreur') {
+						erreurs++
+					}
+				})
+				if (erreurs === 0) {
+					const identifiant = socket.identifiant
+					socket.to(socket.room).emit('deplacerbloc', { blocs: items, identifiant: identifiant })
+				} else {
+					socket.emit('erreur')
+				}
 			})
 		} else {
 			socket.emit('deconnecte')
