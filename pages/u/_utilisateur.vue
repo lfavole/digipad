@@ -1132,8 +1132,7 @@ export default {
 	white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    max-width: 100%;
-	min-width: 200px;
+    width: 100%;
 	margin-bottom: 3rem;
 }
 
@@ -1620,6 +1619,7 @@ export default {
 	}
 
 	#onglets .bouton-ajouter {
+		min-width: 200px;
 		margin-bottom: 0!important;
 	}
 
