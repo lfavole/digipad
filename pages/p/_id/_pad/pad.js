@@ -148,9 +148,8 @@ export default {
 				blocId = blocActif.id
 			}
 			if (this.pad.affichage === 'colonnes') {
-				this.colonnes = donnees.colonnes
+				this.definirColonnes(donnees.blocs)
 			}
-			this.blocs = donnees.blocs
 			this.$nextTick(function () {
 				if (blocActif && this.utilisateur !== this.identifiant) {
 					blocActif.classList.remove('actif')
@@ -680,7 +679,7 @@ export default {
 	watch: {
 		affichage: function (affichage) {
 			if (affichage === 'colonnes') {
-				this.definirColonnes()
+				this.definirColonnes(this.blocs)
 				this.$nextTick(function () {
 					this.activerDefilementHorizontal()
 				}.bind(this))
@@ -735,7 +734,7 @@ export default {
 	},
 	created () {
 		if (this.pad.affichage === 'colonnes') {
-			this.definirColonnes()
+			this.definirColonnes(this.blocs)
 		}
 		if (this.pad.acces === 'public' || (this.pad.acces === 'prive' && this.pad.identifiant === this.identifiant)) {
 			this.$nuxt.$loading.start()
@@ -859,28 +858,29 @@ export default {
 				return donnees.nom
 			}
 		},
-		definirColonnes () {
+		definirColonnes (blocs) {
 			const colonnes = []
 			if (this.pad.colonnes && this.pad.colonnes.length > 0) {
 				this.pad.colonnes.forEach(function () {
 					colonnes.push([])
 				})
-				this.blocs.forEach(function (bloc, index) {
+				blocs.forEach(function (bloc, index) {
 					if (bloc.colonne !== undefined) {
 						colonnes[bloc.colonne].push(bloc)
 					} else {
-						this.blocs[index].colonne = 0
+						blocs[index].colonne = 0
 						colonnes[bloc.colonne].push(bloc)
 					}
-				}.bind(this))
+				})
 			} else {
 				this.pad.colonnes.push(this.$t('colonneSansTitre'))
 				colonnes.push([])
-				this.blocs.forEach(function (bloc, index) {
-					this.blocs[index].colonne = 0
+				blocs.forEach(function (bloc, index) {
+					blocs[index].colonne = 0
 					colonnes[0].push(bloc)
-				}.bind(this))
+				})
 			}
+			this.blocs = blocs
 			this.colonnes = colonnes
 		},
 		definirVignette (item) {
@@ -2215,14 +2215,15 @@ export default {
 			if (this.pad.affichage === 'colonnes') {
 				this.activerDefilementHorizontal()
 				const blocs = []
-				this.colonnes.forEach(function (colonne, index) {
-					colonne.forEach(function (bloc) {
-						bloc.colonne = index
+				this.colonnes.forEach(function (colonne, indexColonne) {
+					colonne.forEach(function (bloc, indexBloc) {
+						colonne[indexBloc].colonne = indexColonne
 					})
 					blocs.push(...colonne)
 				})
 				this.blocs = blocs
 			}
+			this.$socket.emit('deplacerbloc', this.blocs, this.pad.id, this.pad.affichage)
 			this.$nextTick(function () {
 				const blocsActifs = document.querySelectorAll('.bloc.actif')
 				if (blocsActifs.length > 0) {
@@ -2244,7 +2245,6 @@ export default {
 					}
 				}
 			}.bind(this))
-			this.$socket.emit('deplacerbloc', this.blocs, this.colonnes, this.pad.id, this.pad.affichage)
 		},
 		surlignerBloc (event) {
 			const blocActif = document.querySelector('.bloc.actif')
