@@ -113,18 +113,18 @@
 								<span class="date">{{ $t('creeLe') }} {{ $formaterDate(pad.date, langue) }}</span>
 							</a>
 							<div class="actions" v-if="pad.identifiant === identifiant">
-								<span class="ajouter-favori" @click="ajouterFavori(pad)" :title="$t('ajouterFavori')" v-if="!favoris.includes(pad.id)"><i class="material-icons">star_outline</i></span>
-								<span class="supprimer-favori" @click="supprimerFavori(pad.id)" :title="$t('supprimerFavori')" v-else><i class="material-icons">star</i></span>
-								<span class="deplacer" @click="afficherModaleDeplacerPad(pad.id)" :title="$t('ajouterDansDossier')" v-if="dossiers.length > 0"><i class="material-icons">drive_file_move</i></span>
-								<span class="dupliquer" @click="afficherModaleConfirmation($event, pad.id, 'dupliquer')" :title="$t('dupliquerPad')"><i class="material-icons">content_copy</i></span>
-								<span class="exporter" @click="afficherModaleConfirmation($event, pad.id, 'exporter')" :title="$t('exporterPad')"><i class="material-icons">get_app</i></span>
-								<span class="supprimer" @click="afficherModaleConfirmation($event, pad.id, 'supprimer')" :title="$t('supprimerPad')"><i class="material-icons">delete</i></span>
+								<span class="ajouter-favori" role="button" tabindex="0" @click="ajouterFavori(pad)" :title="$t('ajouterFavori')" v-if="!favoris.includes(pad.id)"><i class="material-icons">star_outline</i></span>
+								<span class="supprimer-favori" role="button" tabindex="0" @click="supprimerFavori(pad.id)" :title="$t('supprimerFavori')" v-else><i class="material-icons">star</i></span>
+								<span class="deplacer" role="button" tabindex="0" @click="afficherModaleDeplacerPad(pad.id)" :title="$t('ajouterDansDossier')" :class="{'actif': verifierDossierPad(pad.id)}" v-if="dossiers.length > 0"><i class="material-icons">drive_file_move</i></span>
+								<span class="dupliquer" role="button" tabindex="0" @click="afficherModaleConfirmation($event, pad.id, 'dupliquer')" :title="$t('dupliquerPad')"><i class="material-icons">content_copy</i></span>
+								<span class="exporter" role="button" tabindex="0" @click="afficherModaleConfirmation($event, pad.id, 'exporter')" :title="$t('exporterPad')"><i class="material-icons">get_app</i></span>
+								<span class="supprimer" role="button" tabindex="0" @click="afficherModaleConfirmation($event, pad.id, 'supprimer')" :title="$t('supprimerPad')"><i class="material-icons">delete</i></span>
 							</div>
 							<div class="actions" v-else>
-								<span class="ajouter-favori" @click="ajouterFavori(pad)" :title="$t('ajouterFavori')" v-if="!favoris.includes(pad.id)"><i class="material-icons">star_outline</i></span>
-								<span class="supprimer-favori" @click="supprimerFavori(pad.id)" :title="$t('supprimerFavori')" v-else><i class="material-icons">star</i></span>
-								<span class="deplacer" @click="afficherModaleDeplacerPad(pad.id)" :title="$t('ajouterDansDossier')" v-if="dossiers.length > 0"><i class="material-icons">drive_file_move</i></span>
-								<span class="supprimer" @click="afficherModaleConfirmation($event, pad.id, 'supprimer')"><i class="material-icons">delete</i></span>
+								<span class="ajouter-favori" role="button" tabindex="0" @click="ajouterFavori(pad)" :title="$t('ajouterFavori')" v-if="!favoris.includes(pad.id)"><i class="material-icons">star_outline</i></span>
+								<span class="supprimer-favori" role="button" tabindex="0" @click="supprimerFavori(pad.id)" :title="$t('supprimerFavori')" v-else><i class="material-icons">star</i></span>
+								<span class="deplacer" role="button" tabindex="0" @click="afficherModaleDeplacerPad(pad.id)" :title="$t('ajouterDansDossier')" :class="{'actif': verifierDossierPad(pad.id)}" v-if="dossiers.length > 0"><i class="material-icons">drive_file_move</i></span>
+								<span class="supprimer" role="button" tabindex="0" @click="afficherModaleConfirmation($event, pad.id, 'supprimer')"><i class="material-icons">delete</i></span>
 							</div>
 						</div>
 
@@ -136,18 +136,18 @@
 								</div>
 							</a>
 							<div class="actions" v-if="pad.identifiant === identifiant">
-								<span class="ajouter-favori" @click="ajouterFavori(pad)" :title="$t('ajouterFavori')" v-if="!favoris.includes(pad.id)"><i class="material-icons">star_outline</i></span>
-								<span class="supprimer-favori" @click="supprimerFavori(pad.id)" :title="$t('supprimerFavori')" v-else><i class="material-icons">star</i></span>
-								<span class="deplacer" @click="afficherModaleDeplacerPad(pad.id)" :title="$t('ajouterDansDossier')" v-if="dossiers.length > 0"><i class="material-icons">drive_file_move</i></span>
-								<span class="dupliquer" @click="afficherModaleConfirmation($event, pad.id, 'dupliquer')" :title="$t('dupliquerPad')"><i class="material-icons">content_copy</i></span>
-								<span class="exporter" @click="afficherModaleConfirmation($event, pad.id, 'exporter')" :title="$t('exporterPad')"><i class="material-icons">get_app</i></span>
-								<span class="supprimer" @click="afficherModaleConfirmation($event, pad.id, 'supprimer')" :title="$t('supprimerPad')"><i class="material-icons">delete</i></span>
+								<span class="ajouter-favori" role="button" tabindex="0" @click="ajouterFavori(pad)" :title="$t('ajouterFavori')" v-if="!favoris.includes(pad.id)"><i class="material-icons">star_outline</i></span>
+								<span class="supprimer-favori" role="button" tabindex="0" @click="supprimerFavori(pad.id)" :title="$t('supprimerFavori')" v-else><i class="material-icons">star</i></span>
+								<span class="deplacer" role="button" tabindex="0" @click="afficherModaleDeplacerPad(pad.id)" :title="$t('ajouterDansDossier')" :class="{'actif': verifierDossierPad(pad.id)}" v-if="dossiers.length > 0"><i class="material-icons">drive_file_move</i></span>
+								<span class="dupliquer" role="button" tabindex="0" @click="afficherModaleConfirmation($event, pad.id, 'dupliquer')" :title="$t('dupliquerPad')"><i class="material-icons">content_copy</i></span>
+								<span class="exporter" role="button" tabindex="0" @click="afficherModaleConfirmation($event, pad.id, 'exporter')" :title="$t('exporterPad')"><i class="material-icons">get_app</i></span>
+								<span class="supprimer" role="button" tabindex="0" @click="afficherModaleConfirmation($event, pad.id, 'supprimer')" :title="$t('supprimerPad')"><i class="material-icons">delete</i></span>
 							</div>
 							<div class="actions" v-else>
-								<span class="ajouter-favori" @click="ajouterFavori(pad)" :title="$t('ajouterFavori')" v-if="!favoris.includes(pad.id)"><i class="material-icons">star_outline</i></span>
-								<span class="supprimer-favori" @click="supprimerFavori(pad.id)" :title="$t('supprimerFavori')" v-else><i class="material-icons">star</i></span>
-								<span class="deplacer" @click="afficherModaleDeplacerPad(pad.id)" :title="$t('ajouterDansDossier')" v-if="dossiers.length > 0"><i class="material-icons">drive_file_move</i></span>
-								<span class="supprimer" @click="afficherModaleConfirmation($event, pad.id, 'supprimer')"><i class="material-icons">delete</i></span>
+								<span class="ajouter-favori" role="button" tabindex="0" @click="ajouterFavori(pad)" :title="$t('ajouterFavori')" v-if="!favoris.includes(pad.id)"><i class="material-icons">star_outline</i></span>
+								<span class="supprimer-favori" role="button" tabindex="0" @click="supprimerFavori(pad.id)" :title="$t('supprimerFavori')" v-else><i class="material-icons">star</i></span>
+								<span class="deplacer" role="button" tabindex="0" @click="afficherModaleDeplacerPad(pad.id)" :title="$t('ajouterDansDossier')" :class="{'actif': verifierDossierPad(pad.id)}" v-if="dossiers.length > 0"><i class="material-icons">drive_file_move</i></span>
+								<span class="supprimer" role="button" tabindex="0" @click="afficherModaleConfirmation($event, pad.id, 'supprimer')"><i class="material-icons">delete</i></span>
 							</div>
 						</div>
 					</template>
@@ -167,18 +167,18 @@
 								<span class="date">{{ $t('creeLe') }} {{ $formaterDate(pad.date, langue) }}</span>
 							</a>
 							<div class="actions" v-if="pad.identifiant === identifiant">
-								<span class="ajouter-favori" @click="ajouterFavori(pad)" :title="$t('ajouterFavori')" v-if="!favoris.includes(pad.id)"><i class="material-icons">star_outline</i></span>
-								<span class="supprimer-favori" @click="supprimerFavori(pad.id)" :title="$t('supprimerFavori')" v-else><i class="material-icons">star</i></span>
-								<span class="deplacer" @click="afficherModaleDeplacerPad(pad.id)" :title="$t('ajouterDansDossier')" v-if="dossiers.length > 0"><i class="material-icons">drive_file_move</i></span>
-								<span class="dupliquer" @click="afficherModaleConfirmation($event, pad.id, 'dupliquer')" :title="$t('dupliquerPad')"><i class="material-icons">content_copy</i></span>
-								<span class="exporter" @click="afficherModaleConfirmation($event, pad.id, 'exporter')" :title="$t('exporterPad')"><i class="material-icons">get_app</i></span>
-								<span class="supprimer" @click="afficherModaleConfirmation($event, pad.id, 'supprimer')" :title="$t('supprimerPad')"><i class="material-icons">delete</i></span>
+								<span class="ajouter-favori" role="button" tabindex="0" @click="ajouterFavori(pad)" :title="$t('ajouterFavori')" v-if="!favoris.includes(pad.id)"><i class="material-icons">star_outline</i></span>
+								<span class="supprimer-favori" role="button" tabindex="0" @click="supprimerFavori(pad.id)" :title="$t('supprimerFavori')" v-else><i class="material-icons">star</i></span>
+								<span class="deplacer" role="button" tabindex="0" @click="afficherModaleDeplacerPad(pad.id)" :title="$t('ajouterDansDossier')" :class="{'actif': verifierDossierPad(pad.id)}" v-if="dossiers.length > 0"><i class="material-icons">drive_file_move</i></span>
+								<span class="dupliquer" role="button" tabindex="0" @click="afficherModaleConfirmation($event, pad.id, 'dupliquer')" :title="$t('dupliquerPad')"><i class="material-icons">content_copy</i></span>
+								<span class="exporter" role="button" tabindex="0" @click="afficherModaleConfirmation($event, pad.id, 'exporter')" :title="$t('exporterPad')"><i class="material-icons">get_app</i></span>
+								<span class="supprimer" role="button" tabindex="0" @click="afficherModaleConfirmation($event, pad.id, 'supprimer')" :title="$t('supprimerPad')"><i class="material-icons">delete</i></span>
 							</div>
 							<div class="actions" v-else>
-								<span class="ajouter-favori" @click="ajouterFavori(pad)" :title="$t('ajouterFavori')" v-if="!favoris.includes(pad.id)"><i class="material-icons">star_outline</i></span>
-								<span class="supprimer-favori" @click="supprimerFavori(pad.id)" :title="$t('supprimerFavori')" v-else><i class="material-icons">star</i></span>
-								<span class="deplacer" @click="afficherModaleDeplacerPad(pad.id)" :title="$t('ajouterDansDossier')" v-if="dossiers.length > 0"><i class="material-icons">drive_file_move</i></span>
-								<span class="supprimer" @click="afficherModaleConfirmation($event, pad.id, 'supprimer')"><i class="material-icons">delete</i></span>
+								<span class="ajouter-favori" role="button" tabindex="0" @click="ajouterFavori(pad)" :title="$t('ajouterFavori')" v-if="!favoris.includes(pad.id)"><i class="material-icons">star_outline</i></span>
+								<span class="supprimer-favori" role="button" tabindex="0" @click="supprimerFavori(pad.id)" :title="$t('supprimerFavori')" v-else><i class="material-icons">star</i></span>
+								<span class="deplacer" role="button" tabindex="0" @click="afficherModaleDeplacerPad(pad.id)" :title="$t('ajouterDansDossier')" :class="{'actif': verifierDossierPad(pad.id)}" v-if="dossiers.length > 0"><i class="material-icons">drive_file_move</i></span>
+								<span class="supprimer" role="button" tabindex="0" @click="afficherModaleConfirmation($event, pad.id, 'supprimer')"><i class="material-icons">delete</i></span>
 							</div>
 						</div>
 
@@ -190,18 +190,18 @@
 								</div>
 							</a>
 							<div class="actions" v-if="pad.identifiant === identifiant">
-								<span class="ajouter-favori" @click="ajouterFavori(pad)" :title="$t('ajouterFavori')" v-if="!favoris.includes(pad.id)"><i class="material-icons">star_outline</i></span>
-								<span class="supprimer-favori" @click="supprimerFavori(pad.id)" :title="$t('supprimerFavori')" v-else><i class="material-icons">star</i></span>
-								<span class="deplacer" @click="afficherModaleDeplacerPad(pad.id)" :title="$t('ajouterDansDossier')" v-if="dossiers.length > 0"><i class="material-icons">drive_file_move</i></span>
-								<span class="dupliquer" @click="afficherModaleConfirmation($event, pad.id, 'dupliquer')" :title="$t('dupliquerPad')"><i class="material-icons">content_copy</i></span>
-								<span class="exporter" @click="afficherModaleConfirmation($event, pad.id, 'exporter')" :title="$t('exporterPad')"><i class="material-icons">get_app</i></span>
-								<span class="supprimer" @click="afficherModaleConfirmation($event, pad.id, 'supprimer')" :title="$t('supprimerPad')"><i class="material-icons">delete</i></span>
+								<span class="ajouter-favori" role="button" tabindex="0" @click="ajouterFavori(pad)" :title="$t('ajouterFavori')" v-if="!favoris.includes(pad.id)"><i class="material-icons">star_outline</i></span>
+								<span class="supprimer-favori" role="button" tabindex="0" @click="supprimerFavori(pad.id)" :title="$t('supprimerFavori')" v-else><i class="material-icons">star</i></span>
+								<span class="deplacer" role="button" tabindex="0" @click="afficherModaleDeplacerPad(pad.id)" :title="$t('ajouterDansDossier')" :class="{'actif': verifierDossierPad(pad.id)}" v-if="dossiers.length > 0"><i class="material-icons">drive_file_move</i></span>
+								<span class="dupliquer" role="button" tabindex="0" @click="afficherModaleConfirmation($event, pad.id, 'dupliquer')" :title="$t('dupliquerPad')"><i class="material-icons">content_copy</i></span>
+								<span class="exporter" role="button" tabindex="0" @click="afficherModaleConfirmation($event, pad.id, 'exporter')" :title="$t('exporterPad')"><i class="material-icons">get_app</i></span>
+								<span class="supprimer" role="button" tabindex="0" @click="afficherModaleConfirmation($event, pad.id, 'supprimer')" :title="$t('supprimerPad')"><i class="material-icons">delete</i></span>
 							</div>
 							<div class="actions" v-else>
-								<span class="ajouter-favori" @click="ajouterFavori(pad)" :title="$t('ajouterFavori')" v-if="!favoris.includes(pad.id)"><i class="material-icons">star_outline</i></span>
+								<span class="ajouter-favori" role="button" tabindex="0" @click="ajouterFavori(pad)" :title="$t('ajouterFavori')" v-if="!favoris.includes(pad.id)"><i class="material-icons">star_outline</i></span>
 								<span class="supprimer-favori" @click="supprimerFavori(pad.id)" :title="$t('supprimerFavori')" v-else><i class="material-icons">star</i></span>
-								<span class="deplacer" @click="afficherModaleDeplacerPad(pad.id)" :title="$t('ajouterDansDossier')" v-if="dossiers.length > 0"><i class="material-icons">drive_file_move</i></span>
-								<span class="supprimer" @click="afficherModaleConfirmation($event, pad.id, 'supprimer')"><i class="material-icons">delete</i></span>
+								<span class="deplacer" role="button" tabindex="0" @click="afficherModaleDeplacerPad(pad.id)" :title="$t('ajouterDansDossier')" :class="{'actif': verifierDossierPad(pad.id)}" v-if="dossiers.length > 0"><i class="material-icons">drive_file_move</i></span>
+								<span class="supprimer" role="button" tabindex="0" @click="afficherModaleConfirmation($event, pad.id, 'supprimer')"><i class="material-icons">delete</i></span>
 							</div>
 						</div>
 					</template>
@@ -666,6 +666,15 @@ export default {
 				this.chargement = false
 				this.$store.dispatch('modifierAlerte', this.$t('erreurCommunicationServeur'))
 			}.bind(this))
+		},
+		verifierDossierPad (padId) {
+			let padDansDossier = false
+			this.dossiers.forEach(function (dossier) {
+				if (dossier.pads.includes(padId)) {
+					padDansDossier = true
+				}
+			})
+			return padDansDossier
 		},
 		afficherModaleDeplacerPad (padId) {
 			this.padId = padId
@@ -1488,6 +1497,11 @@ export default {
 	color: #fdcc33;
 }
 
+.pad.mosaique .actions span.deplacer.actif,
+.pad.liste .actions span.deplacer.actif {
+	color: #e32f6c;
+}
+
 .conteneur-pads {
 	display: flex;
 	flex-wrap: wrap;
@@ -1642,7 +1656,7 @@ export default {
 	transform: translateX(1.6rem);
 }
 
-@media screen and (max-width: 399px) {
+@media screen and (max-width: 479px) {
 	#filtrer {
 		flex-wrap: wrap;
 	}
@@ -1778,13 +1792,13 @@ export default {
 	}
 }
 
-@media screen and (max-width: 599px) {
+@media screen and (max-width: 767px) {
 	.pad.mosaique {
 		width: calc(100% - 1.5rem);
 	}
 }
 
-@media screen and (min-width: 600px) and (max-width: 1439px) {
+@media screen and (min-width: 768px) and (max-width: 1439px) {
 	.pad.mosaique {
 		width: calc(50% - 1.5rem);
 	}
