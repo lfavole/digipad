@@ -657,7 +657,7 @@
 						<div class="titre-colonne">
 							<span>{{ col }}</span>
 						</div>
-						<div class="menu-colonne" v-if="pad.identifiant === identifiant">
+						<div class="menu-colonne" v-if="pad.identifiant === identifiant && pad.colonnes.length > 1">
 							<span role="button" tabindex="0" class="bouton gauche" :title="$t('deplacerGauche')" @click="deplacerColonne('gauche', indexCol)" v-if="indexCol > 0"><i class="material-icons">arrow_back</i></span>
 							<span role="button" tabindex="0" class="bouton droite" :title="$t('deplacerDroite')" @click="deplacerColonne('droite', indexCol)" v-if="indexCol < (pad.colonnes.length - 1)"><i class="material-icons">arrow_forward</i></span>
 						</div>

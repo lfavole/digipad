@@ -17,6 +17,7 @@ export default {
 	monCompte: 'My Account',
 	parametresCompte: 'Account settings',
 	rechercher: 'Search',
+	recherche: 'Search',
 	nouveautesEtFAQ: 'News and FAQs',
 	deconnexion: 'Logout',
 	langue: 'Language',
@@ -276,5 +277,11 @@ export default {
 	erreurSuppressionDossier: 'Error while deleting the folder.',
 	dossierSupprime: 'Folder deleted.',
 	erreurModificationDossier: 'Error while changing the folder.',
-	dossierModifie: 'Folder changed.'
+	dossierModifie: 'Folder changed.',
+	ajouterDansDossier: 'Add the pad to a folder',
+	dossierDestination: 'Destination folder',
+	aucunDossier: 'No folder',
+	erreurDeplacementPad: 'Error while moving the pad in the folder.',
+	padDeplace: 'Pad moved.',
+	dossierActuel: 'Current folder'
 }

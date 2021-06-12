@@ -191,12 +191,49 @@ app.post('/api/recuperer-donnees-utilisateur', function (req, res) {
 		const padsCrees = pads[0]
 		const padsRejoints = pads[1]
 		const padsFavoris = pads[2]
+		// Récupération et vérification des dossiers utilisateur
 		db.hgetall('utilisateurs:' + identifiant, function (err, donnees) {
+			let dossiers = []
 			if (err || !donnees.hasOwnProperty('dossiers')) {
 				res.json({ padsCrees: padsCrees, padsRejoints: padsRejoints, padsFavoris: padsFavoris, dossiers: [] })
-				return false
+			} else {
+				dossiers = JSON.parse(donnees.dossiers)
+				const listePadsDossiers = []
+				dossiers.forEach(function (dossier) {
+					dossier.pads.forEach(function (pad) {
+						listePadsDossiers.push(pad)
+					})
+				})
+				const donneesPadsDossiers = []
+				for (const pad of listePadsDossiers) {
+					const donneePadsDossiers = new Promise(function (resolve) {
+						db.exists('pads:' + pad, function (err, resultat) {
+							if (err) { resolve() }
+							if (resultat === 1) {
+								resolve()
+							} else {
+								resolve(pad)
+							}
+						})
+					})
+					donneesPadsDossiers.push(donneePadsDossiers)
+				}
+				Promise.all(donneesPadsDossiers).then(function (padsSupprimes) {
+					padsSupprimes.forEach(function (padSupprime) {
+						if (padSupprime !== '') {
+							dossiers.forEach(function (dossier, indexDossier) {
+								if (dossier.pads.includes(padSupprime)) {
+									const indexPad = dossier.pads.indexOf(padSupprime)
+									dossiers[indexDossier].pads.splice(indexPad, 1)
+								}
+							})
+						}
+					})
+					db.hmset('utilisateurs:' + identifiant, 'dossiers', JSON.stringify(dossiers), function () {
+						res.json({ padsCrees: padsCrees, padsRejoints: padsRejoints, padsFavoris: padsFavoris, dossiers: dossiers })
+					})
+				})
 			}
-			res.json({ padsCrees: padsCrees, padsRejoints: padsRejoints, padsFavoris: padsFavoris, dossiers: JSON.parse(donnees.dossiers) })
 		})
 	})
 })
@@ -554,6 +591,33 @@ app.post('/api/supprimer-pad-favoris', function (req, res) {
 		db.srem('pads-favoris:' + identifiant, pad, function (err) {
 			if (err) { res.send('erreur_suppression_favori'); return false }
 			res.send('pad_supprime_favoris')
+		})
+	} else {
+		res.send('non_connecte')
+	}
+})
+
+app.post('/api/deplacer-pad', function (req, res) {
+	const identifiant = req.body.identifiant
+	if (req.session.identifiant && req.session.identifiant === identifiant) {
+		const padId = req.body.padId
+		const destination = req.body.destination
+		db.hgetall('utilisateurs:' + identifiant, function (err, donnees) {
+			if (err) { res.send('erreur_deplacement'); return false }
+			const dossiers = JSON.parse(donnees.dossiers)
+			dossiers.forEach(function (dossier, indexDossier) {
+				if (dossier.pads.includes(padId)) {
+					const indexPad = dossier.pads.indexOf(padId)
+					dossiers[indexDossier].pads.splice(indexPad, 1)
+				}
+				if (dossier.id === destination) {
+					dossiers[indexDossier].pads.push(padId)
+				}
+			})
+			db.hmset('utilisateurs:' + identifiant, 'dossiers', JSON.stringify(dossiers), function (err) {
+				if (err) { res.send('erreur_deplacement'); return false }
+				res.send('pad_deplace')
+			})
 		})
 	} else {
 		res.send('non_connecte')

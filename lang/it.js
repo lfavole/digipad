@@ -17,6 +17,7 @@ export default {
 	monCompte: 'Il mio profilo',
 	parametresCompte: 'Impostazioni del profilo',
 	rechercher: 'Cerca',
+	recherche: 'Cerca',
 	nouveautesEtFAQ: 'Novità e FAQ',
 	deconnexion: 'Logout',
 	langue: 'Lingua',
@@ -276,5 +277,11 @@ export default {
 	erreurSuppressionDossier: 'Errore durante la cancellazione della directory.',
 	dossierSupprime: 'Directory eliminata.',
 	erreurModificationDossier: 'Errore quando si modifica la directory.',
-	dossierModifie: 'Directory modificata.'
+	dossierModifie: 'Directory modificata.',
+	ajouterDansDossier: 'Aggiungere il pad a una directory',
+	dossierDestination: 'Directory di destinazione',
+	aucunDossier: 'Nessuna directory',
+	erreurDeplacementPad: 'Errore durante lo spostamento del pad nella directory.',
+	padDeplace: 'Pad spostato.',
+	dossierActuel: 'Directory corrente'
 }

@@ -17,6 +17,7 @@ export default {
 	monCompte: 'Mon compte',
 	parametresCompte: 'Paramètres du compte',
 	rechercher: 'Rechercher',
+	recherche: 'Recherche',
 	nouveautesEtFAQ: 'Nouveautés et FAQ',
 	deconnexion: 'Déconnexion',
 	langue: 'Langue',
@@ -276,5 +277,11 @@ export default {
 	erreurSuppressionDossier: 'Erreur lors de la suppression du dossier.',
 	dossierSupprime: 'Dossier supprimé.',
 	erreurModificationDossier: 'Erreur lors de la modification du dossier.',
-	dossierModifie: 'Dossier modifié.'
+	dossierModifie: 'Dossier modifié.',
+	ajouterDansDossier: 'Ajouter le pad dans un dossier',
+	dossierDestination: 'Dossier de destination',
+	aucunDossier: 'Aucun dossier',
+	erreurDeplacementPad: 'Erreur lors du déplacement du pad dans le dossier.',
+	padDeplace: 'Pad déplacé.',
+	dossierActuel: 'Dossier actuel'
 }

@@ -51,15 +51,19 @@
 		<div id="onglets" class="ascenseur">
 			<div class="onglet" :class="{'actif': onglet === 'pads-crees'}" @click="onglet = 'pads-crees'">
 				<span>{{ $t('padsCrees') }}</span>
+				<span class="badge">{{ padsCrees.length }}</span>
 			</div>
 			<div class="onglet" :class="{'actif': onglet === 'pads-rejoints'}" @click="onglet = 'pads-rejoints'">
 				<span>{{ $t('padsRejoints') }}</span>
+				<span class="badge">{{ padsRejoints.length }}</span>
 			</div>
 			<div class="onglet" :class="{'actif': onglet === 'pads-favoris'}" @click="onglet = 'pads-favoris'">
 				<span>{{ $t('favoris') }}</span>
+				<span class="badge">{{ padsFavoris.length }}</span>
 			</div>
 			<div class="onglet" v-for="(item, indexItem) in dossiers" :class="{'actif': onglet === item.id}" @click="onglet = item.id" :key="'dossier_' + indexItem">
 				<span>{{ item.nom }}</span>
+				<span class="badge">{{ item.pads.length }}</span>
 				<div class="menu-dossier">
 					<span role="button" tabindex="0" class="bouton" :title="$t('modifierDossier')" @click="afficherModaleModifierDossier($event, item.id)"><i class="material-icons">edit</i></span>
 					<span role="button" tabindex="0" class="bouton supprimer" :title="$t('supprimerDossier')" @click="afficherModaleConfirmation($event, item.id, 'supprimer-dossier')"><i class="material-icons">delete</i></span>
@@ -104,13 +108,14 @@
 					<template v-for="(pad, indexPad) in pads">
 						<div class="pad liste" v-if="affichage === 'liste'" :key="'pad_' + indexPad">
 							<a class="fond" :href="'/p/' + pad.id + '/' + pad.token" :class="{'fond-personnalise': pad.fond.substring(1, 9) === 'fichiers'}" :style="definirFond(pad.fond)" />
-							<a class="meta" :class="{'pad-rejoint': pad.identifiant !== identifiant}" :href="'/p/' + pad.id + '/' + pad.token">
+							<a class="meta" :class="{'pad-rejoint': pad.identifiant !== identifiant, 'deplacer': dossiers.length > 0}" :href="'/p/' + pad.id + '/' + pad.token">
 								<span class="titre">{{ pad.titre }}</span>
 								<span class="date">{{ $t('creeLe') }} {{ $formaterDate(pad.date, langue) }}</span>
 							</a>
 							<div class="actions" v-if="pad.identifiant === identifiant">
 								<span class="ajouter-favori" @click="ajouterFavori(pad)" :title="$t('ajouterFavori')" v-if="!favoris.includes(pad.id)"><i class="material-icons">star_outline</i></span>
 								<span class="supprimer-favori" @click="supprimerFavori(pad.id)" :title="$t('supprimerFavori')" v-else><i class="material-icons">star</i></span>
+								<span class="deplacer" @click="afficherModaleDeplacerPad(pad.id)" :title="$t('ajouterDansDossier')" v-if="dossiers.length > 0"><i class="material-icons">drive_file_move</i></span>
 								<span class="dupliquer" @click="afficherModaleConfirmation($event, pad.id, 'dupliquer')" :title="$t('dupliquerPad')"><i class="material-icons">content_copy</i></span>
 								<span class="exporter" @click="afficherModaleConfirmation($event, pad.id, 'exporter')" :title="$t('exporterPad')"><i class="material-icons">get_app</i></span>
 								<span class="supprimer" @click="afficherModaleConfirmation($event, pad.id, 'supprimer')" :title="$t('supprimerPad')"><i class="material-icons">delete</i></span>
@@ -118,6 +123,7 @@
 							<div class="actions" v-else>
 								<span class="ajouter-favori" @click="ajouterFavori(pad)" :title="$t('ajouterFavori')" v-if="!favoris.includes(pad.id)"><i class="material-icons">star_outline</i></span>
 								<span class="supprimer-favori" @click="supprimerFavori(pad.id)" :title="$t('supprimerFavori')" v-else><i class="material-icons">star</i></span>
+								<span class="deplacer" @click="afficherModaleDeplacerPad(pad.id)" :title="$t('ajouterDansDossier')" v-if="dossiers.length > 0"><i class="material-icons">drive_file_move</i></span>
 								<span class="supprimer" @click="afficherModaleConfirmation($event, pad.id, 'supprimer')"><i class="material-icons">delete</i></span>
 							</div>
 						</div>
@@ -132,6 +138,7 @@
 							<div class="actions" v-if="pad.identifiant === identifiant">
 								<span class="ajouter-favori" @click="ajouterFavori(pad)" :title="$t('ajouterFavori')" v-if="!favoris.includes(pad.id)"><i class="material-icons">star_outline</i></span>
 								<span class="supprimer-favori" @click="supprimerFavori(pad.id)" :title="$t('supprimerFavori')" v-else><i class="material-icons">star</i></span>
+								<span class="deplacer" @click="afficherModaleDeplacerPad(pad.id)" :title="$t('ajouterDansDossier')" v-if="dossiers.length > 0"><i class="material-icons">drive_file_move</i></span>
 								<span class="dupliquer" @click="afficherModaleConfirmation($event, pad.id, 'dupliquer')" :title="$t('dupliquerPad')"><i class="material-icons">content_copy</i></span>
 								<span class="exporter" @click="afficherModaleConfirmation($event, pad.id, 'exporter')" :title="$t('exporterPad')"><i class="material-icons">get_app</i></span>
 								<span class="supprimer" @click="afficherModaleConfirmation($event, pad.id, 'supprimer')" :title="$t('supprimerPad')"><i class="material-icons">delete</i></span>
@@ -139,6 +146,7 @@
 							<div class="actions" v-else>
 								<span class="ajouter-favori" @click="ajouterFavori(pad)" :title="$t('ajouterFavori')" v-if="!favoris.includes(pad.id)"><i class="material-icons">star_outline</i></span>
 								<span class="supprimer-favori" @click="supprimerFavori(pad.id)" :title="$t('supprimerFavori')" v-else><i class="material-icons">star</i></span>
+								<span class="deplacer" @click="afficherModaleDeplacerPad(pad.id)" :title="$t('ajouterDansDossier')" v-if="dossiers.length > 0"><i class="material-icons">drive_file_move</i></span>
 								<span class="supprimer" @click="afficherModaleConfirmation($event, pad.id, 'supprimer')"><i class="material-icons">delete</i></span>
 							</div>
 						</div>
@@ -154,13 +162,14 @@
 					<template v-for="(pad, indexPad) in resultats">
 						<div class="pad liste" v-if="affichage === 'liste'" :key="'pad_' + indexPad">
 							<a class="fond" :href="'/p/' + pad.id + '/' + pad.token" :class="{'fond-personnalise': pad.fond.substring(1, 9) === 'fichiers'}" :style="definirFond(pad.fond)" />
-							<a class="meta" :class="{'pad-rejoint': pad.identifiant !== identifiant}" :href="'/p/' + pad.id + '/' + pad.token">
+							<a class="meta" :class="{'pad-rejoint': pad.identifiant !== identifiant, 'deplacer': dossiers.length > 0}" :href="'/p/' + pad.id + '/' + pad.token">
 								<span class="titre">{{ pad.titre }}</span>
 								<span class="date">{{ $t('creeLe') }} {{ $formaterDate(pad.date, langue) }}</span>
 							</a>
 							<div class="actions" v-if="pad.identifiant === identifiant">
 								<span class="ajouter-favori" @click="ajouterFavori(pad)" :title="$t('ajouterFavori')" v-if="!favoris.includes(pad.id)"><i class="material-icons">star_outline</i></span>
 								<span class="supprimer-favori" @click="supprimerFavori(pad.id)" :title="$t('supprimerFavori')" v-else><i class="material-icons">star</i></span>
+								<span class="deplacer" @click="afficherModaleDeplacerPad(pad.id)" :title="$t('ajouterDansDossier')" v-if="dossiers.length > 0"><i class="material-icons">drive_file_move</i></span>
 								<span class="dupliquer" @click="afficherModaleConfirmation($event, pad.id, 'dupliquer')" :title="$t('dupliquerPad')"><i class="material-icons">content_copy</i></span>
 								<span class="exporter" @click="afficherModaleConfirmation($event, pad.id, 'exporter')" :title="$t('exporterPad')"><i class="material-icons">get_app</i></span>
 								<span class="supprimer" @click="afficherModaleConfirmation($event, pad.id, 'supprimer')" :title="$t('supprimerPad')"><i class="material-icons">delete</i></span>
@@ -168,6 +177,7 @@
 							<div class="actions" v-else>
 								<span class="ajouter-favori" @click="ajouterFavori(pad)" :title="$t('ajouterFavori')" v-if="!favoris.includes(pad.id)"><i class="material-icons">star_outline</i></span>
 								<span class="supprimer-favori" @click="supprimerFavori(pad.id)" :title="$t('supprimerFavori')" v-else><i class="material-icons">star</i></span>
+								<span class="deplacer" @click="afficherModaleDeplacerPad(pad.id)" :title="$t('ajouterDansDossier')" v-if="dossiers.length > 0"><i class="material-icons">drive_file_move</i></span>
 								<span class="supprimer" @click="afficherModaleConfirmation($event, pad.id, 'supprimer')"><i class="material-icons">delete</i></span>
 							</div>
 						</div>
@@ -182,6 +192,7 @@
 							<div class="actions" v-if="pad.identifiant === identifiant">
 								<span class="ajouter-favori" @click="ajouterFavori(pad)" :title="$t('ajouterFavori')" v-if="!favoris.includes(pad.id)"><i class="material-icons">star_outline</i></span>
 								<span class="supprimer-favori" @click="supprimerFavori(pad.id)" :title="$t('supprimerFavori')" v-else><i class="material-icons">star</i></span>
+								<span class="deplacer" @click="afficherModaleDeplacerPad(pad.id)" :title="$t('ajouterDansDossier')" v-if="dossiers.length > 0"><i class="material-icons">drive_file_move</i></span>
 								<span class="dupliquer" @click="afficherModaleConfirmation($event, pad.id, 'dupliquer')" :title="$t('dupliquerPad')"><i class="material-icons">content_copy</i></span>
 								<span class="exporter" @click="afficherModaleConfirmation($event, pad.id, 'exporter')" :title="$t('exporterPad')"><i class="material-icons">get_app</i></span>
 								<span class="supprimer" @click="afficherModaleConfirmation($event, pad.id, 'supprimer')" :title="$t('supprimerPad')"><i class="material-icons">delete</i></span>
@@ -189,6 +200,7 @@
 							<div class="actions" v-else>
 								<span class="ajouter-favori" @click="ajouterFavori(pad)" :title="$t('ajouterFavori')" v-if="!favoris.includes(pad.id)"><i class="material-icons">star_outline</i></span>
 								<span class="supprimer-favori" @click="supprimerFavori(pad.id)" :title="$t('supprimerFavori')" v-else><i class="material-icons">star</i></span>
+								<span class="deplacer" @click="afficherModaleDeplacerPad(pad.id)" :title="$t('ajouterDansDossier')" v-if="dossiers.length > 0"><i class="material-icons">drive_file_move</i></span>
 								<span class="supprimer" @click="afficherModaleConfirmation($event, pad.id, 'supprimer')"><i class="material-icons">delete</i></span>
 							</div>
 						</div>
@@ -240,7 +252,33 @@
 			</div>
 		</div>
 
-		<div class="conteneur-modale" v-if="modaleImporterPad">
+		<div class="conteneur-modale" v-else-if="modaleDeplacerPad">
+			<div id="creation" class="modale">
+				<div class="en-tete">
+					<span class="titre">{{ $t('ajouterDansDossier') }}</span>
+					<span role="button" class="fermer" @click="fermerModaleDeplacerPad"><i class="material-icons">close</i></span>
+				</div>
+				<div class="conteneur">
+					<div class="contenu">
+						<label for="champ-dossier-actuel">{{ $t('dossierActuel') }}</label>
+						<input type="text" :value="$t('aucunDossier')" disabled v-if="dossierActuel.id === 'aucun'">
+						<input type="text" :value="dossierActuel.nom" disabled v-else>
+						<label for="champ-dossier-pad">{{ $t('dossierDestination') }}</label>
+						<select id="champ-dossier-pad">
+							<option value="aucun" v-if="dossierActuel.id !== 'aucun'">{{ $t('aucunDossier') }}</option>
+							<template v-for="(item, indexItem) in dossiers">
+								<option :value="item.id" v-if="dossierActuel.id !== item.id" :key="'dossier_' + indexItem">{{ item.nom }}</option>
+							</template>
+						</select>
+						<div class="actions">
+							<span role="button" tabindex="0" class="bouton" @click="deplacerPad">{{ $t('valider') }}</span>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="conteneur-modale" v-else-if="modaleImporterPad">
 			<div id="import" class="modale">
 				<div class="en-tete">
 					<span class="titre">{{ $t('importerPad') }}</span>
@@ -280,7 +318,7 @@
 			</div>
 		</div>
 
-		<div class="conteneur-modale" v-if="modaleAjouterDossier">
+		<div class="conteneur-modale" v-else-if="modaleAjouterDossier">
 			<div id="ajout-dossier" class="modale">
 				<div class="en-tete">
 					<span class="titre">{{ $t('ajouterDossier') }}</span>
@@ -298,7 +336,7 @@
 			</div>
 		</div>
 
-		<div class="conteneur-modale" v-if="modaleModifierDossier">
+		<div class="conteneur-modale" v-else-if="modaleModifierDossier">
 			<div id="modification-dossier" class="modale">
 				<div class="en-tete">
 					<span class="titre">{{ $t('modifierDossier') }}</span>
@@ -395,7 +433,9 @@ export default {
 			modaleAjouterDossier: false,
 			modaleModifierDossier: false,
 			dossier: '',
-			dossierId: ''
+			dossierId: '',
+			modaleDeplacerPad: false,
+			dossierActuel: {}
 		}
 	},
 	computed: {
@@ -627,6 +667,65 @@ export default {
 				this.$store.dispatch('modifierAlerte', this.$t('erreurCommunicationServeur'))
 			}.bind(this))
 		},
+		afficherModaleDeplacerPad (padId) {
+			this.padId = padId
+			let dossierActuel = { id: 'aucun', nom: '' }
+			this.dossiers.forEach(function (dossier) {
+				if (dossier.pads.includes(this.padId)) {
+					dossierActuel = { id: dossier.id, nom: dossier.nom }
+				}
+			}.bind(this))
+			this.dossierActuel = dossierActuel
+			this.modaleDeplacerPad = true
+		},
+		deplacerPad () {
+			const destination = document.querySelector('#champ-dossier-pad').value
+			if (destination !== this.dossierActuel.id) {
+				this.chargement = true
+				this.modaleDeplacerPad = false
+				axios.post(this.hote + '/api/deplacer-pad', {
+					padId: this.padId,
+					destination: destination,
+					identifiant: this.identifiant
+				}).then(function (reponse) {
+					this.chargement = false
+					const donnees = reponse.data
+					if (donnees === 'non_connecte') {
+						this.$router.push('/')
+					} else if (donnees === 'erreur_deplacement') {
+						this.$store.dispatch('modifierAlerte', this.$t('erreurDeplacementPad'))
+					} else {
+						this.dossiers.forEach(function (dossier, indexDossier) {
+							if (dossier.pads.includes(this.padId)) {
+								const indexPad = dossier.pads.indexOf(this.padId)
+								this.dossiers[indexDossier].pads.splice(indexPad, 1)
+							}
+							if (dossier.id === destination) {
+								this.dossiers[indexDossier].pads.push(this.padId)
+							}
+						}.bind(this))
+						if (this.onglet === this.dossierActuel.id) {
+							this.pads.forEach(function (pad, indexPad) {
+								if (pad.id === this.padId) {
+									this.pads.splice(indexPad, 1)
+								}
+							}.bind(this))
+						}
+						this.$store.dispatch('modifierMessage', this.$t('padDeplace'))
+						this.fermerModaleDeplacerPad()
+					}
+				}.bind(this)).catch(function () {
+					this.chargement = false
+					this.fermerModaleDeplacerPad()
+					this.$store.dispatch('modifierAlerte', this.$t('erreurCommunicationServeur'))
+				}.bind(this))
+			}
+		},
+		fermerModaleDeplacerPad () {
+			this.modaleDeplacerPad = false
+			this.padId = ''
+			this.dossierActuel = {}
+		},
 		dupliquerPad () {
 			this.modaleConfirmation = ''
 			this.chargement = true
@@ -644,9 +743,11 @@ export default {
 					this.padsCrees.push(donnees)
 					this.$store.dispatch('modifierMessage', this.$t('padDuplique'))
 					this.padId = ''
+					this.onglet = 'pads-crees'
 				}
 			}.bind(this)).catch(function () {
 				this.chargement = false
+				this.padId = ''
 				this.$store.dispatch('modifierAlerte', this.$t('erreurCommunicationServeur'))
 			}.bind(this))
 		},
@@ -665,10 +766,11 @@ export default {
 					this.$store.dispatch('modifierAlerte', this.$t('erreurExportPad'))
 				} else {
 					saveAs('/temp/' + donnees, 'pad-' + this.padId + '.zip')
-					this.padId = ''
 				}
+				this.padId = ''
 			}.bind(this)).catch(function () {
 				this.chargement = false
+				this.padId = ''
 				this.$store.dispatch('modifierAlerte', this.$t('erreurCommunicationServeur'))
 			}.bind(this))
 		},
@@ -704,6 +806,17 @@ export default {
 					this.favoris.forEach(function (favori, index) {
 						if (favori === this.padId) {
 							this.favoris.splice(index, 1)
+						}
+					}.bind(this))
+					this.pads.forEach(function (pad, index) {
+						if (pad.id === this.padId) {
+							this.pads.splice(index, 1)
+						}
+					}.bind(this))
+					this.dossiers.forEach(function (dossier, indexDossier) {
+						if (dossier.pads.includes(this.padId)) {
+							const indexPad = dossier.pads.indexOf(this.padId)
+							this.dossiers[indexDossier].pads.splice(indexPad, 1)
 						}
 					}.bind(this))
 					this.$store.dispatch('modifierMessage', this.$t('padSupprime'))
@@ -812,10 +925,11 @@ export default {
 						this.$store.dispatch('modifierAlerte', this.$t('erreurCommunicationServeur'))
 					} else {
 						this.$store.dispatch('modifierMessage', this.$t('motDePasseModifie'))
-						this.fermerModaleMotDePasse()
 					}
+					this.fermerModaleMotDePasse()
 				}.bind(this)).catch(function () {
 					this.chargement = false
+					this.fermerModaleMotDePasse()
 					this.$store.dispatch('modifierAlerte', this.$t('erreurCommunicationServeur'))
 				}.bind(this))
 			} else {
@@ -855,6 +969,7 @@ export default {
 					identifiant: this.identifiant,
 					affichage: affichage
 				}).then(function (reponse) {
+					this.chargement = false
 					const donnees = reponse.data
 					if (donnees === 'non_connecte') {
 						this.$router.push('/')
@@ -862,7 +977,6 @@ export default {
 						this.$store.dispatch('modifierAffichage', affichage)
 						this.$store.dispatch('modifierMessage', this.$t('affichageModifie'))
 					}
-					this.chargement = false
 				}.bind(this)).catch(function () {
 					this.chargement = false
 					this.$store.dispatch('modifierAlerte', this.$t('erreurCommunicationServeur'))
@@ -883,6 +997,7 @@ export default {
 					dossier: this.dossier,
 					identifiant: this.identifiant
 				}).then(function (reponse) {
+					this.chargement = false
 					const donnees = reponse.data
 					if (donnees === 'non_connecte') {
 						this.$router.push('/')
@@ -892,7 +1007,6 @@ export default {
 						this.dossiers.push(donnees)
 						this.$store.dispatch('modifierMessage', this.$t('dossierAjoute'))
 					}
-					this.chargement = false
 					this.dossier = ''
 				}.bind(this)).catch(function () {
 					this.chargement = false
@@ -928,6 +1042,7 @@ export default {
 					dossierId: this.dossierId,
 					identifiant: this.identifiant
 				}).then(function (reponse) {
+					this.chargement = false
 					const donnees = reponse.data
 					if (donnees === 'non_connecte') {
 						this.$router.push('/')
@@ -941,7 +1056,6 @@ export default {
 						}.bind(this))
 						this.$store.dispatch('modifierMessage', this.$t('dossierModifie'))
 					}
-					this.chargement = false
 					this.fermerModaleModifierDossier()
 				}.bind(this)).catch(function () {
 					this.chargement = false
@@ -1166,6 +1280,23 @@ export default {
 	margin-left: 0.7rem;
 }
 
+#onglets .onglet > span {
+	vertical-align: middle;
+}
+
+#onglets .onglet .badge {
+	display: inline-block;
+	width: 2rem;
+	height: 2rem;
+	background: #e32f6c;
+	border-radius: 50%;
+	font-size: 1.2rem;
+	color: #fff;
+	line-height: 2rem;
+	text-align: center;
+	vertical-align: middle;
+}
+
 #pads {
 	position: absolute;
     top: 4rem;
@@ -1322,6 +1453,14 @@ export default {
 	width: calc(100% - (48px + 10.5rem));
 }
 
+.pad.liste .meta.deplacer {
+	width: calc(100% - (120px + 15rem));
+}
+
+.pad.liste .meta.pad-rejoint.deplacer {
+	width: calc(100% - (72px + 12rem));
+}
+
 .pad.liste .titre {
 	font-size: 1.8rem;
 	font-weight: 700;
@@ -1408,7 +1547,7 @@ export default {
 .pad.mosaique .actions {
 	position: absolute;
 	display: flex;
-	justify-content: center;
+	justify-content: space-evenly;
 	align-items: center;
 	height: 4rem;
 	left: 0;
@@ -1424,12 +1563,7 @@ export default {
 	color: #001d1d;
 	cursor: pointer;
 	text-align: center;
-	width: 3rem;
 	display: inline-block;
-}
-
-.pad.mosaique .actions span + span {
-	margin-left: 3rem;
 }
 
 .pad.liste .actions .supprimer,
@@ -1574,7 +1708,7 @@ export default {
 	}
 
 	.pad.liste .meta {
-		width: calc(100% - 50px);
+		width: calc(100% - 50px)!important;
 	}
 
 	.pad.liste .actions {

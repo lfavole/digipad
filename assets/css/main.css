@@ -589,6 +589,7 @@ label.bouton-bleu {
 	line-height: 1.15;
 }
 
+.modale .conteneur select,
 .modale .conteneur input[type="text"],
 .modale .conteneur input[type="password"] {
 	display: block;
@@ -599,6 +600,11 @@ label.bouton-bleu {
 	padding: 10px 15px;
 	margin: 0 auto 20px;
 	text-align: left;
+}
+
+.modale .conteneur select {
+	background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" height="14" viewBox="0 0 29 14" width="29"><path fill="%23000000" d="M9.37727 3.625l5.08154 6.93523L19.54036 3.625" /></svg>') center right no-repeat;
+	padding-right: 30px;
 }
 
 .modale .conteneur .bouton {

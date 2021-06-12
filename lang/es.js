@@ -17,6 +17,7 @@ export default {
 	monCompte: 'Mi cuenta',
 	parametresCompte: 'Parámetros de cuenta',
 	rechercher: 'Buscar',
+	recherche: 'Buscar',
 	nouveautesEtFAQ: 'Novedades y FAQ',
 	deconnexion: 'Desconexión',
 	langue: 'Idioma',
@@ -276,5 +277,11 @@ export default {
 	erreurSuppressionDossier: 'Error al borrar el directorio.',
 	dossierSupprime: 'Directorio borrado.',
 	erreurModificationDossier: 'Error al modificar el directorio.',
-	dossierModifie: 'Directorio modificado.'
+	dossierModifie: 'Directorio modificado.',
+	ajouterDansDossier: 'Añadir el pad a un directorio',
+	dossierDestination: 'Directorio de destino',
+	aucunDossier: 'No hay directorio',
+	erreurDeplacementPad: 'Error al mover el pad en el directorio.',
+	padDeplace: 'Pad desplazado.',
+	dossierActuel: 'Directorio actual'
 }
