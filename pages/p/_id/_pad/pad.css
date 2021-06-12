@@ -870,7 +870,7 @@
 }
 
 #diapositive .titre span:nth-child(2) {
-	font-size: 1.2rem;
+	font-size: 12px;
 	color: #aaa;
 }
 
@@ -1659,10 +1659,6 @@
 
 	#media .information {
 		font-size: 1.4rem;
-	}
-
-	#diapositive .titre span {
-		font-size: 1rem;
 	}
 
 	#diapositive .media iframe.document {

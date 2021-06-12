@@ -693,7 +693,7 @@ label.bouton-bleu {
 
 .modale-diapositive .titre {
     text-align: left;
-    font-size: 1.7rem;
+    font-size: 15px;
     font-weight: 700;
     width: calc(100% - 5rem);
     padding: 0 2rem;
