@@ -2259,7 +2259,9 @@ export default {
 				const id = element.getAttribute('data-bloc')
 				if (document.querySelector('#' + id)) {
 					document.querySelector('#' + id).classList.add('actif')
-					document.querySelector('#' + id).scrollIntoView()
+					if (document.querySelector('#entrees') && document.querySelector('#entrees').contains(event.target)) {
+						document.querySelector('#' + id).scrollIntoView()
+					}
 				}
 			}
 		},
