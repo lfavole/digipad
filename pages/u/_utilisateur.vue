@@ -916,7 +916,7 @@ export default {
 			const motDePasse = this.motDePasse
 			const nouveauMotDePasse = this.nouveauMotDePasse
 			const confirmationNouveauMotDePasse = this.confirmationNouveauMotDePasse
-			if (nouveauMotDePasse === confirmationNouveauMotDePasse) {
+			if (nouveauMotDePasse === confirmationNouveauMotDePasse && nouveauMotDePasse !== '') {
 				this.modaleMotDePasse = false
 				this.chargement = true
 				axios.post(this.hote + '/api/modifier-mot-de-passe', {
@@ -941,7 +941,7 @@ export default {
 					this.fermerModaleMotDePasse()
 					this.$store.dispatch('modifierAlerte', this.$t('erreurCommunicationServeur'))
 				}.bind(this))
-			} else {
+			} else if (nouveauMotDePasse !== confirmationNouveauMotDePasse) {
 				this.$store.dispatch('modifierAlerte', this.$t('nouveauxMotsDePasseCorrespondentPas'))
 			}
 		},
