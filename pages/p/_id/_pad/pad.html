@@ -224,7 +224,7 @@
 				</div>
 			</div>
 			<div class="conteneur">
-				<label for="televerser-fond" class="bouton-bleu" v-show="menuOptions && progressionFond === 0">{{ $t('televerserImageFond') }}</label>
+				<label for="televerser-fond" class="bouton-bleu" role="button" tabindex="0" v-show="menuOptions && progressionFond === 0">{{ $t('televerserImageFond') }}</label>
 				<input id="televerser-fond" type="file" style="display: none" accept=".jpg, .jpeg, .png, .gif" @change="ajouterFond">
 				<div class="conteneur-chargement progression" v-if="menuOptions && progressionFond > 0">
 					<progress class="barre-progression" max="100" :value="progressionFond" />
@@ -741,7 +741,7 @@
 					<label>{{ $t('texte') }}</label>
 					<div id="texte" />
 					<div class="televerser fichier" v-show="media === '' && !chargementLien" v-if="pad.fichiers === 'actives'">
-						<label for="televerser-fichier" class="bouton" v-show="progressionFichier === 0">{{ $t('ajouterFichier') }}</label>
+						<label for="televerser-fichier" class="bouton" role="button" tabindex="0" v-show="progressionFichier === 0">{{ $t('ajouterFichier') }}</label>
 						<input id="televerser-fichier" type="file" style="display: none" accept=".jpg, .jpeg, .png, .gif, .mp4, .m4v, .mp3, .m4a, .ogg, .wav, .pdf, .ppt, .pptx, .odp, .doc, .docx, .odt, .notebook, .flipchart, .ubz" @change="ajouterFichier">
 						<div class="conteneur-chargement progression" v-if="progressionFichier > 0">
 							<progress class="barre-progression" max="100" :value="progressionFichier" />
@@ -821,7 +821,7 @@
 						<img :src="vignette">
 					</div>
 					<div class="televerser vignette" v-if="type !== 'image' && type !== 'lien-image' && media !== ''">
-						<label for="televerser-vignette" class="bouton" v-show="progressionVignette === 0">{{ $t('modifierVignette') }}</label>
+						<label for="televerser-vignette" class="bouton" role="button" tabindex="0" v-show="progressionVignette === 0">{{ $t('modifierVignette') }}</label>
 						<span role="button" tabindex="0" class="bouton" @click="remettreVignetteDefaut" v-if="vignetteDefaut !== '' && vignette !== vignetteDefaut" v-show="progressionVignette === 0">{{ $t('remettreVignette') }}</span>
 						<input id="televerser-vignette" type="file" style="display: none" accept=".jpg, .jpeg, .png, .gif" @change="ajouterVignette">
 						<div class="conteneur-chargement progression" v-if="progressionVignette > 0">
