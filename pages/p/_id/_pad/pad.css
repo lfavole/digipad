@@ -817,6 +817,10 @@
 	max-height: 15rem;
 }
 
+#vignette .conteneur-chargement {
+	text-align: left;
+}
+
 #recherche #resultats {
 	width: 100%;
 	overflow: hidden;

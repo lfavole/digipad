@@ -742,7 +742,7 @@
 					<div id="texte" />
 					<div class="televerser fichier" v-show="media === '' && !chargementLien" v-if="pad.fichiers === 'actives'">
 						<label for="televerser-fichier" class="bouton" role="button" tabindex="0" v-show="progressionFichier === 0">{{ $t('ajouterFichier') }}</label>
-						<input id="televerser-fichier" type="file" style="display: none" accept=".jpg, .jpeg, .png, .gif, .mp4, .m4v, .mp3, .m4a, .ogg, .wav, .pdf, .ppt, .pptx, .odp, .doc, .docx, .odt, .notebook, .flipchart, .ubz" @change="ajouterFichier">
+						<input id="televerser-fichier" type="file" style="display: none" accept=".jpg, .jpeg, .png, .gif, .mp4, .m4v, .mp3, .m4a, .ogg, .wav, .pdf, .ppt, .pptx, .odp, .doc, .docx, .odt, .ods, .xls, .xlsx, .notebook, .flipchart, .ubz" @change="ajouterFichier">
 						<div class="conteneur-chargement progression" v-if="progressionFichier > 0">
 							<progress class="barre-progression" max="100" :value="progressionFichier" />
 							<div class="chargement" />
@@ -818,7 +818,10 @@
 					</div>
 					<label v-if="type !== 'image' && type !== 'lien-image' && media !== ''">{{ $t('vignette') }}</label>
 					<div id="vignette" v-show="progressionVignette === 0" v-if="type !== 'image' && type !== 'lien-image' && media !== ''">
-						<img :src="vignette">
+						<img :src="vignette" v-if="!chargementVignette">
+						<div class="conteneur-chargement" v-else>
+							<div class="chargement" />
+						</div>
 					</div>
 					<div class="televerser vignette" v-if="type !== 'image' && type !== 'lien-image' && media !== ''">
 						<label for="televerser-vignette" class="bouton" role="button" tabindex="0" v-show="progressionVignette === 0">{{ $t('modifierVignette') }}</label>

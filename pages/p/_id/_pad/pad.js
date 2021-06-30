@@ -613,7 +613,8 @@ export default {
 			codeqr: '',
 			modaleCodeQR: false,
 			recherche: false,
-			requete: ''
+			requete: '',
+			chargementVignette: false
 		}
 	},
 	computed: {
@@ -1161,7 +1162,7 @@ export default {
 		},
 		ajouterFichier () {
 			const champ = document.querySelector('#televerser-fichier')
-			const formats = ['jpg', 'jpeg', 'png', 'gif', 'mp4', 'm4v', 'mp3', 'm4a', 'ogg', 'wav', 'pdf', 'ppt', 'pptx', 'odp', 'doc', 'docx', 'odt', 'flipchart', 'notebook', 'ubz']
+			const formats = ['jpg', 'jpeg', 'png', 'gif', 'mp4', 'm4v', 'mp3', 'm4a', 'ogg', 'wav', 'pdf', 'ppt', 'pptx', 'odp', 'doc', 'docx', 'odt', 'ods', 'xls', 'xlsx', 'flipchart', 'notebook', 'ubz']
 			const extension = champ.files[0].name.substring(champ.files[0].name.lastIndexOf('.') + 1).toLowerCase()
 			if (champ.files && champ.files[0] && formats.includes(extension) && champ.files[0].size < 20480000) {
 				const fichier = champ.files[0]
@@ -1312,9 +1313,31 @@ export default {
 								donnees.media = this.media
 								donnees.source = this.source
 								donnees.type = this.type
-								this.vignette = this.definirVignette(donnees)
-								this.vignetteDefaut = this.definirVignette(donnees)
-								this.chargementLien = false
+								if (this.source === 'web') {
+									this.chargementLien = false
+									this.chargementVignette = true
+									axios.post(this.hote + '/api/generer-vignette', {
+										pad: this.pad.id,
+										lien: this.lien
+									}).then(function (reponse) {
+										if (reponse.data !== '') {
+											this.vignette = reponse.data
+											this.vignetteDefaut = reponse.data
+										} else {
+											this.vignette = this.definirVignette(donnees)
+											this.vignetteDefaut = this.definirVignette(donnees)
+										}
+										this.chargementVignette = false
+									}.bind(this)).catch(function () {
+										this.vignette = this.definirVignette(donnees)
+										this.vignetteDefaut = this.definirVignette(donnees)
+										this.chargementVignette = false
+									}.bind(this))
+								} else {
+									this.vignette = this.definirVignette(donnees)
+									this.vignetteDefaut = this.definirVignette(donnees)
+									this.chargementLien = false
+								}
 							}.bind(this))
 						} else {
 							if (donnees.provider_name.toLowerCase() === 'learningapps.org') {
@@ -1419,6 +1442,11 @@ export default {
 				const url = this.etherpad + '/api/1/deletePad?apikey=' + this.etherpadApi + '&padID=' + etherpadId
 				axios.get(url)
 			}
+			if (this.mode === 'creation' && this.vignette !== '' && this.vignette.substring(1, 9) === 'fichiers') {
+				this.$socket.emit('supprimerfichier', { pad: this.pad.id, fichier: this.media, vignette: this.vignette })
+			} else if (this.mode !== 'creation' && this.vignette !== '' && this.vignette.substring(1, 9) === 'fichiers') {
+				this.vignettes.push(this.vignette)
+			}
 			this.media = ''
 			this.lien = ''
 			this.iframe = ''
@@ -1427,6 +1455,7 @@ export default {
 			this.vignette = ''
 			this.vignetteDefaut = ''
 			this.resultats = {}
+			this.chargementVignette = false
 		},
 		ajouterDocument () {
 			this.chargementLien = true
@@ -1463,7 +1492,9 @@ export default {
 						this.progressionVignette = pourcentage
 					}.bind(this)
 				}).then(function (reponse) {
-					if (this.vignette !== '' && this.vignette.substring(1, 9) === 'fichiers') {
+					if (this.mode === 'creation' && this.vignette !== '' && this.vignette.substring(1, 9) === 'fichiers') {
+						this.$socket.emit('supprimerfichier', { pad: this.pad.id, fichier: this.media, vignette: this.vignette })
+					} else if (this.mode !== 'creation' && this.vignette !== '' && this.vignette.substring(1, 9) === 'fichiers') {
 						this.vignettes.push(this.vignette)
 					}
 					const donnees = reponse.data
@@ -1557,6 +1588,7 @@ export default {
 			this.progressionVignette = 0
 			this.chargementLien = false
 			this.chargementMedia = false
+			this.chargementVignette = false
 			this.fichiers = []
 			this.vignettes = []
 			this.resultats = {}
