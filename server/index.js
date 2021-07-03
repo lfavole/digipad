@@ -1413,14 +1413,14 @@ app.post('/api/generer-vignette', function (req, res) {
 			const lien = req.body.lien
 			const fichier = '/fichiers/' + pad + '/vignette_' + Math.random().toString(36).substring(2) + '.jpg'
 			const destination = path.join(__dirname, '..', '/static' + fichier)
-			const navigateur = await puppeteer.launch({ executablePath: 'chromium-browser', args: ['--no-sandbox', '--disable-setuid-sandbox'] })
+			const navigateur = await puppeteer.launch({ args: ['--no-sandbox', '--disable-setuid-sandbox'] })
 			const page = await navigateur.newPage()
-			await page.setViewport({ width: 1280, height: 720 });
+			await page.setViewport({ width: 1024, height: 576 });
 			await page.goto(lien)
 			await page.screenshot({ path: destination, type: 'jpeg' })
 			await page.close()
 			await navigateur.close()
-			gm(destination).setFormat('jpg').resize(700).quality(85).write(destination, function (erreur) {
+			gm(destination).setFormat('jpg').resize(450).quality(85).write(destination, function (erreur) {
 				if (erreur) {
 					res.send('')
 				} else {
