@@ -29,7 +29,6 @@ const extract = require('extract-zip')
 const moment = require('moment')
 const bcrypt = require('bcrypt')
 const cron = require('node-cron')
-const puppeteer = require('puppeteer')
 let storeOptions
 if (process.env.NODE_ENV === 'production') {
 	storeOptions = {
@@ -1399,35 +1398,6 @@ app.post('/api/televerser-fichier', function (req, res) {
 				res.json({ fichier: fichier.filename, mimetype: mimetype })
 			}
 		})
-	}
-})
-
-app.post('/api/generer-vignette', function (req, res) {
-	const identifiant = req.session.identifiant
-	if (!identifiant) {
-		res.send('non_connecte')
-	} else {
-		genererVignette(req)
-		async function genererVignette (req) {
-			const pad = req.body.pad
-			const lien = req.body.lien
-			const fichier = '/fichiers/' + pad + '/vignette_' + Math.random().toString(36).substring(2) + '.jpg'
-			const destination = path.join(__dirname, '..', '/static' + fichier)
-			const navigateur = await puppeteer.launch({ args: ['--no-sandbox', '--disable-setuid-sandbox'] })
-			const page = await navigateur.newPage()
-			await page.setViewport({ width: 1024, height: 576 });
-			await page.goto(lien)
-			await page.screenshot({ path: destination, type: 'jpeg' })
-			await page.close()
-			await navigateur.close()
-			gm(destination).setFormat('jpg').resize(450).quality(85).write(destination, function (erreur) {
-				if (erreur) {
-					res.send('')
-				} else {
-					res.send(fichier)
-				}
-			})
-		}
 	}
 })
 
