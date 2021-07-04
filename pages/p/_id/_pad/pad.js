@@ -1316,23 +1316,42 @@ export default {
 								if (this.source === 'web') {
 									this.chargementLien = false
 									this.chargementVignette = true
-									axios.post(this.hote + '/api/generer-vignette', {
-										pad: this.pad.id,
-										lien: this.lien
-									}).then(function (reponse) {
-										if (reponse.data !== '') {
-											this.vignette = reponse.data
-											this.vignetteDefaut = reponse.data
+									let domaine = new URL(this.lien)
+									domaine = domaine.hostname
+									const xhr = new XMLHttpRequest()
+									xhr.onload = function () {
+										if (xhr.readyState === xhr.DONE && xhr.status === 200) {
+											const reponse = xhr.responseText
+											if (reponse !== '') {
+												this.chargementVignette = false
+												this.vignette = 'https://ladigitale.dev/favicons' + reponse.substring(1)
+												this.vignetteDefaut = 'https://ladigitale.dev/favicons' + reponse.substring(1)
+												this.$nextTick(function () {
+													const vignette = document.querySelector('#vignette img')
+													vignette.onerror = function() {
+														this.vignette = this.definirVignette(donnees)
+														this.vignetteDefaut = this.definirVignette(donnees)
+													}.bind(this)
+												}.bind(this))
+											} else {
+												this.vignette = this.definirVignette(donnees)
+												this.vignetteDefaut = this.definirVignette(donnees)
+												this.chargementVignette = false
+											}
 										} else {
 											this.vignette = this.definirVignette(donnees)
 											this.vignetteDefaut = this.definirVignette(donnees)
+											this.chargementVignette = false
 										}
-										this.chargementVignette = false
-									}.bind(this)).catch(function () {
+									}.bind(this)
+									xhr.open('POST', 'https://ladigitale.dev/favicons/recuperer_icone.php', true)
+									xhr.setRequestHeader('Content-type', 'application/x-www-form-urlencoded')
+									xhr.send('lien=' + domaine)
+									xhr.onerror = function () {
 										this.vignette = this.definirVignette(donnees)
 										this.vignetteDefaut = this.definirVignette(donnees)
 										this.chargementVignette = false
-									}.bind(this))
+									}.bind(this)
 								} else {
 									this.vignette = this.definirVignette(donnees)
 									this.vignetteDefaut = this.definirVignette(donnees)
