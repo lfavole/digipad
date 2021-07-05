@@ -1152,6 +1152,15 @@ label.bouton-bleu {
 	word-break: break-word;
 }
 
+#discussion .commentaires .texte,
+#discussion .commentaires .texte *,
+#diapositive .commentaires .texte,
+#diapositive .commentaires .texte * {
+	user-select: text!important;
+	-webkit-user-select: text!important;
+	-webkit-touch-callout: default!important;
+}
+
 .commentaires li:not(.edition) .texte a,
 #diapositive .texte a,
 #blocs .bloc .texte a {
