@@ -57,6 +57,10 @@
 				<span>{{ $t('padsRejoints') }}</span>
 				<span class="badge">{{ padsRejoints.length }}</span>
 			</div>
+			<div class="onglet" :class="{'actif': onglet === 'pads-admins'}" @click="onglet = 'pads-admins'">
+				<span>{{ $t('padsAdmins') }}</span>
+				<span class="badge">{{ padsAdmins.length }}</span>
+			</div>
 			<div class="onglet" :class="{'actif': onglet === 'pads-favoris'}" @click="onglet = 'pads-favoris'">
 				<span>{{ $t('favoris') }}</span>
 				<span class="badge">{{ padsFavoris.length }}</span>
@@ -97,7 +101,7 @@
 						<span role="button" tabindex="0" :title="$t('affichageMosaique')" @click="modifierAffichage('mosaique')"><i class="material-icons">view_module</i></span>
 					</div>
 				</div>
-				<div id="actions-dossier" v-if="onglet !== 'pads-crees' && onglet !== 'pads-rejoints' && onglet !== 'pads-favoris'">
+				<div id="actions-dossier" v-if="onglet !== 'pads-crees' && onglet !== 'pads-rejoints' && onglet !== 'pads-admins' && onglet !== 'pads-favoris'">
 					<div class="conteneur">
 						<label>{{ $t('actionsDossier') }}</label>
 						<span role="button" tabindex="0" class="bouton" :title="$t('modifierDossier')" @click="afficherModaleModifierDossier($event, onglet)"><i class="material-icons">edit</i></span>
@@ -111,6 +115,7 @@
 							<a class="meta" :class="{'pad-rejoint': pad.identifiant !== identifiant, 'deplacer': dossiers.length > 0}" :href="'/p/' + pad.id + '/' + pad.token">
 								<span class="titre">{{ pad.titre }}</span>
 								<span class="date">{{ $t('creeLe') }} {{ $formaterDate(pad.date, langue) }}</span>
+								<span class="auteur" v-if="pad.identifiant !== identifiant">{{ $t('par') }} {{ pad.identifiant }}</span>
 							</a>
 							<div class="actions" v-if="pad.identifiant === identifiant">
 								<span class="ajouter-favori" role="button" tabindex="0" @click="ajouterFavori(pad)" :title="$t('ajouterFavori')" v-if="!favoris.includes(pad.id)"><i class="material-icons">star_outline</i></span>
@@ -124,7 +129,9 @@
 								<span class="ajouter-favori" role="button" tabindex="0" @click="ajouterFavori(pad)" :title="$t('ajouterFavori')" v-if="!favoris.includes(pad.id)"><i class="material-icons">star_outline</i></span>
 								<span class="supprimer-favori" role="button" tabindex="0" @click="supprimerFavori(pad.id)" :title="$t('supprimerFavori')" v-else><i class="material-icons">star</i></span>
 								<span class="deplacer" role="button" tabindex="0" @click="afficherModaleDeplacerPad(pad.id)" :title="$t('ajouterDansDossier')" :class="{'actif': verifierDossierPad(pad.id)}" v-if="dossiers.length > 0"><i class="material-icons">drive_file_move</i></span>
-								<span class="supprimer" role="button" tabindex="0" @click="afficherModaleConfirmation($event, pad.id, 'supprimer')"><i class="material-icons">delete</i></span>
+								<span class="supprimer" role="button" tabindex="0" @click="afficherModaleConfirmation($event, pad.id, 'supprimer')" :title="$t('supprimerPad')" v-if="definirTypePad(pad.id) === 'pad-rejoint'"><i class="material-icons">delete</i></span>
+								<span class="supprimer" role="button" tabindex="0" @click="afficherModaleConfirmation($event, pad.id, 'supprimer-admin')" :title="$t('quitterPad')" v-else-if="definirTypePad(pad.id) === 'pad-admin'"><i class="material-icons">logout</i></span>
+								<span class="admin" :title="$t('admin')" v-if="definirTypePad(pad.id) === 'pad-admin'"><i class="material-icons">admin_panel_settings</i></span>
 							</div>
 						</div>
 
@@ -133,6 +140,7 @@
 								<div class="meta">
 									<span class="titre">{{ pad.titre }}</span>
 									<span class="date">{{ $t('creeLe') }} {{ $formaterDate(pad.date, langue) }}</span>
+									<span class="auteur" v-if="pad.identifiant !== identifiant">{{ $t('par') }} {{ pad.identifiant }}</span>
 								</div>
 							</a>
 							<div class="actions" v-if="pad.identifiant === identifiant">
@@ -147,7 +155,9 @@
 								<span class="ajouter-favori" role="button" tabindex="0" @click="ajouterFavori(pad)" :title="$t('ajouterFavori')" v-if="!favoris.includes(pad.id)"><i class="material-icons">star_outline</i></span>
 								<span class="supprimer-favori" role="button" tabindex="0" @click="supprimerFavori(pad.id)" :title="$t('supprimerFavori')" v-else><i class="material-icons">star</i></span>
 								<span class="deplacer" role="button" tabindex="0" @click="afficherModaleDeplacerPad(pad.id)" :title="$t('ajouterDansDossier')" :class="{'actif': verifierDossierPad(pad.id)}" v-if="dossiers.length > 0"><i class="material-icons">drive_file_move</i></span>
-								<span class="supprimer" role="button" tabindex="0" @click="afficherModaleConfirmation($event, pad.id, 'supprimer')"><i class="material-icons">delete</i></span>
+								<span class="supprimer" role="button" tabindex="0" @click="afficherModaleConfirmation($event, pad.id, 'supprimer')" :title="$t('supprimerPad')" v-if="definirTypePad(pad.id) === 'pad-rejoint'"><i class="material-icons">delete</i></span>
+								<span class="supprimer" role="button" tabindex="0" @click="afficherModaleConfirmation($event, pad.id, 'supprimer-admin')" :title="$t('quitterPad')" v-else-if="definirTypePad(pad.id) === 'pad-admin'"><i class="material-icons">logout</i></span>
+								<span class="admin" :title="$t('admin')" v-if="definirTypePad(pad.id) === 'pad-admin'"><i class="material-icons">admin_panel_settings</i></span>
 							</div>
 						</div>
 					</template>
@@ -165,6 +175,7 @@
 							<a class="meta" :class="{'pad-rejoint': pad.identifiant !== identifiant, 'deplacer': dossiers.length > 0}" :href="'/p/' + pad.id + '/' + pad.token">
 								<span class="titre">{{ pad.titre }}</span>
 								<span class="date">{{ $t('creeLe') }} {{ $formaterDate(pad.date, langue) }}</span>
+								<span class="auteur" v-if="pad.identifiant !== identifiant">{{ $t('par') }} {{ pad.identifiant }}</span>
 							</a>
 							<div class="actions" v-if="pad.identifiant === identifiant">
 								<span class="ajouter-favori" role="button" tabindex="0" @click="ajouterFavori(pad)" :title="$t('ajouterFavori')" v-if="!favoris.includes(pad.id)"><i class="material-icons">star_outline</i></span>
@@ -178,7 +189,9 @@
 								<span class="ajouter-favori" role="button" tabindex="0" @click="ajouterFavori(pad)" :title="$t('ajouterFavori')" v-if="!favoris.includes(pad.id)"><i class="material-icons">star_outline</i></span>
 								<span class="supprimer-favori" role="button" tabindex="0" @click="supprimerFavori(pad.id)" :title="$t('supprimerFavori')" v-else><i class="material-icons">star</i></span>
 								<span class="deplacer" role="button" tabindex="0" @click="afficherModaleDeplacerPad(pad.id)" :title="$t('ajouterDansDossier')" :class="{'actif': verifierDossierPad(pad.id)}" v-if="dossiers.length > 0"><i class="material-icons">drive_file_move</i></span>
-								<span class="supprimer" role="button" tabindex="0" @click="afficherModaleConfirmation($event, pad.id, 'supprimer')"><i class="material-icons">delete</i></span>
+								<span class="supprimer" role="button" tabindex="0" @click="afficherModaleConfirmation($event, pad.id, 'supprimer')" :title="$t('supprimerPad')" v-if="definirTypePad(pad.id) === 'pad-rejoint'"><i class="material-icons">delete</i></span>
+								<span class="supprimer" role="button" tabindex="0" @click="afficherModaleConfirmation($event, pad.id, 'supprimer-admin')" :title="$t('quitterPad')" v-else-if="definirTypePad(pad.id) === 'pad-admin'"><i class="material-icons">logout</i></span>
+								<span class="admin" :title="$t('admin')" v-if="definirTypePad(pad.id) === 'pad-admin'"><i class="material-icons">admin_panel_settings</i></span>
 							</div>
 						</div>
 
@@ -187,6 +200,7 @@
 								<div class="meta">
 									<span class="titre">{{ pad.titre }}</span>
 									<span class="date">{{ $t('creeLe') }} {{ $formaterDate(pad.date, langue) }}</span>
+									<span class="auteur" v-if="pad.identifiant !== identifiant">{{ $t('par') }} {{ pad.identifiant }}</span>
 								</div>
 							</a>
 							<div class="actions" v-if="pad.identifiant === identifiant">
@@ -201,7 +215,9 @@
 								<span class="ajouter-favori" role="button" tabindex="0" @click="ajouterFavori(pad)" :title="$t('ajouterFavori')" v-if="!favoris.includes(pad.id)"><i class="material-icons">star_outline</i></span>
 								<span class="supprimer-favori" @click="supprimerFavori(pad.id)" :title="$t('supprimerFavori')" v-else><i class="material-icons">star</i></span>
 								<span class="deplacer" role="button" tabindex="0" @click="afficherModaleDeplacerPad(pad.id)" :title="$t('ajouterDansDossier')" :class="{'actif': verifierDossierPad(pad.id)}" v-if="dossiers.length > 0"><i class="material-icons">drive_file_move</i></span>
-								<span class="supprimer" role="button" tabindex="0" @click="afficherModaleConfirmation($event, pad.id, 'supprimer')"><i class="material-icons">delete</i></span>
+								<span class="supprimer" role="button" tabindex="0" @click="afficherModaleConfirmation($event, pad.id, 'supprimer')" :title="$t('supprimerPad')" v-if="definirTypePad(pad.id) === 'pad-rejoint'"><i class="material-icons">delete</i></span>
+								<span class="supprimer" role="button" tabindex="0" @click="afficherModaleConfirmation($event, pad.id, 'supprimer-admin')" :title="$t('quitterPad')" v-else-if="definirTypePad(pad.id) === 'pad-admin'"><i class="material-icons">logout</i></span>
+								<span class="admin" :title="$t('admin')" v-if="definirTypePad(pad.id) === 'pad-admin'"><i class="material-icons">admin_panel_settings</i></span>
 							</div>
 						</div>
 					</template>
@@ -361,6 +377,7 @@
 						<div class="message" v-html="$t('confirmationDupliquerPad')" v-if="modaleConfirmation === 'dupliquer'" />
 						<div class="message" v-html="$t('confirmationExporterPad')" v-else-if="modaleConfirmation === 'exporter'" />
 						<div class="message" v-html="$t('confirmationSupprimerPad')" v-else-if="modaleConfirmation === 'supprimer'" />
+						<div class="message" v-html="$t('confirmationSupprimerPadAdmin')" v-else-if="modaleConfirmation === 'supprimer-admin'" />
 						<div class="message" v-html="$t('confirmationSupprimerCompte')" v-else-if="modaleConfirmation === 'supprimer-compte'" />
 						<div class="message" v-html="$t('confirmationSupprimerDossier')" v-else-if="modaleConfirmation === 'supprimer-dossier'" />
 						<div class="actions">
@@ -368,6 +385,7 @@
 							<span role="button" tabindex="0" class="bouton" @click="dupliquerPad" v-if="modaleConfirmation === 'dupliquer'">{{ $t('oui') }}</span>
 							<span role="button" tabindex="0" class="bouton" @click="exporterPad" v-else-if="modaleConfirmation === 'exporter'">{{ $t('oui') }}</span>
 							<span role="button" tabindex="0" class="bouton" @click="supprimerPad" v-else-if="modaleConfirmation === 'supprimer'">{{ $t('oui') }}</span>
+							<span role="button" tabindex="0" class="bouton" @click="supprimerPad" v-else-if="modaleConfirmation === 'supprimer-admin'">{{ $t('oui') }}</span>
 							<span role="button" tabindex="0" class="bouton" @click="supprimerCompte" v-else-if="modaleConfirmation === 'supprimer-compte'">{{ $t('oui') }}</span>
 							<span role="button" tabindex="0" class="bouton" @click="supprimerDossier" v-else-if="modaleConfirmation === 'supprimer-dossier'">{{ $t('oui') }}</span>
 						</div>
@@ -401,6 +419,7 @@ export default {
 		return {
 			padsCrees: data.padsCrees,
 			padsRejoints: data.padsRejoints,
+			padsAdmins: data.padsAdmins,
 			padsFavoris: data.padsFavoris,
 			dossiers: data.dossiers
 		}
@@ -465,6 +484,8 @@ export default {
 				pads = this.padsCrees
 			} else if (onglet === 'pads-rejoints') {
 				pads = this.padsRejoints
+			} else if (onglet === 'pads-admins') {
+				pads = this.padsAdmins
 			} else if (onglet === 'pads-favoris') {
 				pads = this.padsFavoris
 			} else {
@@ -474,7 +495,7 @@ export default {
 						listePads = dossier.pads
 					}
 				})
-				const padsTous = this.padsCrees.concat(this.padsRejoints)
+				const padsTous = this.padsCrees.concat(this.padsRejoints, this.padsAdmins)
 				padsTous.forEach(function (pad) {
 					if (listePads.includes(pad.id)) {
 						pads.push(pad)
@@ -786,8 +807,10 @@ export default {
 		supprimerPad () {
 			this.modaleConfirmation = ''
 			this.chargement = true
+			const type = this.definirTypePad(this.padId)
 			axios.post(this.hote + '/api/supprimer-pad', {
 				padId: this.padId,
+				type: type,
 				identifiant: this.identifiant
 			}).then(function (reponse) {
 				this.chargement = false
@@ -805,6 +828,11 @@ export default {
 					this.padsRejoints.forEach(function (pad, index) {
 						if (pad.id === this.padId) {
 							this.padsRejoints.splice(index, 1)
+						}
+					}.bind(this))
+					this.padsAdmins.forEach(function (pad, index) {
+						if (pad.id === this.padId) {
+							this.padsAdmins.splice(index, 1)
 						}
 					}.bind(this))
 					this.padsFavoris.forEach(function (pad, index) {
@@ -836,6 +864,20 @@ export default {
 				this.padId = ''
 				this.$store.dispatch('modifierAlerte', this.$t('erreurCommunicationServeur'))
 			}.bind(this))
+		},
+		definirTypePad (padId) {
+			let type = ''
+			this.padsRejoints.forEach(function (pad) {
+				if (pad.id === padId) {
+					type = 'pad-rejoint'
+				}
+			})
+			this.padsAdmins.forEach(function (pad) {
+				if (pad.id === padId) {
+					type = 'pad-admin'
+				}
+			})
+			return type
 		},
 		rechercher () {
 			const resultats = this.pads.filter(function (element) {
@@ -1264,7 +1306,7 @@ export default {
 }
 
 #onglets .onglet .menu-dossier {
-	display: none;
+	visibility: hidden;
 	position: absolute;
 	color: #fff;
 	top: 0;
@@ -1274,10 +1316,13 @@ export default {
 	padding: 3px 1rem;
 	background: rgba(0, 0, 0, 0.25);
 	border-radius: 4px;
+	opacity: 0;
+	transition: opacity 0.25s ease-in-out;
 }
 
 #onglets .onglet:hover .menu-dossier {
-	display: block;
+	visibility: visible;
+	opacity: 1;
 }
 
 #onglets .onglet .menu-dossier span.supprimer {
@@ -1475,6 +1520,7 @@ export default {
 	font-weight: 700;
 }
 
+.pad.liste .auteur,
 .pad.liste .date {
 	font-size: 1.2rem;
 	color: #777;
@@ -1544,6 +1590,7 @@ export default {
 }
 
 .pad.mosaique .titre {
+	display: block;
 	color: #fff;
 	text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.3);
     font-size: 2rem;
@@ -1551,11 +1598,12 @@ export default {
 	font-weight: 700;
 }
 
+.pad.mosaique .auteur,
 .pad.mosaique .date {
     margin-top: 0.5rem;
     color: #ddd;
     font-size: 1.2rem;
-    display: block;
+    display: inline-block;
 }
 
 .pad.mosaique .actions {
@@ -1583,6 +1631,11 @@ export default {
 .pad.liste .actions .supprimer,
 .pad.mosaique .actions .supprimer {
 	color: #ff6259;
+}
+
+.pad.liste .actions .admin,
+.pad.mosaique .actions .admin {
+	color: #00ced1;
 }
 
 #import label:not(.bouton-interrupteur) {
@@ -1768,6 +1821,7 @@ export default {
 
 	#onglets .bouton-ajouter {
 		min-width: 200px;
+		max-width: 250px;
 		margin-bottom: 0!important;
 	}
 

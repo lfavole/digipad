@@ -36,7 +36,7 @@ export default {
 		ajouterbloc: function (donnees) {
 			this.action = 'ajouter'
 			this.utilisateur = donnees.identifiant
-			if (this.pad.contributions !== 'moderees' || (this.pad.contributions === 'moderees' && ((this.utilisateur === this.identifiant) || (this.pad.identifiant === donnees.identifiant) || (this.pad.identifiant === this.identifiant)))) {
+			if (this.pad.contributions !== 'moderees' || (this.pad.contributions === 'moderees' && ((this.utilisateur === this.identifiant) || (this.pad.identifiant === donnees.identifiant) || this.admin))) {
 				if (this.pad.affichage === 'colonnes') {
 					this.colonnes[donnees.colonne].push(donnees)
 				}
@@ -91,7 +91,7 @@ export default {
 			}
 		},
 		autoriserbloc: function (donnees) {
-			if ((donnees.identifiant === this.identifiant) || (this.pad.identifiant === donnees.identifiant) || (this.pad.identifiant === this.identifiant)) {
+			if ((donnees.identifiant === this.identifiant) || (this.pad.identifiant === donnees.identifiant) || this.admin) {
 				if (this.pad.affichage === 'colonnes') {
 					this.colonnes.forEach(function (colonne, indexColonne) {
 						colonne.forEach(function (item, index) {
@@ -129,7 +129,7 @@ export default {
 					bloc.classList.remove('anime')
 				})
 			})
-			if (this.pad.identifiant === this.identifiant) {
+			if (this.admin) {
 				this.$store.dispatch('modifierMessage', this.$t('capsuleValidee'))
 			} else if (donnees.identifiant === this.identifiant) {
 				this.$store.dispatch('modifierMessage', this.$t('capsulePubliee', { titre: donnees.titre }))
@@ -284,14 +284,21 @@ export default {
 		modifiertitre: function (titre) {
 			this.pad.titre = titre
 			this.chargement = false
-			if (this.pad.identifiant === this.identifiant) {
+			if (this.admin) {
 				this.$store.dispatch('modifierMessage', this.$t('titrePadModifie'))
+			}
+		},
+		modifieradmins: function (admins) {
+			this.pad.admins = admins
+			this.chargement = false
+			if (this.admin) {
+				this.$store.dispatch('modifierMessage', this.$t('listeAdminsModifiee'))
 			}
 		},
 		modifieracces: function (donnees) {
 			this.pad.acces = donnees.acces
 			this.chargement = false
-			if (this.pad.identifiant === this.identifiant) {
+			if (this.admin) {
 				if (donnees.acces === 'code') {
 					this.pad.code = donnees.code
 					this.codeVisible = true
@@ -307,10 +314,10 @@ export default {
 		modifiercontributions: function (donnees) {
 			this.pad.contributions = donnees.contributions
 			this.chargement = false
-			if (this.pad.identifiant === this.identifiant) {
+			if (this.admin) {
 				this.$store.dispatch('modifierMessage', this.$t('statutPadModifie'))
 			}
-			if (this.pad.identifiant !== this.identifiant && donnees.contributionsPrecedentes === 'moderees') {
+			if (!this.admin && donnees.contributionsPrecedentes === 'moderees') {
 				this.$store.dispatch('modifierMessage', this.$t('rechargerPage'))
 			}
 		},
@@ -318,7 +325,7 @@ export default {
 			this.pad.affichage = affichage
 			this.affichage = affichage
 			this.chargement = false
-			if (this.pad.identifiant === this.identifiant) {
+			if (this.admin) {
 				this.action = ''
 				this.$store.dispatch('modifierMessage', this.$t('affichagePadModifie'))
 			}
@@ -327,7 +334,7 @@ export default {
 			this.pad.fond = fond
 			imagesLoaded('#pad', { background: true }, function () {
 				this.chargement = false
-				if (this.pad.identifiant === this.identifiant) {
+				if (this.admin) {
 					this.$store.dispatch('modifierMessage', this.$t('arrierePlanModifie'))
 				}
 			}.bind(this))
@@ -335,56 +342,70 @@ export default {
 		modifiercouleurfond: function (fond) {
 			this.pad.fond = fond
 			this.chargement = false
-			if (this.pad.identifiant === this.identifiant) {
+			if (this.admin) {
 				this.$store.dispatch('modifierMessage', this.$t('arrierePlanModifie'))
 			}
 		},
 		modifieractivite: function (statut) {
 			this.pad.registreActivite = statut
 			this.chargement = false
-			if (this.pad.identifiant === this.identifiant) {
+			if (this.admin) {
 				this.$store.dispatch('modifierMessage', this.$t('parametreActiviteModifie'))
 			}
 		},
 		modifierconversation: function (statut) {
 			this.pad.conversation = statut
 			this.chargement = false
-			if (this.pad.identifiant === this.identifiant) {
+			if (this.admin) {
 				this.$store.dispatch('modifierMessage', this.$t('parametreConversationModifie'))
+			}
+		},
+		modifierlisteutilisateurs: function (statut) {
+			this.pad.listeUtilisateurs = statut
+			this.chargement = false
+			if (this.admin) {
+				this.$store.dispatch('modifierMessage', this.$t('parametreListeUtilisateursModifie'))
+			}
+		},
+		modifiereditionnom: function (statut) {
+			this.pad.editionNom = statut
+			this.chargement = false
+			if (this.admin) {
+				this.$store.dispatch('modifierMessage', this.$t('parametreEditionNomModifie'))
 			}
 		},
 		modifierfichiers: function (statut) {
 			this.pad.fichiers = statut
 			this.chargement = false
-			if (this.pad.identifiant === this.identifiant) {
+			if (this.admin) {
 				this.$store.dispatch('modifierMessage', this.$t('parametreFichiersModifie'))
 			}
 		},
 		modifierliens: function (statut) {
 			this.pad.liens = statut
 			this.chargement = false
-			if (this.pad.identifiant === this.identifiant) {
+			if (this.admin) {
 				this.$store.dispatch('modifierMessage', this.$t('parametreLiensModifie'))
 			}
 		},
 		modifierdocuments: function (statut) {
 			this.pad.documents = statut
 			this.chargement = false
-			if (this.pad.identifiant === this.identifiant) {
+			if (this.admin) {
 				this.$store.dispatch('modifierMessage', this.$t('parametreDocumentsModifie'))
 			}
 		},
 		modifiercommentaires: function (statut) {
 			this.pad.commentaires = statut
 			this.chargement = false
-			if (this.pad.identifiant === this.identifiant) {
+			if (this.admin) {
 				this.$store.dispatch('modifierMessage', this.$t('parametreCommentairesModifie'))
 			}
 		},
 		modifierevaluations: function (statut) {
 			this.pad.evaluations = statut
 			this.chargement = false
-			if (this.pad.identifiant === this.identifiant) {
+			if (this.admin) {
 				this.$store.dispatch('modifierMessage', this.$t('parametreEvaluationModifie'))
 			}
 		},
@@ -398,14 +419,14 @@ export default {
 			this.messages = []
 			this.nouveauxMessages = 0
 			this.chargement = false
-			if (this.pad.identifiant === this.identifiant) {
+			if (this.admin) {
 				this.$store.dispatch('modifierMessage', this.$t('historiqueConversationSupprime'))
 			}
 		},
 		reinitialiseractivite: function () {
 			this.activite = []
 			this.chargement = false
-			if (this.pad.identifiant === this.identifiant) {
+			if (this.admin) {
 				this.$store.dispatch('modifierMessage', this.$t('activiteSupprimee'))
 			}
 		},
@@ -416,7 +437,7 @@ export default {
 				}
 			}.bind(this))
 			this.chargement = false
-			if (this.pad.identifiant === this.identifiant) {
+			if (this.admin) {
 				this.$store.dispatch('modifierMessage', this.$t('entreeActiviteSupprimee'))
 			}
 		},
@@ -424,14 +445,14 @@ export default {
 			this.colonnes.push([])
 			this.pad.colonnes = donnees.colonnes
 			this.activite.unshift({ id: donnees.activiteId, identifiant: donnees.identifiant, nom: donnees.nom, titre: donnees.titre, date: donnees.date, couleur: donnees.couleur, type: 'colonne-ajoutee' })
-			if (this.pad.identifiant === this.identifiant) {
+			if (this.admin) {
 				this.$store.dispatch('modifierMessage', this.$t('colonneAjoutee'))
 			}
 			this.chargement = false
 		},
 		modifiercolonne: function (colonnes) {
 			this.pad.colonnes = colonnes
-			if (this.pad.identifiant === this.identifiant) {
+			if (this.admin) {
 				this.$store.dispatch('modifierMessage', this.$t('nomColonneModifie'))
 			}
 			this.chargement = false
@@ -448,7 +469,7 @@ export default {
 			this.pad.colonnes = donnees.colonnes
 			this.blocs = blocs
 			this.activite.unshift({ id: donnees.activiteId, identifiant: donnees.identifiant, nom: donnees.nom, titre: donnees.titre, date: donnees.date, couleur: donnees.couleur, type: 'colonne-supprimee' })
-			if (this.pad.identifiant === this.identifiant) {
+			if (this.admin) {
 				this.$store.dispatch('modifierMessage', this.$t('colonneSupprimee'))
 			} else {
 				if (this.modaleBloc && parseInt(this.colonne) === parseInt(donnees.colonne)) {
@@ -479,7 +500,7 @@ export default {
 			this.pad.colonnes = donnees.colonnes
 			this.blocs = blocs
 			this.activite.unshift({ id: donnees.activiteId, identifiant: donnees.identifiant, nom: donnees.nom, titre: donnees.titre, date: donnees.date, couleur: donnees.couleur, type: 'colonne-deplacee' })
-			if (this.pad.identifiant === this.identifiant) {
+			if (this.admin) {
 				this.$store.dispatch('modifierMessage', this.$t('colonneDeplacee'))
 			} else {
 				if (this.modaleBloc && parseInt(this.colonne) === parseInt(donnees.colonne) && donnees.direction === 'gauche') {
@@ -614,7 +635,9 @@ export default {
 			modaleCodeQR: false,
 			recherche: false,
 			requete: '',
-			chargementVignette: false
+			chargementVignette: false,
+			modaleAdmins: false,
+			admins: []
 		}
 	},
 	computed: {
@@ -632,6 +655,9 @@ export default {
 		},
 		langue () {
 			return this.$store.state.langue
+		},
+		admin () {
+			return this.pad.identifiant === this.identifiant || this.pad.admins.includes(this.identifiant)
 		},
 		statut () {
 			return this.$store.state.statut
@@ -737,13 +763,13 @@ export default {
 		if (this.pad.affichage === 'colonnes') {
 			this.definirColonnes(this.blocs)
 		}
-		if (this.pad.acces === 'public' || (this.pad.acces === 'prive' && this.pad.identifiant === this.identifiant)) {
+		if (this.pad.acces === 'public' || (this.pad.acces === 'prive' && this.admin)) {
 			this.$nuxt.$loading.start()
 			this.accesAutorise = true
 			this.$socket.emit('connexion', { pad: this.pad.id, identifiant: this.identifiant, nom: this.nom })
 		} else if (this.pad.acces === 'code') {
 			this.$nuxt.$loading.start()
-			if (this.pad.identifiant === this.identifiant || this.acces.includes(this.pad.id)) {
+			if (this.admin || this.acces.includes(this.pad.id)) {
 				this.accesAutorise = true
 				this.$socket.emit('connexion', { pad: this.pad.id, identifiant: this.identifiant, nom: this.nom })
 			}
@@ -2029,6 +2055,49 @@ export default {
 			this.emojis = ''
 			this.donneesBloc = {}
 		},
+		ouvrirModaleAdmins () {
+			this.menuOptions = false
+			this.admins = JSON.parse(JSON.stringify(this.pad.admins))
+			this.modaleAdmins = true
+		},
+		ajouterAdmin () {
+			const identifiantAdmin = document.querySelector('#ajouter-admin input').value.trim()
+			if (identifiantAdmin !== '' && this.identifiant !== identifiantAdmin && !this.admins.includes(identifiantAdmin)) {
+				this.chargement = true
+				axios.post(this.hote + '/api/verifier-identifiant', {
+					identifiant: identifiantAdmin
+				}).then(function (reponse) {
+					this.chargement = false
+					const donnees = reponse.data
+					if (donnees === 'erreur') {
+						this.$store.dispatch('modifierAlerte', this.$t('erreurCommunicationServeur'))
+					} else if (donnees === 'identifiant_non_valide') {
+						this.$store.dispatch('modifierAlerte', this.$t('identifiantNonValide'))
+					} else {
+						this.admins.push(identifiantAdmin)
+					}
+					document.querySelector('#ajouter-admin input').value = ''
+				}.bind(this)).catch(function () {
+					this.chargement = false
+					this.$store.dispatch('modifierAlerte', this.$t('erreurCommunicationServeur'))
+				}.bind(this))
+			}
+		},
+		supprimerAdmin (identifiantAdmin) {
+			const index = this.admins.indexOf(identifiantAdmin)
+			this.admins.splice(index, 1)
+		},
+		modifierAdmins () {
+			if (this.admins.toString() !== this.pad.admins.toString()) {
+				this.modaleAdmins = false
+				this.$socket.emit('modifieradmins', this.pad.id, this.admins)
+				this.chargement = true
+			}
+		},
+		fermerModaleAdmins () {
+			this.modaleAdmins = false
+			this.admins = []
+		},
 		ouvrirModaleCommentaires (bloc, titre) {
 			this.chargement = true
 			this.bloc = bloc
@@ -2539,6 +2608,22 @@ export default {
 				this.$socket.emit('modifierconversation', this.pad.id, 'activee')
 			} else {
 				this.$socket.emit('modifierconversation', this.pad.id, 'desactivee')
+			}
+			this.chargement = true
+		},
+		modifierListeUtilisateurs (event) {
+			if (event.target.checked === true) {
+				this.$socket.emit('modifierlisteutilisateurs', this.pad.id, 'activee')
+			} else {
+				this.$socket.emit('modifierlisteutilisateurs', this.pad.id, 'desactivee')
+			}
+			this.chargement = true
+		},
+		modifierEditionNom (event) {
+			if (event.target.checked === true) {
+				this.$socket.emit('modifiereditionnom', this.pad.id, 'activee')
+			} else {
+				this.$socket.emit('modifiereditionnom', this.pad.id, 'desactivee')
 			}
 			this.chargement = true
 		},

@@ -55,6 +55,7 @@
 	cursor: default;
 }
 
+#ajouter-admin,
 #code-acces,
 #copier-code,
 #copier-lien {
@@ -63,6 +64,7 @@
 	align-items: center;
 }
 
+#ajouter-admin input,
 #copier-code input,
 #code-acces input {
 	display: block;
@@ -76,6 +78,7 @@
 	margin-right: 10px;
 }
 
+#ajouter-admin span i,
 #code-acces span i,
 #copier-code span i,
 #copier-lien span i {
@@ -87,9 +90,50 @@
 	margin-left: 10px;
 }
 
+#ajouter-admin span i:active,
 #copier-code span i:active,
 #copier-lien span i:active {
 	opacity: 0.8;
+}
+
+#ajouter-admin input {
+	margin-bottom: 0;
+}
+
+#admins {
+	max-height: 273px;
+	height: 90%;
+}
+
+#admins p {
+	font-size: 16px;
+}
+
+#admins .actions {
+	margin-top: 20px;
+}
+
+#liste-admins {
+	display: flex;
+	flex-wrap: wrap;
+	margin-bottom: 10px;
+}
+
+#liste-admins .admin {
+	padding: 0.5rem 0.75rem 0.5rem 1.5rem;
+	border: 1px solid #ddd;
+	border-radius: 4px;
+	background: #eee;
+	margin-right: 10px;
+	margin-bottom: 10px;
+}
+
+#liste-admins .identifiant {
+	padding-right: 1.5rem;
+}
+
+#liste-admins .supprimer {
+	cursor: pointer;
 }
 
 #organisation.actif {
@@ -1092,7 +1136,7 @@
 	font-weight: 700;
 }
 
-#utilisateurs li.moi .utilisateur.invite,
+#utilisateurs li.moi .utilisateur.invite.edition,
 #utilisateurs li.moi .couleur {
 	cursor: pointer;
 }
