@@ -26,6 +26,7 @@ export default {
 	modifierMotDePasse: 'Modifica la password',
 	padsCrees: 'Pads creati',
 	padsRejoints: 'Pads visitati',
+	padsAdmins: 'Pads somministrati',
 	rechercherPads: 'Cerca nei pad',
 	creerPad: 'Crea un pad',
 	importerPad: 'Importare un pad',
