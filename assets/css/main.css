@@ -206,6 +206,10 @@ header {
     position: relative;
 }
 
+header.pleine-largeur {
+	padding: 0;
+}
+
 #conteneur-logo {
 	width: 4rem;
     height: 4rem;
@@ -237,6 +241,10 @@ header {
     text-align: left;
     margin-left: 4rem;
     display: block;
+}
+
+header.pleine-largeur #titre {
+	padding-right: 1.5rem;
 }
 
 #titre::before {
