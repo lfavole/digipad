@@ -265,7 +265,7 @@
 				<div class="conteneur-interrupteur" v-if="!pad.listeUtilisateurs || pad.listeUtilisateurs === 'activee'">
 					<span>{{ $t('editionNom') }}</span>
 					<label class="bouton-interrupteur">
-						<input type="checkbox" :checked="!pad.editionNom || pad.editionNom === 'activee'" @change="modifierEditionNom">
+						<input type="checkbox" :checked="pad.editionNom === 'activee'" @change="modifierEditionNom">
 						<span class="barre" />
 					</label>
 				</div>
