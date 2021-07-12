@@ -69,6 +69,7 @@ export default {
 						})
 					}
 				}
+				this.envoyerNotificationAdmins()
 			}
 		},
 		modifierbloc: function (donnees) {
@@ -89,6 +90,7 @@ export default {
 			if (donnees.visibilite === 'visible') {
 				this.activite.unshift({ id: donnees.activiteId, bloc: donnees.bloc, identifiant: donnees.identifiant, nom: donnees.nom, titre: donnees.titre, date: donnees.date, couleur: donnees.couleur, type: 'bloc-modifie' })
 			}
+			this.envoyerNotificationAdmins()
 		},
 		autoriserbloc: function (donnees) {
 			if ((donnees.identifiant === this.identifiant) || (this.pad.identifiant === donnees.identifiant) || this.admin) {
@@ -174,6 +176,7 @@ export default {
 				}
 			}.bind(this))
 			this.activite.unshift({ id: donnees.activiteId, bloc: donnees.bloc, identifiant: donnees.identifiant, nom: donnees.nom, titre: donnees.titre, date: donnees.date, couleur: donnees.couleur, type: 'bloc-supprime' })
+			this.envoyerNotificationAdmins()
 		},
 		commenterbloc: function (donnees) {
 			const blocs = this.blocs
@@ -187,6 +190,7 @@ export default {
 				this.commentaires.unshift({ id: donnees.id, identifiant: donnees.identifiant, nom: donnees.nom, texte: donnees.texte, date: donnees.date })
 			}
 			this.activite.unshift({ id: donnees.activiteId, bloc: donnees.bloc, identifiant: donnees.identifiant, nom: donnees.nom, titre: donnees.titre, date: donnees.date, couleur: donnees.couleur, type: 'bloc-commente' })
+			this.envoyerNotificationAdmins()
 		},
 		modifiercommentaire: function (donnees) {
 			const commentaires = this.commentaires
@@ -235,6 +239,7 @@ export default {
 			})
 			this.blocs = blocs
 			this.activite.unshift({ id: donnees.activiteId, bloc: donnees.bloc, identifiant: donnees.identifiant, nom: donnees.nom, titre: donnees.titre, date: donnees.date, couleur: donnees.couleur, type: 'bloc-evalue' })
+			this.envoyerNotificationAdmins()
 		},
 		modifierevaluation: function (donnees) {
 			this.chargement = false
@@ -523,6 +528,9 @@ export default {
 			this.$store.dispatch('modifierUtilisateur', { identifiant: donnees.identifiant, nom: donnees.nom, langue: donnees.langue, statut: 'auteur' })
 			this.$store.dispatch('modifierMessage', this.$t('padDebloque'))
 		},
+		modifiernotification: function (donnees) {
+			this.pad.notification = donnees
+		},
 		deconnecte: function () {
 			this.chargement = false
 			this.$store.dispatch('modifierMessage', this.$t('problemeConnexion'))
@@ -673,9 +681,44 @@ export default {
 		},
 		blocsRecherche () {
 			let resultats = []
-			const blocs = this.blocs.filter(function (element) {
-				return element.titre.toLowerCase().includes(this.requete.toLowerCase()) || element.texte.toLowerCase().includes(this.requete.toLowerCase()) || element.media.toLowerCase().includes(this.requete.toLowerCase()) || element.iframe.toLowerCase().includes(this.requete.toLowerCase() || element.source.toLowerCase().includes(this.requete.toLowerCase()))
-			}.bind(this))
+			let blocs = []
+			switch (this.requete) {
+			case '!eval+':
+				this.blocs.forEach(function (bloc) {
+					bloc.evaluation = this.definirEvaluationCapsule(bloc.evaluations)
+				}.bind(this))
+				blocs = this.blocs.sort(function (a, b) {
+					return b.evaluation - a.evaluation
+				})
+				break
+			case '!eval-':
+				this.blocs.forEach(function (bloc) {
+					bloc.evaluation = this.definirEvaluationCapsule(bloc.evaluations)
+				}.bind(this))
+				blocs = this.blocs.sort(function (a, b) {
+					return a.evaluation - b.evaluation
+				})
+				break
+			case '!mod-':
+				blocs = this.blocs.filter(function (element) {
+					return element.visibilite === 'masquee'
+				})
+				break
+			case '!comm+':
+				blocs = this.blocs.sort(function (a, b) {
+					return b.commentaires - a.commentaires
+				})
+				break
+			case '!comm-':
+				blocs = this.blocs.sort(function (a, b) {
+					return a.commentaires - b.commentaires
+				})
+				break
+			default:
+				blocs = this.blocs.filter(function (element) {
+					return element.titre.toLowerCase().includes(this.requete.toLowerCase()) || element.texte.toLowerCase().includes(this.requete.toLowerCase()) || element.media.toLowerCase().includes(this.requete.toLowerCase()) || element.iframe.toLowerCase().includes(this.requete.toLowerCase() || element.source.toLowerCase().includes(this.requete.toLowerCase()))
+				}.bind(this))
+			}
 			if (this.pad.affichage === 'colonnes') {
 				if (this.pad.colonnes && this.pad.colonnes.length > 0) {
 					this.pad.colonnes.forEach(function () {
@@ -840,10 +883,12 @@ export default {
 	methods: {
 		allerAccueil () {
 			if (this.statut === 'invite' || this.statut === 'auteur') {
+				this.quitterPage()
 				this.$router.push('/')
 			}
 		},
 		allerCompte () {
+			this.quitterPage()
 			this.$router.push('/u/' + this.identifiant)
 		},
 		ecouterMessage (event) {
@@ -2897,6 +2942,26 @@ export default {
 				this.chargement = false
 				this.$store.dispatch('modifierAlerte', this.$t('erreurCommunicationServeur'))
 			}.bind(this))
+		},
+		envoyerNotificationAdmins () {
+			if (this.identifiant !== this.pad.identifiant) {
+				const adminsNonConnectes = []
+				let notification = []
+				if (this.pad.hasOwnProperty('notification')) {
+					notification = this.pad.notification
+				}
+				if (!this.utilisateurs.map(function (e) { return e.identifiant }).includes(this.pad.identifiant) && !notification.includes(this.pad.identifiant)) {
+					adminsNonConnectes.push(this.pad.identifiant)
+				}
+				this.pad.admins.forEach(function (admin) {
+					if (!this.utilisateurs.map(function (e) { return e.identifiant }).includes(admin) && !notification.includes(admin)) {
+						adminsNonConnectes.push(admin)
+					}
+				}.bind(this))
+				if (adminsNonConnectes.length > 0) {
+					this.$socket.emit('modifiernotification', this.pad.id, adminsNonConnectes)
+				}
+			}
 		},
 		quitterPage () {
 			this.$socket.emit('sortie')

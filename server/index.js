@@ -267,6 +267,9 @@ app.post('/api/recuperer-donnees-pad', function (req, res) {
 						nombreColonnes = JSON.parse(pad.colonnes).length
 						pad.colonnes = JSON.parse(pad.colonnes)
 					}
+					if (pad.hasOwnProperty('notification')) {
+						pad.notification = JSON.parse(pad.notification)
+					}
 					// Pour homogénéité des paramètres de pad avec coadministration
 					if (!pad.hasOwnProperty('admins')) {
 						pad.admins = []
@@ -444,6 +447,7 @@ app.post('/api/recuperer-donnees-pad', function (req, res) {
 								activite[indexItem].couleur = couleurs[index]
 							}
 						})
+						// Ajouter dans pads rejoints
 						if (pad.identifiant !== identifiant && statut === 'utilisateur') {
 							db.smembers('pads-rejoints:' + identifiant, function (err, padsRejoints) {
 								if (err) { res.send('erreur_pad'); return false }
@@ -463,11 +467,27 @@ app.post('/api/recuperer-donnees-pad', function (req, res) {
 										res.json({ pad: pad, blocs: blocs, activite: activite.reverse() })
 									})
 								} else {
-									res.json({ pad: pad, blocs: blocs, activite: activite.reverse() })
+									// Vérifier notification mise à jour pad
+									if (pad.hasOwnProperty('notification') && pad.notification.includes(identifiant)) {
+										pad.notification.splice(pad.notification.indexOf(identifiant), 1)
+										db.hmset('pads:' + id, 'notification', JSON.stringify(pad.notification), function () {
+											res.json({ pad: pad, blocs: blocs, activite: activite.reverse() })
+										})
+									} else {
+										res.json({ pad: pad, blocs: blocs, activite: activite.reverse() })
+									}
 								}
 							})
 						} else {
-							res.json({ pad: pad, blocs: blocs, activite: activite.reverse() })
+							// Vérifier notification mise à jour pad
+							if (pad.hasOwnProperty('notification') && pad.notification.includes(identifiant)) {
+								pad.notification.splice(pad.notification.indexOf(identifiant), 1)
+								db.hmset('pads:' + id, 'notification', JSON.stringify(pad.notification), function () {
+									res.json({ pad: pad, blocs: blocs, activite: activite.reverse() })
+								})
+							} else {
+								res.json({ pad: pad, blocs: blocs, activite: activite.reverse() })
+							}
 						}
 					})
 				} else {
@@ -2558,6 +2578,18 @@ io.on('connection', function (socket) {
 				socket.emit('erreur')
 			}
 		})
+	})
+
+	socket.on('modifiernotification', function (pad, admins) {
+		if (socket.room === 'pad-' + pad) {
+			db.hgetall('pads:' + pad, function () {
+				db.hmset('pads:' + pad, 'notification', JSON.stringify(admins), function () {
+					io.in(socket.room).emit('modifiernotification', admins)
+					socket.handshake.session.cookie.expires = new Date(Date.now() + (3600 * 24 * 7 * 1000))
+					socket.handshake.session.save()
+				})
+			})
+		}
 	})
 
 	socket.on('supprimeractivite', function (pad, id) {

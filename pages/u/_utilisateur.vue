@@ -113,6 +113,7 @@
 						<div class="pad liste" v-if="affichage === 'liste'" :key="'pad_' + indexPad">
 							<a class="fond" :href="'/p/' + pad.id + '/' + pad.token" :class="{'fond-personnalise': pad.fond.substring(1, 9) === 'fichiers'}" :style="definirFond(pad.fond)" />
 							<a class="meta" :class="{'pad-rejoint': pad.identifiant !== identifiant, 'deplacer': dossiers.length > 0}" :href="'/p/' + pad.id + '/' + pad.token">
+								<span class="mise-a-jour" v-if="pad.hasOwnProperty('notification') && pad.notification.includes(identifiant)" />
 								<span class="titre">{{ pad.titre }}</span>
 								<span class="date">{{ $t('creeLe') }} {{ $formaterDate(pad.date, langue) }}</span>
 								<span class="auteur" v-if="pad.identifiant !== identifiant">{{ $t('par') }} {{ pad.identifiant }}</span>
@@ -138,7 +139,7 @@
 						<div class="pad mosaique" v-else :key="'pad_' + indexPad">
 							<a class="conteneur" :class="{'fond-personnalise': pad.fond.substring(1, 9) === 'fichiers'}" :style="definirFond(pad.fond)" :href="'/p/' + pad.id + '/' + pad.token">
 								<div class="meta">
-									<span class="titre">{{ pad.titre }}</span>
+									<span class="titre"><span class="mise-a-jour" v-if="pad.hasOwnProperty('notification') && pad.notification.includes(identifiant)" />{{ pad.titre }}</span>
 									<span class="date">{{ $t('creeLe') }} {{ $formaterDate(pad.date, langue) }}</span>
 									<span class="auteur" v-if="pad.identifiant !== identifiant">{{ $t('par') }} {{ pad.identifiant }}</span>
 								</div>
@@ -173,6 +174,7 @@
 						<div class="pad liste" v-if="affichage === 'liste'" :key="'pad_' + indexPad">
 							<a class="fond" :href="'/p/' + pad.id + '/' + pad.token" :class="{'fond-personnalise': pad.fond.substring(1, 9) === 'fichiers'}" :style="definirFond(pad.fond)" />
 							<a class="meta" :class="{'pad-rejoint': pad.identifiant !== identifiant, 'deplacer': dossiers.length > 0}" :href="'/p/' + pad.id + '/' + pad.token">
+								<span class="mise-a-jour" v-if="pad.hasOwnProperty('notification') && pad.notification.includes(identifiant)" />
 								<span class="titre">{{ pad.titre }}</span>
 								<span class="date">{{ $t('creeLe') }} {{ $formaterDate(pad.date, langue) }}</span>
 								<span class="auteur" v-if="pad.identifiant !== identifiant">{{ $t('par') }} {{ pad.identifiant }}</span>
@@ -198,7 +200,7 @@
 						<div class="pad mosaique" v-else :key="'pad_' + indexPad">
 							<a class="conteneur" :class="{'fond-personnalise': pad.fond.substring(1, 9) === 'fichiers'}" :style="definirFond(pad.fond)" :href="'/p/' + pad.id + '/' + pad.token">
 								<div class="meta">
-									<span class="titre">{{ pad.titre }}</span>
+									<span class="titre"><span class="mise-a-jour" v-if="pad.hasOwnProperty('notification') && pad.notification.includes(identifiant)" />{{ pad.titre }}</span>
 									<span class="date">{{ $t('creeLe') }} {{ $formaterDate(pad.date, langue) }}</span>
 									<span class="auteur" v-if="pad.identifiant !== identifiant">{{ $t('par') }} {{ pad.identifiant }}</span>
 								</div>
@@ -880,9 +882,16 @@ export default {
 			return type
 		},
 		rechercher () {
-			const resultats = this.pads.filter(function (element) {
-				return element.titre.toLowerCase().includes(this.requete.toLowerCase())
-			}.bind(this))
+			let resultats = []
+			if (this.requete === '!maj') {
+				resultats = this.pads.filter(function (element) {
+					return element.notification && element.notification.includes(this.identifiant)
+				}.bind(this))
+			} else {
+				resultats = this.pads.filter(function (element) {
+					return element.titre.toLowerCase().includes(this.requete.toLowerCase())
+				}.bind(this))
+			}
 			this.resultats = resultats
 		},
 		filtrer (filtre) {
@@ -1636,6 +1645,18 @@ export default {
 .pad.liste .actions .admin,
 .pad.mosaique .actions .admin {
 	color: #00ced1;
+}
+
+.pad .mise-a-jour {
+	width: 1rem;
+	height: 1rem;
+	display: inline-block;
+	border-radius: 50%;
+	background: #e32f6c;
+}
+
+.pad.mosaique .mise-a-jour {
+	margin-right: 5px;
 }
 
 #import label:not(.bouton-interrupteur) {
