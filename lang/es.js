@@ -284,5 +284,21 @@ export default {
 	aucunDossier: 'No hay directorio',
 	erreurDeplacementPad: 'Error al mover el pad en el directorio.',
 	padDeplace: 'Pad desplazado.',
-	dossierActuel: 'Directorio actual'
+	dossierActuel: 'Directorio actual',
+	gererAdmins: 'Gestionar los admins',
+	adminsPad: 'Pad Admins',
+	listeAdmins: 'Lista de admins',
+	listeAdminsModifiee: 'Lista de admins modificada.',
+	aucunAdmin: 'No se ha añadido ningún administrador a esta pad.',
+	ajouterAdmin: 'Añadir un administrador',
+	supprimerAdmin: 'Borrar este administrador',
+	identifiantAdmin: 'Identificación del usuario',
+	identifiantNonValide: 'Esta identificación no es válida.',
+	quitterPad: 'Salir de la administración de esta pad',
+	confirmationSupprimerPadAdmin: '¿Quiere dejar la administración de este pad?',
+	admin: 'Admin del pad',
+	parametreListeUtilisateursModifie: 'Parámetro de visualización de la lista de usuarios modificado.',
+	parametreEditionNomModifie: 'Parámetro para editar el nombre modificado.',
+	utilisateurs: 'Usuarios',
+	editionNom: 'Edición del nombre'
 }

@@ -284,5 +284,21 @@ export default {
 	aucunDossier: 'No folder',
 	erreurDeplacementPad: 'Error while moving the pad in the folder.',
 	padDeplace: 'Pad moved.',
-	dossierActuel: 'Current folder'
+	dossierActuel: 'Current folder',
+	gererAdmins: 'Manage admins',
+	adminsPad: 'Pad admins',
+	listeAdmins: 'List of admins',
+	listeAdminsModifiee: 'List of admins changed.',
+	aucunAdmin: 'No admin added to this pad.',
+	ajouterAdmin: 'Add an admin',
+	supprimerAdmin: 'Delete this admin',
+	identifiantAdmin: 'Username',
+	identifiantNonValide: 'This username is not valid.',
+	quitterPad: 'Leave the management of this pad',
+	confirmationSupprimerPadAdmin: 'Do you really want to leave the management of this pad?',
+	admin: 'Admin of this pad',
+	parametreListeUtilisateursModifie: 'User list display setting changed.',
+	parametreEditionNomModifie: 'Name editing setting changed.',
+	utilisateurs: 'Users',
+	editionNom: 'Name editing'
 }

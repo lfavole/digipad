@@ -292,7 +292,7 @@ export default {
 	aucunAdmin: 'Aucun admin ajouté à ce pad.',
 	ajouterAdmin: 'Ajouter un admin',
 	supprimerAdmin: 'Supprimer cet admin',
-	identifiantAdmin: 'Identifiant de l\'admin',
+	identifiantAdmin: 'Identifiant de l\'utilisateur',
 	identifiantNonValide: 'Cet identifiant n\'est pas valide.',
 	quitterPad: 'Quitter l\'administration de ce pad',
 	confirmationSupprimerPadAdmin: 'Souhaitez-vous quitter l\'administration de ce pad&nbsp;?',
