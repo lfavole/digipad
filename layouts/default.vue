@@ -52,7 +52,7 @@ export default {
 				this.$store.dispatch('modifierMessage', '')
 				setTimeout(function () {
 					element.parentNode.removeChild(element)
-				}, 2000)
+				}, 2500)
 			}
 		}
 	},

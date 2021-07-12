@@ -2592,6 +2592,38 @@ io.on('connection', function (socket) {
 		}
 	})
 
+	socket.on('verifiermodifierbloc', function (pad, bloc, identifiant) {
+		if (socket.identifiant !== '' && socket.identifiant !== undefined && socket.room === 'pad-' + pad) {
+			socket.to(socket.room).emit('verifiermodifierbloc', { bloc: bloc, identifiant: identifiant })
+			socket.handshake.session.cookie.expires = new Date(Date.now() + (3600 * 24 * 7 * 1000))
+			socket.handshake.session.save()
+		}
+	})
+
+	socket.on('reponsemodifierbloc', function (pad, identifiant, reponse) {
+		if (socket.identifiant !== '' && socket.identifiant !== undefined && socket.room === 'pad-' + pad) {
+			socket.to(socket.room).emit('reponsemodifierbloc', { identifiant: identifiant, reponse: reponse })
+			socket.handshake.session.cookie.expires = new Date(Date.now() + (3600 * 24 * 7 * 1000))
+			socket.handshake.session.save()
+		}
+	})
+
+	socket.on('verifiermodeorganiser', function (pad, identifiant) {
+		if (socket.identifiant !== '' && socket.identifiant !== undefined && socket.room === 'pad-' + pad) {
+			socket.to(socket.room).emit('verifiermodeorganiser', identifiant)
+			socket.handshake.session.cookie.expires = new Date(Date.now() + (3600 * 24 * 7 * 1000))
+			socket.handshake.session.save()
+		}
+	})
+
+	socket.on('reponsemodeorganiser', function (pad, identifiant, reponse) {
+		if (socket.identifiant !== '' && socket.identifiant !== undefined && socket.room === 'pad-' + pad) {
+			socket.to(socket.room).emit('reponsemodeorganiser', { identifiant: identifiant, reponse: reponse })
+			socket.handshake.session.cookie.expires = new Date(Date.now() + (3600 * 24 * 7 * 1000))
+			socket.handshake.session.save()
+		}
+	})
+
 	socket.on('supprimeractivite', function (pad, id) {
 		if (socket.identifiant !== '' && socket.identifiant !== undefined && socket.room === 'pad-' + pad) {
 			db.zremrangebyscore('activite:' + pad, id, id, function () {
