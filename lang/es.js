@@ -289,16 +289,19 @@ export default {
 	adminsPad: 'Pad Admins',
 	listeAdmins: 'Lista de admins',
 	listeAdminsModifiee: 'Lista de admins modificada.',
-	aucunAdmin: 'No se ha añadido ningún administrador a esta pad.',
+	aucunAdmin: 'No se ha añadido ningún administrador a este pad.',
 	ajouterAdmin: 'Añadir un administrador',
 	supprimerAdmin: 'Borrar este administrador',
 	identifiantAdmin: 'Identificación del usuario',
 	identifiantNonValide: 'Esta identificación no es válida.',
-	quitterPad: 'Salir de la administración de esta pad',
+	quitterPad: 'Salir de la administración de este pad',
 	confirmationSupprimerPadAdmin: '¿Quiere dejar la administración de este pad?',
 	admin: 'Admin del pad',
 	parametreListeUtilisateursModifie: 'Parámetro de visualización de la lista de usuarios modificado.',
 	parametreEditionNomModifie: 'Parámetro para editar el nombre modificado.',
 	utilisateurs: 'Usuarios',
-	editionNom: 'Edición del nombre'
+	editionNom: 'Edición del nombre',
+	modeOrganiserAutreUtilisateur: 'El modo Organizar está siendo utilizado por otro administrador.',
+	modeOrganiserProprietaire: 'El propietario del pad acaba de activar el modo organizador.',
+	capsuleEnCoursModification: 'Esta cápsula ya está siendo modificada por otro usuario.'
 }

@@ -300,5 +300,8 @@ export default {
 	parametreListeUtilisateursModifie: 'Parametro di visualizzazione dell\'elenco utenti modificato.',
 	parametreEditionNomModifie: 'Parametro per modificare il nome modificato.',
 	utilisateurs: 'Utenti',
-	editionNom: 'Modifica del nome'
+	editionNom: 'Modifica del nome',
+	modeOrganiserAutreUtilisateur: 'La modalità Organizzazione è utilizzata da un altro amministratore.',
+	modeOrganiserProprietaire: 'Il proprietario del pad ha appena attivato la Modalità Organizzazione.',
+	capsuleEnCoursModification: 'Questa capsula è già stata modificata da un altro utente.'
 }

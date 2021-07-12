@@ -300,5 +300,8 @@ export default {
 	parametreListeUtilisateursModifie: 'User list display setting changed.',
 	parametreEditionNomModifie: 'Name editing setting changed.',
 	utilisateurs: 'Users',
-	editionNom: 'Name editing'
+	editionNom: 'Name editing',
+	modeOrganiserAutreUtilisateur: 'The Organize mode is being used by another admin.',
+	modeOrganiserProprietaire: 'The owner of the pad has just activated the Organize Mode.',
+	capsuleEnCoursModification: 'This capsule is already being modified by another user.'
 }

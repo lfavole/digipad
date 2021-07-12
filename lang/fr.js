@@ -300,5 +300,8 @@ export default {
 	parametreListeUtilisateursModifie: 'Paramètre d\'affichage de la liste des utilisateurs modifié.',
 	parametreEditionNomModifie: 'Paramètre d\'édition du nom modifié.',
 	utilisateurs: 'Utilisateurs',
-	editionNom: 'Édition du nom'
+	editionNom: 'Édition du nom',
+	modeOrganiserAutreUtilisateur: 'Le mode Organiser est en cours d\'utilisation par un autre admin.',
+	modeOrganiserProprietaire: 'Le propriétaire du pad vient d\'activer le Mode Organiser.',
+	capsuleEnCoursModification: 'Cette capsule est déjà en cours de modification par un autre utilisateur.'
 }
