@@ -569,7 +569,6 @@ export default {
 			this.$store.dispatch('modifierMessage', this.$t('problemeConnexion'))
 		}
 	},
-	watchQuery: ['page'],
 	async asyncData (context) {
 		const id = context.route.params.id
 		const token = context.route.params.pad
@@ -679,6 +678,18 @@ export default {
 			chargementVignette: false,
 			modaleAdmins: false,
 			admins: []
+		}
+	},
+	head () {
+		return {
+			title: this.pad.hasOwnProperty('titre') ? this.pad.titre + ' - Digipad' : 'Digipad',
+			meta: [
+				{
+					hid: 'robots',
+					name: 'robots',
+					content: 'noindex, nofollow'
+				}
+			]
 		}
 	},
 	computed: {
@@ -835,6 +846,7 @@ export default {
 			}
 		}
 	},
+	watchQuery: ['page'],
 	created () {
 		if (this.pad.affichage === 'colonnes') {
 			this.definirColonnes(this.blocs)
@@ -3023,18 +3035,6 @@ export default {
 			if (this.vignettes.length > 0) {
 				this.$socket.emit('supprimervignettes', this.vignettes)
 			}
-		}
-	},
-	head () {
-		return {
-			title: this.pad.hasOwnProperty('titre') ? this.pad.titre + ' - Digipad' : 'Digipad',
-			meta: [
-				{
-					hid: 'robots',
-					name: 'robots',
-					content: 'noindex, nofollow'
-				}
-			]
 		}
 	}
 }
