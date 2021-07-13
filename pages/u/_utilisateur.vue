@@ -411,7 +411,6 @@ export default {
 	components: {
 		chargement
 	},
-	watchQuery: ['page'],
 	async asyncData (context) {
 		const { data } = await axios.post(context.store.state.hote + '/api/recuperer-donnees-utilisateur', {
 			identifiant: context.store.state.identifiant
@@ -457,6 +456,11 @@ export default {
 			dossierId: '',
 			modaleDeplacerPad: false,
 			dossierActuel: {}
+		}
+	},
+	head () {
+		return {
+			title: this.identifiant + ' - Digipad'
 		}
 	},
 	computed: {
@@ -511,6 +515,7 @@ export default {
 			this.rechercher()
 		}
 	},
+	watchQuery: ['page'],
 	created () {
 		if (this.identifiant === '' || this.statut === 'invite') {
 			this.$router.push('/')
@@ -1187,11 +1192,6 @@ export default {
 			}.bind(this)).catch(function () {
 				this.$store.dispatch('modifierAlerte', this.$t('erreurCommunicationServeur'))
 			}.bind(this))
-		}
-	},
-	head () {
-		return {
-			title: this.identifiant + ' - Digipad'
 		}
 	}
 }
