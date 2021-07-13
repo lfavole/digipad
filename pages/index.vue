@@ -156,6 +156,11 @@ export default {
 			hub: false
 		}
 	},
+	head () {
+		return {
+			title: 'Digipad by La Digitale'
+		}
+	},
 	computed: {
 		hote () {
 			return this.$store.state.hote
@@ -293,11 +298,6 @@ export default {
 		},
 		fermerHub () {
 			this.hub = false
-		}
-	},
-	head () {
-		return {
-			title: 'Digipad by La Digitale'
 		}
 	}
 }
