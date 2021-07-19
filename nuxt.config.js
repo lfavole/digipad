@@ -81,7 +81,8 @@ module.exports = {
 			hashAlgorithm: 'sha256',
 			policies: {
 				'script-src': ["'self'", "'unsafe-inline'"],
-				'frame-ancestors': ["*"]
+				'frame-ancestors': ["*"],
+				'frame-src': ["*"]
 			}
 		},
 		static: {

@@ -79,7 +79,7 @@ cron.schedule('59 23 * * Saturday', () => {
 })
 
 app.set('trust proxy', true)
-app.use(helmet())
+app.use(helmet({ frameguard: false }))
 app.use(bodyParser.json({ limit: '100mb' }))
 app.use(expressSession)
 io.use(sharedsession(expressSession, {
