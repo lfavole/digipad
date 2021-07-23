@@ -1405,7 +1405,7 @@ export default {
 		},
 		ajouterLien () {
 			if (this.lien !== '') {
-				const regex = RegExp('<iframe(.+)</iframe>', 'g')
+				const regex = /<iframe(.+)<\/iframe>/g
 				if (regex.test(this.lien) === true) {
 					this.lien = this.lien.match(/<iframe [^>]*src="[^"]*"[^>]*>/g).map(x => x.replace(/.*src="([^"]*)".*/, '$1'))[0]
 				}
@@ -1808,6 +1808,7 @@ export default {
 					break
 				}
 				this.$nextTick(function () {
+					const that = this
 					let largeurPanneau = '308px'
 					let hauteurPanneau = '300px'
 					if (document.querySelector('#page').offsetWidth > 580 && document.querySelector('#page').offsetHeight > 580) {
@@ -1863,6 +1864,29 @@ export default {
 									width: largeurPanneau,
 									height: '150px'
 								}).reposition()
+							} else if (item.type === 'embed') {
+								panel.addControl({
+									html: '<span class="material-icons lien">link</span>',
+									name: 'copier-lien',
+									handler: function () {
+										let lien
+										if (item.source === 'etherpad') {
+											lien = item.media
+										} else if (that.verifierURL(item.iframe) === true) {
+											lien = item.iframe
+										} else {
+											lien = item.iframe.match(/<iframe [^>]*src="[^"]*"[^>]*>/g).map(x => x.replace(/.*src="([^"]*)".*/, '$1'))[0]
+										}
+										const clipboardLien = new ClipboardJS('#panneau_' + item.bloc + ' .lien', {
+											text: function () {
+												return lien
+											}
+										})
+										clipboardLien.on('success', function () {
+											that.$store.dispatch('modifierMessage', that.$t('lienCopie'))
+										})
+									}
+								})
 							}
 						},
 						onmaximized: function(panel) {
