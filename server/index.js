@@ -560,21 +560,39 @@ app.post('/api/creer-pad-sans-compte', function (req, res) {
 	const hash = bcrypt.hashSync(motdepasse, 10)
 	const token = Math.random().toString(16).slice(2)
 	const date = moment().format()
-	db.get('pad', function (err, resultat) {
+	db.exists('pad', function (err, resultat) {
 		if (err) { res.send('erreur_creation'); return false }
-		const id = parseInt(resultat) + 1
-		const multi = db.multi()
-		multi.incr('pad')
-		multi.hmset('pads:' + id, 'id', id, 'token', token, 'titre', titre, 'identifiant', identifiant, 'motdepasse', hash, 'fond', '/img/fond1.png', 'acces', 'public', 'contributions', 'ouvertes', 'affichage', 'mur', 'registreActivite', 'active', 'conversation', 'desactivee', 'listeUtilisateurs', 'activee', 'editionNom', 'desactivee', 'fichiers', 'actives', 'liens', 'actives', 'documents', 'desactives', 'commentaires', 'desactives', 'evaluations', 'desactivees', 'date', date, 'colonnes', JSON.stringify([]), 'bloc', 0, 'activite', 0)
-		multi.hmset('utilisateurs:' + identifiant, 'id', identifiant, 'motdepasse', '', 'date', date, 'nom', nom, 'langue', 'fr')
-		multi.exec(function () {
-			const chemin = path.join(__dirname, '..', '/static/fichiers/' + id)
-			fs.mkdirsSync(chemin)
-			req.session.langue = 'fr'
-			req.session.statut = 'auteur'
-			req.session.cookie.expires = new Date(Date.now() + (3600 * 24 * 7 * 1000))
-			res.json({ id: id, token: token, titre: titre, identifiant: identifiant, fond: '/img/fond1.png', acces: 'public', contributions: 'ouvertes', affichage: 'mur', registreActivite: 'active', conversation: 'desactivee', listeUtilisateurs: 'activee', editionNom: 'desactivee', fichiers: 'actives', liens: 'actives', liens: 'actives', documents: 'desactives', commentaires: 'desactives', evaluations: 'desactivees', date: date, colonnes: [], bloc: 0, activite: 0 })
-		})
+		if (resultat === 1) {
+			db.get('pad', function (err, resultat) {
+				if (err) { res.send('erreur_creation'); return false }
+				const id = parseInt(resultat) + 1
+				const multi = db.multi()
+				multi.incr('pad')
+				multi.hmset('pads:' + id, 'id', id, 'token', token, 'titre', titre, 'identifiant', identifiant, 'motdepasse', hash, 'fond', '/img/fond1.png', 'acces', 'public', 'contributions', 'ouvertes', 'affichage', 'mur', 'registreActivite', 'active', 'conversation', 'desactivee', 'listeUtilisateurs', 'activee', 'editionNom', 'desactivee', 'fichiers', 'actives', 'liens', 'actives', 'documents', 'desactives', 'commentaires', 'desactives', 'evaluations', 'desactivees', 'date', date, 'colonnes', JSON.stringify([]), 'bloc', 0, 'activite', 0)
+				multi.hmset('utilisateurs:' + identifiant, 'id', identifiant, 'motdepasse', '', 'date', date, 'nom', nom, 'langue', 'fr')
+				multi.exec(function () {
+					const chemin = path.join(__dirname, '..', '/static/fichiers/' + id)
+					fs.mkdirsSync(chemin)
+					req.session.langue = 'fr'
+					req.session.statut = 'auteur'
+					req.session.cookie.expires = new Date(Date.now() + (3600 * 24 * 7 * 1000))
+					res.json({ id: id, token: token, titre: titre, identifiant: identifiant, fond: '/img/fond1.png', acces: 'public', contributions: 'ouvertes', affichage: 'mur', registreActivite: 'active', conversation: 'desactivee', listeUtilisateurs: 'activee', editionNom: 'desactivee', fichiers: 'actives', liens: 'actives', liens: 'actives', documents: 'desactives', commentaires: 'desactives', evaluations: 'desactivees', date: date, colonnes: [], bloc: 0, activite: 0 })
+				})
+			})
+		} else {
+			const multi = db.multi()
+			multi.incr('pad')
+			multi.hmset('pads:1', 'id', 1, 'token', token, 'titre', titre, 'identifiant', identifiant, 'motdepasse', hash, 'fond', '/img/fond1.png', 'acces', 'public', 'contributions', 'ouvertes', 'affichage', 'mur', 'registreActivite', 'active', 'conversation', 'desactivee', 'listeUtilisateurs', 'activee', 'editionNom', 'desactivee', 'fichiers', 'actives', 'liens', 'actives', 'documents', 'desactives', 'commentaires', 'desactives', 'evaluations', 'desactivees', 'date', date, 'colonnes', JSON.stringify([]), 'bloc', 0, 'activite', 0)
+			multi.hmset('utilisateurs:' + identifiant, 'id', identifiant, 'motdepasse', '', 'date', date, 'nom', nom, 'langue', 'fr')
+			multi.exec(function () {
+				const chemin = path.join(__dirname, '..', '/static/fichiers/1')
+				fs.mkdirsSync(chemin)
+				req.session.langue = 'fr'
+				req.session.statut = 'auteur'
+				req.session.cookie.expires = new Date(Date.now() + (3600 * 24 * 7 * 1000))
+				res.json({ id: 1, token: token, titre: titre, identifiant: identifiant, fond: '/img/fond1.png', acces: 'public', contributions: 'ouvertes', affichage: 'mur', registreActivite: 'active', conversation: 'desactivee', listeUtilisateurs: 'activee', editionNom: 'desactivee', fichiers: 'actives', liens: 'actives', liens: 'actives', documents: 'desactives', commentaires: 'desactives', evaluations: 'desactivees', date: date, colonnes: [], bloc: 0, activite: 0 })
+			})
+		}
 	})
 })
 
