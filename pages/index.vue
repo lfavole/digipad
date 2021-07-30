@@ -242,11 +242,11 @@ export default {
 			})
 		},
 		sInscrire () {
-			if (this.identifiant !== '' && this.motDePasse !== '' && this.motDePasse === this.confirmationMotDePasse) {
+			if (this.identifiant.trim() !== '' && this.motDePasse.trim() !== '' && this.motDePasse.trim() === this.confirmationMotDePasse.trim()) {
 				this.chargement = true
 				axios.post(this.hote + '/api/inscription', {
-					identifiant: this.identifiant,
-					motdepasse: this.motDePasse
+					identifiant: this.identifiant.trim(),
+					motdepasse: this.motDePasse.trim()
 				}).then(function (reponse) {
 					this.chargement = false
 					const donnees = reponse.data
