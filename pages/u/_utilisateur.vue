@@ -970,8 +970,8 @@ export default {
 		},
 		modifierMotDePasse () {
 			const motDePasse = this.motDePasse
-			const nouveauMotDePasse = this.nouveauMotDePasse
-			const confirmationNouveauMotDePasse = this.confirmationNouveauMotDePasse
+			const nouveauMotDePasse = this.nouveauMotDePasse.trim()
+			const confirmationNouveauMotDePasse = this.confirmationNouveauMotDePasse.trim()
 			if (nouveauMotDePasse === confirmationNouveauMotDePasse && nouveauMotDePasse !== '') {
 				this.modaleMotDePasse = false
 				this.chargement = true
