@@ -1617,6 +1617,23 @@
 	}
 }
 
+@media screen and (max-width: 399px) {
+	.televerser.vignette .bouton,
+	#media .supprimer,
+	#media .convertir {
+		margin-left: 0!important;
+	}
+
+	#media .supprimer {
+		margin-bottom: 1.5rem;
+	}
+
+	#media .supprimer,
+	#media .convertir {
+		width: 100%;
+	}
+}
+
 @media screen and (orientation: landscape) and (max-height: 479px) {
 	#motdepasse {
 		height: 90%;
@@ -1688,12 +1705,6 @@
 		height: 5rem;
 		font-size: 2.7rem;
 		line-height: 5rem;
-	}
-
-	.televerser.vignette .bouton,
-	#media .supprimer {
-		width: 100%;
-		margin-left: 0!important;
 	}
 
 	.televerser.vignette span.bouton {
