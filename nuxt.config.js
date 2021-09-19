@@ -82,7 +82,7 @@ module.exports = {
 			policies: {
 				'script-src': ["'self'", "'unsafe-inline'"],
 				'frame-ancestors': ["*"],
-				'frame-src': ["*"]
+				'frame-src': ["*", "blob:"]
 			}
 		},
 		static: {
