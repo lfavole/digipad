@@ -1790,7 +1790,7 @@ io.on('connection', function (socket) {
 				})
 				if (erreurs === 0) {
 					const identifiant = socket.identifiant
-					socket.to(socket.room).emit('deplacerbloc', { blocs: items, identifiant: identifiant })
+					io.in(socket.room).emit('deplacerbloc', { blocs: items, identifiant: identifiant })
 				} else {
 					socket.emit('erreur')
 				}
@@ -2621,22 +2621,6 @@ io.on('connection', function (socket) {
 	socket.on('reponsemodifierbloc', function (pad, identifiant, reponse) {
 		if (socket.identifiant !== '' && socket.identifiant !== undefined && socket.room === 'pad-' + pad) {
 			socket.to(socket.room).emit('reponsemodifierbloc', { identifiant: identifiant, reponse: reponse })
-			socket.handshake.session.cookie.expires = new Date(Date.now() + (3600 * 24 * 7 * 1000))
-			socket.handshake.session.save()
-		}
-	})
-
-	socket.on('verifiermodeorganiser', function (pad, identifiant) {
-		if (socket.identifiant !== '' && socket.identifiant !== undefined && socket.room === 'pad-' + pad) {
-			socket.to(socket.room).emit('verifiermodeorganiser', identifiant)
-			socket.handshake.session.cookie.expires = new Date(Date.now() + (3600 * 24 * 7 * 1000))
-			socket.handshake.session.save()
-		}
-	})
-
-	socket.on('reponsemodeorganiser', function (pad, identifiant, reponse) {
-		if (socket.identifiant !== '' && socket.identifiant !== undefined && socket.room === 'pad-' + pad) {
-			socket.to(socket.room).emit('reponsemodeorganiser', { identifiant: identifiant, reponse: reponse })
 			socket.handshake.session.cookie.expires = new Date(Date.now() + (3600 * 24 * 7 * 1000))
 			socket.handshake.session.save()
 		}

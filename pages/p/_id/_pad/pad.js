@@ -151,6 +151,8 @@ export default {
 			}
 			if (this.pad.affichage === 'colonnes') {
 				this.definirColonnes(donnees.blocs)
+			} else {
+				this.blocs = donnees.blocs
 			}
 			this.$nextTick(function () {
 				if (blocActif && this.utilisateur !== this.identifiant) {
@@ -541,27 +543,6 @@ export default {
 		reponsemodifierbloc: function (donnees) {
 			if (this.identifiant === donnees.identifiant && donnees.reponse === true) {
 				this.$store.dispatch('modifierMessage', this.$t('capsuleEnCoursModification'))
-			}
-		},
-		verifiermodeorganiser: function (identifiant) {
-			if (this.admin && this.action === 'organiser') {
-				this.$socket.emit('reponsemodeorganiser', this.pad.id, identifiant, false)
-			} else if (this.admin && this.action !== 'organiser') {
-				this.$socket.emit('reponsemodeorganiser', this.pad.id, identifiant, true)
-			}
-		},
-		reponsemodeorganiser: function (donnees) {
-			this.chargement = false
-			if (this.identifiant === donnees.identifiant && donnees.reponse === true) {
-				this.activerModeOrganiser()
-			} else if (this.admin && this.action === 'organiser' && donnees.reponse === false) {
-				this.desactiverModeOrganiser()
-				document.querySelectorAll('#app .notification').forEach(function (notification) {
-					notification.parentNode.removeChild(notification)
-				})
-				this.$store.dispatch('modifierMessage', this.$t('modeOrganiserProprietaire'))
-			} else if (this.identifiant === donnees.identifiant && this.action !== 'organiser' && donnees.reponse === false) {
-				this.$store.dispatch('modifierMessage', this.$t('modeOrganiserAutreUtilisateur'))
 			}
 		},
 		deconnecte: function () {
@@ -1997,10 +1978,6 @@ export default {
 				return false
 			}
 		},
-		verifierModeOrganiser () {
-			this.chargement = true
-			this.$socket.emit('verifiermodeorganiser', this.pad.id, this.identifiant)
-		},
 		activerModeOrganiser () {
 			if (this.blocs.length > 1 || (this.pad.affichage === 'colonnes' && this.pad.colonnes.length > 1)) {
 				this.menuActivite = false
@@ -2009,9 +1986,6 @@ export default {
 				this.recherche = false
 				this.action = 'organiser'
 				this.$store.dispatch('modifierMessage', this.$t('modeOrganiserActive'))
-				if (this.pad.identifiant === this.identifiant) {
-					this.$socket.emit('reponsemodeorganiser', this.pad.id, '', false)
-				}
 			}
 		},
 		desactiverModeOrganiser () {
