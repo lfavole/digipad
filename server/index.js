@@ -270,6 +270,10 @@ app.post('/api/recuperer-donnees-pad', function (req, res) {
 					if (pad.hasOwnProperty('notification')) {
 						pad.notification = JSON.parse(pad.notification)
 					}
+					// Pour homogénéité des paramètres de pad
+					if (!pad.hasOwnProperty('ordre')) {
+						pad.ordre = 'croissant'
+					}
 					// Pour homogénéité des paramètres de pad avec coadministration
 					if (!pad.hasOwnProperty('admins')) {
 						pad.admins = []
@@ -447,6 +451,13 @@ app.post('/api/recuperer-donnees-pad', function (req, res) {
 								activite[indexItem].couleur = couleurs[index]
 							}
 						})
+						let ordre = 'croissant'
+						if (pad.hasOwnProperty('ordre')) {
+							ordre = pad.ordre
+						}
+						if (ordre === 'decroissant') {
+							blocs.reverse()
+						}
 						// Ajouter dans pads rejoints
 						if (pad.identifiant !== identifiant && statut === 'utilisateur') {
 							db.smembers('pads-rejoints:' + identifiant, function (err, padsRejoints) {
@@ -515,27 +526,27 @@ app.post('/api/creer-pad', function (req, res) {
 					const id = parseInt(resultat) + 1
 					const multi = db.multi()
 					multi.incr('pad')
-					multi.hmset('pads:' + id, 'id', id, 'token', token, 'titre', titre, 'identifiant', identifiant, 'fond', '/img/fond1.png', 'acces', 'public', 'contributions', 'ouvertes', 'affichage', 'mur', 'registreActivite', 'active', 'conversation', 'desactivee', 'listeUtilisateurs', 'activee','editionNom', 'desactivee', 'fichiers', 'actives', 'liens', 'actives', 'documents', 'desactives', 'commentaires', 'desactives', 'evaluations', 'desactivees', 'date', date, 'colonnes', JSON.stringify([]), 'bloc', 0, 'activite', 0, 'admins', JSON.stringify([]))
+					multi.hmset('pads:' + id, 'id', id, 'token', token, 'titre', titre, 'identifiant', identifiant, 'fond', '/img/fond1.png', 'acces', 'public', 'contributions', 'ouvertes', 'affichage', 'mur', 'registreActivite', 'active', 'conversation', 'desactivee', 'listeUtilisateurs', 'activee','editionNom', 'desactivee', 'fichiers', 'actives', 'liens', 'actives', 'documents', 'desactives', 'commentaires', 'desactives', 'evaluations', 'desactivees', 'ordre', 'croissant', 'date', date, 'colonnes', JSON.stringify([]), 'bloc', 0, 'activite', 0, 'admins', JSON.stringify([]))
 					multi.sadd('pads-crees:' + identifiant, id)
 					multi.sadd('utilisateurs-pads:' + id, identifiant)
 					multi.hmset('couleurs:' + identifiant, 'pad' + id, couleur)
 					multi.exec(function () {
 						const chemin = path.join(__dirname, '..', '/static/fichiers/' + id)
 						fs.mkdirsSync(chemin)
-						res.json({ id: id, token: token, titre: titre, identifiant: identifiant, fond: '/img/fond1.png', acces: 'public', contributions: 'ouvertes', affichage: 'mur', registreActivite: 'active', conversation: 'desactivee', listeUtilisateurs: 'activee', editionNom: 'desactivee', fichiers: 'actives', liens: 'actives', documents: 'desactives', commentaires: 'desactives', evaluations: 'desactivees', date: date, colonnes: [], bloc: 0, activite: 0, admins: [] })
+						res.json({ id: id, token: token, titre: titre, identifiant: identifiant, fond: '/img/fond1.png', acces: 'public', contributions: 'ouvertes', affichage: 'mur', registreActivite: 'active', conversation: 'desactivee', listeUtilisateurs: 'activee', editionNom: 'desactivee', fichiers: 'actives', liens: 'actives', documents: 'desactives', commentaires: 'desactives', evaluations: 'desactivees', ordre: 'croissant', date: date, colonnes: [], bloc: 0, activite: 0, admins: [] })
 					})
 				})
 			} else {
 				const multi = db.multi()
 				multi.set('pad', '1')
-				multi.hmset('pads:1', 'id', 1, 'token', token, 'titre', titre, 'identifiant', identifiant, 'fond', '/img/fond1.png', 'acces', 'public', 'contributions', 'ouvertes', 'affichage', 'mur', 'registreActivite', 'active', 'conversation', 'desactivee', 'listeUtilisateurs', 'activee','editionNom', 'desactivee', 'fichiers', 'actives', 'liens', 'actives', 'documents', 'desactives', 'commentaires', 'desactives', 'evaluations', 'desactivees', 'date', date, 'colonnes', JSON.stringify([]), 'bloc', 0, 'activite', 0, 'admins', JSON.stringify([]))
+				multi.hmset('pads:1', 'id', 1, 'token', token, 'titre', titre, 'identifiant', identifiant, 'fond', '/img/fond1.png', 'acces', 'public', 'contributions', 'ouvertes', 'affichage', 'mur', 'registreActivite', 'active', 'conversation', 'desactivee', 'listeUtilisateurs', 'activee','editionNom', 'desactivee', 'fichiers', 'actives', 'liens', 'actives', 'documents', 'desactives', 'commentaires', 'desactives', 'evaluations', 'desactivees', 'ordre', 'croissant', 'date', date, 'colonnes', JSON.stringify([]), 'bloc', 0, 'activite', 0, 'admins', JSON.stringify([]))
 				multi.sadd('pads-crees:' + identifiant, 1)
 				multi.sadd('utilisateurs-pads:1', identifiant)
 				multi.hmset('couleurs:' + identifiant, 'pad1', couleur)
 				multi.exec(function () {
 					const chemin = path.join(__dirname, '..', '/static/fichiers/1')
 					fs.mkdirsSync(chemin)
-					res.json({ id: 1, token: token, titre: titre, identifiant: identifiant, fond: '/img/fond1.png', acces: 'public', contributions: 'ouvertes', affichage: 'mur', registreActivite: 'active', conversation: 'desactivee', listeUtilisateurs: 'activee', editionNom: 'desactivee', fichiers: 'actives', liens: 'actives', documents: 'desactives', commentaires: 'desactives', evaluations: 'desactivees', date: date, colonnes: [], bloc: 0, activite: 0, admins: [] })
+					res.json({ id: 1, token: token, titre: titre, identifiant: identifiant, fond: '/img/fond1.png', acces: 'public', contributions: 'ouvertes', affichage: 'mur', registreActivite: 'active', conversation: 'desactivee', listeUtilisateurs: 'activee', editionNom: 'desactivee', fichiers: 'actives', liens: 'actives', documents: 'desactives', commentaires: 'desactives', evaluations: 'desactivees', ordre: 'croissant', date: date, colonnes: [], bloc: 0, activite: 0, admins: [] })
 				})
 			}
 		})
@@ -568,7 +579,7 @@ app.post('/api/creer-pad-sans-compte', function (req, res) {
 				const id = parseInt(resultat) + 1
 				const multi = db.multi()
 				multi.incr('pad')
-				multi.hmset('pads:' + id, 'id', id, 'token', token, 'titre', titre, 'identifiant', identifiant, 'motdepasse', hash, 'fond', '/img/fond1.png', 'acces', 'public', 'contributions', 'ouvertes', 'affichage', 'mur', 'registreActivite', 'active', 'conversation', 'desactivee', 'listeUtilisateurs', 'activee', 'editionNom', 'desactivee', 'fichiers', 'actives', 'liens', 'actives', 'documents', 'desactives', 'commentaires', 'desactives', 'evaluations', 'desactivees', 'date', date, 'colonnes', JSON.stringify([]), 'bloc', 0, 'activite', 0)
+				multi.hmset('pads:' + id, 'id', id, 'token', token, 'titre', titre, 'identifiant', identifiant, 'motdepasse', hash, 'fond', '/img/fond1.png', 'acces', 'public', 'contributions', 'ouvertes', 'affichage', 'mur', 'registreActivite', 'active', 'conversation', 'desactivee', 'listeUtilisateurs', 'activee', 'editionNom', 'desactivee', 'fichiers', 'actives', 'liens', 'actives', 'documents', 'desactives', 'commentaires', 'desactives', 'evaluations', 'desactivees', 'ordre', 'croissant', 'date', date, 'colonnes', JSON.stringify([]), 'bloc', 0, 'activite', 0)
 				multi.hmset('utilisateurs:' + identifiant, 'id', identifiant, 'motdepasse', '', 'date', date, 'nom', nom, 'langue', 'fr')
 				multi.exec(function () {
 					const chemin = path.join(__dirname, '..', '/static/fichiers/' + id)
@@ -576,13 +587,13 @@ app.post('/api/creer-pad-sans-compte', function (req, res) {
 					req.session.langue = 'fr'
 					req.session.statut = 'auteur'
 					req.session.cookie.expires = new Date(Date.now() + (3600 * 24 * 7 * 1000))
-					res.json({ id: id, token: token, titre: titre, identifiant: identifiant, fond: '/img/fond1.png', acces: 'public', contributions: 'ouvertes', affichage: 'mur', registreActivite: 'active', conversation: 'desactivee', listeUtilisateurs: 'activee', editionNom: 'desactivee', fichiers: 'actives', liens: 'actives', liens: 'actives', documents: 'desactives', commentaires: 'desactives', evaluations: 'desactivees', date: date, colonnes: [], bloc: 0, activite: 0 })
+					res.json({ id: id, token: token, titre: titre, identifiant: identifiant, fond: '/img/fond1.png', acces: 'public', contributions: 'ouvertes', affichage: 'mur', registreActivite: 'active', conversation: 'desactivee', listeUtilisateurs: 'activee', editionNom: 'desactivee', fichiers: 'actives', liens: 'actives', liens: 'actives', documents: 'desactives', commentaires: 'desactives', evaluations: 'desactivees', ordre: 'croissant', date: date, colonnes: [], bloc: 0, activite: 0 })
 				})
 			})
 		} else {
 			const multi = db.multi()
 			multi.incr('pad')
-			multi.hmset('pads:1', 'id', 1, 'token', token, 'titre', titre, 'identifiant', identifiant, 'motdepasse', hash, 'fond', '/img/fond1.png', 'acces', 'public', 'contributions', 'ouvertes', 'affichage', 'mur', 'registreActivite', 'active', 'conversation', 'desactivee', 'listeUtilisateurs', 'activee', 'editionNom', 'desactivee', 'fichiers', 'actives', 'liens', 'actives', 'documents', 'desactives', 'commentaires', 'desactives', 'evaluations', 'desactivees', 'date', date, 'colonnes', JSON.stringify([]), 'bloc', 0, 'activite', 0)
+			multi.hmset('pads:1', 'id', 1, 'token', token, 'titre', titre, 'identifiant', identifiant, 'motdepasse', hash, 'fond', '/img/fond1.png', 'acces', 'public', 'contributions', 'ouvertes', 'affichage', 'mur', 'registreActivite', 'active', 'conversation', 'desactivee', 'listeUtilisateurs', 'activee', 'editionNom', 'desactivee', 'fichiers', 'actives', 'liens', 'actives', 'documents', 'desactives', 'commentaires', 'desactives', 'evaluations', 'desactivees', 'ordre', 'croissant', 'date', date, 'colonnes', JSON.stringify([]), 'bloc', 0, 'activite', 0)
 			multi.hmset('utilisateurs:' + identifiant, 'id', identifiant, 'motdepasse', '', 'date', date, 'nom', nom, 'langue', 'fr')
 			multi.exec(function () {
 				const chemin = path.join(__dirname, '..', '/static/fichiers/1')
@@ -590,7 +601,7 @@ app.post('/api/creer-pad-sans-compte', function (req, res) {
 				req.session.langue = 'fr'
 				req.session.statut = 'auteur'
 				req.session.cookie.expires = new Date(Date.now() + (3600 * 24 * 7 * 1000))
-				res.json({ id: 1, token: token, titre: titre, identifiant: identifiant, fond: '/img/fond1.png', acces: 'public', contributions: 'ouvertes', affichage: 'mur', registreActivite: 'active', conversation: 'desactivee', listeUtilisateurs: 'activee', editionNom: 'desactivee', fichiers: 'actives', liens: 'actives', liens: 'actives', documents: 'desactives', commentaires: 'desactives', evaluations: 'desactivees', date: date, colonnes: [], bloc: 0, activite: 0 })
+				res.json({ id: 1, token: token, titre: titre, identifiant: identifiant, fond: '/img/fond1.png', acces: 'public', contributions: 'ouvertes', affichage: 'mur', registreActivite: 'active', conversation: 'desactivee', listeUtilisateurs: 'activee', editionNom: 'desactivee', fichiers: 'actives', liens: 'actives', liens: 'actives', documents: 'desactives', commentaires: 'desactives', evaluations: 'desactivees', ordre: 'croissant', date: date, colonnes: [], bloc: 0, activite: 0 })
 			})
 		}
 	})
@@ -723,6 +734,7 @@ app.post('/api/dupliquer-pad', function (req, res) {
 						let conversation = 'desactivee'
 						let listeUtilisateurs = 'activee'
 						let editionNom = 'desactivee'
+						let ordre = 'croissant'
 						if (donnees.hasOwnProperty('registreActivite')) {
 							registreActivite = donnees.registreActivite
 						}
@@ -735,9 +747,12 @@ app.post('/api/dupliquer-pad', function (req, res) {
 						if (donnees.hasOwnProperty('editionNom')) {
 							editionNom = donnees.editionNom
 						}
+						if (donnees.hasOwnProperty('ordre')) {
+							ordre = donnees.ordre
+						}
 						const multi = db.multi()
 						multi.incr('pad')
-						multi.hmset('pads:' + id, 'id', id, 'token', token, 'titre', 'Copie de ' + donnees.titre, 'identifiant', identifiant, 'fond', donnees.fond, 'acces', donnees.acces, 'code', code, 'contributions', donnees.contributions, 'affichage', donnees.affichage, 'registreActivite', registreActivite, 'conversation', conversation, 'listeUtilisateurs', listeUtilisateurs, 'editionNom', editionNom, 'fichiers', donnees.fichiers, 'liens', donnees.liens, 'documents', donnees.documents, 'commentaires', donnees.commentaires, 'evaluations', donnees.evaluations, 'date', date, 'colonnes', donnees.colonnes, 'bloc', donnees.bloc, 'activite', 0)
+						multi.hmset('pads:' + id, 'id', id, 'token', token, 'titre', 'Copie de ' + donnees.titre, 'identifiant', identifiant, 'fond', donnees.fond, 'acces', donnees.acces, 'code', code, 'contributions', donnees.contributions, 'affichage', donnees.affichage, 'registreActivite', registreActivite, 'conversation', conversation, 'listeUtilisateurs', listeUtilisateurs, 'editionNom', editionNom, 'fichiers', donnees.fichiers, 'liens', donnees.liens, 'documents', donnees.documents, 'commentaires', donnees.commentaires, 'evaluations', donnees.evaluations, 'ordre', ordre, 'date', date, 'colonnes', donnees.colonnes, 'bloc', donnees.bloc, 'activite', 0)
 						multi.sadd('pads-crees:' + identifiant, id)
 						multi.sadd('utilisateurs-pads:' + id, identifiant)
 						multi.hmset('couleurs:' + identifiant, 'pad' + id, couleur)
@@ -745,7 +760,7 @@ app.post('/api/dupliquer-pad', function (req, res) {
 							if (fs.existsSync(path.join(__dirname, '..', '/static/fichiers/' + pad))) {
 								fs.copySync(path.join(__dirname, '..', '/static/fichiers/' + pad), path.join(__dirname, '..', '/static/fichiers/' + id))
 							}
-							res.json({ id: id, token: token, titre: 'Copie de ' + donnees.titre, identifiant: identifiant, fond: donnees.fond, acces: donnees.acces, code: code, contributions: donnees.contributions, affichage: donnees.affichage, registreActivite: registreActivite, conversation: conversation, listeUtilisateurs: listeUtilisateurs, editionNom: editionNom, fichiers: donnees.fichiers, liens: donnees.liens, documents: donnees.documents, commentaires: donnees.commentaires, evaluations: donnees.evaluations, date: date, colonnes: donnees.colonnes, bloc: donnees.bloc, activite: 0 })
+							res.json({ id: id, token: token, titre: 'Copie de ' + donnees.titre, identifiant: identifiant, fond: donnees.fond, acces: donnees.acces, code: code, contributions: donnees.contributions, affichage: donnees.affichage, registreActivite: registreActivite, conversation: conversation, listeUtilisateurs: listeUtilisateurs, editionNom: editionNom, fichiers: donnees.fichiers, liens: donnees.liens, documents: donnees.documents, commentaires: donnees.commentaires, evaluations: donnees.evaluations, ordre: ordre, date: date, colonnes: donnees.colonnes, bloc: donnees.bloc, activite: 0 })
 						})
 					})
 				})
@@ -942,6 +957,7 @@ app.post('/api/importer-pad', function (req, res) {
 							let conversation = 'desactivee'
 							let listeUtilisateurs = 'activee'
 							let editionNom = 'desactivee'
+							let ordre = 'croissant'
 							let activiteId = 0
 							if (donnees.pad.hasOwnProperty('registreActivite')) {
 								registreActivite = donnees.pad.registreActivite
@@ -955,12 +971,15 @@ app.post('/api/importer-pad', function (req, res) {
 							if (donnees.pad.hasOwnProperty('editionNom')) {
 								editionNom = donnees.pad.editionNom
 							}
+							if (donnees.pad.hasOwnProperty('ordre')) {
+								ordre = donnees.pad.ordre
+							}
 							if (parametres.activite === true) {
 								activiteId = donnees.pad.activite
 							}
 							const multi = db.multi()
 							multi.incr('pad')
-							multi.hmset('pads:' + id, 'id', id, 'token', token, 'titre', donnees.pad.titre, 'identifiant', identifiant, 'fond', donnees.pad.fond, 'acces', donnees.pad.acces, 'code', code, 'contributions', donnees.pad.contributions, 'affichage', donnees.pad.affichage, 'registreActivite', registreActivite, 'conversation', conversation, 'listeUtilisateurs', listeUtilisateurs, 'editionNom', editionNom, 'fichiers', donnees.pad.fichiers, 'liens', donnees.pad.liens, 'documents', donnees.pad.documents, 'commentaires', donnees.pad.commentaires, 'evaluations', donnees.pad.evaluations, 'date', date, 'colonnes', donnees.pad.colonnes, 'bloc', donnees.pad.bloc, 'activite', activiteId, 'admins', JSON.stringify([])),
+							multi.hmset('pads:' + id, 'id', id, 'token', token, 'titre', donnees.pad.titre, 'identifiant', identifiant, 'fond', donnees.pad.fond, 'acces', donnees.pad.acces, 'code', code, 'contributions', donnees.pad.contributions, 'affichage', donnees.pad.affichage, 'registreActivite', registreActivite, 'conversation', conversation, 'listeUtilisateurs', listeUtilisateurs, 'editionNom', editionNom, 'fichiers', donnees.pad.fichiers, 'liens', donnees.pad.liens, 'documents', donnees.pad.documents, 'commentaires', donnees.pad.commentaires, 'evaluations', donnees.pad.evaluations, 'ordre', ordre, 'date', date, 'colonnes', donnees.pad.colonnes, 'bloc', donnees.pad.bloc, 'activite', activiteId, 'admins', JSON.stringify([])),
 							multi.sadd('pads-crees:' + identifiant, id)
 							multi.sadd('utilisateurs-pads:' + id, identifiant)
 							multi.hmset('couleurs:' + identifiant, 'pad' + id, couleur)
@@ -989,7 +1008,7 @@ app.post('/api/importer-pad', function (req, res) {
 							multi.exec(function () {
 								fs.removeSync(source)
 								fs.removeSync(cible)
-								res.json({ id: id, token: token, titre: donnees.pad.titre, identifiant: identifiant, fond: donnees.pad.fond, acces: donnees.pad.acces, code: code, contributions: donnees.pad.contributions, affichage: donnees.pad.affichage, registreActivite: registreActivite, conversation: conversation, listeUtilisateurs: listeUtilisateurs, editionNom: editionNom, fichiers: donnees.pad.fichiers, liens: donnees.pad.liens, documents: donnees.pad.documents, commentaires: donnees.pad.commentaires, evaluations: donnees.pad.evaluations, date: date, colonnes: donnees.pad.colonnes, bloc: donnees.pad.bloc, activite: activiteId, admins: [] })
+								res.json({ id: id, token: token, titre: donnees.pad.titre, identifiant: identifiant, fond: donnees.pad.fond, acces: donnees.pad.acces, code: code, contributions: donnees.pad.contributions, affichage: donnees.pad.affichage, registreActivite: registreActivite, conversation: conversation, listeUtilisateurs: listeUtilisateurs, editionNom: editionNom, fichiers: donnees.pad.fichiers, liens: donnees.pad.liens, documents: donnees.pad.documents, commentaires: donnees.pad.commentaires, evaluations: donnees.pad.evaluations, ordre: ordre, date: date, colonnes: donnees.pad.colonnes, bloc: donnees.pad.bloc, activite: activiteId, admins: [] })
 							})
 						})
 					})
@@ -1756,8 +1775,11 @@ io.on('connection', function (socket) {
 		}
 	})
 
-	socket.on('deplacerbloc', function (items, pad, affichage) {
+	socket.on('deplacerbloc', function (items, pad, affichage, ordre) {
 		if (socket.identifiant !== '' && socket.identifiant !== undefined && socket.room === 'pad-' + pad) {
+			if (ordre === 'decroissant') {
+				items.reverse()
+			}
 			const donneesBlocs = []
 			for (let i = 0; i < items.length; i++) {
 				const donneeBloc = new Promise(function (resolve) {
@@ -1789,6 +1811,9 @@ io.on('connection', function (socket) {
 					}
 				})
 				if (erreurs === 0) {
+					if (ordre === 'decroissant') {
+						items.reverse()
+					}
 					const identifiant = socket.identifiant
 					io.in(socket.room).emit('deplacerbloc', { blocs: items, identifiant: identifiant })
 				} else {
@@ -2162,6 +2187,19 @@ io.on('connection', function (socket) {
 			db.hmset('pads:' + pad, 'affichage', affichage, function (err) {
 				if (err) { socket.emit('erreur'); return false }
 				io.in(socket.room).emit('modifieraffichage', affichage)
+				socket.handshake.session.cookie.expires = new Date(Date.now() + (3600 * 24 * 7 * 1000))
+				socket.handshake.session.save()
+			})
+		} else {
+			socket.emit('deconnecte')
+		}
+	})
+
+	socket.on('modifierordre', function (pad, ordre) {
+		if (socket.identifiant !== '' && socket.identifiant !== undefined && socket.room === 'pad-' + pad) {
+			db.hmset('pads:' + pad, 'ordre', ordre, function (err) {
+				if (err) { socket.emit('erreur'); return false }
+				io.in(socket.room).emit('modifierordre', ordre)
 				socket.handshake.session.cookie.expires = new Date(Date.now() + (3600 * 24 * 7 * 1000))
 				socket.handshake.session.save()
 			})

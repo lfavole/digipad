@@ -38,9 +38,17 @@ export default {
 			this.utilisateur = donnees.identifiant
 			if (this.pad.contributions !== 'moderees' || (this.pad.contributions === 'moderees' && ((this.utilisateur === this.identifiant) || (this.pad.identifiant === donnees.identifiant) || this.admin))) {
 				if (this.pad.affichage === 'colonnes') {
-					this.colonnes[donnees.colonne].push(donnees)
+					if (this.pad.ordre === 'croissant') {
+						this.colonnes[donnees.colonne].push(donnees)
+					} else {
+						this.colonnes[donnees.colonne].unshift(donnees)
+					}
 				}
-				this.blocs.push(donnees)
+				if (this.pad.ordre === 'croissant') {
+					this.blocs.push(donnees)
+				} else {
+					this.blocs.unshift(donnees)
+				}
 				if (this.pad.contributions !== 'moderees' || (this.pad.contributions === 'moderees' && this.pad.identifiant === donnees.identifiant)) {
 					this.activite.unshift({ id: donnees.activiteId, bloc: donnees.bloc, identifiant: donnees.identifiant, nom: donnees.nom, titre: donnees.titre, date: donnees.date, couleur: donnees.couleur, type: 'bloc-ajoute' })
 				}
@@ -52,22 +60,10 @@ export default {
 					})
 				})
 				if (this.utilisateur === this.identifiant) {
-					if (this.pad.affichage === 'colonnes') {
-						this.$nextTick(function () {
-							const colonne = document.querySelector('#colonne' + donnees.colonne + ' .conteneur-colonne')
-							colonne.scrollTop = colonne.scrollHeight
-						})
-					} else if (this.pad.affichage === 'mur') {
-						this.$nextTick(function () {
-							const bloc = document.querySelector('#' + donnees.bloc)
-							bloc.scrollIntoView()
-						})
-					} else if (this.pad.affichage === 'flux-vertical') {
-						this.$nextTick(function () {
-							const pad = document.querySelector('#pad')
-							pad.scrollTop = pad.scrollHeight
-						})
-					}
+					this.$nextTick(function () {
+						const bloc = document.querySelector('#' + donnees.bloc)
+						bloc.scrollIntoView()
+					})
 				}
 				this.envoyerNotificationAdmins()
 			}
@@ -119,9 +115,17 @@ export default {
 				this.chargement = false
 			} else {
 				if (this.pad.affichage === 'colonnes') {
-					this.colonnes[donnees.colonne].push(donnees)
+					if (this.pad.ordre === 'croissant') {
+						this.colonnes[donnees.colonne].push(donnees)
+					} else {
+						this.colonnes[donnees.colonne].unshift(donnees)
+					}
 				}
-				this.blocs.push(donnees)
+				if (this.pad.ordre === 'croissant') {
+					this.blocs.push(donnees)
+				} else {
+					this.blocs.unshift(donnees)
+				}
 			}
 			this.activite.unshift({ id: donnees.activiteId, bloc: donnees.bloc, identifiant: donnees.identifiant, nom: donnees.nom, titre: donnees.titre, date: donnees.date, couleur: donnees.couleur, type: 'bloc-ajoute' })
 			this.$nextTick(function () {
@@ -335,6 +339,28 @@ export default {
 			if (this.admin) {
 				this.action = ''
 				this.$store.dispatch('modifierMessage', this.$t('affichagePadModifie'))
+			}
+		},
+		modifierordre: function (ordre) {
+			const blocActif = document.querySelector('.bloc.actif')
+			let blocId = ''
+			if (blocActif) {
+				blocId = blocActif.id
+			}
+			this.pad.ordre = ordre
+			this.blocs.reverse()
+			if (this.pad.affichage === 'colonnes') {
+				this.definirColonnes(this.blocs)
+			}
+			this.$nextTick(function () {
+				if (blocActif) {
+					blocActif.classList.remove('actif')
+					document.querySelector('#' + blocId).classList.add('actif')
+				}
+			})
+			this.chargement = false
+			if (this.admin) {
+				this.$store.dispatch('modifierMessage', this.$t('parametreOrdreModifie'))
 			}
 		},
 		modifierfond: function (fond) {
@@ -1260,7 +1286,7 @@ export default {
 		},
 		ajouterFichier () {
 			const champ = document.querySelector('#televerser-fichier')
-			const formats = ['jpg', 'jpeg', 'png', 'gif', 'mp4', 'm4v', 'mp3', 'm4a', 'ogg', 'wav', 'pdf', 'ppt', 'pptx', 'odp', 'doc', 'docx', 'odt', 'ods', 'xls', 'xlsx', 'flipchart', 'notebook', 'ubz']
+			const formats = ['jpg', 'jpeg', 'png', 'gif', 'mp4', 'm4v', 'mp3', 'm4a', 'ogg', 'wav', 'pdf', 'ppt', 'pptx', 'odp', 'doc', 'docx', 'odt', 'ods', 'odg', 'xls', 'xlsx', 'flipchart', 'notebook', 'ubz', 'ipynb']
 			const extension = champ.files[0].name.substring(champ.files[0].name.lastIndexOf('.') + 1).toLowerCase()
 			if (champ.files && champ.files[0] && formats.includes(extension) && champ.files[0].size < 20480000) {
 				const fichier = champ.files[0]
@@ -2439,7 +2465,11 @@ export default {
 				})
 				this.blocs = blocs
 			}
-			this.$socket.emit('deplacerbloc', this.blocs, this.pad.id, this.pad.affichage)
+			let ordre = 'croissant'
+			if (this.pad.hasOwnProperty('ordre')) {
+				ordre = this.pad.ordre
+			}
+			this.$socket.emit('deplacerbloc', this.blocs, this.pad.id, this.pad.affichage, ordre)
 			this.$nextTick(function () {
 				const blocsActifs = document.querySelectorAll('.bloc.actif')
 				if (blocsActifs.length > 0) {
@@ -2635,6 +2665,12 @@ export default {
 		modifierAffichage (affichage) {
 			if (this.pad.affichage !== affichage) {
 				this.$socket.emit('modifieraffichage', this.pad.id, affichage)
+				this.chargement = true
+			}
+		},
+		modifierOrdre (ordre) {
+			if (this.pad.ordre !== ordre) {
+				this.$socket.emit('modifierordre', this.pad.id, ordre)
 				this.chargement = true
 			}
 		},

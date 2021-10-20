@@ -142,6 +142,7 @@ export default {
 	accesPadModifie: 'Accedi al pad modificato.',
 	statutPadModifie: 'Status del pad modificato.',
 	affichagePadModifie: 'Visualizza il pad modificato.',
+	parametreOrdreModifie: 'Ordine delle capsule modificato.',
 	arrierePlanModifie: 'Sfondo modificato.',
 	parametreCommentairesModifie: 'Parametro dei commenti delle capsule modificato.',
 	parametreEvaluationModifie: 'Parametro di valutazione delle capsule modificato.',
@@ -303,5 +304,8 @@ export default {
 	editionNom: 'Modifica del nome',
 	modeOrganiserAutreUtilisateur: 'La modalità Organizzazione è utilizzata da un altro amministratore.',
 	modeOrganiserProprietaire: 'Il proprietario del pad ha appena attivato la Modalità Organizzazione.',
-	capsuleEnCoursModification: 'Questa capsula è già stata modificata da un altro utente.'
+	capsuleEnCoursModification: 'Questa capsula è già stata modificata da un altro utente.',
+	ordreCapsules: 'Ordine delle capsule',
+	croissant: 'ascendente',
+	decroissant: 'discendente'
 }

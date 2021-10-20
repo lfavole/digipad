@@ -141,7 +141,8 @@ export default {
 	titrePadModifie: 'Title of the pad changed.',
 	accesPadModifie: 'Access to the pad changed.',
 	statutPadModifie: 'Status of the pad changed.',
-	affichagePadModifie: 'Disply of the pad changed.',
+	affichagePadModifie: 'Display of the pad changed.',
+	parametreOrdreModifie: 'Order of the capsules changed.',
 	arrierePlanModifie: 'Background changed.',
 	parametreCommentairesModifie: 'Capsule comment parameter changed.',
 	parametreEvaluationModifie: 'Capsule review parameter changed.',
@@ -303,5 +304,8 @@ export default {
 	editionNom: 'Name editing',
 	modeOrganiserAutreUtilisateur: 'The Organize mode is being used by another admin.',
 	modeOrganiserProprietaire: 'The owner of the pad has just activated the Organize Mode.',
-	capsuleEnCoursModification: 'This capsule is already being modified by another user.'
+	capsuleEnCoursModification: 'This capsule is already being modified by another user.',
+	ordreCapsules: 'Order of the capsules',
+	croissant: 'ascending',
+	decroissant: 'descending'
 }
