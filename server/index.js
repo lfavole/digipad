@@ -1165,6 +1165,26 @@ app.post('/api/modifier-mot-de-passe', function (req, res) {
 	}
 })
 
+app.post('/api/modifier-mot-de-passe-admin', function (req, res) {
+	const admin = req.body.admin
+	if (admin === process.env.ADMIN_PASSWORD) {
+		const identifiant = req.body.identifiant
+		db.exists('utilisateurs:' + identifiant, function (err, resultat) {
+			if (err) { res.send('erreur'); return false }
+			if (resultat === 1) {
+				db.hgetall('utilisateurs:' + identifiant, function (err) {
+					if (err) { res.send('erreur'); return false }
+					const hash = bcrypt.hashSync(req.body.motdepasse, 10)
+					db.hmset('utilisateurs:' + identifiant, 'motdepasse', hash)
+					res.send('motdepasse_modifie')
+				})
+			} else {
+				res.send('identifiant_non_valide')
+			}
+		})
+	}
+})
+
 app.post('/api/supprimer-compte', function (req, res) {
 	const identifiant = req.body.identifiant
 	if (req.session.identifiant && req.session.identifiant === identifiant) {

@@ -36,6 +36,7 @@ DB_PWD (mot de passe de la base de données Redis)
 SESSION_KEY (clé de session Express Session)
 ETHERPAD (lien vers un serveur Etherpad pour les documents collaboratifs)
 ETHERPAD_API_KEY (clé API Etherpad)
+ADMIN_PASSWORD (mot de passe pour accéder à la page d'administration /admin)
 ```
 
 ### Projet Nuxt.js avec serveur Node.js (Express) et base de données Redis
