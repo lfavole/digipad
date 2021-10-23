@@ -296,7 +296,7 @@
 						<span class="barre" />
 					</label>
 				</div>
-				<div class="conteneur-interrupteur">
+				<div class="conteneur-interrupteur" v-if="etherpad !== '' && etherpadApi !== ''">
 					<span>{{ $t('documentsCollaboratifs') }}</span>
 					<label class="bouton-interrupteur">
 						<input type="checkbox" :checked="pad.documents === 'actives'" @change="modifierDocuments">
