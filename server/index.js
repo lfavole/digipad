@@ -1090,15 +1090,17 @@ app.post('/api/supprimer-pad', function (req, res) {
 			} else {
 				db.hgetall('utilisateurs:' + identifiant, function (err, donnees) {
 					if (err) { res.send('erreur_suppression'); return false }
-					const dossiers = JSON.parse(donnees.dossiers)
-					dossiers.forEach(function (dossier, indexDossier) {
-						if (dossier.pads.includes(pad)) {
-							const indexPad = dossier.pads.indexOf(pad)
-							dossiers[indexDossier].pads.splice(indexPad, 1)
-						}
-					})
 					const multi = db.multi()
-					multi.hmset('utilisateurs:' + identifiant, 'dossiers', JSON.stringify(dossiers))
+					if (donnees.hasOwnProperty('dossiers')) {
+						const dossiers = JSON.parse(donnees.dossiers)
+						dossiers.forEach(function (dossier, indexDossier) {
+							if (dossier.pads.includes(pad)) {
+								const indexPad = dossier.pads.indexOf(pad)
+								dossiers[indexDossier].pads.splice(indexPad, 1)
+							}
+						})
+						multi.hmset('utilisateurs:' + identifiant, 'dossiers', JSON.stringify(dossiers))
+					}
 					if (type === 'pad-rejoint') {
 						multi.srem('pads-rejoints:' + identifiant, pad)
 					}
