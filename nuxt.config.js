@@ -89,6 +89,11 @@ module.exports = {
 			maxAge: 1000 * 60 * 60 * 24 * 7
 		}
 	},
+	env: {
+		etherpad: process.env.ETHERPAD,
+		etherpadApi: process.env.ETHERPAD_API_KEY,
+		adminPassword: process.env.ADMIN_PASSWORD
+	},
 	buildModules: [
 		'@nuxtjs/eslint-module'
 	]

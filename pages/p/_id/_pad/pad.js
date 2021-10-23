@@ -725,10 +725,10 @@ export default {
 			return this.$store.state.acces
 		},
 		etherpad () {
-			return this.$store.state.etherpad
+			return process.env.etherpad
 		},
 		etherpadApi () {
-			return this.$store.state.etherpadApi
+			return process.env.etherpadApi
 		},
 		blocsRecherche () {
 			let resultats = []

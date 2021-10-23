@@ -58,7 +58,7 @@ export default {
 	},
 	mounted () {
 		const motdepasse = prompt(this.$t('motDePasse'), '')
-		if (motdepasse === process.env.ADMIN_PASSWORD) {
+		if (motdepasse === process.env.adminPassword) {
 			this.acces = true
 			this.admin = motdepasse
 		}
