@@ -297,8 +297,8 @@ app.post('/api/recuperer-donnees-pad', function (req, res) {
 											if (!donnees.hasOwnProperty('visibilite')) {
 												donnees.visibilite = 'visible'
 											}
-											// Ne pas ajouter les capsules en attente de modération
-											if (pad.contributions === 'moderees' && donnees.visibilite === 'masquee' && donnees.identifiant !== identifiant && pad.identifiant !== identifiant && !pad.admins.includes(identifiant)) {
+											// Ne pas ajouter les capsules en attente de modération ou privées
+											if (((pad.contributions === 'moderees' && donnees.visibilite === 'masquee') || donnees.visibilite === 'privee') && donnees.identifiant !== identifiant && pad.identifiant !== identifiant && !pad.admins.includes(identifiant)) {
 												resolve({})
 											}
 											db.zcard('commentaires:' + bloc, function (err, commentaires) {
@@ -1681,20 +1681,27 @@ io.on('connection', function (socket) {
 		socket.broadcast.emit('deconnexion', identifiant)
 	})
 
-	socket.on('ajouterbloc', function (bloc, pad, token, titre, texte, media, iframe, type, source, vignette, couleur, colonne) {
+	socket.on('ajouterbloc', function (bloc, pad, token, titre, texte, media, iframe, type, source, vignette, couleur, colonne, privee) {
 		if (socket.identifiant !== '' && socket.identifiant !== undefined && socket.room === 'pad-' + pad) {
 			const identifiant = socket.identifiant
 			const nom = socket.nom
-			db.hgetall('pads:' + pad, function (err, resultat) {
+			db.hgetall('pads:' + pad, function (err, donnees) {
 				if (err) { socket.emit('erreur'); return false }
-				const id = parseInt(resultat.bloc) + 1
+				const proprietaire = donnees.identifiant
+				let admins = []
+				if (donnees.hasOwnProperty('admins')) {
+					admins = donnees.admins
+				}
+				const id = parseInt(donnees.bloc) + 1
 				db.hincrby('pads:' + pad, 'bloc', 1)
-				if (resultat.id === pad && resultat.token === token) {
+				if (donnees.id === pad && donnees.token === token) {
 					const date = moment().format()
-					const activiteId = parseInt(resultat.activite) + 1
+					const activiteId = parseInt(donnees.activite) + 1
 					const multi = db.multi()
 					let visibilite = 'visible'
-					if (resultat.contributions === 'moderees' && resultat.identifiant !== identifiant) {
+					if ((admins.includes(identifiant) || proprietaire === identifiant) && privee === true) {
+						visibilite = 'privee'
+					} else if (!admins.includes(identifiant) && proprietaire !== identifiant && donnees.contributions === 'moderees') {
 						visibilite = 'masquee'
 					}
 					multi.hmset('pad-' + pad + ':' + bloc, 'id', id, 'bloc', bloc, 'titre', titre, 'texte', texte, 'media', media, 'iframe', iframe, 'type', type, 'source', source, 'vignette', vignette, 'date', date, 'identifiant', identifiant, 'commentaires', 0, 'evaluations', 0, 'colonne', colonne, 'visibilite', visibilite)
@@ -1716,7 +1723,7 @@ io.on('connection', function (socket) {
 		}
 	})
 
-	socket.on('modifierbloc', function (bloc, pad, token, titre, texte, media, iframe, type, source, vignette, couleur, colonne) {
+	socket.on('modifierbloc', function (bloc, pad, token, titre, texte, media, iframe, type, source, vignette, couleur, colonne, privee) {
 		if (socket.identifiant !== '' && socket.identifiant !== undefined && socket.room === 'pad-' + pad) {
 			db.hgetall('pads:' + pad, function (err, donnees) {
 				if (donnees.id === pad && donnees.token === token) {
@@ -1737,16 +1744,27 @@ io.on('connection', function (socket) {
 									if (objet.hasOwnProperty('visibilite')) {
 										visibilite = objet.visibilite
 									}
+									if (privee === true) {
+										visibilite = 'privee'
+									}
 									const date = moment().format()
-									if (visibilite !== 'masquee') {
+									if (visibilite === 'visible') {
 										// Enregistrer entrée du registre d'activité
 										const activiteId = parseInt(donnees.activite) + 1
 										const multi = db.multi()
-										multi.hmset('pad-' + pad + ':' + bloc, 'titre', titre, 'texte', texte, 'media', media, 'iframe', iframe, 'type', type, 'source', source, 'vignette', vignette, 'modifie', date)
+										multi.hmset('pad-' + pad + ':' + bloc, 'titre', titre, 'texte', texte, 'media', media, 'iframe', iframe, 'type', type, 'source', source, 'vignette', vignette, 'visibilite', 'visible', 'modifie', date)
 										multi.hincrby('pads:' + pad, 'activite', 1)
 										multi.zadd('activite:' + pad, activiteId, JSON.stringify({ id: activiteId, bloc: bloc, identifiant: identifiant, titre: titre, date: date, couleur: couleur, type: 'bloc-modifie' }))
 										multi.exec(function () {
 											io.in(socket.room).emit('modifierbloc', { bloc: bloc, titre: titre, texte: texte, media: media, iframe: iframe, type: type, source: source, vignette: vignette, identifiant: identifiant, nom: nom, modifie: date, couleur: couleur, colonne: colonne, visibilite: visibilite, activiteId: activiteId })
+											socket.handshake.session.cookie.expires = new Date(Date.now() + (3600 * 24 * 7 * 1000))
+											socket.handshake.session.save()
+										})
+									} else if (visibilite === 'privee') {
+										const multi = db.multi()
+										multi.hmset('pad-' + pad + ':' + bloc, 'titre', titre, 'texte', texte, 'media', media, 'iframe', iframe, 'type', type, 'source', source, 'vignette', vignette, 'visibilite', 'privee', 'modifie', date)
+										multi.exec(function () {
+											io.in(socket.room).emit('modifierbloc', { bloc: bloc, titre: titre, texte: texte, media: media, iframe: iframe, type: type, source: source, vignette: vignette, identifiant: identifiant, nom: nom, modifie: date, couleur: couleur, colonne: colonne, visibilite: visibilite })
 											socket.handshake.session.cookie.expires = new Date(Date.now() + (3600 * 24 * 7 * 1000))
 											socket.handshake.session.save()
 										})
@@ -1766,7 +1784,7 @@ io.on('connection', function (socket) {
 		}
 	})
 
-	socket.on('autoriserbloc', function (pad, token, item) {
+	socket.on('autoriserbloc', function (pad, token, item, moderation, admin) {
 		if (socket.identifiant !== '' && socket.identifiant !== undefined && socket.room === 'pad-' + pad) {
 			db.hgetall('pads:' + pad, function (err, donnees) {
 				if (donnees.id === pad && donnees.token === token) {
@@ -1784,7 +1802,7 @@ io.on('connection', function (socket) {
 							multi.hincrby('pads:' + pad, 'activite', 1)
 							multi.zadd('activite:' + pad, activiteId, JSON.stringify({ id: activiteId, bloc: item.bloc, identifiant: item.identifiant, titre: item.titre, date: date, couleur: item.couleur, type: 'bloc-ajoute' }))
 							multi.exec(function () {
-								io.in(socket.room).emit('autoriserbloc', { bloc: item.bloc, titre: item.titre, texte: item.texte, media: item.media, iframe: item.iframe, type: item.type, source: item.source, vignette: item.vignette, identifiant: item.identifiant, nom: item.nom, date: date, couleur: item.couleur, commentaires: 0, evaluations: [], colonne: item.colonne, visibilite: 'visible', activiteId: activiteId })
+								io.in(socket.room).emit('autoriserbloc', { bloc: item.bloc, titre: item.titre, texte: item.texte, media: item.media, iframe: item.iframe, type: item.type, source: item.source, vignette: item.vignette, identifiant: item.identifiant, nom: item.nom, date: date, couleur: item.couleur, commentaires: 0, evaluations: [], colonne: item.colonne, visibilite: 'visible', activiteId: activiteId, moderation: moderation, admin: admin })
 								socket.handshake.session.cookie.expires = new Date(Date.now() + (3600 * 24 * 7 * 1000))
 								socket.handshake.session.save()
 							})

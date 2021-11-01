@@ -588,7 +588,7 @@ label.bouton-bleu {
 	width: 100%;
 }
 
-.modale .conteneur label:not(.bouton) {
+.modale .conteneur label:not(.bouton):not(.bouton-interrupteur) {
 	display: block;
 	width: 100%;
 	font-weight: 700;
@@ -652,6 +652,16 @@ label.bouton-bleu {
 
 .modale .conteneur .actions .bouton:last-child {
     margin-right: 0;
+}
+
+.modale .conteneur-interrupteur {
+	display: flex;
+	align-items: center;
+	margin-bottom: 20px;
+}
+
+.modale .conteneur-interrupteur > span {
+	margin-right: 1.5rem;
 }
 
 #alerte {

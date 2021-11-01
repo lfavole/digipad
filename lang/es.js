@@ -307,5 +307,8 @@ export default {
 	capsuleEnCoursModification: 'Esta cápsula ya está siendo modificada por otro usuario.',
 	ordreCapsules: 'Orden de las cápsulas',
 	croissant: 'ascendente',
-	decroissant: 'descendente'
+	decroissant: 'descendente',
+	capsulePrivee: 'Cápsula privada',
+	capsuleVisible: 'Cápsula visible para todos los usuarios.',
+	afficherCapsule: 'Ver cápsula'
 }
