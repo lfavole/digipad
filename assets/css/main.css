@@ -1236,3 +1236,34 @@ label.bouton-bleu {
 		height: 27rem;
 	}
 }
+
+
+/* CSS Print
+–––––––––––––––––––––––––––––––––––––––––––––––––– */
+@media print {
+	html,
+	body,
+	#__layout,
+	#__nuxt,
+	#app,
+	#page {
+		height: auto!important;
+	}
+
+	body {
+		position: relative!important;
+		overflow: auto!important;
+	}
+
+	.notification {
+		display: none!important;
+	}
+
+	#blocs.mur > div {
+		width: 100%!important;
+	}
+
+	#blocs.mur {
+		display: block!important;
+	}
+}

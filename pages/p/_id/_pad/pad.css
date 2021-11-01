@@ -920,10 +920,6 @@
 	border-color: #ccc!important;
 }
 
-#diapositive.privee .en-tete {
-	background: rgba(0, 0, 80, 0.05)!important;
-}
-
 #diapositive .contenu {
 	overflow: auto;
 	-webkit-overflow-scrolling: touch;
@@ -1778,5 +1774,89 @@
 
 	#suivant {
 		right: 0;
+	}
+}
+
+@media print {
+	#blocs .bloc .titre i,
+	#blocs.colonnes .bloc.haut.ajouter-colonne,
+	#blocs.colonnes .ajouter,
+	#ajouter,
+	#conteneur-logo,
+	#nav,
+	#conteneur-header-droit,
+	#blocs .bloc .evaluation .bouton,
+	#blocs .bloc .action,
+	#masque,
+	.menu {
+		display: none!important;
+	}
+
+	#pad {
+		height: auto!important;
+		margin-left: 0!important;
+		width: 100%!important;
+		padding-bottom: 100rem!important;
+	}
+
+	#titre {
+		margin-left: 0!important;
+	}
+
+	#blocs .bloc {
+		display: block!important;
+		border-radius: 0!important;
+		margin-bottom: 1.5rem!important;
+		max-width: 700px!important;
+	}
+
+	#blocs .bloc .media {
+		text-align: center!important;
+	}
+
+	#blocs .bloc .media img {
+		max-height: 300px!important;
+	}
+
+	#blocs .bloc.actif {
+		outline: none!important;
+	}
+
+	.colonnes #pad {
+		display: block!important;
+		width: 100%!important;
+		overflow: auto!important;
+	}
+
+	#blocs.colonnes .colonne,
+	#blocs.colonnes .conteneur-colonne,
+	#blocs.flux-vertical,
+	#blocs.colonnes {
+		display: block!important;
+	}
+
+	#blocs.colonnes .colonne {
+		width: 100%!important;
+		height: auto!important;
+		margin-bottom: 5rem!important;
+	}
+
+	#blocs.colonnes .bloc {
+		margin: 0 0 1.5rem 0!important;
+		width: 100%!important;
+	}
+
+	#blocs.colonnes .conteneur-colonne {
+		margin: 0!important;
+		padding: 0!important;
+		width: 100%!important;
+	}
+
+	#blocs .bloc .titre {
+		background: none!important;
+	}
+
+	#blocs .bloc .titre span {
+		width: auto!important;
 	}
 }

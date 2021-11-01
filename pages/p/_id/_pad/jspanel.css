@@ -449,3 +449,9 @@
 body {
     -ms-overflow-style: scrollbar;
 }
+
+@media print {
+	.jsPanel {
+		display: none!important;
+	}
+}
