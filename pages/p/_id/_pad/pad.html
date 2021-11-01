@@ -905,7 +905,7 @@
 
 	<div class="conteneur-modale" v-if="modaleDiaporama">
 		<div id="diapositive" class="modale-diapositive" :class="{'privee': donneesBloc.visibilite === 'privee'}" :style="{'border-color': donneesBloc.couleur}" v-show="!chargement">
-			<div class="en-tete" :style="{'background': eclaircirCouleur(donneesBloc.couleur)}">
+			<div class="en-tete">
 				<span class="titre"><span>{{ donneesBloc.titre }}</span> <span>{{ $t('par') }} {{ definirNom(donneesBloc) }}</span></span>
 				<span role="button" tabindex="0" class="fermer" @click="fermerModaleDiaporama"><i class="material-icons">close</i></span>
 			</div>
