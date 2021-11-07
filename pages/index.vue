@@ -41,7 +41,7 @@
 						<input id="champ-titre-pad" type="text" maxlength="48" :value="titre" @input="titre = $event.target.value">
 						<label for="champ-motdepasse-pad">{{ $t('motDePassePad') }}</label>
 						<p class="information">{{ $t('infoMotDePassePad') }}</p>
-						<input id="champ-motdepasse-pad" type="text" maxlength="24" :value="motDePassePad" @input="motDePassePad = $event.target.value" @keydown.enter="creerPad">
+						<input id="champ-motdepasse-pad" type="text" maxlength="48" :value="motDePassePad" @input="motDePassePad = $event.target.value" @keydown.enter="creerPad">
 						<div class="actions">
 							<span role="button" tabindex="0" class="bouton" @click="creerPad" v-if="!chargement">{{ $t('creer') }}</span>
 							<div class="conteneur-chargement" v-else>
@@ -62,9 +62,9 @@
 				<div class="conteneur">
 					<div class="contenu">
 						<label for="champ-identifiant">{{ $t('identifiant') }}</label>
-						<input id="champ-identifiant" type="text" maxlength="24" :value="identifiant" @input="identifiant = $event.target.value">
+						<input id="champ-identifiant" type="text" maxlength="48" :value="identifiant" @input="identifiant = $event.target.value">
 						<label for="champ-motdepasse">{{ $t('motDePasse') }}</label>
-						<input id="champ-motdepasse" type="password" maxlength="24" :value="motDePasse" @input="motDePasse = $event.target.value" @keydown.enter="seConnecter">
+						<input id="champ-motdepasse" type="password" maxlength="48" :value="motDePasse" @input="motDePasse = $event.target.value" @keydown.enter="seConnecter">
 						<div class="actions">
 							<span role="button" tabindex="0" class="bouton" @click="seConnecter" v-if="!chargement">{{ $t('valider') }}</span>
 							<div class="conteneur-chargement" v-else>
@@ -86,12 +86,12 @@
 					<div class="contenu">
 						<label for="champ-identifiant">{{ $t('identifiant') }}</label>
 						<p class="information">{{ $t('infoIdentifiant') }}</p>
-						<input id="champ-identifiant" type="text" maxlength="24" :value="identifiant" @input="identifiant = $event.target.value">
+						<input id="champ-identifiant" type="text" maxlength="48" :value="identifiant" @input="identifiant = $event.target.value">
 						<label for="champ-motdepasse">{{ $t('motDePasse') }}</label>
 						<p class="information">{{ $t('infoMotDePasse') }}</p>
-						<input id="champ-motdepasse" type="password" maxlength="24" :value="motDePasse" @input="motDePasse = $event.target.value">
+						<input id="champ-motdepasse" type="password" maxlength="48" :value="motDePasse" @input="motDePasse = $event.target.value">
 						<label for="champ-confirmation-motdepasse">{{ $t('confirmationMotDePasse') }}</label>
-						<input id="champ-confirmation-motdepasse" type="password" maxlength="24" :value="confirmationMotDePasse" @input="confirmationMotDePasse = $event.target.value" @keydown.enter="sInscrire">
+						<input id="champ-confirmation-motdepasse" type="password" maxlength="48" :value="confirmationMotDePasse" @input="confirmationMotDePasse = $event.target.value" @keydown.enter="sInscrire">
 						<div class="actions">
 							<span role="button" tabindex="0" class="bouton" @click="sInscrire" v-if="!chargement">{{ $t('valider') }}</span>
 							<div class="conteneur-chargement" v-else>
@@ -180,11 +180,11 @@ export default {
 			})
 		},
 		creerPad () {
-			if (this.titre !== '' && this.motDePassePad !== '') {
+			if (this.titre.trim() !== '' && this.motDePassePad.trim() !== '') {
 				this.chargement = true
 				axios.post(this.hote + '/api/creer-pad-sans-compte', {
-					titre: this.titre,
-					motdepasse: this.motDePassePad
+					titre: this.titre.trim(),
+					motdepasse: this.motDePassePad.trim()
 				}).then(function (reponse) {
 					const donnees = reponse.data
 					if (donnees === 'erreur_creation') {
@@ -260,12 +260,10 @@ export default {
 					this.chargement = false
 					this.$store.dispatch('modifierAlerte', this.$t('erreurCommunicationServeur'))
 				}.bind(this))
-			} else {
-				if (this.identifiant === '' || this.motDePasse === '' || this.confirmationMotDePasse === '') {
-					this.$store.dispatch('modifierAlerte', this.$t('remplirChamps'))
-				} else if (this.motDePasse !== this.confirmationMotDePasse) {
-					this.$store.dispatch('modifierAlerte', this.$t('motsDePassePasIdentiques'))
-				}
+			} else if (this.identifiant.trim() === '' || this.motDePasse.trim() === '' || this.confirmationMotDePasse.trim() === '') {
+				this.$store.dispatch('modifierAlerte', this.$t('remplirChamps'))
+			} else if (this.motDePasse.trim() !== this.confirmationMotDePasse.trim()) {
+				this.$store.dispatch('modifierAlerte', this.$t('motsDePassePasIdentiques'))
 			}
 		},
 		fermerModaleConnexion () {
