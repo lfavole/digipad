@@ -239,11 +239,11 @@
 				<div class="conteneur">
 					<div class="contenu">
 						<label for="champ-motdepasse-actuel">{{ $t('motDePasseActuel') }}</label>
-						<input id="champ-motdepasse-actuel" type="password" maxlength="24" :value="motDePasse" @input="motDePasse = $event.target.value">
+						<input id="champ-motdepasse-actuel" type="password" maxlength="48" :value="motDePasse" @input="motDePasse = $event.target.value">
 						<label for="champ-nouveau-motdepasse">{{ $t('nouveauMotDePasse') }}</label>
-						<input id="champ-nouveau-motdepasse" type="password" maxlength="24" :value="nouveauMotDePasse" @input="nouveauMotDePasse = $event.target.value">
+						<input id="champ-nouveau-motdepasse" type="password" maxlength="48" :value="nouveauMotDePasse" @input="nouveauMotDePasse = $event.target.value">
 						<label for="champ-confirmation-motdepasse">{{ $t('confirmationNouveauMotDePasse') }}</label>
-						<input id="champ-confirmation-motdepasse" type="password" maxlength="24" :value="confirmationNouveauMotDePasse" @input="confirmationNouveauMotDePasse = $event.target.value" @keydown.enter="modifierMotDePasse">
+						<input id="champ-confirmation-motdepasse" type="password" maxlength="48" :value="confirmationNouveauMotDePasse" @input="confirmationNouveauMotDePasse = $event.target.value" @keydown.enter="modifierMotDePasse">
 						<div class="actions">
 							<span role="button" tabindex="0" class="bouton" @click="modifierMotDePasse">{{ $t('modifier') }}</span>
 						</div>

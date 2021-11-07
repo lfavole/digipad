@@ -13,11 +13,11 @@
 				</h1>
 				<div class="conteneur">
 					<label>{{ $t('identifiant') }}</label>
-					<input id="identifiant" type="text" maxlength="24" :value="identifiant" @input="identifiant = $event.target.value">
+					<input id="identifiant" type="text" maxlength="48" :value="identifiant" @input="identifiant = $event.target.value">
 				</div>
 				<div class="conteneur">
 					<label>{{ $t('motDePasse') }}</label>
-					<input id="motdepasse" type="text" maxlength="24" :value="motdepasse" @input="motdepasse = $event.target.value">
+					<input id="motdepasse" type="text" maxlength="48" :value="motdepasse" @input="motdepasse = $event.target.value">
 				</div>
 				<div class="actions">
 					<span class="bouton" role="button" tabindex="0" @click="modifierMotDePasse">{{ $t('valider') }}</span>

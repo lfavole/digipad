@@ -1114,7 +1114,7 @@
 			<div class="conteneur">
 				<div class="contenu">
 					<label for="champ-motdepasse">{{ $t('motDePasse') }}</label>
-					<input id="champ-motdepasse" type="text" maxlength="24" :value="motDePasse" @input="motDePasse = $event.target.value" @keydown.enter="verifierMotDePasse">
+					<input id="champ-motdepasse" type="text" maxlength="48" :value="motDePasse" @input="motDePasse = $event.target.value" @keydown.enter="verifierMotDePasse">
 					<div class="actions">
 						<span role="button" tabindex="0" class="bouton" @click="verifierMotDePasse">{{ $t('valider') }}</span>
 					</div>
@@ -1132,9 +1132,9 @@
 			<div class="conteneur">
 				<div class="contenu">
 					<label for="champ-motdepasse-actuel">{{ $t('motDePasseActuel') }}</label>
-					<input id="champ-motdepasse-actuel" type="text" maxlength="24" :value="motDePasse" @input="motDePasse = $event.target.value">
+					<input id="champ-motdepasse-actuel" type="text" maxlength="48" :value="motDePasse" @input="motDePasse = $event.target.value">
 					<label for="champ-nouveau-motdepasse">{{ $t('nouveauMotDePasse') }}</label>
-					<input id="champ-nouveau-motdepasse" type="text" maxlength="24" :value="nouveauMotDePasse" @input="nouveauMotDePasse = $event.target.value" @keydown.enter="modifierMotDePasse">
+					<input id="champ-nouveau-motdepasse" type="text" maxlength="48" :value="nouveauMotDePasse" @input="nouveauMotDePasse = $event.target.value" @keydown.enter="modifierMotDePasse">
 					<div class="actions">
 						<span role="button" tabindex="0" class="bouton" @click="modifierMotDePasse">{{ $t('modifier') }}</span>
 					</div>
