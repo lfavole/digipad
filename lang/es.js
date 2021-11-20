@@ -235,7 +235,7 @@ export default {
 	mentionsLegales2: 'Digipad es una aplicación colaborativa que permite crear muros multimedia que pueden alojar todo tipo de archivos y recursos multimedia interactivos. Su uso está exclusivamente reservado a un ámbito educativo y pedagógico.',
 	mentionsLegales3: 'La Digitale no se hace responsable de los contenidos publicados por los usuarios del sitio web. La Digitale se compromete a borrar, tras ser advertida por correo electrónico a la dirección ez@ladigitale.dev, todo contenido inapropiado o que no respete los derechos de autor.',
 	politiqueConfidentialite: 'Política de confidencialidad',
-	mentionsLegales4: 'La recogida de datos personales se limita al historial diario generado por el servidor. El sitio web digipad.app se compromete a no transmitir o revender a terceras partes los datos de sus usuarios. El sitio web no realiza ningún tipo de vigilancia de tráfico con fines estadísticos.',
+	mentionsLegales4: 'La recogida de datos personales se limita al historial diario generado por el servidor. La Digitale se compromete a no transmitir o revender a terceras partes los datos de sus usuarios. El sitio web no realiza ningún tipo de vigilancia de tráfico con fines estadísticos.',
 	mentionsLegales5: 'Una cookie que contiene el nombre de usuario y otra cookie que contiene el identificador del socket de comunicación son utilizadas para permitir al usuario a conectarse a su sesión y actualizar en tiempo real los contenidos de los pads. Para garantizar una máxima confidencialidad, se recomienda utilizar un seudónimo y no indicar informaciones personales en los contenidos.',
 	proprieteIntellectuelle: 'Propiedad Intelectual',
 	hebergement: 'Alojamiento',
