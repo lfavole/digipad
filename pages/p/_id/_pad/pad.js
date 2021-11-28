@@ -702,7 +702,7 @@ export default {
 	},
 	head () {
 		return {
-			title: this.pad.hasOwnProperty('titre') ? this.pad.titre + ' - Digipad' : 'Digipad',
+			title: this.pad.hasOwnProperty('titre') ? this.pad.titre + ' - Digipad by La Digitale' : 'Digipad by La Digitale',
 			meta: [
 				{
 					hid: 'robots',

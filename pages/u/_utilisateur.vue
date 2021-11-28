@@ -460,7 +460,7 @@ export default {
 	},
 	head () {
 		return {
-			title: this.identifiant + ' - Digipad'
+			title: this.identifiant + ' - Digipad by La Digitale'
 		}
 	},
 	computed: {
