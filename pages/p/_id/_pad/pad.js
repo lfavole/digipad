@@ -1137,7 +1137,7 @@ export default {
 				icone = 'link'
 				break
 			case 'embed':
-				if (item.source === 'youtube' || item.source === 'vimeo' || item.source === 'dailymotion') {
+				if (item.source === 'youtube' || item.source === 'vimeo' || item.source === 'dailymotion' || item.source === 'digiplay') {
 					icone = 'movie'
 				} else if (item.source === 'slideshare' || item.media.includes('wikipedia.org') || item.media.includes('drive.google.com') || item.media.includes('docs.google.com')) {
 					icone = 'description'
@@ -2139,7 +2139,7 @@ export default {
 			}
 		},
 		definirTypeMedia () {
-			if (this.donneesBloc.source === 'youtube' || this.donneesBloc.source === 'vimeo' || this.donneesBloc.source === 'dailymotion') {
+			if (this.donneesBloc.source === 'youtube' || this.donneesBloc.source === 'vimeo' || this.donneesBloc.source === 'dailymotion' || this.donneesBloc.source === 'digiplay') {
 				return 'video'
 			} else if (this.donneesBloc.source === 'slideshare' || this.donneesBloc.source === 'soundcloud' || this.donneesBloc.media.includes('clyp.it') || this.donneesBloc.media.includes('vocaroo.com') || this.donneesBloc.media.includes('voca.ro')) {
 				return 'embed'
