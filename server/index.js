@@ -714,6 +714,16 @@ app.post('/api/dupliquer-pad', function (req, res) {
 								if (donnees.hasOwnProperty('visibilite')) {
 									visibilite = donnees.visibilite
 								}
+								const etherpad = process.env.ETHERPAD
+								const etherpadApi = process.env.ETHERPAD_API_KEY
+								if (donnees.iframe !== '' && donnees.iframe.includes(etherpad)) {
+									const etherpadId = donnees.iframe.replace(etherpad + '/p/', '')
+									const destinationId = 'pad-' + id + '-' + Math.random().toString(16).slice(2)
+									url = etherpad + '/api/1/copyPad?apikey=' + etherpadApi + '&sourceID=' + etherpadId + '&destinationID=' + destinationId
+									axios.get(url)
+									donnees.iframe = etherpad + '/p/' + destinationId
+									donnees.media = etherpad + '/p/' + destinationId
+								}
 								const multi = db.multi()
 								const blocId = 'bloc-id-' + (new Date()).getTime() + Math.random().toString(16).slice(10)
 								multi.hmset('pad-' + id + ':' + blocId, 'id', donnees.id, 'bloc', blocId, 'titre', donnees.titre, 'texte', donnees.texte, 'media', donnees.media, 'iframe', donnees.iframe, 'type', donnees.type, 'source', donnees.source, 'vignette', donnees.vignette, 'date', date, 'identifiant', donnees.identifiant, 'commentaires', 0, 'evaluations', 0, 'colonne', donnees.colonne, 'visibilite', visibilite)
@@ -1035,56 +1045,31 @@ app.post('/api/supprimer-pad', function (req, res) {
 			if (resultat.identifiant === identifiant) {
 				db.zrange('blocs:' + pad, 0, -1, function (err, blocs) {
 					if (err) { res.send('erreur_suppression'); return false }
-					const donneesBlocs = []
-					for (const bloc of blocs) {
-						const donneesBloc = new Promise(function (resolve) {
-							db.hgetall('pad-' + pad + ':' + bloc, function (err, donnees) {
-								if (err) { resolve() }
-								const etherpad = process.env.ETHERPAD
-								const etherpadApi = process.env.ETHERPAD_API_KEY
-								let etherpadId, url
-								if (donnees.iframe !== '' && donnees.iframe.includes(etherpad)) {
-									etherpadId = donnees.iframe.replace(etherpad + '/p/', '')
-									url = etherpad + '/api/1/deletePad?apikey=' + etherpadApi + '&padID=' + etherpadId
-									axios.get(url)
-								}
-								if (donnees.media !== '' && donnees.media.includes(etherpad)) {
-									etherpadId = donnees.media.replace(etherpad + '/p/', '')
-									url = etherpad + '/api/1/deletePad?apikey=' + etherpadApi + '&padID=' + etherpadId
-									axios.get(url)
-								}
-								resolve(bloc)
-							})
-						})
-						donneesBlocs.push(donneesBloc)
+					const multi = db.multi()
+					for (let i = 0; i < blocs.length; i++) {
+						multi.del('commentaires:' + blocs[i])
+						multi.del('evaluations:' + blocs[i])
+						multi.del('pad-' + pad + ':' + blocs[i])
 					}
-					Promise.all(donneesBlocs).then(function () {
-						const multi = db.multi()
-						for (let i = 0; i < blocs.length; i++) {
-							multi.del('commentaires:' + blocs[i])
-							multi.del('evaluations:' + blocs[i])
-							multi.del('pad-' + pad + ':' + blocs[i])
+					multi.del('blocs:' + pad)
+					multi.del('pads:' + pad)
+					multi.del('activite:' + pad)
+					multi.srem('pads-crees:' + identifiant, pad)
+					multi.smembers('utilisateurs-pads:' + pad, function (err, utilisateurs) {
+						if (err) { res.send('erreur_suppression'); return false }
+						for (let j = 0; j < utilisateurs.length; j++) {
+							db.srem('pads-rejoints:' + utilisateurs[j], pad)
+							db.srem('pads-utilisateurs:' + utilisateurs[j], pad)
+							db.srem('pads-admins:' + utilisateurs[j], pad)
+							db.srem('pads-favoris:' + utilisateurs[j], pad)
+							db.hdel('couleurs:' + utilisateurs[j], 'pad' + pad)
 						}
-						multi.del('blocs:' + pad)
-						multi.del('pads:' + pad)
-						multi.del('activite:' + pad)
-						multi.srem('pads-crees:' + identifiant, pad)
-						multi.smembers('utilisateurs-pads:' + pad, function (err, utilisateurs) {
-							if (err) { res.send('erreur_suppression'); return false }
-							for (let j = 0; j < utilisateurs.length; j++) {
-								db.srem('pads-rejoints:' + utilisateurs[j], pad)
-								db.srem('pads-utilisateurs:' + utilisateurs[j], pad)
-								db.srem('pads-admins:' + utilisateurs[j], pad)
-								db.srem('pads-favoris:' + utilisateurs[j], pad)
-								db.hdel('couleurs:' + utilisateurs[j], 'pad' + pad)
-							}
-						})
-						multi.del('utilisateurs-pads:' + pad)
-						multi.exec(function () {
-							const chemin = path.join(__dirname, '..', '/static/fichiers/' + pad)
-							fs.removeSync(chemin)
-							res.send('pad_supprime')
-						})
+					})
+					multi.del('utilisateurs-pads:' + pad)
+					multi.exec(function () {
+						const chemin = path.join(__dirname, '..', '/static/fichiers/' + pad)
+						fs.removeSync(chemin)
+						res.send('pad_supprime')
 					})
 				})
 			} else {
@@ -1194,58 +1179,33 @@ app.post('/api/supprimer-compte', function (req, res) {
 			if (err) { res.send('erreur'); return false }
 			const donneesPads = []
 			for (const pad of pads) {
-				const donneesPad = new Promise(function (resolveMain) {
+				const donneesPad = new Promise(function (resolve) {
 					db.zrange('blocs:' + pad, 0, -1, function (err, blocs) {
-						if (err) { resolveMain() }
-						const donneesBlocs = []
-						for (const bloc of blocs) {
-							const donneesBloc = new Promise(function (resolve) {
-								db.hgetall('pad-' + pad + ':' + bloc, function (err, donnees) {
-									if (err) { resolve() }
-									const etherpad = process.env.ETHERPAD
-									const etherpadApi = process.env.ETHERPAD_API_KEY
-									let etherpadId, url
-									if (donnees.iframe !== '' && donnees.iframe.includes(etherpad)) {
-										etherpadId = donnees.iframe.replace(etherpad + '/p/', '')
-										url = etherpad + '/api/1/deletePad?apikey=' + etherpadApi + '&padID=' + etherpadId
-										axios.get(url)
-									}
-									if (donnees.media !== '' && donnees.media.includes(etherpad)) {
-										etherpadId = donnees.media.replace(etherpad + '/p/', '')
-										url = etherpad + '/api/1/deletePad?apikey=' + etherpadApi + '&padID=' + etherpadId
-										axios.get(url)
-									}
-									resolve(bloc)
-								})
-							})
-							donneesBlocs.push(donneesBloc)
+						if (err) { resolve() }
+						const multi = db.multi()
+						for (let i = 0; i < blocs.length; i++) {
+							multi.del('commentaires:' + blocs[i])
+							multi.del('evaluations:' + blocs[i])
+							multi.del('pad-' + pad + ':' + blocs[i])
 						}
-						Promise.all(donneesBlocs).then(function () {
-							const multi = db.multi()
-							for (let i = 0; i < blocs.length; i++) {
-								multi.del('commentaires:' + blocs[i])
-								multi.del('evaluations:' + blocs[i])
-								multi.del('pad-' + pad + ':' + blocs[i])
+						multi.del('blocs:' + pad)
+						multi.del('pads:' + pad)
+						multi.del('activite:' + pad)
+						multi.smembers('utilisateurs-pads:' + pad, function (err, utilisateurs) {
+							if (err) { resolve() }
+							for (let j = 0; j < utilisateurs.length; j++) {
+								db.srem('pads-rejoints:' + utilisateurs[j], pad)
+								db.srem('pads-utilisateurs:' + utilisateurs[j], pad)
+								db.srem('pads-admins:' + utilisateurs[j], pad)
+								db.srem('pads-favoris:' + utilisateurs[j], pad)
+								db.hdel('couleurs:' + utilisateurs[j], 'pad' + pad)
 							}
-							multi.del('blocs:' + pad)
-							multi.del('pads:' + pad)
-							multi.del('activite:' + pad)
-							multi.smembers('utilisateurs-pads:' + pad, function (err, utilisateurs) {
-								if (err) { resolveMain() }
-								for (let j = 0; j < utilisateurs.length; j++) {
-									db.srem('pads-rejoints:' + utilisateurs[j], pad)
-									db.srem('pads-utilisateurs:' + utilisateurs[j], pad)
-									db.srem('pads-admins:' + utilisateurs[j], pad)
-									db.srem('pads-favoris:' + utilisateurs[j], pad)
-									db.hdel('couleurs:' + utilisateurs[j], 'pad' + pad)
-								}
-							})
-							multi.del('utilisateurs-pads:' + pad)
-							multi.exec(function () {
-								const chemin = path.join(__dirname, '..', '/static/fichiers/' + pad)
-								fs.removeSync(chemin)
-								resolveMain(pad)
-							})
+						})
+						multi.del('utilisateurs-pads:' + pad)
+						multi.exec(function () {
+							const chemin = path.join(__dirname, '..', '/static/fichiers/' + pad)
+							fs.removeSync(chemin)
+							resolve(pad)
 						})
 					})
 				})

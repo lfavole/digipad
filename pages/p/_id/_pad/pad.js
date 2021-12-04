@@ -1625,7 +1625,7 @@ export default {
 		},
 		ajouterDocument () {
 			this.chargementLien = true
-			this.lien = this.etherpad + '/p/' + 'pad-' + this.pad.id + '-' + Math.random().toString(16).slice(2)
+			this.lien = this.etherpad + '/p/pad-' + this.pad.id + '-' + Math.random().toString(16).slice(2)
 			this.iframe = this.lien
 			this.$nextTick(function () {
 				this.media = this.lien
