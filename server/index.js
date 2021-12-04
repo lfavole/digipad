@@ -719,7 +719,7 @@ app.post('/api/dupliquer-pad', function (req, res) {
 								if (donnees.iframe !== '' && donnees.iframe.includes(etherpad)) {
 									const etherpadId = donnees.iframe.replace(etherpad + '/p/', '')
 									const destinationId = 'pad-' + id + '-' + Math.random().toString(16).slice(2)
-									url = etherpad + '/api/1/copyPad?apikey=' + etherpadApi + '&sourceID=' + etherpadId + '&destinationID=' + destinationId
+									const url = etherpad + '/api/1.2.14/copyPad?apikey=' + etherpadApi + '&sourceID=' + etherpadId + '&destinationID=' + destinationId
 									axios.get(url)
 									donnees.iframe = etherpad + '/p/' + destinationId
 									donnees.media = etherpad + '/p/' + destinationId
