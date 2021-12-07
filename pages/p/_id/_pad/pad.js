@@ -329,7 +329,7 @@ export default {
 				this.$store.dispatch('modifierMessage', this.$t('accesPadModifie'))
 			} else {
 				if (donnees.acces === 'prive') {
-					this.$socket.emit('sortie', this.pad.id)
+					this.$socket.emit('sortie', this.pad.id, this.identifiant)
 					this.$router.push('/')
 				}
 			}
@@ -1183,14 +1183,14 @@ export default {
 		ajouterColonne () {
 			if (this.titreColonne !== '') {
 				this.chargement = true
-				this.$socket.emit('ajoutercolonne', this.pad.id, this.titreColonne, this.pad.colonnes, this.couleur)
+				this.$socket.emit('ajoutercolonne', this.pad.id, this.titreColonne, this.pad.colonnes, this.couleur, this.identifiant, this.nom)
 				this.fermerModaleColonne()
 			}
 		},
 		modifierColonne () {
 			if (this.titreColonne !== '') {
 				this.chargement = true
-				this.$socket.emit('modifiercolonne', this.pad.id, this.titreColonne, this.colonne)
+				this.$socket.emit('modifiercolonne', this.pad.id, this.titreColonne, this.colonne, this.identifiant)
 				this.fermerModaleColonne()
 			}
 		},
@@ -1204,7 +1204,7 @@ export default {
 		supprimerColonne () {
 			this.modaleConfirmer = false
 			this.chargement = true
-			this.$socket.emit('supprimercolonne', this.pad.id, this.titreColonne, this.colonne, this.couleur)
+			this.$socket.emit('supprimercolonne', this.pad.id, this.titreColonne, this.colonne, this.couleur, this.identifiant, this.nom)
 			this.fermerModaleColonne()
 		},
 		fermerModaleColonne () {
@@ -1216,7 +1216,7 @@ export default {
 		},
 		deplacerColonne (direction, colonne) {
 			this.chargement = true
-			this.$socket.emit('deplacercolonne', this.pad.id, this.pad.colonnes[colonne], direction, colonne, this.couleur)
+			this.$socket.emit('deplacercolonne', this.pad.id, this.pad.colonnes[colonne], direction, colonne, this.couleur, this.identifiant, this.nom)
 		},
 		ouvrirModaleBloc (mode, item, colonne) {
 			this.mode = mode
@@ -1716,14 +1716,14 @@ export default {
 			this.bloc = 'bloc-id-' + (new Date()).getTime() + Math.random().toString(16).slice(10)
 			if (this.titre !== '' || this.texte !== '' || this.media !== '') {
 				this.chargement = true
-				this.$socket.emit('ajouterbloc', this.bloc, this.pad.id, this.pad.token, this.titre, this.texte, this.media, this.iframe, this.type, this.source, this.vignette, this.couleur, this.colonne, this.visibilite)
+				this.$socket.emit('ajouterbloc', this.bloc, this.pad.id, this.pad.token, this.titre, this.texte, this.media, this.iframe, this.type, this.source, this.vignette, this.couleur, this.colonne, this.visibilite, this.identifiant, this.nom)
 				this.modaleBloc = false
 			}
 		},
 		modifierBloc () {
 			if (this.titre !== '' || this.texte !== '' || this.media !== '') {
 				this.chargement = true
-				this.$socket.emit('modifierbloc', this.bloc, this.pad.id, this.pad.token, this.titre, this.texte, this.media, this.iframe, this.type, this.source, this.vignette, this.couleur, this.colonne, this.visibilite)
+				this.$socket.emit('modifierbloc', this.bloc, this.pad.id, this.pad.token, this.titre, this.texte, this.media, this.iframe, this.type, this.source, this.vignette, this.couleur, this.colonne, this.visibilite, this.identifiant, this.nom)
 				this.modaleBloc = false
 				if (this.fichiers.length > 0) {
 					this.$socket.emit('supprimerfichiers', { pad: this.pad.id, fichiers: this.fichiers })
@@ -1796,7 +1796,7 @@ export default {
 		supprimerBloc () {
 			this.modaleConfirmer = false
 			this.chargement = true
-			this.$socket.emit('supprimerbloc', this.bloc, this.pad.id, this.pad.token, this.titre, this.couleur, this.colonne)
+			this.$socket.emit('supprimerbloc', this.bloc, this.pad.id, this.pad.token, this.titre, this.couleur, this.colonne, this.identifiant, this.nom)
 		},
 		fermerModaleConfirmer () {
 			this.modaleConfirmer = false
@@ -2239,7 +2239,7 @@ export default {
 		modifierAdmins () {
 			if (this.admins.toString() !== this.pad.admins.toString()) {
 				this.modaleAdmins = false
-				this.$socket.emit('modifieradmins', this.pad.id, this.admins)
+				this.$socket.emit('modifieradmins', this.pad.id, this.admins, this.identifiant)
 				this.chargement = true
 			}
 		},
@@ -2260,7 +2260,7 @@ export default {
 				bloc = this.donneesBloc.bloc
 			}
 			if (this.commentaire !== '') {
-				this.$socket.emit('commenterbloc', bloc, this.pad.id, this.titre, this.commentaire, this.couleur)
+				this.$socket.emit('commenterbloc', bloc, this.pad.id, this.titre, this.commentaire, this.couleur, this.identifiant, this.nom)
 				this.commentaire = ''
 				this.commentaireId = ''
 				this.commentaireModifie = ''
@@ -2309,7 +2309,7 @@ export default {
 			if (Object.keys(this.donneesBloc).length > 0) {
 				bloc = this.donneesBloc.bloc
 			}
-			this.$socket.emit('modifiercommentaire', bloc, this.pad.id, this.commentaireId, this.commentaireModifie)
+			this.$socket.emit('modifiercommentaire', bloc, this.pad.id, this.commentaireId, this.commentaireModifie, this.identifiant)
 			this.commentaireId = ''
 			this.commentaireModifie = ''
 			this.editionCommentaire = false
@@ -2328,7 +2328,7 @@ export default {
 			if (Object.keys(this.donneesBloc).length > 0) {
 				bloc = this.donneesBloc.bloc
 			}
-			this.$socket.emit('supprimercommentaire', bloc, this.pad.id, this.commentaireId)
+			this.$socket.emit('supprimercommentaire', bloc, this.pad.id, this.commentaireId, this.identifiant)
 			this.fermerModaleConfirmer()
 		},
 		genererEditeur () {
@@ -2446,7 +2446,7 @@ export default {
 			} else {
 				this.chargement = true
 			}
-			this.$socket.emit('evaluerbloc', bloc, this.pad.id, this.titre, this.evaluation, this.couleur)
+			this.$socket.emit('evaluerbloc', bloc, this.pad.id, this.titre, this.evaluation, this.couleur, this.identifiant, this.nom)
 			this.fermerModaleEvaluations()
 		},
 		modifierEvaluation () {
@@ -2457,9 +2457,9 @@ export default {
 				this.chargement = true
 			}
 			if (this.evaluation === 0) {
-				this.$socket.emit('supprimerevaluation', bloc, this.pad.id, this.evaluationId)
+				this.$socket.emit('supprimerevaluation', bloc, this.pad.id, this.evaluationId, this.identifiant)
 			} else {
-				this.$socket.emit('modifierevaluation', bloc, this.pad.id, this.evaluationId, this.evaluation)
+				this.$socket.emit('modifierevaluation', bloc, this.pad.id, this.evaluationId, this.evaluation, this.identifiant)
 			}
 			this.fermerModaleEvaluations()
 		},
@@ -2496,7 +2496,7 @@ export default {
 			if (this.pad.hasOwnProperty('ordre')) {
 				ordre = this.pad.ordre
 			}
-			this.$socket.emit('deplacerbloc', this.blocs, this.pad.id, this.pad.affichage, ordre)
+			this.$socket.emit('deplacerbloc', this.blocs, this.pad.id, this.pad.affichage, ordre, this.identifiant)
 			this.$nextTick(function () {
 				const blocsActifs = document.querySelectorAll('.bloc.actif')
 				if (blocsActifs.length > 0) {
@@ -2585,7 +2585,7 @@ export default {
 		},
 		envoyerMessage () {
 			if (this.message !== '') {
-				this.$socket.emit('message', this.pad.id, this.message)
+				this.$socket.emit('message', this.pad.id, this.message, this.identifiant, this.nom)
 				this.message = ''
 			}
 		},
@@ -2595,7 +2595,7 @@ export default {
 			this.modaleConfirmer = true
 		},
 		reinitialiserMessages () {
-			this.$socket.emit('reinitialisermessages', this.pad.id)
+			this.$socket.emit('reinitialisermessages', this.pad.id, this.identifiant)
 			this.chargement = true
 			this.menuChat = false
 			this.fermerModaleConfirmer()
@@ -2606,19 +2606,19 @@ export default {
 			this.modaleConfirmer = true
 		},
 		reinitialiserActivite () {
-			this.$socket.emit('reinitialiseractivite', this.pad.id)
+			this.$socket.emit('reinitialiseractivite', this.pad.id, this.identifiant)
 			this.chargement = true
 			this.menuActivite = false
 			this.fermerModaleConfirmer()
 		},
 		supprimerActivite (id) {
-			this.$socket.emit('supprimeractivite', this.pad.id, id)
+			this.$socket.emit('supprimeractivite', this.pad.id, id, this.identifiant)
 			this.chargement = true
 		},
 		modifierTitre () {
 			const titre = document.querySelector('#titre-pad').value
 			if (this.pad.titre !== titre && titre !== '') {
-				this.$socket.emit('modifiertitre', this.pad.id, titre)
+				this.$socket.emit('modifiertitre', this.pad.id, titre, this.identifiant)
 				this.chargement = true
 			}
 		},
@@ -2645,7 +2645,7 @@ export default {
 		},
 		modifierAcces (acces) {
 			if (this.pad.acces !== acces) {
-				this.$socket.emit('modifieracces', this.pad.id, acces)
+				this.$socket.emit('modifieracces', this.pad.id, acces, this.identifiant)
 				this.chargement = true
 			}
 		},
@@ -2685,31 +2685,31 @@ export default {
 		},
 		modifierContributions (contributions) {
 			if (this.pad.contributions !== contributions) {
-				this.$socket.emit('modifiercontributions', this.pad.id, contributions, this.pad.contributions)
+				this.$socket.emit('modifiercontributions', this.pad.id, contributions, this.pad.contributions, this.identifiant)
 				this.chargement = true
 			}
 		},
 		modifierAffichage (affichage) {
 			if (this.pad.affichage !== affichage) {
-				this.$socket.emit('modifieraffichage', this.pad.id, affichage)
+				this.$socket.emit('modifieraffichage', this.pad.id, affichage, this.identifiant)
 				this.chargement = true
 			}
 		},
 		modifierOrdre (ordre) {
 			if (this.pad.ordre !== ordre) {
-				this.$socket.emit('modifierordre', this.pad.id, ordre)
+				this.$socket.emit('modifierordre', this.pad.id, ordre, this.identifiant)
 				this.chargement = true
 			}
 		},
 		modifierFond (fond) {
 			if (this.pad.fond !== fond) {
-				this.$socket.emit('modifierfond', this.pad.id, '/img/' + fond, this.pad.fond)
+				this.$socket.emit('modifierfond', this.pad.id, '/img/' + fond, this.pad.fond, this.identifiant)
 				this.chargement = true
 			}
 		},
 		modifierCouleurFond (event) {
 			if (this.pad.fond !== event.target.value) {
-				this.$socket.emit('modifiercouleurfond', this.pad.id, event.target.value, this.pad.fond)
+				this.$socket.emit('modifiercouleurfond', this.pad.id, event.target.value, this.pad.fond, this.identifiant)
 				this.chargement = true
 			}
 		},
@@ -2740,7 +2740,7 @@ export default {
 						this.progressionFond = 0
 						this.$store.dispatch('modifierAlerte', this.$t('erreurTeleversementFichier'))
 					} else {
-						this.$socket.emit('modifierfond', this.pad.id, donnees, this.pad.fond)
+						this.$socket.emit('modifierfond', this.pad.id, donnees, this.pad.fond, this.identifiant)
 					}
 					this.progressionFond = 0
 					champ.value = ''
@@ -2756,73 +2756,73 @@ export default {
 		},
 		modifierActivite (event) {
 			if (event.target.checked === true) {
-				this.$socket.emit('modifieractivite', this.pad.id, 'active')
+				this.$socket.emit('modifieractivite', this.pad.id, 'active', this.identifiant)
 			} else {
-				this.$socket.emit('modifieractivite', this.pad.id, 'desactive')
+				this.$socket.emit('modifieractivite', this.pad.id, 'desactive', this.identifiant)
 			}
 			this.chargement = true
 		},
 		modifierConversation (event) {
 			if (event.target.checked === true) {
-				this.$socket.emit('modifierconversation', this.pad.id, 'activee')
+				this.$socket.emit('modifierconversation', this.pad.id, 'activee', this.identifiant)
 			} else {
-				this.$socket.emit('modifierconversation', this.pad.id, 'desactivee')
+				this.$socket.emit('modifierconversation', this.pad.id, 'desactivee', this.identifiant)
 			}
 			this.chargement = true
 		},
 		modifierListeUtilisateurs (event) {
 			if (event.target.checked === true) {
-				this.$socket.emit('modifierlisteutilisateurs', this.pad.id, 'activee')
+				this.$socket.emit('modifierlisteutilisateurs', this.pad.id, 'activee', this.identifiant)
 			} else {
-				this.$socket.emit('modifierlisteutilisateurs', this.pad.id, 'desactivee')
+				this.$socket.emit('modifierlisteutilisateurs', this.pad.id, 'desactivee', this.identifiant)
 			}
 			this.chargement = true
 		},
 		modifierEditionNom (event) {
 			if (event.target.checked === true) {
-				this.$socket.emit('modifiereditionnom', this.pad.id, 'activee')
+				this.$socket.emit('modifiereditionnom', this.pad.id, 'activee', this.identifiant)
 			} else {
-				this.$socket.emit('modifiereditionnom', this.pad.id, 'desactivee')
+				this.$socket.emit('modifiereditionnom', this.pad.id, 'desactivee', this.identifiant)
 			}
 			this.chargement = true
 		},
 		modifierFichiers (event) {
 			if (event.target.checked === true) {
-				this.$socket.emit('modifierfichiers', this.pad.id, 'actives')
+				this.$socket.emit('modifierfichiers', this.pad.id, 'actives', this.identifiant)
 			} else {
-				this.$socket.emit('modifierfichiers', this.pad.id, 'desactives')
+				this.$socket.emit('modifierfichiers', this.pad.id, 'desactives', this.identifiant)
 			}
 			this.chargement = true
 		},
 		modifierLiens (event) {
 			if (event.target.checked === true) {
-				this.$socket.emit('modifierliens', this.pad.id, 'actives')
+				this.$socket.emit('modifierliens', this.pad.id, 'actives', this.identifiant)
 			} else {
-				this.$socket.emit('modifierliens', this.pad.id, 'desactives')
+				this.$socket.emit('modifierliens', this.pad.id, 'desactives', this.identifiant)
 			}
 			this.chargement = true
 		},
 		modifierDocuments (event) {
 			if (event.target.checked === true) {
-				this.$socket.emit('modifierdocuments', this.pad.id, 'actives')
+				this.$socket.emit('modifierdocuments', this.pad.id, 'actives', this.identifiant)
 			} else {
-				this.$socket.emit('modifierdocuments', this.pad.id, 'desactives')
+				this.$socket.emit('modifierdocuments', this.pad.id, 'desactives', this.identifiant)
 			}
 			this.chargement = true
 		},
 		modifierCommentaires (event) {
 			if (event.target.checked === true) {
-				this.$socket.emit('modifiercommentaires', this.pad.id, 'actives')
+				this.$socket.emit('modifiercommentaires', this.pad.id, 'actives', this.identifiant)
 			} else {
-				this.$socket.emit('modifiercommentaires', this.pad.id, 'desactives')
+				this.$socket.emit('modifiercommentaires', this.pad.id, 'desactives', this.identifiant)
 			}
 			this.chargement = true
 		},
 		modifierEvaluations (event) {
 			if (event.target.checked === true) {
-				this.$socket.emit('modifierevaluations', this.pad.id, 'activees')
+				this.$socket.emit('modifierevaluations', this.pad.id, 'activees', this.identifiant)
 			} else {
-				this.$socket.emit('modifierevaluations', this.pad.id, 'desactivees')
+				this.$socket.emit('modifierevaluations', this.pad.id, 'desactivees', this.identifiant)
 			}
 			this.chargement = true
 		},
@@ -2836,7 +2836,7 @@ export default {
 		modifierCouleur (couleur) {
 			this.listeCouleurs = false
 			this.couleur = couleur
-			this.$socket.emit('modifiercouleur', this.pad.id, couleur)
+			this.$socket.emit('modifiercouleur', this.pad.id, couleur, this.identifiant)
 		},
 		afficherModifierNom () {
 			this.nomUtilisateur = this.nom
@@ -2848,7 +2848,7 @@ export default {
 		modifierNom () {
 			const nom = this.nomUtilisateur
 			if (nom !== '') {
-				this.$socket.emit('modifiernom', this.pad.id, nom, this.statut)
+				this.$socket.emit('modifiernom', this.pad.id, nom, this.statut, this.identifiant)
 				this.chargement = true
 				this.fermerModaleModifierNom()
 			}
@@ -3078,7 +3078,7 @@ export default {
 			}
 		},
 		quitterPage () {
-			this.$socket.emit('sortie', this.pad.id)
+			this.$socket.emit('sortie', this.pad.id, this.identifiant)
 			if (this.mode === 'creation' && this.media !== '' && this.lien === '') {
 				this.$socket.emit('supprimerfichier', { pad: this.pad.id, fichier: this.media })
 			}

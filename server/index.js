@@ -1640,18 +1640,16 @@ io.on('connection', function (socket) {
 		})
 	})
 
-	socket.on('sortie', function (pad) {
-		socket.to('pad-' + pad).emit('deconnexion', socket.identifiant)
+	socket.on('sortie', function (pad, identifiant) {
+		socket.to('pad-' + pad).emit('deconnexion', identifiant)
 	})
 
 	socket.on('deconnexion', function (identifiant) {
 		socket.broadcast.emit('deconnexion', identifiant)
 	})
 
-	socket.on('ajouterbloc', function (bloc, pad, token, titre, texte, media, iframe, type, source, vignette, couleur, colonne, privee) {
-		if (socket.identifiant !== '' && socket.identifiant !== undefined) {
-			const identifiant = socket.identifiant
-			const nom = socket.nom
+	socket.on('ajouterbloc', function (bloc, pad, token, titre, texte, media, iframe, type, source, vignette, couleur, colonne, privee, identifiant, nom) {
+		if (identifiant !== '' && identifiant !== undefined && socket.handshake.session.identifiant === identifiant) {
 			db.hgetall('pads:' + pad, function (err, donnees) {
 				if (err) { socket.emit('erreur'); return false }
 				const proprietaire = donnees.identifiant
@@ -1690,8 +1688,8 @@ io.on('connection', function (socket) {
 		}
 	})
 
-	socket.on('modifierbloc', function (bloc, pad, token, titre, texte, media, iframe, type, source, vignette, couleur, colonne, privee) {
-		if (socket.identifiant !== '' && socket.identifiant !== undefined) {
+	socket.on('modifierbloc', function (bloc, pad, token, titre, texte, media, iframe, type, source, vignette, couleur, colonne, privee, identifiant, nom) {
+		if (identifiant !== '' && identifiant !== undefined && socket.handshake.session.identifiant === identifiant) {
 			db.hgetall('pads:' + pad, function (err, donnees) {
 				if (donnees.id === pad && donnees.token === token) {
 					const proprietaire = donnees.identifiant
@@ -1704,8 +1702,6 @@ io.on('connection', function (socket) {
 						if (resultat === 1) {
 							db.hgetall('pad-' + pad + ':' + bloc, function (err, objet) {
 								if (err) { socket.emit('erreur'); return false }
-								const identifiant = socket.identifiant
-								const nom = socket.nom
 								if (objet.identifiant === identifiant || proprietaire === identifiant || admins.includes(identifiant)) {
 									let visibilite = 'visible'
 									if (objet.hasOwnProperty('visibilite')) {
@@ -1751,8 +1747,8 @@ io.on('connection', function (socket) {
 		}
 	})
 
-	socket.on('autoriserbloc', function (pad, token, item, moderation, admin) {
-		if (socket.identifiant !== '' && socket.identifiant !== undefined) {
+	socket.on('autoriserbloc', function (pad, token, item, moderation, identifiant) {
+		if (identifiant !== '' && identifiant !== undefined && socket.handshake.session.identifiant === identifiant) {
 			db.hgetall('pads:' + pad, function (err, donnees) {
 				if (donnees.id === pad && donnees.token === token) {
 					db.exists('pad-' + pad + ':' + item.bloc, function (err, resultat) {
@@ -1769,7 +1765,7 @@ io.on('connection', function (socket) {
 							multi.hincrby('pads:' + pad, 'activite', 1)
 							multi.zadd('activite:' + pad, activiteId, JSON.stringify({ id: activiteId, bloc: item.bloc, identifiant: item.identifiant, titre: item.titre, date: date, couleur: item.couleur, type: 'bloc-ajoute' }))
 							multi.exec(function () {
-								io.in('pad-' + pad).emit('autoriserbloc', { bloc: item.bloc, titre: item.titre, texte: item.texte, media: item.media, iframe: item.iframe, type: item.type, source: item.source, vignette: item.vignette, identifiant: item.identifiant, nom: item.nom, date: date, couleur: item.couleur, commentaires: 0, evaluations: [], colonne: item.colonne, visibilite: 'visible', activiteId: activiteId, moderation: moderation, admin: admin })
+								io.in('pad-' + pad).emit('autoriserbloc', { bloc: item.bloc, titre: item.titre, texte: item.texte, media: item.media, iframe: item.iframe, type: item.type, source: item.source, vignette: item.vignette, identifiant: item.identifiant, nom: item.nom, date: date, couleur: item.couleur, commentaires: 0, evaluations: [], colonne: item.colonne, visibilite: 'visible', activiteId: activiteId, moderation: moderation, admin: identifiant })
 								socket.handshake.session.cookie.expires = new Date(Date.now() + (3600 * 24 * 7 * 1000))
 								socket.handshake.session.save()
 							})
@@ -1782,8 +1778,8 @@ io.on('connection', function (socket) {
 		}
 	})
 
-	socket.on('deplacerbloc', function (items, pad, affichage, ordre) {
-		if (socket.identifiant !== '' && socket.identifiant !== undefined) {
+	socket.on('deplacerbloc', function (items, pad, affichage, ordre, identifiant) {
+		if (identifiant !== '' && identifiant !== undefined && socket.handshake.session.identifiant === identifiant) {
 			if (ordre === 'decroissant') {
 				items.reverse()
 			}
@@ -1821,7 +1817,6 @@ io.on('connection', function (socket) {
 					if (ordre === 'decroissant') {
 						items.reverse()
 					}
-					const identifiant = socket.identifiant
 					io.in('pad-' + pad).emit('deplacerbloc', { blocs: items, identifiant: identifiant })
 				} else {
 					socket.emit('erreur')
@@ -1832,8 +1827,8 @@ io.on('connection', function (socket) {
 		}
 	})
 
-	socket.on('supprimerbloc', function (bloc, pad, token, titre, couleur, colonne) {
-		if (socket.identifiant !== '' && socket.identifiant !== undefined) {
+	socket.on('supprimerbloc', function (bloc, pad, token, titre, couleur, colonne, identifiant, nom) {
+		if (identifiant !== '' && identifiant !== undefined && socket.handshake.session.identifiant === identifiant) {
 			db.hgetall('pads:' + pad, function (err, donnees) {
 				if (err) { socket.emit('erreur'); return false }
 				if (donnees.id === pad && donnees.token === token) {
@@ -1866,8 +1861,6 @@ io.on('connection', function (socket) {
 									url = etherpad + '/api/1/deletePad?apikey=' + etherpadApi + '&padID=' + etherpadId
 									axios.get(url)
 								}
-								const identifiant = socket.identifiant
-								const nom = socket.nom
 								if (objet.bloc === bloc && (objet.identifiant === identifiant || proprietaire === identifiant || admins.includes(identifiant))) {
 									const date = moment().format()
 									const activiteId = parseInt(donnees.activite) + 1
@@ -1895,16 +1888,14 @@ io.on('connection', function (socket) {
 		}
 	})
 
-	socket.on('commenterbloc', function (bloc, pad, titre, texte, couleur) {
-		if (socket.identifiant !== '' && socket.identifiant !== undefined) {
+	socket.on('commenterbloc', function (bloc, pad, titre, texte, couleur, identifiant, nom) {
+		if (identifiant !== '' && identifiant !== undefined && socket.handshake.session.identifiant === identifiant) {
 			db.hgetall('pads:' + pad, function (err, resultat) {
 				if (err) { socket.emit('erreur'); return false }
 				db.hgetall('pad-' + pad + ':' + bloc, function (err, donnees) {
 					if (err) { socket.emit('erreur'); return false }
 					db.zcard('commentaires:' + bloc, function (err, commentaires) {
 						if (err) { socket.emit('erreur'); return false }
-						const identifiant = socket.identifiant
-						const nom = socket.nom
 						const date = moment().format()
 						const activiteId = parseInt(resultat.activite) + 1
 						const commentaireId = parseInt(donnees.commentaires) + 1
@@ -1928,12 +1919,11 @@ io.on('connection', function (socket) {
 		}
 	})
 
-	socket.on('modifiercommentaire', function (bloc, pad, id, texte) {
-		if (socket.identifiant !== '' && socket.identifiant !== undefined) {
+	socket.on('modifiercommentaire', function (bloc, pad, id, texte, identifiant) {
+		if (identifiant !== '' && identifiant !== undefined && socket.handshake.session.identifiant === identifiant) {
 			db.zrangebyscore('commentaires:' + bloc, id, id, function (err, donnees) {
 				if (err) { socket.emit('erreur'); return false }
 				const dateModification = moment().format()
-				const identifiant = socket.identifiant
 				const date = JSON.parse(donnees).date
 				const commentaire = { id: id, identifiant: identifiant, date: date, modifie: dateModification, texte: texte }
 				const multi = db.multi()
@@ -1950,8 +1940,8 @@ io.on('connection', function (socket) {
 		}
 	})
 
-	socket.on('supprimercommentaire', function (bloc, pad, id) {
-		if (socket.identifiant !== '' && socket.identifiant !== undefined) {
+	socket.on('supprimercommentaire', function (bloc, pad, id, identifiant) {
+		if (identifiant !== '' && identifiant !== undefined && socket.handshake.session.identifiant === identifiant) {
 			db.zremrangebyscore('commentaires:' + bloc, id, id)
 			db.zcard('commentaires:' + bloc, function (err, commentaires) {
 				if (err) { socket.emit('erreur'); return false }
@@ -2005,14 +1995,12 @@ io.on('connection', function (socket) {
 		})
 	})
 
-	socket.on('evaluerbloc', function (bloc, pad, titre, etoiles, couleur) {
-		if (socket.identifiant !== '' && socket.identifiant !== undefined) {
+	socket.on('evaluerbloc', function (bloc, pad, titre, etoiles, couleur, identifiant, nom) {
+		if (identifiant !== '' && identifiant !== undefined && socket.handshake.session.identifiant === identifiant) {
 			db.hgetall('pads:' + pad, function (err, resultat) {
 				if (err) { socket.emit('erreur'); return false }
 				db.hgetall('pad-' + pad + ':' + bloc, function (err, donnees) {
 					if (err) { socket.emit('erreur'); return false }
-					const identifiant = socket.identifiant
-					const nom = socket.nom
 					const date = moment().format()
 					const activiteId = parseInt(resultat.activite) + 1
 					const evaluationId = parseInt(donnees.evaluations) + 1
@@ -2035,12 +2023,11 @@ io.on('connection', function (socket) {
 		}
 	})
 
-	socket.on('modifierevaluation', function (bloc, pad, etoiles) {
-		if (socket.identifiant !== '' && socket.identifiant !== undefined) {
+	socket.on('modifierevaluation', function (bloc, pad, etoiles, identifiant) {
+		if (identifiant !== '' && identifiant !== undefined && socket.handshake.session.identifiant === identifiant) {
 			db.zrangebyscore('evaluations:' + bloc, id, id, function (err) {
 				if (err) { socket.emit('erreur'); return false }
 				const date = moment().format()
-				const identifiant = socket.identifiant
 				const evaluation = { id: id, identifiant: identifiant, date: date, etoiles: etoiles }
 				const multi = db.multi()
 				multi.zremrangebyscore('evaluations:' + bloc, id, id)
@@ -2056,8 +2043,8 @@ io.on('connection', function (socket) {
 		}
 	})
 
-	socket.on('supprimerevaluation', function (bloc, pad, id) {
-		if (socket.identifiant !== '' && socket.identifiant !== undefined) {
+	socket.on('supprimerevaluation', function (bloc, pad, id, identifiant) {
+		if (identifiant !== '' && identifiant !== undefined && socket.handshake.session.identifiant === identifiant) {
 			db.zremrangebyscore('evaluations:' + bloc, id, id, function (err) {
 				if (err) { socket.emit('erreur'); return false }
 				io.in('pad-' + pad).emit('supprimerevaluation', { id: id, bloc: bloc })
@@ -2069,14 +2056,12 @@ io.on('connection', function (socket) {
 		}
 	})
 
-	socket.on('modifiernom', function (pad, nom, statut) {
-		if (socket.identifiant !== '' && socket.identifiant !== undefined) {
-			const identifiant = socket.identifiant
+	socket.on('modifiernom', function (pad, nom, statut, identifiant) {
+		if (identifiant !== '' && identifiant !== undefined && socket.handshake.session.identifiant === identifiant) {
 			if (statut === 'invite') {
 				db.hmset('noms:' + identifiant, 'nom', nom, function (err) {
 					if (err) { socket.emit('erreur'); return false }
 					io.in('pad-' + pad).emit('modifiernom', { identifiant: identifiant, nom: nom })
-					socket.nom = nom
 					socket.handshake.session.nom = nom
 					socket.handshake.session.cookie.expires = new Date(Date.now() + (3600 * 24 * 7 * 1000))
 					socket.handshake.session.save()
@@ -2085,7 +2070,6 @@ io.on('connection', function (socket) {
 				db.hmset('utilisateurs:' + identifiant, 'nom', nom, function (err) {
 					if (err) { socket.emit('erreur'); return false }
 					io.in('pad-' + pad).emit('modifiernom', { identifiant: identifiant, nom: nom })
-					socket.nom = nom
 					socket.handshake.session.nom = nom
 					socket.handshake.session.cookie.expires = new Date(Date.now() + (3600 * 24 * 7 * 1000))
 					socket.handshake.session.save()
@@ -2096,9 +2080,8 @@ io.on('connection', function (socket) {
 		}
 	})
 
-	socket.on('modifiercouleur', function (pad, couleur) {
-		if (socket.identifiant !== '' && socket.identifiant !== undefined) {
-			const identifiant = socket.identifiant
+	socket.on('modifiercouleur', function (pad, couleur, identifiant) {
+		if (identifiant !== '' && identifiant !== undefined && socket.handshake.session.identifiant === identifiant) {
 			db.hmset('couleurs:' + identifiant, 'pad' + pad, couleur, function (err) {
 				if (err) { socket.emit('erreur'); return false }
 				io.in('pad-' + pad).emit('modifiercouleur', { identifiant: identifiant, couleur: couleur })
@@ -2110,8 +2093,8 @@ io.on('connection', function (socket) {
 		}
 	})
 
-	socket.on('modifiertitre', function (pad, titre) {
-		if (socket.identifiant !== '' && socket.identifiant !== undefined) {
+	socket.on('modifiertitre', function (pad, titre, identifiant) {
+		if (identifiant !== '' && identifiant !== undefined && socket.handshake.session.identifiant === identifiant) {
 			db.hmset('pads:' + pad, 'titre', titre, function (err) {
 				if (err) { socket.emit('erreur'); return false }
 				io.in('pad-' + pad).emit('modifiertitre', titre)
@@ -2123,8 +2106,8 @@ io.on('connection', function (socket) {
 		}
 	})
 
-	socket.on('modifieradmins', function (pad, admins) {
-		if (socket.identifiant !== '' && socket.identifiant !== undefined) {
+	socket.on('modifieradmins', function (pad, admins, identifiant) {
+		if (identifiant !== '' && identifiant !== undefined && socket.handshake.session.identifiant === identifiant) {
 			db.hgetall('pads:' + pad, function (err, donnees) {
 				if (err) { socket.emit('erreur'); return false }
 				let listeAdmins = []
@@ -2154,8 +2137,8 @@ io.on('connection', function (socket) {
 		}
 	})
 
-	socket.on('modifieracces', function (pad, acces) {
-		if (socket.identifiant !== '' && socket.identifiant !== undefined) {
+	socket.on('modifieracces', function (pad, acces, identifiant) {
+		if (identifiant !== '' && identifiant !== undefined && socket.handshake.session.identifiant === identifiant) {
 			db.hgetall('pads:' + pad, function (err, donnees) {
 				if (err) { socket.emit('erreur'); return false }
 				let code = ''
@@ -2176,8 +2159,8 @@ io.on('connection', function (socket) {
 		}
 	})
 
-	socket.on('modifiercontributions', function (pad, contributions, contributionsPrecedentes) {
-		if (socket.identifiant !== '' && socket.identifiant !== undefined) {
+	socket.on('modifiercontributions', function (pad, contributions, contributionsPrecedentes, identifiant) {
+		if (identifiant !== '' && identifiant !== undefined && socket.handshake.session.identifiant === identifiant) {
 			db.hmset('pads:' + pad, 'contributions', contributions, function (err) {
 				if (err) { socket.emit('erreur'); return false }
 				io.in('pad-' + pad).emit('modifiercontributions', { contributions: contributions, contributionsPrecedentes: contributionsPrecedentes })
@@ -2189,8 +2172,8 @@ io.on('connection', function (socket) {
 		}
 	})
 
-	socket.on('modifieraffichage', function (pad, affichage) {
-		if (socket.identifiant !== '' && socket.identifiant !== undefined) {
+	socket.on('modifieraffichage', function (pad, affichage, identifiant) {
+		if (identifiant !== '' && identifiant !== undefined && socket.handshake.session.identifiant === identifiant) {
 			db.hmset('pads:' + pad, 'affichage', affichage, function (err) {
 				if (err) { socket.emit('erreur'); return false }
 				io.in('pad-' + pad).emit('modifieraffichage', affichage)
@@ -2202,8 +2185,8 @@ io.on('connection', function (socket) {
 		}
 	})
 
-	socket.on('modifierordre', function (pad, ordre) {
-		if (socket.identifiant !== '' && socket.identifiant !== undefined) {
+	socket.on('modifierordre', function (pad, ordre, identifiant) {
+		if (identifiant !== '' && identifiant !== undefined && socket.handshake.session.identifiant === identifiant) {
 			db.hmset('pads:' + pad, 'ordre', ordre, function (err) {
 				if (err) { socket.emit('erreur'); return false }
 				io.in('pad-' + pad).emit('modifierordre', ordre)
@@ -2215,8 +2198,8 @@ io.on('connection', function (socket) {
 		}
 	})
 
-	socket.on('modifierfond', function (pad, fond, ancienfond) {
-		if (socket.identifiant !== '' && socket.identifiant !== undefined) {
+	socket.on('modifierfond', function (pad, fond, ancienfond, identifiant) {
+		if (identifiant !== '' && identifiant !== undefined && socket.handshake.session.identifiant === identifiant) {
 			db.hmset('pads:' + pad, 'fond', fond, function (err) {
 				if (err) { socket.emit('erreur'); return false }
 				io.in('pad-' + pad).emit('modifierfond', fond)
@@ -2232,8 +2215,8 @@ io.on('connection', function (socket) {
 		}
 	})
 
-	socket.on('modifiercouleurfond', function (pad, fond, ancienfond) {
-		if (socket.identifiant !== '' && socket.identifiant !== undefined) {
+	socket.on('modifiercouleurfond', function (pad, fond, ancienfond, identifiant) {
+		if (identifiant !== '' && identifiant !== undefined && socket.handshake.session.identifiant === identifiant) {
 			db.hmset('pads:' + pad, 'fond', fond, function (err) {
 				if (err) { socket.emit('erreur'); return false }
 				io.in('pad-' + pad).emit('modifiercouleurfond', fond)
@@ -2249,8 +2232,8 @@ io.on('connection', function (socket) {
 		}
 	})
 
-	socket.on('modifieractivite', function (pad, statut) {
-		if (socket.identifiant !== '' && socket.identifiant !== undefined) {
+	socket.on('modifieractivite', function (pad, statut, identifiant) {
+		if (identifiant !== '' && identifiant !== undefined && socket.handshake.session.identifiant === identifiant) {
 			db.hmset('pads:' + pad, 'registreActivite', statut, function () {
 				io.in('pad-' + pad).emit('modifieractivite', statut)
 				socket.handshake.session.cookie.expires = new Date(Date.now() + (3600 * 24 * 7 * 1000))
@@ -2261,8 +2244,8 @@ io.on('connection', function (socket) {
 		}
 	})
 
-	socket.on('modifierconversation', function (pad, statut) {
-		if (socket.identifiant !== '' && socket.identifiant !== undefined) {
+	socket.on('modifierconversation', function (pad, statut, identifiant) {
+		if (identifiant !== '' && identifiant !== undefined && socket.handshake.session.identifiant === identifiant) {
 			db.hmset('pads:' + pad, 'conversation', statut, function () {
 				io.in('pad-' + pad).emit('modifierconversation', statut)
 				socket.handshake.session.cookie.expires = new Date(Date.now() + (3600 * 24 * 7 * 1000))
@@ -2273,8 +2256,8 @@ io.on('connection', function (socket) {
 		}
 	})
 
-	socket.on('modifierlisteutilisateurs', function (pad, statut) {
-		if (socket.identifiant !== '' && socket.identifiant !== undefined) {
+	socket.on('modifierlisteutilisateurs', function (pad, statut, identifiant) {
+		if (identifiant !== '' && identifiant !== undefined && socket.handshake.session.identifiant === identifiant) {
 			db.hmset('pads:' + pad, 'listeUtilisateurs', statut, function () {
 				io.in('pad-' + pad).emit('modifierlisteutilisateurs', statut)
 				socket.handshake.session.cookie.expires = new Date(Date.now() + (3600 * 24 * 7 * 1000))
@@ -2285,8 +2268,8 @@ io.on('connection', function (socket) {
 		}
 	})
 
-	socket.on('modifiereditionnom', function (pad, statut) {
-		if (socket.identifiant !== '' && socket.identifiant !== undefined) {
+	socket.on('modifiereditionnom', function (pad, statut, identifiant) {
+		if (identifiant !== '' && identifiant !== undefined && socket.handshake.session.identifiant === identifiant) {
 			db.hmset('pads:' + pad, 'editionNom', statut, function () {
 				io.in('pad-' + pad).emit('modifiereditionnom', statut)
 				socket.handshake.session.cookie.expires = new Date(Date.now() + (3600 * 24 * 7 * 1000))
@@ -2297,8 +2280,8 @@ io.on('connection', function (socket) {
 		}
 	})
 
-	socket.on('modifierfichiers', function (pad, statut) {
-		if (socket.identifiant !== '' && socket.identifiant !== undefined) {
+	socket.on('modifierfichiers', function (pad, statut, identifiant) {
+		if (identifiant !== '' && identifiant !== undefined && socket.handshake.session.identifiant === identifiant) {
 			db.hmset('pads:' + pad, 'fichiers', statut, function () {
 				io.in('pad-' + pad).emit('modifierfichiers', statut)
 				socket.handshake.session.cookie.expires = new Date(Date.now() + (3600 * 24 * 7 * 1000))
@@ -2309,8 +2292,8 @@ io.on('connection', function (socket) {
 		}
 	})
 
-	socket.on('modifierliens', function (pad, statut) {
-		if (socket.identifiant !== '' && socket.identifiant !== undefined) {
+	socket.on('modifierliens', function (pad, statut, identifiant) {
+		if (identifiant !== '' && identifiant !== undefined && socket.handshake.session.identifiant === identifiant) {
 			db.hmset('pads:' + pad, 'liens', statut, function () {
 				io.in('pad-' + pad).emit('modifierliens', statut)
 				socket.handshake.session.cookie.expires = new Date(Date.now() + (3600 * 24 * 7 * 1000))
@@ -2321,8 +2304,8 @@ io.on('connection', function (socket) {
 		}
 	})
 
-	socket.on('modifierdocuments', function (pad, statut) {
-		if (socket.identifiant !== '' && socket.identifiant !== undefined) {
+	socket.on('modifierdocuments', function (pad, statut, identifiant) {
+		if (identifiant !== '' && identifiant !== undefined && socket.handshake.session.identifiant === identifiant) {
 			db.hmset('pads:' + pad, 'documents', statut, function () {
 				io.in('pad-' + pad).emit('modifierdocuments', statut)
 				socket.handshake.session.cookie.expires = new Date(Date.now() + (3600 * 24 * 7 * 1000))
@@ -2333,8 +2316,8 @@ io.on('connection', function (socket) {
 		}
 	})
 
-	socket.on('modifiercommentaires', function (pad, statut) {
-		if (socket.identifiant !== '' && socket.identifiant !== undefined) {
+	socket.on('modifiercommentaires', function (pad, statut, identifiant) {
+		if (identifiant !== '' && identifiant !== undefined && socket.handshake.session.identifiant === identifiant) {
 			db.hmset('pads:' + pad, 'commentaires', statut, function () {
 				io.in('pad-' + pad).emit('modifiercommentaires', statut)
 				socket.handshake.session.cookie.expires = new Date(Date.now() + (3600 * 24 * 7 * 1000))
@@ -2345,8 +2328,8 @@ io.on('connection', function (socket) {
 		}
 	})
 
-	socket.on('modifierevaluations', function (pad, statut) {
-		if (socket.identifiant !== '' && socket.identifiant !== undefined) {
+	socket.on('modifierevaluations', function (pad, statut, identifiant) {
+		if (identifiant !== '' && identifiant !== undefined && socket.handshake.session.identifiant === identifiant) {
 			db.hmset('pads:' + pad, 'evaluations', statut, function () {
 				io.in('pad-' + pad).emit('modifierevaluations', statut)
 				socket.handshake.session.cookie.expires = new Date(Date.now() + (3600 * 24 * 7 * 1000))
@@ -2357,10 +2340,8 @@ io.on('connection', function (socket) {
 		}
 	})
 
-	socket.on('message', function (pad, texte) {
-		if (socket.identifiant !== '' && socket.identifiant !== undefined) {
-			const identifiant = socket.identifiant
-			const nom = socket.nom
+	socket.on('message', function (pad, texte, identifiant, nom) {
+		if (identifiant !== '' && identifiant !== undefined && socket.handshake.session.identifiant === identifiant) {
 			const date = moment().format()
 			io.in('pad-' + pad).emit('message', { texte: texte, identifiant: identifiant, nom: nom, date: date })
 			socket.handshake.session.cookie.expires = new Date(Date.now() + (3600 * 24 * 7 * 1000))
@@ -2370,8 +2351,8 @@ io.on('connection', function (socket) {
 		}
 	})
 
-	socket.on('reinitialisermessages', function (pad) {
-		if (socket.identifiant !== '' && socket.identifiant !== undefined) {
+	socket.on('reinitialisermessages', function (pad, identifiant) {
+		if (identifiant !== '' && identifiant !== undefined && socket.handshake.session.identifiant === identifiant) {
 			io.in('pad-' + pad).emit('reinitialisermessages')
 			socket.handshake.session.cookie.expires = new Date(Date.now() + (3600 * 24 * 7 * 1000))
 			socket.handshake.session.save()
@@ -2380,8 +2361,8 @@ io.on('connection', function (socket) {
 		}
 	})
 
-	socket.on('reinitialiseractivite', function (pad) {
-		if (socket.identifiant !== '' && socket.identifiant !== undefined) {
+	socket.on('reinitialiseractivite', function (pad, identifiant) {
+		if (identifiant !== '' && identifiant !== undefined && socket.handshake.session.identifiant === identifiant) {
 			db.del('activite:' + pad, function () {
 				io.in('pad-' + pad).emit('reinitialiseractivite')
 				socket.handshake.session.cookie.expires = new Date(Date.now() + (3600 * 24 * 7 * 1000))
@@ -2392,12 +2373,10 @@ io.on('connection', function (socket) {
 		}
 	})
 
-	socket.on('ajoutercolonne', function (pad, titre, colonnes, couleur) {
-		if (socket.identifiant !== '' && socket.identifiant !== undefined) {
+	socket.on('ajoutercolonne', function (pad, titre, colonnes, couleur, identifiant, nom) {
+		if (identifiant !== '' && identifiant !== undefined && socket.handshake.session.identifiant === identifiant) {
 			db.hgetall('pads:' + pad, function (err, resultat) {
 				if (err) { socket.emit('erreur'); return false }
-				const identifiant = socket.identifiant
-				const nom = socket.nom
 				const date = moment().format()
 				const activiteId = parseInt(resultat.activite) + 1
 				colonnes.push(titre)
@@ -2417,8 +2396,8 @@ io.on('connection', function (socket) {
 		}
 	})
 
-	socket.on('modifiercolonne', function (pad, titre, index) {
-		if (socket.identifiant !== '' && socket.identifiant !== undefined) {
+	socket.on('modifiercolonne', function (pad, titre, index, identifiant) {
+		if (identifiant !== '' && identifiant !== undefined && socket.handshake.session.identifiant === identifiant) {
 			db.hgetall('pads:' + pad, function (err, donnees) {
 				if (err) { socket.emit('erreur'); return false }
 				const colonnes = JSON.parse(donnees.colonnes)
@@ -2434,8 +2413,8 @@ io.on('connection', function (socket) {
 		}
 	})
 
-	socket.on('supprimercolonne', function (pad, titre, colonne, couleur) {
-		if (socket.identifiant !== '' && socket.identifiant !== undefined) {
+	socket.on('supprimercolonne', function (pad, titre, colonne, couleur, identifiant, nom) {
+		if (identifiant !== '' && identifiant !== undefined && socket.handshake.session.identifiant === identifiant) {
 			db.hgetall('pads:' + pad, function (err, donnees) {
 				if (err) { socket.emit('erreur'); return false }
 				const colonnes = JSON.parse(donnees.colonnes)
@@ -2509,8 +2488,6 @@ io.on('connection', function (socket) {
 							donneesBlocsRestants.push(donneeBloc)
 						}
 						Promise.all([donneesBlocsSupprimes, donneesBlocsRestants]).then(function () {
-							const identifiant = socket.identifiant
-							const nom = socket.nom
 							const date = moment().format()
 							const activiteId = parseInt(donnees.activite) + 1
 							const multi = db.multi()
@@ -2532,8 +2509,8 @@ io.on('connection', function (socket) {
 		}
 	})
 
-	socket.on('deplacercolonne', function (pad, titre, direction, colonne, couleur) {
-		if (socket.identifiant !== '' && socket.identifiant !== undefined) {
+	socket.on('deplacercolonne', function (pad, titre, direction, colonne, couleur, identifiant, nom) {
+		if (identifiant !== '' && identifiant !== undefined && socket.handshake.session.identifiant === identifiant) {
 			db.hgetall('pads:' + pad, function (err, donnees) {
 				if (err) { socket.emit('erreur'); return false }
 				const colonnes = JSON.parse(donnees.colonnes)
@@ -2592,8 +2569,6 @@ io.on('connection', function (socket) {
 							donneesBlocsDeplaces.push(donneesBlocDeplace)
 						}
 						Promise.all(donneesBlocsDeplaces).then(function () {
-							const identifiant = socket.identifiant
-							const nom = socket.nom
 							const date = moment().format()
 							const activiteId = parseInt(donnees.activite) + 1
 							const multi = db.multi()
@@ -2626,9 +2601,7 @@ io.on('connection', function (socket) {
 						if (!err && col !== null) {
 							couleur = col
 						}
-						socket.identifiant = identifiant
 						socket.handshake.session.identifiant = identifiant
-						socket.nom = utilisateur.nom
 						socket.handshake.session.nom = utilisateur.nom
 						socket.handshake.session.statut = 'auteur'
 						socket.handshake.session.langue = utilisateur.langue
@@ -2654,7 +2627,7 @@ io.on('connection', function (socket) {
 	})
 
 	socket.on('verifiermodifierbloc', function (pad, bloc, identifiant) {
-		if (socket.identifiant !== '' && socket.identifiant !== undefined) {
+		if (identifiant !== '' && identifiant !== undefined && socket.handshake.session.identifiant === identifiant) {
 			socket.to('pad-' + pad).emit('verifiermodifierbloc', { bloc: bloc, identifiant: identifiant })
 			socket.handshake.session.cookie.expires = new Date(Date.now() + (3600 * 24 * 7 * 1000))
 			socket.handshake.session.save()
@@ -2662,15 +2635,15 @@ io.on('connection', function (socket) {
 	})
 
 	socket.on('reponsemodifierbloc', function (pad, identifiant, reponse) {
-		if (socket.identifiant !== '' && socket.identifiant !== undefined) {
+		if (identifiant !== '' && identifiant !== undefined && socket.handshake.session.identifiant === identifiant) {
 			socket.to('pad-' + pad).emit('reponsemodifierbloc', { identifiant: identifiant, reponse: reponse })
 			socket.handshake.session.cookie.expires = new Date(Date.now() + (3600 * 24 * 7 * 1000))
 			socket.handshake.session.save()
 		}
 	})
 
-	socket.on('supprimeractivite', function (pad, id) {
-		if (socket.identifiant !== '' && socket.identifiant !== undefined) {
+	socket.on('supprimeractivite', function (pad, id, identifiant) {
+		if (identifiant !== '' && identifiant !== undefined && socket.handshake.session.identifiant === identifiant) {
 			db.zremrangebyscore('activite:' + pad, id, id, function () {
 				io.in('pad-' + pad).emit('supprimeractivite', id)
 				socket.handshake.session.cookie.expires = new Date(Date.now() + (3600 * 24 * 7 * 1000))
