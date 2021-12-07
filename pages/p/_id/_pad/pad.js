@@ -278,7 +278,7 @@ export default {
 		supprimerevaluation: function (donnees) {
 			this.chargement = false
 			const blocs = this.blocs
-			blocs.forEach(function (item, index) {
+			blocs.forEach(function (item) {
 				if (item.bloc === donnees.bloc) {
 					const evaluations = item.evaluations
 					evaluations.forEach(function (evaluation, index) {
@@ -329,7 +329,7 @@ export default {
 				this.$store.dispatch('modifierMessage', this.$t('accesPadModifie'))
 			} else {
 				if (donnees.acces === 'prive') {
-					this.$socket.emit('sortie')
+					this.$socket.emit('sortie', this.pad.id)
 					this.$router.push('/')
 				}
 			}
@@ -2309,7 +2309,7 @@ export default {
 			if (Object.keys(this.donneesBloc).length > 0) {
 				bloc = this.donneesBloc.bloc
 			}
-			this.$socket.emit('modifiercommentaire', bloc, this.commentaireId, this.commentaireModifie)
+			this.$socket.emit('modifiercommentaire', bloc, this.pad.id, this.commentaireId, this.commentaireModifie)
 			this.commentaireId = ''
 			this.commentaireModifie = ''
 			this.editionCommentaire = false
@@ -2328,7 +2328,7 @@ export default {
 			if (Object.keys(this.donneesBloc).length > 0) {
 				bloc = this.donneesBloc.bloc
 			}
-			this.$socket.emit('supprimercommentaire', bloc, this.commentaireId)
+			this.$socket.emit('supprimercommentaire', bloc, this.pad.id, this.commentaireId)
 			this.fermerModaleConfirmer()
 		},
 		genererEditeur () {
@@ -2457,9 +2457,9 @@ export default {
 				this.chargement = true
 			}
 			if (this.evaluation === 0) {
-				this.$socket.emit('supprimerevaluation', bloc, this.evaluationId)
+				this.$socket.emit('supprimerevaluation', bloc, this.pad.id, this.evaluationId)
 			} else {
-				this.$socket.emit('modifierevaluation', bloc, this.evaluationId, this.evaluation)
+				this.$socket.emit('modifierevaluation', bloc, this.pad.id, this.evaluationId, this.evaluation)
 			}
 			this.fermerModaleEvaluations()
 		},
@@ -2585,7 +2585,7 @@ export default {
 		},
 		envoyerMessage () {
 			if (this.message !== '') {
-				this.$socket.emit('message', this.message)
+				this.$socket.emit('message', this.pad.id, this.message)
 				this.message = ''
 			}
 		},
@@ -2595,7 +2595,7 @@ export default {
 			this.modaleConfirmer = true
 		},
 		reinitialiserMessages () {
-			this.$socket.emit('reinitialisermessages')
+			this.$socket.emit('reinitialisermessages', this.pad.id)
 			this.chargement = true
 			this.menuChat = false
 			this.fermerModaleConfirmer()
@@ -2848,7 +2848,7 @@ export default {
 		modifierNom () {
 			const nom = this.nomUtilisateur
 			if (nom !== '') {
-				this.$socket.emit('modifiernom', nom, this.statut)
+				this.$socket.emit('modifiernom', this.pad.id, nom, this.statut)
 				this.chargement = true
 				this.fermerModaleModifierNom()
 			}
@@ -3078,7 +3078,7 @@ export default {
 			}
 		},
 		quitterPage () {
-			this.$socket.emit('sortie')
+			this.$socket.emit('sortie', this.pad.id)
 			if (this.mode === 'creation' && this.media !== '' && this.lien === '') {
 				this.$socket.emit('supprimerfichier', { pad: this.pad.id, fichier: this.media })
 			}
