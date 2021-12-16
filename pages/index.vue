@@ -413,9 +413,8 @@ export default {
 }
 
 #actions .bouton:hover {
-    color: #fff;
-	text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.3);
-	background: #00ced1;
+	text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.2);
+	background: #fff;
 }
 
 #actions .bouton:last-child {

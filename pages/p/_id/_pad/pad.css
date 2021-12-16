@@ -640,7 +640,8 @@
 	font-weight: 700;
 	font-size: 16px;
 	text-transform: uppercase;
-	color: #242f3d;
+	color: #fff;
+	background: #242f3d;
 	border-top: 1px solid #ddd;
 	bottom: 0;
 	left: 0;
@@ -649,15 +650,14 @@
 	cursor: pointer;
 	letter-spacing: 1px;
     text-indent: 1px;
-	transition: background-color ease-in 0.1s;
-	text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.3);
+	transition: all ease-in 0.1s;
+	text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.2);
 	border-bottom-left-radius: 10px;
 	border-bottom-right-radius: 10px;
 }
 
 #bloc .valider:hover {
-	color: #fff;
-	background: #242f3d;
+	background: #394b62;
 }
 
 .televerser.fichier {

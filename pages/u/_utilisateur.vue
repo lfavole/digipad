@@ -1235,9 +1235,8 @@ export default {
 
 #bouton-importer:hover,
 #bouton-creer:hover {
-    color: #fff;
-	text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.3);
-	background: #00ced1;
+	text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.2);
+	background: #fff;
 }
 
 #identifiant {
@@ -1295,14 +1294,14 @@ export default {
 	line-height: 32px;
 	padding: 0 20px;
 	cursor: pointer;
-	color: #fff;
-	text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.3);
+	color: #001d1d;
+	text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.1);
 	background: #00ced1;
 	border-radius: 5px;
 	letter-spacing: 1px;
 	text-indent: 1px;
 	text-align: center;
-	transition: background-color ease-in 0.1s;
+	transition: all ease-in 0.1s;
 	white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -1311,7 +1310,8 @@ export default {
 }
 
 #onglets .bouton-ajouter:hover {
-	background: #00acb0;
+	color: #fff;
+	background: #001d1d;
 }
 
 #onglets .onglet .menu-dossier {
@@ -1662,6 +1662,7 @@ export default {
 #import label:not(.bouton-interrupteur) {
 	width: 100%;
 	text-align: center;
+	margin-top: 10px;
 }
 
 .progression .chargement {
