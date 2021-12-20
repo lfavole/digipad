@@ -153,11 +153,6 @@ iframe {
 	height: 100%;
 }
 
-::placeholder {
-	color: #aaa;
-	opacity: 1!important;
-}
-
 ::-webkit-scrollbar {
 	width: 5px;
 	height: 10px;
@@ -174,6 +169,16 @@ iframe {
 .ascenseur {
 	scrollbar-color: rgba(0, 0, 0, 0.5) transparent;
 	scrollbar-width: thin;
+}
+
+::placeholder {
+	color: #aaa;
+	opacity: 1!important;
+}
+
+input:disabled {
+	-webkit-text-fill-color: #001d1d;
+	opacity: 1;
 }
 
 [v-cloak] {
