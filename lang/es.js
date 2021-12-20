@@ -182,7 +182,7 @@ export default {
 	adresseLien: 'Indique el enlace que desea insertar:',
 	erreurTeleversementFichier: 'Error al cargar el archivo.',
 	formatFichierPasAccepte: 'No se acepta este formato de archivo.',
-	tailleMaximale20: 'El tamaño máximo autorizado es de 20 MB.',
+	tailleMaximale10: 'El tamaño máximo autorizado es de 10 MB.',
 	tailleMaximale3: 'El tamaño máximo autorizado es de 3 MB.',
 	erreurRecuperationContenu: 'Error en la recuperación del contenido.',
 	erreurTeleversementVignette: 'Error al cargar la minuatura.',

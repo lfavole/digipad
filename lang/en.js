@@ -182,7 +182,7 @@ export default {
 	adresseLien: 'Enter the link to insert:',
 	erreurTeleversementFichier: 'Error while uploading the file.',
 	formatFichierPasAccepte: 'This file format is not supported.',
-	tailleMaximale20: 'The maximum size allowed is 20 MB.',
+	tailleMaximale10: 'The maximum size allowed is 10 MB.',
 	tailleMaximale3: 'The maximum size allowed is 3 MB.',
 	erreurRecuperationContenu: 'Error while retrieving the content.',
 	erreurTeleversementVignette: 'Error while uploading the thumbnail.',

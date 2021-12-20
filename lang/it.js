@@ -182,7 +182,7 @@ export default {
 	adresseLien: 'Indicare il link da inserire:',
 	erreurTeleversementFichier: 'Errore durante il caricamento del file.',
 	formatFichierPasAccepte: 'il formato di questo file non è compatibile.',
-	tailleMaximale20: 'La dimensione massima consentita è 20 MB.',
+	tailleMaximale10: 'La dimensione massima consentita è 10 MB.',
 	tailleMaximale3: 'La dimensione massima consentita è 3 MB.',
 	erreurRecuperationContenu: 'Errore durante il recupero del contenuto.',
 	erreurTeleversementVignette: 'Errore durante il caricamento della miniatura.',
