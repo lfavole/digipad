@@ -182,7 +182,7 @@ export default {
 	adresseLien: 'Indiquez le lien à insérer :',
 	erreurTeleversementFichier: 'Erreur lors du téléversement du fichier.',
 	formatFichierPasAccepte: 'Ce format de fichier n\'est pas accepté.',
-	tailleMaximale10: 'La taille maximale autorisée est 10 Mo.',
+	tailleMaximale20: 'La taille maximale autorisée est 20 Mo.',
 	tailleMaximale3: 'La taille maximale autorisée est 3 Mo.',
 	erreurRecuperationContenu: 'Erreur lors de la récupération du contenu.',
 	erreurTeleversementVignette: 'Erreur lors du téléversement de la vignette.',
