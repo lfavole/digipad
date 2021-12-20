@@ -196,6 +196,27 @@ app.post('/api/recuperer-donnees-utilisateur', function (req, res) {
 		const padsRejoints = pads[1]
 		const padsAdmins = pads[2]
 		const padsFavoris = pads[3]
+		// Vérification des données des pads
+		padsCrees.forEach(function (pad, indexPad) {
+			if (!pad.hasOwnProperty('id') || !pad.hasOwnProperty('token') || !pad.hasOwnProperty('identifiant') || !pad.hasOwnProperty('titre') || !pad.hasOwnProperty('fond') || !pad.hasOwnProperty('date')) {
+				padsCrees.splice(indexPad, 1)
+			}
+		})
+		padsRejoints.forEach(function (pad, indexPad) {
+			if (!pad.hasOwnProperty('id') || !pad.hasOwnProperty('token') || !pad.hasOwnProperty('identifiant') || !pad.hasOwnProperty('titre') || !pad.hasOwnProperty('fond') || !pad.hasOwnProperty('date')) {
+				padsRejoints.splice(indexPad, 1)
+			}
+		})
+		padsAdmins.forEach(function (pad, indexPad) {
+			if (!pad.hasOwnProperty('id') || !pad.hasOwnProperty('token') || !pad.hasOwnProperty('identifiant') || !pad.hasOwnProperty('titre') || !pad.hasOwnProperty('fond') || !pad.hasOwnProperty('date')) {
+				padsAdmins.splice(indexPad, 1)
+			}
+		})
+		padsFavoris.forEach(function (pad, indexPad) {
+			if (!pad.hasOwnProperty('id') || !pad.hasOwnProperty('token') || !pad.hasOwnProperty('identifiant') || !pad.hasOwnProperty('titre') || !pad.hasOwnProperty('fond') || !pad.hasOwnProperty('date')) {
+				padsFavoris.splice(indexPad, 1)
+			}
+		})
 		// Suppresion redondances pads rejoints et pads administrés
 		padsRejoints.forEach(function (pad, indexPad) {
 			padsAdmins.forEach(function (padAdmin) {
@@ -241,6 +262,17 @@ app.post('/api/recuperer-donnees-utilisateur', function (req, res) {
 								}
 							})
 						}
+					})
+					// Supprimer doublons dans dossiers
+					dossiers.forEach(function (dossier, indexDossier) {
+						const pads = []
+						dossier.pads.forEach(function (pad, indexPad) {
+							if (!pads.includes(parseInt(pad))) {
+								pads.push(parseInt(pad))
+							} else {
+								dossiers[indexDossier].pads.splice(indexPad, 1)
+							}
+						})
 					})
 					db.hmset('utilisateurs:' + identifiant, 'dossiers', JSON.stringify(dossiers), function () {
 						res.json({ padsCrees: padsCrees, padsRejoints: padsRejoints, padsAdmins: padsAdmins, padsFavoris: padsFavoris, dossiers: dossiers })
@@ -1420,6 +1452,7 @@ app.post('/api/ajouter-dossier', function (req, res) {
 				dossiers = JSON.parse(donnees.dossiers)
 			}
 			const id = Math.random().toString(36).substring(2)
+
 			dossiers.push({ id: id, nom: nom, pads: [] })
 			db.hmset('utilisateurs:' + identifiant, 'dossiers', JSON.stringify(dossiers), function (err) {
 				if (err) { res.send('erreur_ajout_dossier'); return false }
