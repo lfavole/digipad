@@ -96,7 +96,8 @@ module.exports = {
 	env: {
 		etherpad: process.env.ETHERPAD,
 		etherpadApi: process.env.ETHERPAD_API_KEY,
-		adminPassword: process.env.ADMIN_PASSWORD
+		adminPassword: process.env.ADMIN_PASSWORD,
+		uploadLimit: process.env.UPLOAD_LIMIT
 	},
 	buildModules: [
 		'@nuxtjs/eslint-module'

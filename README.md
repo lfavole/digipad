@@ -36,6 +36,7 @@ DB_PWD (mot de passe de la base de données Redis)
 SESSION_KEY (clé de session Express Session)
 ETHERPAD (lien vers un serveur Etherpad pour les documents collaboratifs)
 ETHERPAD_API_KEY (clé API Etherpad)
+UPLOAD_LIMIT (limite de téléversement des fichiers en Mo)
 ADMIN_PASSWORD (mot de passe pour accéder à la page d'administration /admin)
 ```
 
@@ -47,6 +48,8 @@ https://digipad.app
 
 
 ### Remerciements et crédits
+```
 Traduction en italien par Paolo Mauri (https://gitlab.com/maupao)
-
 Traduction en espagnol par Fernando S. Delgado Trujillo (https://gitlab.com/fersdt)
+Traduction en croate par Ksenija Lekić (https://gitlab.com/Ksenija66L)
+```
