@@ -743,6 +743,9 @@ export default {
 		etherpadApi () {
 			return process.env.etherpadApi
 		},
+		limite () {
+			return process.env.uploadLimit
+		},
 		blocsRecherche () {
 			let resultats = []
 			let blocs = []
@@ -1311,7 +1314,7 @@ export default {
 			const champ = document.querySelector('#televerser-fichier')
 			const formats = ['jpg', 'jpeg', 'png', 'gif', 'mp4', 'm4v', 'mp3', 'm4a', 'ogg', 'wav', 'pdf', 'ppt', 'pptx', 'odp', 'doc', 'docx', 'odt', 'ods', 'odg', 'xls', 'xlsx', 'flipchart', 'notebook', 'ubz', 'ipynb', 'dgs', 'dgc', 'dgb']
 			const extension = champ.files[0].name.substring(champ.files[0].name.lastIndexOf('.') + 1).toLowerCase()
-			if (champ.files && champ.files[0] && formats.includes(extension) && champ.files[0].size < 20480000) {
+			if (champ.files && champ.files[0] && formats.includes(extension) && champ.files[0].size < this.limite * 1024000) {
 				const fichier = champ.files[0]
 				const formulaire = new FormData()
 				formulaire.append('pad', this.pad.id)
@@ -1396,8 +1399,8 @@ export default {
 			} else {
 				if (formats.includes(extension) === false) {
 					this.$store.dispatch('modifierAlerte', this.$t('formatFichierPasAccepte'))
-				} else if (champ.files[0].size > 20480000) {
-					this.$store.dispatch('modifierAlerte', this.$t('tailleMaximale20'))
+				} else if (champ.files[0].size > this.limite * 1024000) {
+					this.$store.dispatch('modifierAlerte', this.$t('tailleMaximale', { taille: this.limite }))
 				}
 				champ.value = ''
 			}
@@ -1644,7 +1647,7 @@ export default {
 			const champ = document.querySelector('#televerser-vignette')
 			const formats = ['jpg', 'jpeg', 'png', 'gif']
 			const extension = champ.files[0].name.substring(champ.files[0].name.lastIndexOf('.') + 1).toLowerCase()
-			if (champ.files && champ.files[0] && formats.includes(extension) && champ.files[0].size < 5242880) {
+			if (champ.files && champ.files[0] && formats.includes(extension) && champ.files[0].size < 3072000) {
 				const fichier = champ.files[0]
 				const formulaire = new FormData()
 				formulaire.append('pad', this.pad.id)
@@ -1691,8 +1694,8 @@ export default {
 			} else {
 				if (formats.includes(extension) === false) {
 					this.$store.dispatch('modifierAlerte', this.$t('formatFichierPasAccepte'))
-				} else if (champ.files[0].size > 3145728) {
-					this.$store.dispatch('modifierAlerte', this.$t('tailleMaximale3'))
+				} else if (champ.files[0].size > 3072000) {
+					this.$store.dispatch('modifierAlerte', this.$t('tailleMaximale', { taille: 3 }))
 				}
 				champ.value = ''
 			}
@@ -1920,6 +1923,11 @@ export default {
 											that.$store.dispatch('modifierMessage', that.$t('lienCopie'))
 										})
 									}
+								})
+							} else if (item.type === 'pdf' || item.type === 'document' || item.type === 'office') {
+								panel.addControl({
+									html: '<a class="material-icons telecharger" href="/fichiers/' + that.pad.id + '/' + item.media + '" target="_blank">file_download</a>',
+									name: 'telecharger'
 								})
 							}
 						},

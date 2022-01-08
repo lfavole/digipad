@@ -136,10 +136,12 @@
 	margin-right: 0;
 }
 
+.jsPanel-controlbar .jsPanel-btn a,
 .jsPanel-controlbar .jsPanel-btn span {
 	vertical-align: middle;
 }
 
+.jsPanel-controlbar .jsPanel-btn a.material-icons,
 .jsPanel-controlbar .jsPanel-btn span.material-icons {
 	font-size: 24px;
 }
