@@ -59,6 +59,10 @@ module.exports = {
 			{
 				code: 'es',
 				file: 'es.js'
+			},
+			{
+				code: 'hr',
+				file: 'hr.js'
 			}
 		],
 		defaultLocale: 'fr',

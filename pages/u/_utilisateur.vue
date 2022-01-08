@@ -25,6 +25,7 @@
 						<span role="button" tabindex="0" :class="{'selectionne': langue === 'fr'}" @click="modifierLangue('fr')">FR</span>
 						<span role="button" tabindex="0" :class="{'selectionne': langue === 'es'}" @click="modifierLangue('es')">ES</span>
 						<span role="button" tabindex="0" :class="{'selectionne': langue === 'it'}" @click="modifierLangue('it')">IT</span>
+						<span role="button" tabindex="0" :class="{'selectionne': langue === 'hr'}" @click="modifierLangue('hr')">HR</span>
 						<span role="button" tabindex="0" :class="{'selectionne': langue === 'en'}" @click="modifierLangue('en')">EN</span>
 					</div>
 				</div>
@@ -1227,6 +1228,7 @@ export default {
 	background: #46fbff;
 	cursor: pointer;
     transition: all ease-in 0.1s;
+	text-align: center;
 }
 
 #bouton-creer {
