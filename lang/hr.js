@@ -1,5 +1,5 @@
 export default {
-	slogan: '<strong>Digitalna podloga</strong> omogućuje stvaranje <strong> multimedijskih zidova za suradnju </strong> za nastavu uživo, virtualnu nastavu, rad na daljinu. ', 
+	slogan: '<strong>Digitalna podloga</strong> omogućuje stvaranje <strong> multimedijskih zidova za suradnju </strong> za nastavu uživo, virtualnu nastavu, rad na daljinu.',
 	seConnecter: 'Prijava',
 	sInscrire: 'Registracija',
 	mentionsLegales: 'Uvjeti korištenja',
@@ -182,8 +182,7 @@ export default {
 	adresseLien: 'Unesite vezu za umetanje:',
 	erreurTeleversementFichier: 'Pogreška pri prijenosu datoteke.',
 	formatFichierPasAccepte: 'Ovaj oblik datoteke nije podržan.',
-	tailleMaximale20: 'Maksimalna dopuštena veličina je 20 MB.',
-	tailleMaximale3: 'Maksimalna dopuštena veličina je 3 MB.',
+	tailleMaximale: 'Maksimalna dopuštena veličina je {taille} MB.',
 	erreurRecuperationContenu: 'Pogreška prilikom dohvaćanja sadržaja.',
 	erreurTeleversementVignette: 'Pogreška pri prijenosu minijature.',
 	confirmationSupprimerCapsule: 'Želite li stvarno izbrisati ovu objavu?',
