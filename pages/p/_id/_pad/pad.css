@@ -583,7 +583,7 @@
     text-indent: 1px;
     border-radius: 4px;
     text-transform: uppercase;
-    transition: all ease-in 0.1s;
+    transition: all 0.1s ease-in;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -650,7 +650,7 @@
 	cursor: pointer;
 	letter-spacing: 1px;
     text-indent: 1px;
-	transition: all ease-in 0.1s;
+	transition: all 0.1s ease-in;
 	text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.2);
 	border-bottom-left-radius: 10px;
 	border-bottom-right-radius: 10px;
@@ -1492,7 +1492,7 @@
 	right: 0;
 	bottom: 0;
 	background-color: #ccc;
-	transition: 0.3s;
+	transition: 0.2s;
 	border-radius: 3rem;
 }
 
@@ -1505,7 +1505,7 @@
 	left: 0.3rem;
 	bottom: 0.3rem;
 	background-color: #fff;
-	transition: 0.3s;
+	transition: 0.2s;
 	border-radius: 50%;
 }
 

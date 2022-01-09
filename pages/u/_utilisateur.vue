@@ -1227,7 +1227,7 @@ export default {
 	margin-bottom: 1.5rem;
 	background: #46fbff;
 	cursor: pointer;
-    transition: all ease-in 0.1s;
+    transition: all 0.1s ease-in;
 	text-align: center;
 }
 
@@ -1303,7 +1303,7 @@ export default {
 	letter-spacing: 1px;
 	text-indent: 1px;
 	text-align: center;
-	transition: all ease-in 0.1s;
+	transition: all 0.1s ease-in;
 	white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -1705,7 +1705,7 @@ export default {
 	right: 0;
 	bottom: 0;
 	background-color: #ccc;
-	transition: 0.3s;
+	transition: 0.2s;
 	border-radius: 3rem;
 }
 
@@ -1717,7 +1717,7 @@ export default {
 	left: 0.3rem;
 	bottom: 0.3rem;
 	background-color: #fff;
-	transition: 0.3s;
+	transition: 0.2s;
 	border-radius: 50%;
 }
 

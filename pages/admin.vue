@@ -208,7 +208,7 @@ export default {
 	border-radius: 2em;
     background: #46fbff;
 	cursor: pointer;
-    transition: all ease-in 0.1s;
+    transition: all 0.1s ease-in;
 }
 
 .actions .bouton:hover {
