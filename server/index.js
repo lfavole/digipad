@@ -55,7 +55,7 @@ const sessionOptions = {
 	saveUninitialized: false,
 	cookie: {
 		sameSite: 'None',
-		secure: 'auto'
+		secure: true
 	}
 }
 const expressSession = session(sessionOptions)
