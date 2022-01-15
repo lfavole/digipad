@@ -30,6 +30,7 @@ export default {
 	rechercherPads: 'Traži na podlozi',
 	creerPad: 'Kreirajte podlogu',
 	importerPad: 'Uvoznik na podlogu',
+	limitePad: 'Dostigli ste maksimalan broj jastučića ({limite}). Prije stvaranja novih morate izbrisati jastučiće. Ne zaboravite izvesti jastučiće prije brisanja kako biste ih arhivirali na računalo.',
 	importerCommentaires: 'Uvezite komentare',
 	importerEvaluations: 'Uvezite recenzije',
 	importerActivite: 'Uvoz aktivnosti podloge',

@@ -30,6 +30,7 @@ export default {
 	rechercherPads: 'Search in the pads',
 	creerPad: 'Create a pad',
 	importerPad: 'Importer un pad',
+	limitePad: 'You have reached the maximum number of pads ({limite}). You must delete pads before you can create new ones. Don\'t forget to export the pads before deleting them so that you can archive them on your computer.',
 	importerCommentaires: 'Import comments',
 	importerEvaluations: 'Import reviews',
 	importerActivite: 'Import pad activity',

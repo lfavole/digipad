@@ -80,8 +80,8 @@
 		<div id="pads" class="ascenseur" :class="affichage">
 			<div class="section">
 				<div id="boutons">
-					<span id="bouton-creer" role="button" tabindex="0" @click="afficherModaleCreerPad">{{ $t('creerPad') }}</span>
-					<span id="bouton-importer" role="button" tabindex="0" @click="afficherModaleImporterPad">{{ $t('importerPad') }}</span>
+					<span id="bouton-creer" :class="{'desactive': padsCrees.length >= limite}" role="button" tabindex="0" @click="afficherModaleCreerPad">{{ $t('creerPad') }}</span>
+					<span id="bouton-importer" :class="{'desactive': padsCrees.length >= limite}" role="button" tabindex="0" @click="afficherModaleImporterPad">{{ $t('importerPad') }}</span>
 				</div>
 				<div id="filtrer">
 					<div class="rechercher">
@@ -482,6 +482,9 @@ export default {
 		},
 		affichage () {
 			return this.$store.state.affichage
+		},
+		limite () {
+			return process.env.padLimit
 		}
 	},
 	watch: {
@@ -546,10 +549,14 @@ export default {
 			}
 		},
 		afficherModaleCreerPad () {
-			this.modaleCreerPad = true
-			this.$nextTick(function () {
-				document.querySelector('#creation input').focus()
-			})
+			if (this.padsCrees.length < this.limite) {
+				this.modaleCreerPad = true
+				this.$nextTick(function () {
+					document.querySelector('#creation input').focus()
+				})
+			} else {
+				this.$store.dispatch('modifierAlerte', this.$t('limitePad', { limite: this.limite }))
+			}
 		},
 		creerPad () {
 			if (this.titre !== '') {
@@ -576,7 +583,11 @@ export default {
 			this.titre = ''
 		},
 		afficherModaleImporterPad () {
-			this.modaleImporterPad = true
+			if (this.padsCrees.length < this.limite) {
+				this.modaleImporterPad = true
+			} else {
+				this.$store.dispatch('modifierAlerte', this.$t('limitePad', { limite: this.limite }))
+			}
 		},
 		modifierParametresImport (event, type) {
 			this.parametresImport[type] = event.target.checked
@@ -1231,12 +1242,19 @@ export default {
 	text-align: center;
 }
 
+#bouton-importer.desactive,
+#bouton-creer.desactive {
+	border: 2px solid #777;
+	background: #aaa;
+	cursor: default;
+}
+
 #bouton-creer {
 	margin-right: 1.5rem;
 }
 
-#bouton-importer:hover,
-#bouton-creer:hover {
+#bouton-importer:not(.desactive):hover,
+#bouton-creer:not(.desactive):hover {
 	text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.2);
 	background: #fff;
 }

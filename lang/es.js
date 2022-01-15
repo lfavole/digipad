@@ -30,6 +30,7 @@ export default {
 	rechercherPads: 'Buscar en los pads',
 	creerPad: 'Crear un pad',
 	importerPad: 'Importar un pad',
+	limitePad: 'Ha alcanzado el número máximo de almohadillas ({limite}). Debes borrar los pads antes de poder crear otros nuevos. Acuérdate de exportar los pads antes de borrarlos para poder archivarlos en tu ordenador.',
 	importerCommentaires: 'Importar comentarios',
 	importerEvaluations: 'Importar evaluaciones',
 	importerActivite: 'Importar actividad del pad',

@@ -30,6 +30,7 @@ export default {
 	rechercherPads: 'Cerca nei pad',
 	creerPad: 'Crea un pad',
 	importerPad: 'Importare un pad',
+	limitePad: 'Hai raggiunto il numero massimo di pad ({limite}). È necessario cancellare i pad prima di poterne creare di nuovi. Ricordati di esportare i blocchi prima di cancellarli, in modo da poterli archiviare sul tuo computer.',
 	importerCommentaires: 'Importare i commenti',
 	importerEvaluations: 'Importare le revisioni',
 	importerActivite: 'Importare l\'attività del pad',
