@@ -332,7 +332,7 @@ header.pleine-largeur #titre {
     bottom: 0;
     overflow: hidden;
 	background: rgba(255, 255, 255, 0.95);
-    transition: all 0.1s ease-out;
+    transition: all 0.15s ease-out;
     transform: translate3d(0, 0, 0);
     z-index: 10;
 }
@@ -348,7 +348,7 @@ header.pleine-largeur #titre {
 }
 
 .menu.ouvert {
-    transition: all 0.1s ease-in-out;
+    transition: all 0.15s ease-in-out;
     transform: translate3d(0, 0, 0);
 }
 
