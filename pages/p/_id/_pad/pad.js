@@ -1829,8 +1829,6 @@ export default {
 					html = '<iframe src="/pdfjs/web/viewer.html?file=../../fichiers/' + this.pad.id + '/' + item.media + '" allowfullscreen></iframe>'
 					break
 				case 'document':
-					html = '<iframe src="/viewer/#../fichiers/' + this.pad.id + '/' + item.media + '" allowfullscreen></iframe>'
-					break
 				case 'office':
 					html = '<iframe src="https://view.officeapps.live.com/op/embed.aspx?src=' + this.hote + '/fichiers/' + this.pad.id + '/' + item.media + '" allowfullscreen></iframe>'
 					break
