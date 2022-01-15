@@ -808,7 +808,7 @@
 					<div id="texte" />
 					<div class="televerser fichier" v-show="media === '' && !chargementLien" v-if="pad.fichiers === 'actives'">
 						<label for="televerser-fichier" class="bouton" role="button" tabindex="0" v-show="progressionFichier === 0">{{ $t('ajouterFichier') }}</label>
-						<input id="televerser-fichier" type="file" style="display: none" accept=".jpg, .jpeg, .png, .gif, .mp4, .m4v, .mp3, .m4a, .ogg, .wav, .pdf, .ppt, .pptx, .odp, .doc, .docx, .odt, .ods, .odg, .xls, .xlsx, .notebook, .flipchart, .ubz, .ipynb, .dgs, .dgc, .dgb" @change="ajouterFichier">
+						<input id="televerser-fichier" type="file" style="display: none" accept=".jpg, .jpeg, .png, .gif, .mp4, .m4v, .mp3, .m4a, .ogg, .wav, .pdf, .ppt, .pptx, .odp, .doc, .docx, .odt, .ods, .odg, .xls, .xlsx, .notebook, .flipchart, .ubz, .ipynb, .dgs, .dgc, .dgb, .kmz" @change="ajouterFichier">
 						<div class="conteneur-chargement progression" v-if="progressionFichier > 0">
 							<progress class="barre-progression" max="100" :value="progressionFichier" />
 							<div class="chargement" />
@@ -854,9 +854,8 @@
 						<img id="image" :src="media" v-else-if="type === 'lien-image'">
 						<audio id="audio" controls :src="'/fichiers/' + pad.id + '/' + media" v-else-if="type === 'audio'" />
 						<video id="video" controls playsinline crossOrigin="anonymous" :src="'/fichiers/' + pad.id + '/' + media" v-else-if="type === 'video'" />
-						<iframe id="document" :src="'/viewer/#../fichiers/' + pad.id + '/' + media" allowfullscreen v-else-if="type === 'document'" />
 						<iframe id="document" :src="'/pdfjs/web/viewer.html?file=../../fichiers/' + pad.id + '/' + media" allowfullscreen v-else-if="type === 'pdf'" />
-						<iframe id="document" :src="'https://view.officeapps.live.com/op/embed.aspx?src=' + hote + '/fichiers/' + pad.id + '/' + media" allowfullscreen v-else-if="type === 'office'" />
+						<iframe id="document" :src="'https://view.officeapps.live.com/op/embed.aspx?src=' + hote + '/fichiers/' + pad.id + '/' + media" allowfullscreen v-else-if="type === 'office' || type === 'document'" />
 						<a id="lien" :href="media" target="_blank" v-else-if="type === 'lien'">
 							<span class="type">{{ $t('lienExterne') }}</span>
 							<span class="nom">{{ definirNomFichier(media) }}</span>
@@ -921,9 +920,8 @@
 						<img :src="donneesBloc.media" v-else-if="donneesBloc.type === 'lien-image'">
 						<audio controls :src="'/fichiers/' + pad.id + '/' + donneesBloc.media" v-else-if="donneesBloc.type === 'audio'" />
 						<video controls playsinline crossOrigin="anonymous" :src="'/fichiers/' + pad.id + '/' + donneesBloc.media" v-else-if="donneesBloc.type === 'video'" />
-						<iframe class="document" :src="'/viewer/#../fichiers/' + pad.id + '/' + donneesBloc.media" allowfullscreen v-else-if="donneesBloc.type === 'document'" />
 						<iframe class="document" :src="'/pdfjs/web/viewer.html?file=../../fichiers/' + pad.id + '/' + donneesBloc.media" allowfullscreen v-else-if="donneesBloc.type === 'pdf'" />
-						<iframe class="document" :src="'https://view.officeapps.live.com/op/embed.aspx?src=' + hote + '/fichiers/' + pad.id + '/' + donneesBloc.media" allowfullscreen v-else-if="donneesBloc.type === 'office'" />
+						<iframe class="document" :src="'https://view.officeapps.live.com/op/embed.aspx?src=' + hote + '/fichiers/' + pad.id + '/' + donneesBloc.media" allowfullscreen v-else-if="donneesBloc.type === 'office' || donneesBloc.type === 'document'" />
 						<span v-else-if="donneesBloc.type === 'lien'">
 							<a :href="donneesBloc.media" target="_blank">
 								<img :src="donneesBloc.vignette" v-if="donneesBloc.vignette && donneesBloc.vignette !== ''">
