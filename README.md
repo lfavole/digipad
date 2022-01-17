@@ -37,6 +37,7 @@ SESSION_KEY (clé de session Express Session)
 ETHERPAD (lien vers un serveur Etherpad pour les documents collaboratifs)
 ETHERPAD_API_KEY (clé API Etherpad)
 UPLOAD_LIMIT (limite de téléversement des fichiers en Mo)
+PAD_LIMIT (nombre maximum de pads par compte utilisateur)
 ADMIN_PASSWORD (mot de passe pour accéder à la page d'administration /admin)
 ```
 
