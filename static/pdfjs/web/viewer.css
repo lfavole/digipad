@@ -2778,7 +2778,7 @@ html[dir="rtl"] #documentPropertiesOverlay .row > * {
 }
 
 #openFile,
-#viewBookmark
+#viewBookmark,
 #secondaryOpenFile,
 #secondaryViewBookmark {
 	display: none!important;
