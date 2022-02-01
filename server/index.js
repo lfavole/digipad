@@ -29,7 +29,7 @@ const extract = require('extract-zip')
 const moment = require('moment')
 const bcrypt = require('bcrypt')
 const cron = require('node-cron')
-let storeOptions
+let storeOptions, cookie
 if (process.env.NODE_ENV === 'production') {
 	storeOptions = {
 		host: process.env.DB_HOST,
@@ -38,12 +38,19 @@ if (process.env.NODE_ENV === 'production') {
 		client: db,
 		prefix: 'sessions:'
 	}
+	cookie = {
+		sameSite: 'None',
+		secure: true
+	}
 } else {
 	storeOptions = {
 		host: 'localhost',
 		port: 6379,
 		client: db,
 		prefix: 'sessions:'
+	}
+	cookie = {
+		secure: false
 	}
 }
 const sessionOptions = {
@@ -53,10 +60,7 @@ const sessionOptions = {
 	resave: false,
 	rolling: true,
 	saveUninitialized: false,
-	cookie: {
-		sameSite: 'None',
-		secure: true
-	}
+	cookie: cookie
 }
 const expressSession = session(sessionOptions)
 const sharedsession = require('express-socket.io-session')
@@ -200,21 +204,29 @@ app.post('/api/recuperer-donnees-utilisateur', function (req, res) {
 		padsCrees.forEach(function (pad, indexPad) {
 			if (!pad.hasOwnProperty('id') || !pad.hasOwnProperty('token') || !pad.hasOwnProperty('identifiant') || !pad.hasOwnProperty('titre') || !pad.hasOwnProperty('fond') || !pad.hasOwnProperty('date')) {
 				padsCrees.splice(indexPad, 1)
+			} else {
+				padsCrees[indexPad].id = parseInt(pad.id)
 			}
 		})
 		padsRejoints.forEach(function (pad, indexPad) {
 			if (!pad.hasOwnProperty('id') || !pad.hasOwnProperty('token') || !pad.hasOwnProperty('identifiant') || !pad.hasOwnProperty('titre') || !pad.hasOwnProperty('fond') || !pad.hasOwnProperty('date')) {
 				padsRejoints.splice(indexPad, 1)
+			} else {
+				padsRejoints[indexPad].id = parseInt(pad.id)
 			}
 		})
 		padsAdmins.forEach(function (pad, indexPad) {
 			if (!pad.hasOwnProperty('id') || !pad.hasOwnProperty('token') || !pad.hasOwnProperty('identifiant') || !pad.hasOwnProperty('titre') || !pad.hasOwnProperty('fond') || !pad.hasOwnProperty('date')) {
 				padsAdmins.splice(indexPad, 1)
+			} else {
+				padsAdmins[indexPad].id = parseInt(pad.id)
 			}
 		})
 		padsFavoris.forEach(function (pad, indexPad) {
 			if (!pad.hasOwnProperty('id') || !pad.hasOwnProperty('token') || !pad.hasOwnProperty('identifiant') || !pad.hasOwnProperty('titre') || !pad.hasOwnProperty('fond') || !pad.hasOwnProperty('date')) {
 				padsFavoris.splice(indexPad, 1)
+			} else {
+				padsFavoris[indexPad].id = parseInt(pad.id)
 			}
 		})
 		// Suppresion redondances pads rejoints et pads administrés
@@ -233,9 +245,12 @@ app.post('/api/recuperer-donnees-utilisateur', function (req, res) {
 			} else {
 				dossiers = JSON.parse(donnees.dossiers)
 				const listePadsDossiers = []
-				dossiers.forEach(function (dossier) {
-					dossier.pads.forEach(function (pad) {
-						listePadsDossiers.push(pad)
+				dossiers.forEach(function (dossier, indexDossier) {
+					dossier.pads.forEach(function (pad, indexPad) {
+						dossiers[indexDossier].pads[indexPad] = parseInt(pad)
+						if (!listePadsDossiers.includes(parseInt(pad))) {
+							listePadsDossiers.push(parseInt(pad))
+						}
 					})
 				})
 				const donneesPadsDossiers = []
@@ -246,7 +261,7 @@ app.post('/api/recuperer-donnees-utilisateur', function (req, res) {
 							if (resultat === 1) {
 								resolve()
 							} else {
-								resolve(pad)
+								resolve(parseInt(pad))
 							}
 						})
 					})
@@ -254,7 +269,7 @@ app.post('/api/recuperer-donnees-utilisateur', function (req, res) {
 				}
 				Promise.all(donneesPadsDossiers).then(function (padsSupprimes) {
 					padsSupprimes.forEach(function (padSupprime) {
-						if (padSupprime !== '') {
+						if (padSupprime !== '' || padSupprime !== null) {
 							dossiers.forEach(function (dossier, indexDossier) {
 								if (dossier.pads.includes(padSupprime)) {
 									const indexPad = dossier.pads.indexOf(padSupprime)
@@ -267,8 +282,8 @@ app.post('/api/recuperer-donnees-utilisateur', function (req, res) {
 					dossiers.forEach(function (dossier, indexDossier) {
 						const pads = []
 						dossier.pads.forEach(function (pad, indexPad) {
-							if (!pads.includes(parseInt(pad))) {
-								pads.push(parseInt(pad))
+							if (!pads.includes(pad)) {
+								pads.push(pad)
 							} else {
 								dossiers[indexDossier].pads.splice(indexPad, 1)
 							}
@@ -2056,7 +2071,7 @@ io.on('connection', function (socket) {
 		}
 	})
 
-	socket.on('modifierevaluation', function (bloc, pad, etoiles, identifiant) {
+	socket.on('modifierevaluation', function (bloc, pad, id, etoiles, identifiant) {
 		if (identifiant !== '' && identifiant !== undefined && socket.handshake.session.identifiant === identifiant) {
 			db.zrangebyscore('evaluations:' + bloc, id, id, function (err) {
 				if (err) { socket.emit('erreur'); return false }
