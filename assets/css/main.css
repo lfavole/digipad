@@ -861,6 +861,11 @@ label.bouton-bleu {
 	color: #aaa;
 }
 
+.contenu-editeur:lang(hr):empty:before {
+	content: 'Dodavanje teksta...';
+	color: #aaa;
+}
+
 .contenu-editeur-commentaire {
 	padding: 10px 15px;
 	font-size: 16px;
@@ -889,6 +894,11 @@ label.bouton-bleu {
 
 .contenu-editeur-commentaire:lang(es):empty:before {
 	content: 'Tu comentario...';
+	color: #aaa;
+}
+
+.contenu-editeur-commentaire:lang(hr):empty:before {
+	content: 'Vaš komentar...';
 	color: #aaa;
 }
 
@@ -1175,15 +1185,6 @@ label.bouton-bleu {
 	-webkit-user-select: text!important;
 	-webkit-touch-callout: default!important;
 	word-break: break-word;
-}
-
-#discussion .commentaires .texte,
-#discussion .commentaires .texte *,
-#diapositive .commentaires .texte,
-#diapositive .commentaires .texte * {
-	user-select: text!important;
-	-webkit-user-select: text!important;
-	-webkit-touch-callout: default!important;
 }
 
 .commentaires li:not(.edition) .texte a,
