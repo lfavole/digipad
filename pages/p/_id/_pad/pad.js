@@ -5,9 +5,9 @@ import pell from 'pell'
 import linkifyHtml from 'linkifyjs/html'
 import saveAs from 'file-saver'
 import Panzoom from '@panzoom/panzoom'
+import ClipboardJS from 'clipboard'
 import chargement from '@/components/chargement.vue'
 import emojis from '@/components/emojis.vue'
-import ClipboardJS from 'clipboard'
 
 export default {
 	name: 'Pad',
