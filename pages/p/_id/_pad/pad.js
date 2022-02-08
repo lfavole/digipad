@@ -931,8 +931,8 @@ export default {
 			// eslint-disable-next-line
 			this.codeqr = new QRCode('qr', {
 				text: lien,
-				width: 500,
-				height: 500,
+				width: 360,
+				height: 360,
 				colorDark: '#000000',
 				colorLight: '#ffffff',
 				// eslint-disable-next-line
@@ -1079,8 +1079,6 @@ export default {
 						vignette = '/img/facebook.png'
 					} else if (item.media.includes('vocaroo.com') || item.media.includes('voca.ro')) {
 						vignette = '/img/vocaroo.png'
-					} else if (item.media.includes('learningapps.org')) {
-						vignette = '/img/learning-apps.png'
 					} else if (item.media.includes('drive.google.com')) {
 						vignette = '/img/google-drive.png'
 					} else if (item.media.includes('docs.google.com/document')) {
@@ -1103,8 +1101,6 @@ export default {
 						vignette = '/img/genially.png'
 					} else if (item.media.includes('ladigitale.dev/digitools/')) {
 						vignette = '/img/digitools.png'
-					} else if (item.media.includes('teamimg.now.sh')) {
-						vignette = '/img/teamimg.png'
 					} else if (item.media.includes('framapad.org')) {
 						vignette = '/img/framapad.png'
 					} else {
@@ -1150,7 +1146,7 @@ export default {
 					icone = 'volume_up'
 				} else if (item.media.includes('google.com/maps')) {
 					icone = 'place'
-				} else if (item.source === 'etherpad' || item.media.includes('teamimg.now.sh') || item.media.includes('framapad.org')) {
+				} else if (item.source === 'etherpad' || item.media.includes('framapad.org')) {
 					icone = 'group_work'
 				} else {
 					icone = 'web'
@@ -1463,7 +1459,7 @@ export default {
 								donnees.media = this.media
 								donnees.source = this.source
 								donnees.type = this.type
-								if (this.source === 'web') {
+								if (this.source === 'web' && !this.media.includes('facebook.com') && !this.media.includes('vocaroo.com') && !this.media.includes('drive.google.com') && !this.media.includes('docs.google.com') && !this.media.includes('google.com/maps') && !this.media.includes('wikipedia.org') && !this.media.includes('genial.ly') && !this.media.includes('ladigitale.dev/digitools/') && !this.media.includes('framapad.org')) {
 									this.chargementLien = false
 									this.chargementVignette = true
 									let domaine = new URL(this.lien)
