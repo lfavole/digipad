@@ -1030,9 +1030,9 @@ export default {
 						this.$router.push('/')
 					} else {
 						this.$i18n.setLocale(langue)
+						document.getElementsByTagName('html')[0].setAttribute('lang', langue)
 						this.$store.dispatch('modifierLangue', langue)
 						this.$store.dispatch('modifierMessage', this.$t('langueModifiee'))
-						document.getElementsByTagName('html')[0].setAttribute('lang', langue)
 					}
 				}.bind(this)).catch(function () {
 					this.$store.dispatch('modifierAlerte', this.$t('erreurCommunicationServeur'))
