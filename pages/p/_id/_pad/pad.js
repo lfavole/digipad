@@ -1224,6 +1224,7 @@ export default {
 			} else {
 				this.$socket.emit('verifiermodifierbloc', this.pad.id, item.bloc, this.identifiant)
 				this.titreModale = this.$t('modifierCapsule')
+				this.donneesBloc = item
 				this.bloc = item.bloc
 				this.titre = item.titre
 				this.texte = item.texte
@@ -1412,7 +1413,7 @@ export default {
 				if (this.verifierURL(this.media) === false) {
 					this.$socket.emit('supprimerfichier', { pad: this.pad.id, fichier: this.media, vignette: this.vignette })
 				}
-			} else {
+			} else if (this.mode === 'edition') {
 				if (this.verifierURL(this.media) === false) {
 					this.fichiers.push(this.media)
 				}
@@ -1588,12 +1589,14 @@ export default {
 				}.bind(this))
 			}.bind(this))
 		},
-		verifierURL (url) {
+		verifierURL (lien) {
+			let url
 			try {
-				return Boolean(new URL(url))
-			} catch (e) {
+				url = new URL(lien)
+			} catch (_) {
 				return false
 			}
+			return url.protocol === 'http:' || url.protocol === 'https:'
 		},
 		convertirEnLien () {
 			this.iframe = ''
@@ -1609,7 +1612,7 @@ export default {
 			}
 			if (this.mode === 'creation' && this.vignette !== '' && this.vignette.substring(1, 9) === 'fichiers') {
 				this.$socket.emit('supprimerfichier', { pad: this.pad.id, fichier: this.media, vignette: this.vignette })
-			} else if (this.mode !== 'creation' && this.vignette !== '' && this.vignette.substring(1, 9) === 'fichiers') {
+			} else if (this.mode === 'edition' && this.vignette !== '' && this.vignette.substring(1, 9) === 'fichiers') {
 				this.vignettes.push(this.vignette)
 			}
 			this.media = ''
@@ -1761,6 +1764,7 @@ export default {
 			this.vignettes = []
 			this.resultats = {}
 			this.visibilite = false
+			this.donneesBloc = {}
 		},
 		fermerModaleBlocSansEnregistrement () {
 			this.modaleBloc = false
@@ -1768,11 +1772,16 @@ export default {
 			if (this.mode === 'creation' && this.media !== '' && this.lien === '') {
 				this.$socket.emit('supprimerfichier', { pad: this.pad.id, fichier: this.media, vignette: this.vignette })
 			}
+			this.fichiers.forEach(function (item, index) {
+				if (Object.keys(this.donneesBloc).length > 0 && item === this.donneesBloc.media) {
+					this.fichiers.splice(index, 1)
+				}
+			}.bind(this))
 			if (this.fichiers.length > 0) {
 				this.$socket.emit('supprimerfichiers', { pad: this.pad.id, fichiers: this.fichiers })
 			}
 			this.vignettes.forEach(function (item, index) {
-				if (item === this.vignetteDefaut) {
+				if (Object.keys(this.donneesBloc).length > 0 && item === this.donneesBloc.vignette) {
 					this.vignettes.splice(index, 1)
 				}
 			}.bind(this))
