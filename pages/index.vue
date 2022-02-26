@@ -178,6 +178,7 @@ export default {
 		if (this.langues.includes(langue) === true) {
 			this.$i18n.setLocale(langue)
 			this.$store.dispatch('modifierLangue', langue)
+			this.$socket.emit('modifierlangue', langue)
 		} else {
 			this.$i18n.setLocale(this.langue)
 		}

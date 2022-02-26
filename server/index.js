@@ -139,7 +139,9 @@ app.post('/api/inscription', function (req, res) {
 			multi.exec(function () {
 				req.session.identifiant = identifiant
 				req.session.nom = ''
-				req.session.langue = 'fr'
+				if (req.session.langue === '' || req.session.langue === undefined) {
+					req.session.langue = 'fr'
+				}
 				req.session.statut = 'utilisateur'
 				req.session.affichage = 'liste'
 				req.session.cookie.expires = new Date(Date.now() + (3600 * 24 * 7 * 1000))
@@ -646,7 +648,9 @@ app.post('/api/creer-pad-sans-compte', function (req, res) {
 				multi.exec(function () {
 					const chemin = path.join(__dirname, '..', '/static/fichiers/' + id)
 					fs.mkdirsSync(chemin)
-					req.session.langue = 'fr'
+					if (req.session.langue === '' || req.session.langue === undefined) {
+						req.session.langue = 'fr'
+					}
 					req.session.statut = 'auteur'
 					req.session.cookie.expires = new Date(Date.now() + (3600 * 24 * 7 * 1000))
 					res.json({ id: id, token: token, titre: titre, identifiant: identifiant, fond: '/img/fond1.png', acces: 'public', contributions: 'ouvertes', affichage: 'mur', registreActivite: 'active', conversation: 'desactivee', listeUtilisateurs: 'activee', editionNom: 'desactivee', fichiers: 'actives', liens: 'actives', liens: 'actives', documents: 'desactives', commentaires: 'desactives', evaluations: 'desactivees', ordre: 'croissant', date: date, colonnes: [], bloc: 0, activite: 0 })
@@ -660,7 +664,9 @@ app.post('/api/creer-pad-sans-compte', function (req, res) {
 			multi.exec(function () {
 				const chemin = path.join(__dirname, '..', '/static/fichiers/1')
 				fs.mkdirsSync(chemin)
-				req.session.langue = 'fr'
+				if (req.session.langue === '' || req.session.langue === undefined) {
+					req.session.langue = 'fr'
+				}
 				req.session.statut = 'auteur'
 				req.session.cookie.expires = new Date(Date.now() + (3600 * 24 * 7 * 1000))
 				res.json({ id: 1, token: token, titre: titre, identifiant: identifiant, fond: '/img/fond1.png', acces: 'public', contributions: 'ouvertes', affichage: 'mur', registreActivite: 'active', conversation: 'desactivee', listeUtilisateurs: 'activee', editionNom: 'desactivee', fichiers: 'actives', liens: 'actives', liens: 'actives', documents: 'desactives', commentaires: 'desactives', evaluations: 'desactivees', ordre: 'croissant', date: date, colonnes: [], bloc: 0, activite: 0 })
@@ -2734,6 +2740,11 @@ io.on('connection', function (socket) {
 		if (vignette.substring(1, 9) === 'fichiers') {
 			supprimerVignette(vignette)
 		}
+	})
+
+	socket.on('modifierlangue', function (langue) {
+		socket.handshake.session.langue = langue
+		socket.handshake.session.save()
 	})
 })
 
