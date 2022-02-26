@@ -728,6 +728,9 @@ export default {
 		langue () {
 			return this.$store.state.langue
 		},
+		langues () {
+			return this.$store.state.langues
+		},
 		admin () {
 			return this.pad.identifiant === this.identifiant || this.pad.admins.includes(this.identifiant)
 		},
@@ -897,7 +900,13 @@ export default {
 		} else {
 			this.$router.push('/')
 		}
-		this.$i18n.setLocale(this.langue)
+		const langue = this.$route.query.lang
+		if (this.langues.includes(langue) === true) {
+			this.$i18n.setLocale(langue)
+			this.$store.dispatch('modifierLangue', langue)
+		} else {
+			this.$i18n.setLocale(this.langue)
+		}
 	},
 	mounted () {
 		imagesLoaded('#pad', { background: true }, function () {
@@ -940,6 +949,7 @@ export default {
 			})
 			setTimeout(function () {
 				this.$nuxt.$loading.finish()
+				document.getElementsByTagName('html')[0].setAttribute('lang', this.langue)
 			}.bind(this), 100)
 		}.bind(this))
 	},

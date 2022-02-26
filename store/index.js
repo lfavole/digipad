@@ -11,6 +11,7 @@ export const state = () => ({
 	identifiant: '',
 	nom: '',
 	langue: 'fr',
+	langues: ['fr', 'es', 'it', 'hr', 'en'],
 	statut: '',
 	acces: [],
 	affichage: 'liste'

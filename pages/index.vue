@@ -168,10 +168,24 @@ export default {
 		},
 		langue () {
 			return this.$store.state.langue
+		},
+		langues () {
+			return this.$store.state.langues
 		}
 	},
 	created () {
-		this.$i18n.setLocale(this.langue)
+		const langue = this.$route.query.lang
+		if (this.langues.includes(langue) === true) {
+			this.$i18n.setLocale(langue)
+			this.$store.dispatch('modifierLangue', langue)
+		} else {
+			this.$i18n.setLocale(this.langue)
+		}
+	},
+	mounted () {
+		setTimeout(function () {
+			document.getElementsByTagName('html')[0].setAttribute('lang', this.langue)
+		}.bind(this), 100)
 	},
 	methods: {
 		afficherModaleCreer () {
