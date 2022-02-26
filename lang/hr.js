@@ -18,7 +18,6 @@ export default {
 	parametresCompte: 'Postavke računa',
 	rechercher: 'Traži',
 	recherche: 'Traži',
-	nouveautesEtFAQ: 'Novosti i često postavljena pitanja',
 	deconnexion: 'Odjavite se',
 	langue: 'Jezik',
 	nom: 'Ime',
@@ -315,5 +314,7 @@ export default {
 	decroissant: 'silazni',
 	capsulePrivee: 'Privatna objava',
 	capsuleVisible: 'Objava vidljiva svim korisnicima.',
-	afficherCapsule: 'Prikažite objavu'
+	afficherCapsule: 'Prikažite objavu',
+	vues: 'posjeta',
+	vue: 'posjet'
 }

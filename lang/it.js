@@ -18,7 +18,6 @@ export default {
 	parametresCompte: 'Impostazioni del profilo',
 	rechercher: 'Cerca',
 	recherche: 'Cerca',
-	nouveautesEtFAQ: 'Novità e FAQ',
 	deconnexion: 'Logout',
 	langue: 'Lingua',
 	nom: 'Nome',
@@ -315,5 +314,7 @@ export default {
 	decroissant: 'discendente',
 	capsulePrivee: 'Capsula privata',
 	capsuleVisible: 'Capsula visibile a tutti gli utenti.',
-	afficherCapsule: 'Visualizza la capsula'
+	afficherCapsule: 'Visualizza la capsula',
+	vues: 'viste',
+	vue: 'vista'
 }
