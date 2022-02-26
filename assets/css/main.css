@@ -798,8 +798,10 @@ label.bouton-bleu {
 
 .boutons-editeur-commentaire button,
 .boutons-editeur button {
+	display: inline-flex;
+	align-items: center;
 	font-size: 24px;
-	width: 24px;
+	min-width: 24px;
 	height: 24px;
 	text-align: center;
 	color: #222;
@@ -815,8 +817,40 @@ label.bouton-bleu {
 .boutons-editeur-commentaire button label[for="couleur-texte-commentaire"],
 .boutons-editeur button label[for="couleur-texte"] {
 	font-size: 19px!important;
+	width: auto!important;
 	margin: 0!important;
 	line-height: 24px!important;
+}
+
+.boutons-editeur-commentaire input[type="color"],
+.boutons-editeur input[type="color"] {
+	width: 18px;
+	height: 18px;
+	margin-left: 4px;
+	padding: 0;
+	border: none;
+	cursor: pointer;
+	user-select: none!important;
+}
+
+.boutons-editeur input[type="color"]::-moz-color-swatch {
+	border: none;
+	border-radius: 50%;
+}
+
+.boutons-editeur input[type="color"]::-webkit-color-swatch {
+	border: none;
+	border-radius: 50%;
+}
+
+.boutons-editeur-commentaire input[type="color"]::-moz-color-swatch {
+	border: none;
+	border-radius: 50%;
+}
+
+.boutons-editeur-commentaire input[type="color"]::-webkit-color-swatch {
+	border: none;
+	border-radius: 50%;
 }
 
 #diapositive .ecrire-commentaire .boutons-editeur-commentaire,
