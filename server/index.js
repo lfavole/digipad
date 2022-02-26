@@ -317,6 +317,10 @@ app.post('/api/recuperer-donnees-pad', function (req, res) {
 					if (pad.hasOwnProperty('notification')) {
 						pad.notification = JSON.parse(pad.notification)
 					}
+					let vues = 0
+					if (pad.hasOwnProperty('vues')) {
+						vues = parseInt(pad.vues) + 1
+					}
 					// Pour homogénéité des paramètres de pad
 					if (!pad.hasOwnProperty('ordre')) {
 						pad.ordre = 'croissant'
@@ -513,48 +517,51 @@ app.post('/api/recuperer-donnees-pad', function (req, res) {
 						if (ordre === 'decroissant') {
 							blocs.reverse()
 						}
-						// Ajouter dans pads rejoints
-						if (pad.identifiant !== identifiant && statut === 'utilisateur') {
-							db.smembers('pads-rejoints:' + identifiant, function (err, padsRejoints) {
-								if (err) { res.send('erreur_pad'); return false }
-								let padDejaRejoint = false
-								for (const padRejoint of padsRejoints) {
-									if (padRejoint === id) {
-										padDejaRejoint = true
+						// Ajouter nombre de vues
+						db.hmset('pads:' + id, 'vues', vues, function () {
+							// Ajouter dans pads rejoints
+							if (pad.identifiant !== identifiant && statut === 'utilisateur') {
+								db.smembers('pads-rejoints:' + identifiant, function (err, padsRejoints) {
+									if (err) { res.send('erreur_pad'); return false }
+									let padDejaRejoint = false
+									for (const padRejoint of padsRejoints) {
+										if (padRejoint === id) {
+											padDejaRejoint = true
+										}
 									}
-								}
-								if (padDejaRejoint === false) {
-									const multi = db.multi()
-									multi.sadd('pads-rejoints:' + identifiant, id)
-									multi.sadd('pads-utilisateurs:' + identifiant, id)
-									multi.hmset('couleurs:' + identifiant, 'pad' + id, choisirCouleur())
-									multi.sadd('utilisateurs-pads:' + id, identifiant)
-									multi.exec(function () {
-										res.json({ pad: pad, blocs: blocs, activite: activite.reverse() })
-									})
-								} else {
-									// Vérifier notification mise à jour pad
-									if (pad.hasOwnProperty('notification') && pad.notification.includes(identifiant)) {
-										pad.notification.splice(pad.notification.indexOf(identifiant), 1)
-										db.hmset('pads:' + id, 'notification', JSON.stringify(pad.notification), function () {
+									if (padDejaRejoint === false) {
+										const multi = db.multi()
+										multi.sadd('pads-rejoints:' + identifiant, id)
+										multi.sadd('pads-utilisateurs:' + identifiant, id)
+										multi.hmset('couleurs:' + identifiant, 'pad' + id, choisirCouleur())
+										multi.sadd('utilisateurs-pads:' + id, identifiant)
+										multi.exec(function () {
 											res.json({ pad: pad, blocs: blocs, activite: activite.reverse() })
 										})
 									} else {
-										res.json({ pad: pad, blocs: blocs, activite: activite.reverse() })
+										// Vérifier notification mise à jour pad
+										if (pad.hasOwnProperty('notification') && pad.notification.includes(identifiant)) {
+											pad.notification.splice(pad.notification.indexOf(identifiant), 1)
+											db.hmset('pads:' + id, 'notification', JSON.stringify(pad.notification), function () {
+												res.json({ pad: pad, blocs: blocs, activite: activite.reverse() })
+											})
+										} else {
+											res.json({ pad: pad, blocs: blocs, activite: activite.reverse() })
+										}
 									}
-								}
-							})
-						} else {
-							// Vérifier notification mise à jour pad
-							if (pad.hasOwnProperty('notification') && pad.notification.includes(identifiant)) {
-								pad.notification.splice(pad.notification.indexOf(identifiant), 1)
-								db.hmset('pads:' + id, 'notification', JSON.stringify(pad.notification), function () {
-									res.json({ pad: pad, blocs: blocs, activite: activite.reverse() })
 								})
 							} else {
-								res.json({ pad: pad, blocs: blocs, activite: activite.reverse() })
+								// Vérifier notification mise à jour pad
+								if (pad.hasOwnProperty('notification') && pad.notification.includes(identifiant)) {
+									pad.notification.splice(pad.notification.indexOf(identifiant), 1)
+									db.hmset('pads:' + id, 'notification', JSON.stringify(pad.notification), function () {
+										res.json({ pad: pad, blocs: blocs, activite: activite.reverse() })
+									})
+								} else {
+									res.json({ pad: pad, blocs: blocs, activite: activite.reverse() })
+								}
 							}
-						}
+						})
 					})
 				} else {
 					res.send('erreur_pad')

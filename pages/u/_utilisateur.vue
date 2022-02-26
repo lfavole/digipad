@@ -9,7 +9,6 @@
 
 		<nav id="nav">
 			<span id="compte" role="button" tabindex="0" :title="$t('parametresCompte')" @click="menu = !menu"><i class="material-icons">account_circle</i></span>
-			<span id="informations" role="button" tabindex="0" :title="$t('nouveautesEtFAQ')"><a href="https://drive.infomaniak.com/app/share/139248/eb7c3ad0-a36f-45f2-8125-3e2c59cce1fc/preview/text/4259" target="_blank"><i class="material-icons">help_outline</i></a></span>
 			<span id="deconnexion" role="button" tabindex="0" :title="$t('deconnexion')" @click="deconnexion"><i class="material-icons">power_settings_new</i></span>
 		</nav>
 
@@ -118,6 +117,9 @@
 								<span class="titre">{{ pad.titre }}</span>
 								<span class="date">{{ $t('creeLe') }} {{ $formaterDate(pad.date, langue) }}</span>
 								<span class="auteur" v-if="pad.identifiant !== identifiant">{{ $t('par') }} {{ pad.identifiant }}</span>
+								<span class="vues" v-if="pad.hasOwnProperty('vues') && pad.vues > 1">- {{ pad.vues }} {{ $t('vues') }}</span>
+								<span class="vues" v-else-if="pad.hasOwnProperty('vues') && pad.vues < 2">- {{ pad.vues }} {{ $t('vue') }}</span>
+								<span class="vues" v-else-if="!pad.hasOwnProperty('vues')">- 0 {{ $t('vue') }}</span>
 							</a>
 							<div class="actions" v-if="pad.identifiant === identifiant">
 								<span class="ajouter-favori" role="button" tabindex="0" @click="ajouterFavori(pad)" :title="$t('ajouterFavori')" v-if="!favoris.includes(pad.id)"><i class="material-icons">star_outline</i></span>
@@ -143,6 +145,9 @@
 									<span class="titre"><span class="mise-a-jour" v-if="pad.hasOwnProperty('notification') && pad.notification.includes(identifiant)" />{{ pad.titre }}</span>
 									<span class="date">{{ $t('creeLe') }} {{ $formaterDate(pad.date, langue) }}</span>
 									<span class="auteur" v-if="pad.identifiant !== identifiant">{{ $t('par') }} {{ pad.identifiant }}</span>
+									<span class="vues" v-if="pad.hasOwnProperty('vues') && pad.vues > 1">- {{ pad.vues }} {{ $t('vues') }}</span>
+									<span class="vues" v-else-if="pad.hasOwnProperty('vues') && pad.vues < 2">- {{ pad.vues }} {{ $t('vue') }}</span>
+									<span class="vues" v-else-if="!pad.hasOwnProperty('vues')">- 0 {{ $t('vue') }}</span>
 								</div>
 							</a>
 							<div class="actions" v-if="pad.identifiant === identifiant">
@@ -179,6 +184,9 @@
 								<span class="titre">{{ pad.titre }}</span>
 								<span class="date">{{ $t('creeLe') }} {{ $formaterDate(pad.date, langue) }}</span>
 								<span class="auteur" v-if="pad.identifiant !== identifiant">{{ $t('par') }} {{ pad.identifiant }}</span>
+								<span class="vues" v-if="pad.hasOwnProperty('vues') && pad.vues > 1">- {{ pad.vues }} {{ $t('vues') }}</span>
+								<span class="vues" v-else-if="pad.hasOwnProperty('vues') && pad.vues < 2">- {{ pad.vues }} {{ $t('vue') }}</span>
+								<span class="vues" v-else-if="!pad.hasOwnProperty('vues')">- 0 {{ $t('vue') }}</span>
 							</a>
 							<div class="actions" v-if="pad.identifiant === identifiant">
 								<span class="ajouter-favori" role="button" tabindex="0" @click="ajouterFavori(pad)" :title="$t('ajouterFavori')" v-if="!favoris.includes(pad.id)"><i class="material-icons">star_outline</i></span>
@@ -204,6 +212,9 @@
 									<span class="titre"><span class="mise-a-jour" v-if="pad.hasOwnProperty('notification') && pad.notification.includes(identifiant)" />{{ pad.titre }}</span>
 									<span class="date">{{ $t('creeLe') }} {{ $formaterDate(pad.date, langue) }}</span>
 									<span class="auteur" v-if="pad.identifiant !== identifiant">{{ $t('par') }} {{ pad.identifiant }}</span>
+									<span class="vues" v-if="pad.hasOwnProperty('vues') && pad.vues > 1">- {{ pad.vues }} {{ $t('vues') }}</span>
+									<span class="vues" v-else-if="pad.hasOwnProperty('vues') && pad.vues < 2">- {{ pad.vues }} {{ $t('vue') }}</span>
+									<span class="vues" v-else-if="!pad.hasOwnProperty('vues')">- 0 {{ $t('vue') }}</span>
 								</div>
 							</a>
 							<div class="actions" v-if="pad.identifiant === identifiant">
@@ -537,6 +548,7 @@ export default {
 		imagesLoaded('#pads', { background: true }, function () {
 			setTimeout(function () {
 				this.$nuxt.$loading.finish()
+				document.getElementsByTagName('html')[0].setAttribute('lang', this.langue)
 			}.bind(this), 100)
 		}.bind(this))
 	},
@@ -1549,6 +1561,7 @@ export default {
 	font-weight: 700;
 }
 
+.pad.liste .vues,
 .pad.liste .auteur,
 .pad.liste .date {
 	font-size: 1.2rem;
@@ -1614,7 +1627,7 @@ export default {
 .pad.mosaique .meta {
 	width: 100%;
 	padding: 1.5rem;
-    background: rgba(0, 0, 0, 0.55);
+    background: rgba(0, 0, 0, 0.7);
 	text-align: center;
 }
 
@@ -1627,6 +1640,7 @@ export default {
 	font-weight: 700;
 }
 
+.pad.mosaique .vues,
 .pad.mosaique .auteur,
 .pad.mosaique .date {
     margin-top: 0.5rem;
