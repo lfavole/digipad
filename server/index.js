@@ -1784,9 +1784,9 @@ io.on('connection', function (socket) {
 											socket.handshake.session.cookie.expires = new Date(Date.now() + (3600 * 24 * 7 * 1000))
 											socket.handshake.session.save()
 										})
-									} else if (visibilite === 'privee') {
+									} else if (visibilite === 'privee' || visibilite === 'masquee') {
 										const multi = db.multi()
-										multi.hmset('pad-' + pad + ':' + bloc, 'titre', titre, 'texte', texte, 'media', media, 'iframe', iframe, 'type', type, 'source', source, 'vignette', vignette, 'visibilite', 'privee', 'modifie', date)
+										multi.hmset('pad-' + pad + ':' + bloc, 'titre', titre, 'texte', texte, 'media', media, 'iframe', iframe, 'type', type, 'source', source, 'vignette', vignette, 'visibilite', visibilite, 'modifie', date)
 										multi.exec(function () {
 											io.in('pad-' + pad).emit('modifierbloc', { bloc: bloc, titre: titre, texte: texte, media: media, iframe: iframe, type: type, source: source, vignette: vignette, identifiant: identifiant, nom: nom, modifie: date, couleur: couleur, colonne: colonne, visibilite: visibilite })
 											socket.handshake.session.cookie.expires = new Date(Date.now() + (3600 * 24 * 7 * 1000))
