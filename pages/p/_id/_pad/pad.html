@@ -808,7 +808,7 @@
 					<div id="texte" />
 					<div class="televerser fichier" v-show="media === '' && !chargementLien" v-if="pad.fichiers === 'actives'">
 						<label for="televerser-fichier" class="bouton" role="button" tabindex="0" v-show="progressionFichier === 0">{{ $t('ajouterFichier') }}</label>
-						<input id="televerser-fichier" type="file" style="display: none" accept=".jpg, .jpeg, .png, .gif, .mp4, .m4v, .mp3, .m4a, .ogg, .wav, .pdf, .ppt, .pptx, .odp, .doc, .docx, .odt, .ods, .odg, .xls, .xlsx, .notebook, .flipchart, .ubz, .ipynb, .dgs, .dgc, .dgb, .kmz" @change="ajouterFichier">
+						<input id="televerser-fichier" type="file" style="display: none" accept=".jpg, .jpeg, .png, .gif, .mp4, .m4v, .mp3, .m4a, .ogg, .wav, .pdf, .ppt, .pptx, .odp, .doc, .docx, .odt, .ods, .odg, .xls, .xlsx, .notebook, .flipchart, .ubz, .ipynb, .dgs, .dgc, .dgb, .kmz, .sb3, .epub, .sprite3" @change="ajouterFichier">
 						<div class="conteneur-chargement progression" v-if="progressionFichier > 0">
 							<progress class="barre-progression" max="100" :value="progressionFichier" />
 							<div class="chargement" />
