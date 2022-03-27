@@ -49,7 +49,7 @@ https://digipad.app
 
 
 ### Remerciements et crédits
-Traduction en italien par Paolo Mauri (https://gitlab.com/maupao)
+Traduction en italien par Paolo Mauri (https://gitlab.com/maupao) et @nilocram (Roberto Marcolin)
 
 Traduction en espagnol par Fernando S. Delgado Trujillo (https://gitlab.com/fersdt)
 
