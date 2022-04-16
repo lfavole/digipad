@@ -89,11 +89,11 @@
 					</div>
 					<div class="filtrer">
 						<span><i class="material-icons">sort</i></span>
-						<select id="champ-filtrer" @change="filtrer($event.target.value)">
-							<option value="date-asc" selected>{{ $t('dateAsc') }}</option>
-							<option value="date-desc">{{ $t('dateDesc') }}</option>
-							<option value="alpha-asc">{{ $t('alphaAsc') }}</option>
-							<option value="alpha-desc">{{ $t('alphaDesc') }}</option>
+						<select id="champ-filtrer" @change="modifierFiltre($event.target.value)">
+							<option value="date-asc" :selected="filtre === 'date-asc'">{{ $t('dateAsc') }}</option>
+							<option value="date-desc" :selected="filtre === 'date-desc'">{{ $t('dateDesc') }}</option>
+							<option value="alpha-asc" :selected="filtre === 'alpha-asc'">{{ $t('alphaAsc') }}</option>
+							<option value="alpha-desc" :selected="filtre === 'alpha-desc'">{{ $t('alphaDesc') }}</option>
 						</select>
 					</div>
 					<div class="afficher">
@@ -455,7 +455,6 @@ export default {
 			pads: [],
 			requete: '',
 			resultats: [],
-			filtre: 'date-asc',
 			favoris: [],
 			parametresImport: {
 				commentaires: false,
@@ -493,6 +492,9 @@ export default {
 		},
 		affichage () {
 			return this.$store.state.affichage
+		},
+		filtre () {
+			return this.$store.state.filtre
 		},
 		limite () {
 			return process.env.padLimit
@@ -541,6 +543,7 @@ export default {
 			favoris.push(pad.id)
 		})
 		this.favoris = favoris
+		this.filtrer(this.filtre)
 		this.$nuxt.$loading.start()
 		this.$i18n.setLocale(this.langue)
 	},
@@ -963,7 +966,28 @@ export default {
 			} else {
 				this.resultats = pads
 			}
-			this.filtre = filtre
+		},
+		modifierFiltre (filtre) {
+			if (this.filtre !== filtre) {
+				this.chargement = true
+				axios.post(this.hote + '/api/modifier-filtre', {
+					identifiant: this.identifiant,
+					filtre: filtre
+				}).then(function (reponse) {
+					this.chargement = false
+					const donnees = reponse.data
+					if (donnees === 'non_connecte') {
+						this.$router.push('/')
+					} else {
+						this.filtrer(filtre)
+						this.$store.dispatch('modifierFiltre', filtre)
+						this.$store.dispatch('modifierMessage', this.$t('filtreModifie'))
+					}
+				}.bind(this)).catch(function () {
+					this.chargement = false
+					this.$store.dispatch('modifierAlerte', this.$t('erreurCommunicationServeur'))
+				}.bind(this))
+			}
 		},
 		modifierNom () {
 			const nom = document.querySelector('#nom').value

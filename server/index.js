@@ -135,7 +135,7 @@ app.post('/api/inscription', function (req, res) {
 			const hash = bcrypt.hashSync(motdepasse, 10)
 			const date = moment().format()
 			const multi = db.multi()
-			multi.hmset('utilisateurs:' + identifiant, 'id', identifiant, 'motdepasse', hash, 'date', date, 'nom', '', 'langue', 'fr', 'affichage', 'liste')
+			multi.hmset('utilisateurs:' + identifiant, 'id', identifiant, 'motdepasse', hash, 'date', date, 'nom', '', 'langue', 'fr', 'affichage', 'liste', 'filtre', 'date-asc')
 			multi.exec(function () {
 				req.session.identifiant = identifiant
 				req.session.nom = ''
@@ -144,6 +144,7 @@ app.post('/api/inscription', function (req, res) {
 				}
 				req.session.statut = 'utilisateur'
 				req.session.affichage = 'liste'
+				req.session.filtre = 'date-asc'
 				req.session.cookie.expires = new Date(Date.now() + (3600 * 24 * 7 * 1000))
 				res.json({ identifiant: identifiant, nom: '', langue: 'fr', statut: 'utilisateur', affichage: 'liste' })
 			})
@@ -173,8 +174,13 @@ app.post('/api/connexion', function (req, res) {
 						affichage = donnees.affichage
 					}
 					req.session.affichage = affichage
+					let filtre = 'date-asc'
+					if (donnees.hasOwnProperty('filtre')) {
+						filtre = donnees.filtre
+					}
+					req.session.filtre = filtre
 					req.session.cookie.expires = new Date(Date.now() + (3600 * 24 * 7 * 1000))
-					res.json({ identifiant: identifiant, nom: nom, langue: langue, statut: 'utilisateur', affichage: affichage })
+					res.json({ identifiant: identifiant, nom: nom, langue: langue, statut: 'utilisateur', affichage: affichage, filtre: filtre })
 				} else {
 					res.send('erreur_connexion')
 				}
@@ -191,6 +197,7 @@ app.post('/api/deconnexion', function (req, res) {
 	req.session.langue = ''
 	req.session.statut = ''
 	req.session.affichage = ''
+	req.session.filtre = ''
 	req.session.destroy()
 	res.send('deconnecte')
 })
@@ -1391,6 +1398,7 @@ app.post('/api/supprimer-compte', function (req, res) {
 							req.session.langue = ''
 							req.session.statut = ''
 							req.session.affichage = ''
+							req.session.filtre = ''
 							req.session.destroy()
 							res.send('compte_supprime')
 						})
@@ -1464,6 +1472,18 @@ app.post('/api/modifier-affichage', function (req, res) {
 		db.hmset('utilisateurs:' + identifiant, 'affichage', affichage)
 		req.session.affichage = affichage
 		res.send('affichage_modifie')
+	} else {
+		res.send('non_connecte')
+	}
+})
+
+app.post('/api/modifier-filtre', function (req, res) {
+	const identifiant = req.body.identifiant
+	if (req.session.identifiant && req.session.identifiant === identifiant) {
+		const filtre = req.body.filtre
+		db.hmset('utilisateurs:' + identifiant, 'filtre', filtre)
+		req.session.filtre = filtre
+		res.send('filtre_modifie')
 	} else {
 		res.send('non_connecte')
 	}
@@ -1763,7 +1783,7 @@ io.on('connection', function (socket) {
 						if (resultat === 1) {
 							db.hgetall('pad-' + pad + ':' + bloc, function (err, objet) {
 								if (err) { socket.emit('erreur'); return false }
-								if (objet.identifiant === identifiant || proprietaire === identifiant || admins.includes(identifiant)) {
+								if (objet.identifiant === identifiant || proprietaire === identifiant || admins.includes(identifiant) || donnees.contributions === 'modifiables') {
 									let visibilite = 'visible'
 									if (objet.hasOwnProperty('visibilite')) {
 										visibilite = objet.visibilite

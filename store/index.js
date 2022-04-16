@@ -14,7 +14,8 @@ export const state = () => ({
 	langues: ['fr', 'es', 'it', 'hr', 'en'],
 	statut: '',
 	acces: [],
-	affichage: 'liste'
+	affichage: 'liste',
+	filtre: 'date-asc'
 })
 
 export const mutations = {
@@ -44,6 +45,9 @@ export const mutations = {
 	},
 	modifierAffichage (state, affichage) {
 		state.affichage = affichage
+	},
+	modifierFiltre (state, filtre) {
+		state.filtre = filtre
 	}
 }
 
@@ -68,6 +72,9 @@ export const actions = {
 		if (donnees.hasOwnProperty('affichage')) {
 			commit('modifierAffichage', donnees.affichage)
 		}
+		if (donnees.hasOwnProperty('filtre')) {
+			commit('modifierFiltre', donnees.filtre)
+		}
 	},
 	modifierNom ({ commit }, nom) {
 		commit('modifierNom', nom)
@@ -78,11 +85,15 @@ export const actions = {
 	modifierAffichage ({ commit }, affichage) {
 		commit('modifierAffichage', affichage)
 	},
+	modifierFiltre ({ commit }, filtre) {
+		commit('modifierFiltre', filtre)
+	},
 	reinitialiser ({ commit }) {
 		commit('modifierIdentifiant', '')
 		commit('modifierNom', '')
 		commit('modifierLangue', 'fr')
 		commit('modifierStatut', '')
 		commit('modifierAffichage', 'liste')
+		commit('modifierFiltre', 'date-asc')
 	}
 }
