@@ -1350,6 +1350,12 @@ export default {
 							this.vignette = vignette
 							this.vignetteDefaut = vignette
 						}
+						if (this.mode === 'edition') {
+							this.fichiers.push(this.media)
+							if (this.vignette !== '' && this.vignette.substring(1, 9) === 'fichiers') {
+								this.vignettes.push(this.vignette)
+							}
+						}
 						switch (this.type) {
 						case 'image':
 							this.$nextTick(function () {
@@ -3098,23 +3104,7 @@ export default {
 		},
 		quitterPage () {
 			this.$socket.emit('sortie', this.pad.id, this.identifiant)
-			if (this.mode === 'creation' && this.media !== '' && this.lien === '') {
-				this.$socket.emit('supprimerfichier', { pad: this.pad.id, fichier: this.media })
-			}
-			if (this.fichiers.length > 0) {
-				this.$socket.emit('supprimerfichiers', { pad: this.pad.id, fichiers: this.fichiers })
-			}
-			this.vignettes.forEach(function (item, index) {
-				if (item === this.vignetteDefaut) {
-					this.vignettes.splice(index, 1)
-				}
-			}.bind(this))
-			if (this.vignette !== this.vignetteDefaut && this.vignette.substring(1, 9) === 'fichiers') {
-				this.vignettes.push(this.vignette)
-			}
-			if (this.vignettes.length > 0) {
-				this.$socket.emit('supprimervignettes', this.vignettes)
-			}
+			this.fermerModaleBlocSansEnregistrement()
 		}
 	}
 }

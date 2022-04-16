@@ -192,12 +192,16 @@
 					<input type="radio" name="contributions" :checked="pad.contributions === 'ouvertes'" @change="modifierContributions('ouvertes')">
 					<span class="coche" />
 				</label>
-				<label class="bouton-radio">{{ $t('fermees') }}
-					<input type="radio" name="contributions" :checked="pad.contributions === 'fermees'" @change="modifierContributions('fermees')">
+				<label class="bouton-radio">{{ $t('modifiablesParTous') }}
+					<input type="radio" name="contributions" :checked="pad.contributions === 'modifiables'" @change="modifierContributions('modifiables')">
 					<span class="coche" />
 				</label>
 				<label class="bouton-radio">{{ $t('moderees') }}
 					<input type="radio" name="contributions" :checked="pad.contributions === 'moderees'" @change="modifierContributions('moderees')">
+					<span class="coche" />
+				</label>
+				<label class="bouton-radio">{{ $t('fermees') }}
+					<input type="radio" name="contributions" :checked="pad.contributions === 'fermees'" @change="modifierContributions('fermees')">
 					<span class="coche" />
 				</label>
 			</div>
@@ -400,7 +404,7 @@
 							<span role="button" tabindex="0" class="bouton" :title="$t('evaluerCapsule')" :style="{'color': couleur}" @click="ouvrirModaleEvaluations(item.bloc, item.titre, item.evaluations)" v-else><i class="material-icons">rate_review</i></span>
 						</div>
 						<div class="action" :style="{'color': item.couleur}">
-							<span role="button" tabindex="0" class="bouton" :title="$t('modifierCapsule')" @click="ouvrirModaleBloc('edition', item, 0)" v-if="item.identifiant === identifiant || admin"><i class="material-icons">edit</i></span>
+							<span role="button" tabindex="0" class="bouton" :title="$t('modifierCapsule')" @click="ouvrirModaleBloc('edition', item, 0)" v-if="item.identifiant === identifiant || admin || pad.contributions === 'modifiables'"><i class="material-icons">edit</i></span>
 							<span role="button" tabindex="0" class="bouton" :title="$t('commenterCapsule')" @click="ouvrirModaleCommentaires(item.bloc, item.titre)" v-if="pad.commentaires === 'actives'"><i class="material-icons">comment</i><span class="badge">{{ item.commentaires }}</span></span>
 							<span role="button" tabindex="0" class="bouton info" :title="$t('informationsCapsule')" :data-description="definirDescription(item)"><i class="material-icons">info</i></span>
 							<span class="media-type" v-if="item.media !== ''"><i class="material-icons">{{ definirIconeMedia(item) }}</i></span>
@@ -443,7 +447,7 @@
 							<span role="button" tabindex="0" class="bouton" :title="$t('evaluerCapsule')" :style="{'color': couleur}" @click="ouvrirModaleEvaluations(item.bloc, item.titre, item.evaluations)" v-else><i class="material-icons">rate_review</i></span>
 						</div>
 						<div class="action" :style="{'color': item.couleur}">
-							<span role="button" tabindex="0" class="bouton" :title="$t('modifierCapsule')" @click="ouvrirModaleBloc('edition', item, 0)" v-if="item.identifiant === identifiant || admin"><i class="material-icons">edit</i></span>
+							<span role="button" tabindex="0" class="bouton" :title="$t('modifierCapsule')" @click="ouvrirModaleBloc('edition', item, 0)" v-if="item.identifiant === identifiant || admin || pad.contributions === 'modifiables'"><i class="material-icons">edit</i></span>
 							<span role="button" tabindex="0" class="bouton" :title="$t('commenterCapsule')" @click="ouvrirModaleCommentaires(item.bloc, item.titre)" v-if="pad.commentaires === 'actives'"><i class="material-icons">comment</i><span class="badge">{{ item.commentaires }}</span></span>
 							<span role="button" tabindex="0" class="bouton info" :title="$t('informationsCapsule')" :data-description="definirDescription(item)"><i class="material-icons">info</i></span>
 							<span class="media-type" v-if="item.media !== ''"><i class="material-icons">{{ definirIconeMedia(item) }}</i></span>
@@ -486,7 +490,7 @@
 							<span role="button" tabindex="0" class="bouton" :title="$t('evaluerCapsule')" :style="{'color': couleur}" @click="ouvrirModaleEvaluations(item.bloc, item.titre, item.evaluations)" v-else><i class="material-icons">rate_review</i></span>
 						</div>
 						<div class="action" :style="{'color': item.couleur}">
-							<span role="button" tabindex="0" class="bouton" :title="$t('modifierCapsule')" @click="ouvrirModaleBloc('edition', item, 0)" v-if="item.identifiant === identifiant || admin"><i class="material-icons">edit</i></span>
+							<span role="button" tabindex="0" class="bouton" :title="$t('modifierCapsule')" @click="ouvrirModaleBloc('edition', item, 0)" v-if="item.identifiant === identifiant || admin || pad.contributions === 'modifiables'"><i class="material-icons">edit</i></span>
 							<span role="button" tabindex="0" class="bouton" :title="$t('commenterCapsule')" @click="ouvrirModaleCommentaires(item.bloc, item.titre)" v-if="pad.commentaires === 'actives'"><i class="material-icons">comment</i><span class="badge">{{ item.commentaires }}</span></span>
 							<span role="button" tabindex="0" class="bouton info" :title="$t('informationsCapsule')" :data-description="definirDescription(item)"><i class="material-icons">info</i></span>
 							<span class="media-type" v-if="item.media !== ''"><i class="material-icons">{{ definirIconeMedia(item) }}</i></span>
@@ -529,7 +533,7 @@
 							<span role="button" tabindex="0" class="bouton" :title="$t('evaluerCapsule')" :style="{'color': couleur}" @click="ouvrirModaleEvaluations(item.bloc, item.titre, item.evaluations)" v-else><i class="material-icons">rate_review</i></span>
 						</div>
 						<div class="action" :style="{'color': item.couleur}">
-							<span role="button" tabindex="0" class="bouton" :title="$t('modifierCapsule')" @click="ouvrirModaleBloc('edition', item, 0)" v-if="item.identifiant === identifiant || admin"><i class="material-icons">edit</i></span>
+							<span role="button" tabindex="0" class="bouton" :title="$t('modifierCapsule')" @click="ouvrirModaleBloc('edition', item, 0)" v-if="item.identifiant === identifiant || admin || pad.contributions === 'modifiables'"><i class="material-icons">edit</i></span>
 							<span role="button" tabindex="0" class="bouton" :title="$t('commenterCapsule')" @click="ouvrirModaleCommentaires(item.bloc, item.titre)" v-if="pad.commentaires === 'actives'"><i class="material-icons">comment</i><span class="badge">{{ item.commentaires }}</span></span>
 							<span role="button" tabindex="0" class="bouton info" :title="$t('informationsCapsule')" :data-description="definirDescription(item)"><i class="material-icons">info</i></span>
 							<span class="media-type" v-if="item.media !== ''"><i class="material-icons">{{ definirIconeMedia(item) }}</i></span>
@@ -583,7 +587,7 @@
 									<span role="button" tabindex="0" class="bouton" :title="$t('evaluerCapsule')" :style="{'color': couleur}" @click="ouvrirModaleEvaluations(item.bloc, item.titre, item.evaluations)" v-else><i class="material-icons">rate_review</i></span>
 								</div>
 								<div class="action" :style="{'color': item.couleur}">
-									<span role="button" tabindex="0" class="bouton" :title="$t('modifierCapsule')" @click="ouvrirModaleBloc('edition', item, indexCol)" v-if="item.identifiant === identifiant || admin"><i class="material-icons">edit</i></span>
+									<span role="button" tabindex="0" class="bouton" :title="$t('modifierCapsule')" @click="ouvrirModaleBloc('edition', item, indexCol)" v-if="item.identifiant === identifiant || admin || pad.contributions === 'modifiables'"><i class="material-icons">edit</i></span>
 									<span role="button" tabindex="0" class="bouton" :title="$t('commenterCapsule')" @click="ouvrirModaleCommentaires(item.bloc, item.titre)" v-if="pad.commentaires === 'actives'"><i class="material-icons">comment</i><span class="badge">{{ item.commentaires }}</span></span>
 									<span role="button" tabindex="0" class="bouton info" :title="$t('informationsCapsule')" :data-description="definirDescription(item)"><i class="material-icons">info</i></span>
 									<span class="media-type" v-if="item.media !== ''"><i class="material-icons">{{ definirIconeMedia(item) }}</i></span>
@@ -647,7 +651,7 @@
 									<span role="button" tabindex="0" class="bouton" :title="$t('evaluerCapsule')" :style="{'color': couleur}" @click="ouvrirModaleEvaluations(item.bloc, item.titre, item.evaluations)" v-else><i class="material-icons">rate_review</i></span>
 								</div>
 								<div class="action" :style="{'color': item.couleur}">
-									<span role="button" tabindex="0" class="bouton" :title="$t('modifierCapsule')" @click="ouvrirModaleBloc('edition', item, indexCol)" v-if="item.identifiant === identifiant || admin"><i class="material-icons">edit</i></span>
+									<span role="button" tabindex="0" class="bouton" :title="$t('modifierCapsule')" @click="ouvrirModaleBloc('edition', item, indexCol)" v-if="item.identifiant === identifiant || admin || pad.contributions === 'modifiables'"><i class="material-icons">edit</i></span>
 									<span role="button" tabindex="0" class="bouton" :title="$t('commenterCapsule')" @click="ouvrirModaleCommentaires(item.bloc, item.titre)" v-if="pad.commentaires === 'actives'"><i class="material-icons">comment</i><span class="badge">{{ item.commentaires }}</span></span>
 									<span role="button" tabindex="0" class="bouton info" :title="$t('informationsCapsule')" :data-description="definirDescription(item)"><i class="material-icons">info</i></span>
 									<span class="media-type" v-if="item.media !== ''"><i class="material-icons">{{ definirIconeMedia(item) }}</i></span>
