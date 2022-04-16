@@ -103,6 +103,7 @@ export default {
 	ouvertes: 'aperti',
 	fermees: 'chiuse',
 	moderees: 'moderati',
+	modifiablesParTous: 'modificabili da tutti',
 	affichage: 'Display',
 	mur: 'muro',
 	fluxVertical: 'flusso verticale',
@@ -271,6 +272,7 @@ export default {
 	affichageListe: 'Display lista',
 	affichageMosaique: 'Display mosaico',
 	affichageModifie: 'Display modificato.',
+	filtreModifie: 'Filtro modificato.',
 	ajouterDossier: 'Aggiungere una directory',
 	erreurAjoutDossier: 'Errore durante la creazione della directory.',
 	dossierAjoute: 'Directory aggiunta.',
@@ -318,4 +320,3 @@ export default {
 	vues: 'viste',
 	vue: 'vista'
 }
-
