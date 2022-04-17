@@ -103,7 +103,7 @@ export default {
 	ouvertes: 'opened',
 	fermees: 'closed',
 	moderees: 'moderated',
-	modifiablesParTous: 'editable by all',
+	modifiables: 'opened and editable',
 	affichage: 'Display',
 	mur: 'wall',
 	fluxVertical: 'vertical flow',

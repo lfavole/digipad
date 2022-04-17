@@ -103,7 +103,7 @@ export default {
 	ouvertes: 'otvoreno',
 	fermees: 'zatvoreno',
 	moderees: 'moderirano',
-	modifiablesParTous: 'mogu ga uređivati svi',
+	modifiables: 'otvoreno i može se uređivati',
 	affichage: 'Prikaz',
 	mur: 'zid',
 	fluxVertical: 'okomiti tok',

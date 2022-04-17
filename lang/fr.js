@@ -103,7 +103,7 @@ export default {
 	ouvertes: 'ouvertes',
 	fermees: 'fermées',
 	moderees: 'modérées',
-	modifiablesParTous: 'modifiables par tous',
+	modifiables: 'ouvertes et modifiables',
 	affichage: 'Affichage',
 	mur: 'mur',
 	fluxVertical: 'flux vertical',
