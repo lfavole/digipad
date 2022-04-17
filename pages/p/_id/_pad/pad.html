@@ -188,12 +188,12 @@
 			</div>
 			<div class="conteneur" v-if="pad.acces !== 'prive'">
 				<label>{{ $t('contributions') }}</label>
-				<label class="bouton-radio">{{ $t('ouvertes') }}
-					<input type="radio" name="contributions" :checked="pad.contributions === 'ouvertes'" @change="modifierContributions('ouvertes')">
+				<label class="bouton-radio">{{ $t('modifiables') }}
+					<input type="radio" name="contributions" :checked="pad.contributions === 'modifiables'" @change="modifierContributions('modifiables')">
 					<span class="coche" />
 				</label>
-				<label class="bouton-radio">{{ $t('modifiablesParTous') }}
-					<input type="radio" name="contributions" :checked="pad.contributions === 'modifiables'" @change="modifierContributions('modifiables')">
+				<label class="bouton-radio">{{ $t('ouvertes') }}
+					<input type="radio" name="contributions" :checked="pad.contributions === 'ouvertes'" @change="modifierContributions('ouvertes')">
 					<span class="coche" />
 				</label>
 				<label class="bouton-radio">{{ $t('moderees') }}
