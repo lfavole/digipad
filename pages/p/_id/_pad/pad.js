@@ -1741,9 +1741,19 @@ export default {
 				this.chargement = true
 				this.$socket.emit('modifierbloc', this.bloc, this.pad.id, this.pad.token, this.titre, this.texte, this.media, this.iframe, this.type, this.source, this.vignette, this.couleur, this.colonne, this.visibilite, this.identifiant, this.nom)
 				this.modaleBloc = false
+				this.fichiers.forEach(function (item, index) {
+					if (this.media === item) {
+						this.fichiers.splice(index, 1)
+					}
+				}.bind(this))
 				if (this.fichiers.length > 0) {
 					this.$socket.emit('supprimerfichiers', { pad: this.pad.id, fichiers: this.fichiers })
 				}
+				this.vignettes.forEach(function (item, index) {
+					if (this.vignette === item) {
+						this.vignettes.splice(index, 1)
+					}
+				}.bind(this))
 				if (this.vignettes.length > 0) {
 					this.$socket.emit('supprimervignettes', this.vignettes)
 				}
