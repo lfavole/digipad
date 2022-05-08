@@ -65,8 +65,8 @@ const sessionOptions = {
 const expressSession = session(sessionOptions)
 const sharedsession = require('express-socket.io-session')
 const config = require('../nuxt.config.js')
-if (process.env.SESSION_KEY) {
-	dureeSession = process.env.SESSION_KEY
+if (process.env.SESSION_DURATION) {
+	dureeSession = parseInt(process.env.SESSION_DURATION)
 } else {
 	dureeSession = 864000000 //3600 * 24 * 10 * 1000
 }
@@ -2639,7 +2639,38 @@ function recupererDonnees (identifiant) {
 								})
 							})
 						} else {
-							resolve({})
+							fs.exists(path.join(__dirname, '..', '/static/pads/' + pad + '.json'), async function (existe) {
+								if (existe === true) {
+									let donnees = await fs.readJson(path.join(__dirname, '..', '/static/pads/' + pad + '.json'))
+									donnees = donnees.pad
+									console.log(donnees)
+									db.exists('utilisateurs:' + donnees.identifiant, function (err, resultat) {
+										if (err) {
+											donnees.nom = donnees.identifiant
+											resolve(donnees)
+										}
+										if (resultat === 1) {
+											db.hgetall('utilisateurs:' + donnees.identifiant, function (err, utilisateur) {
+												if (err) {
+													donnees.nom = donnees.identifiant
+													resolve(donnees)
+												}
+												if (utilisateur.nom === '') {
+													donnees.nom = donnees.identifiant
+												} else {
+													donnees.nom = utilisateur.nom
+												}
+												resolve(donnees)
+											})
+										} else {
+											donnees.nom = donnees.identifiant
+											resolve(donnees)
+										}
+									})
+								} else {
+									resolve({})
+								}
+							})
 						}
 					})
 				})
@@ -2687,7 +2718,37 @@ function recupererDonnees (identifiant) {
 								})
 							})
 						} else {
-							resolve({})
+							fs.exists(path.join(__dirname, '..', '/static/pads/' + pad + '.json'), async function (existe) {
+								if (existe === true) {
+									let donnees = await fs.readJson(path.join(__dirname, '..', '/static/pads/' + pad + '.json'))
+									donnees = donnees.pad
+									db.exists('utilisateurs:' + donnees.identifiant, function (err, resultat) {
+										if (err) {
+											donnees.nom = donnees.identifiant
+											resolve(donnees)
+										}
+										if (resultat === 1) {
+											db.hgetall('utilisateurs:' + donnees.identifiant, function (err, utilisateur) {
+												if (err) {
+													donnees.nom = donnees.identifiant
+													resolve(donnees)
+												}
+												if (utilisateur.nom === '') {
+													donnees.nom = donnees.identifiant
+												} else {
+													donnees.nom = utilisateur.nom
+												}
+												resolve(donnees)
+											})
+										} else {
+											donnees.nom = donnees.identifiant
+											resolve(donnees)
+										}
+									})
+								} else {
+									resolve({})
+								}
+							})
 						}
 					})
 				})
@@ -2735,7 +2796,37 @@ function recupererDonnees (identifiant) {
 								})
 							})
 						} else {
-							resolve({})
+							fs.exists(path.join(__dirname, '..', '/static/pads/' + pad + '.json'), async function (existe) {
+								if (existe === true) {
+									let donnees = await fs.readJson(path.join(__dirname, '..', '/static/pads/' + pad + '.json'))
+									donnees = donnees.pad
+									db.exists('utilisateurs:' + donnees.identifiant, function (err, resultat) {
+										if (err) {
+											donnees.nom = donnees.identifiant
+											resolve(donnees)
+										}
+										if (resultat === 1) {
+											db.hgetall('utilisateurs:' + donnees.identifiant, function (err, utilisateur) {
+												if (err) {
+													donnees.nom = donnees.identifiant
+													resolve(donnees)
+												}
+												if (utilisateur.nom === '') {
+													donnees.nom = donnees.identifiant
+												} else {
+													donnees.nom = utilisateur.nom
+												}
+												resolve(donnees)
+											})
+										} else {
+											donnees.nom = donnees.identifiant
+											resolve(donnees)
+										}
+									})
+								} else {
+									resolve({})
+								}
+							})
 						}
 					})
 				})
@@ -2783,7 +2874,37 @@ function recupererDonnees (identifiant) {
 								})
 							})
 						} else {
-							resolve({})
+							fs.exists(path.join(__dirname, '..', '/static/pads/' + pad + '.json'), async function (existe) {
+								if (existe === true) {
+									let donnees = await fs.readJson(path.join(__dirname, '..', '/static/pads/' + pad + '.json'))
+									donnees = donnees.pad
+									db.exists('utilisateurs:' + donnees.identifiant, function (err, resultat) {
+										if (err) {
+											donnees.nom = donnees.identifiant
+											resolve(donnees)
+										}
+										if (resultat === 1) {
+											db.hgetall('utilisateurs:' + donnees.identifiant, function (err, utilisateur) {
+												if (err) {
+													donnees.nom = donnees.identifiant
+													resolve(donnees)
+												}
+												if (utilisateur.nom === '') {
+													donnees.nom = donnees.identifiant
+												} else {
+													donnees.nom = utilisateur.nom
+												}
+												resolve(donnees)
+											})
+										} else {
+											donnees.nom = donnees.identifiant
+											resolve(donnees)
+										}
+									})
+								} else {
+									resolve({})
+								}
+							})
 						}
 					})
 				})
