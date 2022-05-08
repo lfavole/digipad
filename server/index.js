@@ -29,7 +29,7 @@ const extract = require('extract-zip')
 const moment = require('moment')
 const bcrypt = require('bcrypt')
 const cron = require('node-cron')
-let storeOptions, cookie
+let storeOptions, cookie, dureeSession
 if (process.env.NODE_ENV === 'production') {
 	storeOptions = {
 		host: process.env.DB_HOST,
@@ -65,6 +65,11 @@ const sessionOptions = {
 const expressSession = session(sessionOptions)
 const sharedsession = require('express-socket.io-session')
 const config = require('../nuxt.config.js')
+if (process.env.SESSION_KEY) {
+	dureeSession = process.env.SESSION_KEY
+} else {
+	dureeSession = 864000000 //3600 * 24 * 10 * 1000
+}
 
 config.dev = !(process.env.NODE_ENV === 'production')
 const nuxt = new Nuxt(config)
@@ -80,6 +85,10 @@ if (config.dev) {
 
 cron.schedule('59 23 * * Saturday', () => {
 	fs.emptyDirSync(path.join(__dirname, '..', '/static/temp'))
+})
+
+cron.schedule('0 0 1 * *', () => {
+	exporterPadsJson()
 })
 
 app.set('trust proxy', true)
@@ -118,7 +127,7 @@ app.get('/p/:id/:token', function (req) {
 			req.session.nom = nom
 			req.session.langue = 'fr'
 			req.session.statut = 'invite'
-			req.session.cookie.expires = new Date(Date.now() + (3600 * 24 * 7 * 1000))
+			req.session.cookie.expires = new Date(Date.now() + dureeSession)
 			req.next()
 		})
 	} else {
@@ -145,7 +154,7 @@ app.post('/api/inscription', function (req, res) {
 				req.session.statut = 'utilisateur'
 				req.session.affichage = 'liste'
 				req.session.filtre = 'date-asc'
-				req.session.cookie.expires = new Date(Date.now() + (3600 * 24 * 7 * 1000))
+				req.session.cookie.expires = new Date(Date.now() + dureeSession)
 				res.json({ identifiant: identifiant, nom: '', langue: 'fr', statut: 'utilisateur', affichage: 'liste' })
 			})
 		} else {
@@ -179,7 +188,7 @@ app.post('/api/connexion', function (req, res) {
 						filtre = donnees.filtre
 					}
 					req.session.filtre = filtre
-					req.session.cookie.expires = new Date(Date.now() + (3600 * 24 * 7 * 1000))
+					req.session.cookie.expires = new Date(Date.now() + dureeSession)
 					res.json({ identifiant: identifiant, nom: nom, langue: langue, statut: 'utilisateur', affichage: affichage, filtre: filtre })
 				} else {
 					res.send('erreur_connexion')
@@ -315,269 +324,93 @@ app.post('/api/recuperer-donnees-pad', function (req, res) {
 	db.exists('pads:' + id, function (err, resultat) {
 		if (err) { res.send('erreur_pad'); return false }
 		if (resultat === 1) {
-			db.hgetall('pads:' + id, function (err, pad) {
-				if (err) { res.send('erreur_pad'); return false }
-				if (pad.id === id && pad.token === token) {
-					let nombreColonnes = 0
-					if (pad.hasOwnProperty('colonnes')) {
-						nombreColonnes = JSON.parse(pad.colonnes).length
-						pad.colonnes = JSON.parse(pad.colonnes)
-					}
-					if (pad.hasOwnProperty('notification')) {
-						pad.notification = JSON.parse(pad.notification)
-					}
-					let vues = 0
-					if (pad.hasOwnProperty('vues')) {
-						vues = parseInt(pad.vues) + 1
-					}
-					// Pour homogénéité des paramètres de pad
-					if (!pad.hasOwnProperty('ordre')) {
-						pad.ordre = 'croissant'
-					}
-					// Pour homogénéité des paramètres de pad avec coadministration
-					if (!pad.hasOwnProperty('admins')) {
-						pad.admins = []
-					} else {
-						pad.admins = JSON.parse(pad.admins)
-					}
-					const blocsPad = new Promise(function (resolveMain) {
-						const donneesBlocs = []
-						db.zrange('blocs:' + id, 0, -1, function (err, blocs) {
-							if (err) { resolveMain(donneesBlocs) }
-							for (const bloc of blocs) {
-								const donneesBloc = new Promise(function (resolve) {
-									db.hgetall('pad-' + id + ':' + bloc, function (err, donnees) {
-										if (err) { resolve({}) }
-										if (donnees && Object.keys(donnees).length > 0) {
-											// Pour résoudre le problème des capsules qui sont référencées dans une colonne inexistante
-											if (parseInt(donnees.colonne) >= nombreColonnes) {
-												donnees.colonne = nombreColonnes - 1
-											}
-											// Pour homogénéité des paramètres du bloc avec modération activée
-											if (!donnees.hasOwnProperty('visibilite')) {
-												donnees.visibilite = 'visible'
-											}
-											// Pour résoudre le problème lié au changement de domaine de digidoc
-											if (donnees.hasOwnProperty('iframe') && donnees.iframe.includes('env-7747481.jcloud-ver-jpe.ik-server.com') === true) {
-												donnees.iframe = donnees.iframe.replace('https://env-7747481.jcloud-ver-jpe.ik-server.com', process.env.ETHERPAD)
-											}
-											// Pour résoudre le problème lié au changement de domaine de digidoc
-											if (donnees.hasOwnProperty('media') && donnees.media.includes('env-7747481.jcloud-ver-jpe.ik-server.com') === true) {
-												donnees.media = donnees.media.replace('https://env-7747481.jcloud-ver-jpe.ik-server.com', process.env.ETHERPAD)
-											}
-											// Ne pas ajouter les capsules en attente de modération ou privées
-											if (((pad.contributions === 'moderees' && donnees.visibilite === 'masquee') || donnees.visibilite === 'privee') && donnees.identifiant !== identifiant && pad.identifiant !== identifiant && !pad.admins.includes(identifiant)) {
-												resolve({})
-											}
-											db.zcard('commentaires:' + bloc, function (err, commentaires) {
-												if (err) { resolve({}) }
-												donnees.commentaires = commentaires
-												db.zrange('evaluations:' + bloc, 0, -1, function (err, evaluations) {
-													if (err) { resolve({}) }
-													const donneesEvaluations = []
-													evaluations.forEach(function (evaluation) {
-														donneesEvaluations.push(JSON.parse(evaluation))
-													})
-													donnees.evaluations = donneesEvaluations
-													db.exists('utilisateurs:' + donnees.identifiant, function (err, resultat) {
-														if (err) { resolve({}) }
-														if (resultat === 1) {
-															db.hgetall('utilisateurs:' + donnees.identifiant, function (err, utilisateur) {
-																if (err) { resolve({}) }
-																donnees.nom = utilisateur.nom
-																db.hget('couleurs:' + donnees.identifiant, 'pad' + id, function (err, couleur) {
-																	if (err || couleur === null) {
-																		donnees.couleur = ''
-																	} else {
-																		donnees.couleur = couleur
-																	}
-																	resolve(donnees)
-																})
-															})
-														} else {
-															db.exists('noms:' + donnees.identifiant, function (err, resultat) {
-																if (err) { resolve({}) }
-																if (resultat === 1) {
-																	db.hget('noms:' + donnees.identifiant, 'nom', function (err, nom) {
-																		if (err) { resolve({}) }
-																		donnees.nom = nom
-																		db.hget('couleurs:' + donnees.identifiant, 'pad' + id, function (err, couleur) {
-																			if (err || couleur === null) {
-																				donnees.couleur = ''
-																			} else {
-																				donnees.couleur = couleur
-																			}
-																			resolve(donnees)
-																		})
-																	})
-																} else {
-																	donnees.nom = ''
-																	donnees.couleur = ''
-																	resolve(donnees)
-																}
-															})
-														}
-													})
-												})
-											})
-										} else {
-											resolve({})
-										}
-									})
-								})
-								donneesBlocs.push(donneesBloc)
-							}
-							Promise.all(donneesBlocs).then(function (resultat) {
-								resolveMain(resultat)
-							})
-						})
-					})
-					const activitePad = new Promise(function (resolveMain) {
-						const donneesEntrees = []
-						db.zrange('activite:' + id, 0, -1, function (err, entrees) {
-							if (err) { resolveMain(donneesEntrees) }
-							for (let entree of entrees) {
-								entree = JSON.parse(entree)
-								const donneesEntree = new Promise(function (resolve) {
-									db.exists('utilisateurs:' + entree.identifiant, function (err, resultat) {
-										if (err) { resolve({}) }
-										if (resultat === 1) {
-											db.hgetall('utilisateurs:' + entree.identifiant, function (err, utilisateur) {
-												if (err) { resolve({}) }
-												entree.nom = utilisateur.nom
-												db.hget('couleurs:' + entree.identifiant, 'pad' + id, function (err, couleur) {
-													if (err || couleur === null) {
-														entree.couleur = ''
-													} else {
-														entree.couleur = couleur
-													}
-													resolve(entree)
-												})
-											})
-										} else {
-											db.exists('noms:' + entree.identifiant, function (err, resultat) {
-												if (err) { resolve({}) }
-												if (resultat === 1) {
-													db.hget('noms:' + entree.identifiant, 'nom', function (err, nom) {
-														if (err) { resolve({}) }
-														entree.nom = nom
-														db.hget('couleurs:' + entree.identifiant, 'pad' + id, function (err, couleur) {
-															if (err) { resolve({}) }
-															entree.couleur = couleur
-															resolve(entree)
-														})
-													})
-												} else {
-													entree.nom = ''
-													entree.couleur = ''
-													resolve(entree)
-												}
-											})
-										}
-									})
-								})
-								donneesEntrees.push(donneesEntree)
-							}
-							Promise.all(donneesEntrees).then(function (resultat) {
-								resolveMain(resultat)
-							})
-						})
-					})
-					Promise.all([blocsPad, activitePad]).then(function ([blocs, activite]) {
-						// Définir la même couleur pour les utilisateurs qui ne sont plus dans la base de données
-						const utilisateursSansCouleur = []
-						const couleurs = []
-						blocs = blocs.filter(function (element) {
-							return Object.keys(element).length > 0
-						})
-						blocs.forEach(function (bloc) {
-							if ((bloc.couleur === '' || bloc.couleur === null) && utilisateursSansCouleur.includes(bloc.identifiant) === false) {
-								utilisateursSansCouleur.push(bloc.identifiant)
-							}
-						})
-						activite = activite.filter(function (element) {
-							return Object.keys(element).length > 0
-						})
-						activite.forEach(function (item) {
-							if ((item.couleur === '' || item.couleur === null) && utilisateursSansCouleur.includes(item.identifiant) === false) {
-								utilisateursSansCouleur.push(item.identifiant)
-							}
-						})
-						utilisateursSansCouleur.forEach(function () {
-							const couleur = choisirCouleur()
-							couleurs.push(couleur)
-						})
-						blocs.forEach(function (bloc, indexBloc) {
-							if (utilisateursSansCouleur.includes(bloc.identifiant) === true) {
-								const index = utilisateursSansCouleur.indexOf(bloc.identifiant)
-								blocs[indexBloc].couleur = couleurs[index]
-							}
-						})
-						activite.forEach(function (item, indexItem) {
-							if (utilisateursSansCouleur.includes(item.identifiant) === true) {
-								const index = utilisateursSansCouleur.indexOf(item.identifiant)
-								activite[indexItem].couleur = couleurs[index]
-							}
-						})
-						let ordre = 'croissant'
-						if (pad.hasOwnProperty('ordre')) {
-							ordre = pad.ordre
-						}
-						if (ordre === 'decroissant') {
-							blocs.reverse()
-						}
-						// Ajouter nombre de vues
-						db.hmset('pads:' + id, 'vues', vues, function () {
-							// Ajouter dans pads rejoints
-							if (pad.identifiant !== identifiant && statut === 'utilisateur') {
-								db.smembers('pads-rejoints:' + identifiant, function (err, padsRejoints) {
-									if (err) { res.send('erreur_pad'); return false }
-									let padDejaRejoint = false
-									for (const padRejoint of padsRejoints) {
-										if (padRejoint === id) {
-											padDejaRejoint = true
-										}
+			recupererDonneesPad(id, token, identifiant, statut, res)
+		} else {
+			fs.exists(path.join(__dirname, '..', '/static/pads/' + id + '.json'), async function (existe) {
+				if (existe === true) {
+					const donnees = await fs.readJson(path.join(__dirname, '..', '/static/pads/' + id + '.json'))
+					const donneesBlocs = []
+					for (const [indexBloc, bloc] of donnees.blocs.entries()) {
+						const donneesBloc = new Promise(function (resolve) {
+							if (bloc.hasOwnProperty('id') && bloc.hasOwnProperty('bloc') && bloc.hasOwnProperty('titre') && bloc.hasOwnProperty('texte') && bloc.hasOwnProperty('media') && bloc.hasOwnProperty('iframe') && bloc.hasOwnProperty('type') && bloc.hasOwnProperty('source') && bloc.hasOwnProperty('vignette') && bloc.hasOwnProperty('identifiant') && bloc.hasOwnProperty('commentaires') && bloc.hasOwnProperty('evaluations') && bloc.hasOwnProperty('colonne') && bloc.hasOwnProperty('listeCommentaires') && bloc.hasOwnProperty('listeEvaluations')) {
+								let visibilite = 'visible'
+								if (bloc.hasOwnProperty('visibilite')) {
+									visibilite = bloc.visibilite
+								}
+								const multi = db.multi()
+								multi.hmset('pad-' + id + ':' + bloc.bloc, 'id', bloc.id, 'bloc', bloc.bloc, 'titre', bloc.titre, 'texte', bloc.texte, 'media', bloc.media, 'iframe', bloc.iframe, 'type', bloc.type, 'source', bloc.source, 'vignette', bloc.vignette, 'date', bloc.date, 'identifiant', bloc.identifiant, 'commentaires', bloc.commentaires, 'evaluations', bloc.evaluations, 'colonne', bloc.colonne, 'visibilite', visibilite)
+								multi.zadd('blocs:' + id, indexBloc, bloc.bloc)
+								for (const commentaire of bloc.listeCommentaires) {
+									if (commentaire.hasOwnProperty('id') && commentaire.hasOwnProperty('identifiant') && commentaire.hasOwnProperty('date') && commentaire.hasOwnProperty('texte')) {
+										multi.zadd('commentaires:' + bloc.bloc, commentaire.id, JSON.stringify(commentaire))
 									}
-									if (padDejaRejoint === false) {
-										const multi = db.multi()
-										multi.sadd('pads-rejoints:' + identifiant, id)
-										multi.sadd('pads-utilisateurs:' + identifiant, id)
-										multi.hmset('couleurs:' + identifiant, 'pad' + id, choisirCouleur())
-										multi.sadd('utilisateurs-pads:' + id, identifiant)
-										multi.exec(function () {
-											res.json({ pad: pad, blocs: blocs, activite: activite.reverse() })
-										})
-									} else {
-										// Vérifier notification mise à jour pad
-										if (pad.hasOwnProperty('notification') && pad.notification.includes(identifiant)) {
-											pad.notification.splice(pad.notification.indexOf(identifiant), 1)
-											db.hmset('pads:' + id, 'notification', JSON.stringify(pad.notification), function () {
-												res.json({ pad: pad, blocs: blocs, activite: activite.reverse() })
-											})
-										} else {
-											res.json({ pad: pad, blocs: blocs, activite: activite.reverse() })
-										}
+								}
+								for (const evaluation of bloc.listeEvaluations) {
+									if (evaluation.hasOwnProperty('id') && evaluation.hasOwnProperty('identifiant') && evaluation.hasOwnProperty('date') && evaluation.hasOwnProperty('etoiles')) {
+										multi.zadd('evaluations:' + bloc.bloc, evaluation.id, JSON.stringify(evaluation))
 									}
+								}
+								multi.exec(function () {
+									resolve()
 								})
 							} else {
-								// Vérifier notification mise à jour pad
-								if (pad.hasOwnProperty('notification') && pad.notification.includes(identifiant)) {
-									pad.notification.splice(pad.notification.indexOf(identifiant), 1)
-									db.hmset('pads:' + id, 'notification', JSON.stringify(pad.notification), function () {
-										res.json({ pad: pad, blocs: blocs, activite: activite.reverse() })
-									})
-								} else {
-									res.json({ pad: pad, blocs: blocs, activite: activite.reverse() })
-								}
+								resolve()
 							}
+						})
+						donneesBlocs.push(donneesBloc)
+					}
+					Promise.all(donneesBlocs).then(function () {
+						let registreActivite = 'active'
+						let conversation = 'desactivee'
+						let listeUtilisateurs = 'activee'
+						let editionNom = 'desactivee'
+						let ordre = 'croissant'
+						let admins = JSON.stringify([])
+						let vues = 0
+						if (donnees.pad.hasOwnProperty('registreActivite')) {
+							registreActivite = donnees.pad.registreActivite
+						}
+						if (donnees.pad.hasOwnProperty('conversation')) {
+							conversation = donnees.pad.conversation
+						}
+						if (donnees.pad.hasOwnProperty('listeUtilisateurs')) {
+							listeUtilisateurs = donnees.pad.listeUtilisateurs
+						}
+						if (donnees.pad.hasOwnProperty('editionNom')) {
+							editionNom = donnees.pad.editionNom
+						}
+						if (donnees.pad.hasOwnProperty('ordre')) {
+							ordre = donnees.pad.ordre
+						}
+						if (donnees.pad.hasOwnProperty('admins')) {
+							admins = JSON.stringify(donnees.pad.admins)
+						}
+						if (donnees.pad.hasOwnProperty('vues')) {
+							vues = donnees.pad.vues
+						}
+						const multi = db.multi()
+						if (donnees.pad.hasOwnProperty('motdepasse')) {
+							multi.hmset('pads:' + id, 'id', id, 'token', donnees.pad.token, 'titre', donnees.pad.titre, 'identifiant', donnees.pad.identifiant, 'fond', donnees.pad.fond, 'acces', donnees.pad.acces, 'motdepasse', donnees.pad.motdepasse, 'contributions', donnees.pad.contributions, 'affichage', donnees.pad.affichage, 'registreActivite', registreActivite, 'conversation', conversation, 'listeUtilisateurs', listeUtilisateurs, 'editionNom', editionNom, 'fichiers', donnees.pad.fichiers, 'liens', donnees.pad.liens, 'documents', donnees.pad.documents, 'commentaires', donnees.pad.commentaires, 'evaluations', donnees.pad.evaluations, 'ordre', ordre, 'date', donnees.pad.date, 'colonnes', donnees.pad.colonnes, 'bloc', donnees.pad.bloc, 'activite', donnees.pad.activite, 'admins', admins, 'vues', vues)
+						} else if (donnees.pad.hasOwnProperty('code')) {
+							multi.hmset('pads:' + id, 'id', id, 'token', donnees.pad.token, 'titre', donnees.pad.titre, 'identifiant', donnees.pad.identifiant, 'fond', donnees.pad.fond, 'acces', donnees.pad.acces, 'code', donnees.pad.code, 'contributions', donnees.pad.contributions, 'affichage', donnees.pad.affichage, 'registreActivite', registreActivite, 'conversation', conversation, 'listeUtilisateurs', listeUtilisateurs, 'editionNom', editionNom, 'fichiers', donnees.pad.fichiers, 'liens', donnees.pad.liens, 'documents', donnees.pad.documents, 'commentaires', donnees.pad.commentaires, 'evaluations', donnees.pad.evaluations, 'ordre', ordre, 'date', donnees.pad.date, 'colonnes', donnees.pad.colonnes, 'bloc', donnees.pad.bloc, 'activite', donnees.pad.activite, 'admins', admins, 'vues', vues)
+						} else {
+							multi.hmset('pads:' + id, 'id', id, 'token', donnees.pad.token, 'titre', donnees.pad.titre, 'identifiant', donnees.pad.identifiant, 'fond', donnees.pad.fond, 'acces', donnees.pad.acces, 'contributions', donnees.pad.contributions, 'affichage', donnees.pad.affichage, 'registreActivite', registreActivite, 'conversation', conversation, 'listeUtilisateurs', listeUtilisateurs, 'editionNom', editionNom, 'fichiers', donnees.pad.fichiers, 'liens', donnees.pad.liens, 'documents', donnees.pad.documents, 'commentaires', donnees.pad.commentaires, 'evaluations', donnees.pad.evaluations, 'ordre', ordre, 'date', donnees.pad.date, 'colonnes', donnees.pad.colonnes, 'bloc', donnees.pad.bloc, 'activite', donnees.pad.activite, 'admins', admins, 'vues', vues)
+						}
+						for (const activite of donnees.activite) {
+							if (activite.hasOwnProperty('bloc') && activite.hasOwnProperty('identifiant') && activite.hasOwnProperty('titre') && activite.hasOwnProperty('date') && activite.hasOwnProperty('couleur') && activite.hasOwnProperty('type') && activite.hasOwnProperty('id')) {
+								multi.zadd('activite:' + id, activite.id, JSON.stringify(activite))
+							}
+						}
+						multi.exec(function () {
+							fs.remove(path.join(__dirname, '..', '/static/pads/' + id + '.json'), function () {
+								recupererDonneesPad(id, token, identifiant, statut, res)
+							})
 						})
 					})
 				} else {
 					res.send('erreur_pad')
 				}
 			})
-		} else {
-			res.send('erreur_pad')
 		}
 	})
 })
@@ -597,7 +430,7 @@ app.post('/api/creer-pad', function (req, res) {
 					const id = parseInt(resultat) + 1
 					const multi = db.multi()
 					multi.incr('pad')
-					multi.hmset('pads:' + id, 'id', id, 'token', token, 'titre', titre, 'identifiant', identifiant, 'fond', '/img/fond1.png', 'acces', 'public', 'contributions', 'ouvertes', 'affichage', 'mur', 'registreActivite', 'active', 'conversation', 'desactivee', 'listeUtilisateurs', 'activee','editionNom', 'desactivee', 'fichiers', 'actives', 'liens', 'actives', 'documents', 'desactives', 'commentaires', 'desactives', 'evaluations', 'desactivees', 'ordre', 'croissant', 'date', date, 'colonnes', JSON.stringify([]), 'bloc', 0, 'activite', 0, 'admins', JSON.stringify([]))
+					multi.hmset('pads:' + id, 'id', id, 'token', token, 'titre', titre, 'identifiant', identifiant, 'fond', '/img/fond1.png', 'acces', 'public', 'contributions', 'ouvertes', 'affichage', 'mur', 'registreActivite', 'active', 'conversation', 'desactivee', 'listeUtilisateurs', 'activee', 'editionNom', 'desactivee', 'fichiers', 'actives', 'liens', 'actives', 'documents', 'desactives', 'commentaires', 'desactives', 'evaluations', 'desactivees', 'ordre', 'croissant', 'date', date, 'colonnes', JSON.stringify([]), 'bloc', 0, 'activite', 0, 'admins', JSON.stringify([]))
 					multi.sadd('pads-crees:' + identifiant, id)
 					multi.sadd('utilisateurs-pads:' + id, identifiant)
 					multi.hmset('couleurs:' + identifiant, 'pad' + id, couleur)
@@ -659,7 +492,7 @@ app.post('/api/creer-pad-sans-compte', function (req, res) {
 						req.session.langue = 'fr'
 					}
 					req.session.statut = 'auteur'
-					req.session.cookie.expires = new Date(Date.now() + (3600 * 24 * 7 * 1000))
+					req.session.cookie.expires = new Date(Date.now() + dureeSession)
 					res.json({ id: id, token: token, titre: titre, identifiant: identifiant, fond: '/img/fond1.png', acces: 'public', contributions: 'ouvertes', affichage: 'mur', registreActivite: 'active', conversation: 'desactivee', listeUtilisateurs: 'activee', editionNom: 'desactivee', fichiers: 'actives', liens: 'actives', liens: 'actives', documents: 'desactives', commentaires: 'desactives', evaluations: 'desactivees', ordre: 'croissant', date: date, colonnes: [], bloc: 0, activite: 0 })
 				})
 			})
@@ -675,7 +508,7 @@ app.post('/api/creer-pad-sans-compte', function (req, res) {
 					req.session.langue = 'fr'
 				}
 				req.session.statut = 'auteur'
-				req.session.cookie.expires = new Date(Date.now() + (3600 * 24 * 7 * 1000))
+				req.session.cookie.expires = new Date(Date.now() + dureeSession)
 				res.json({ id: 1, token: token, titre: titre, identifiant: identifiant, fond: '/img/fond1.png', acces: 'public', contributions: 'ouvertes', affichage: 'mur', registreActivite: 'active', conversation: 'desactivee', listeUtilisateurs: 'activee', editionNom: 'desactivee', fichiers: 'actives', liens: 'actives', liens: 'actives', documents: 'desactives', commentaires: 'desactives', evaluations: 'desactivees', ordre: 'croissant', date: date, colonnes: [], bloc: 0, activite: 0 })
 			})
 		}
@@ -1064,7 +897,7 @@ app.post('/api/importer-pad', function (req, res) {
 							}
 							const multi = db.multi()
 							multi.incr('pad')
-							multi.hmset('pads:' + id, 'id', id, 'token', token, 'titre', donnees.pad.titre, 'identifiant', identifiant, 'fond', donnees.pad.fond, 'acces', donnees.pad.acces, 'code', code, 'contributions', donnees.pad.contributions, 'affichage', donnees.pad.affichage, 'registreActivite', registreActivite, 'conversation', conversation, 'listeUtilisateurs', listeUtilisateurs, 'editionNom', editionNom, 'fichiers', donnees.pad.fichiers, 'liens', donnees.pad.liens, 'documents', donnees.pad.documents, 'commentaires', donnees.pad.commentaires, 'evaluations', donnees.pad.evaluations, 'ordre', ordre, 'date', date, 'colonnes', donnees.pad.colonnes, 'bloc', donnees.pad.bloc, 'activite', activiteId, 'admins', JSON.stringify([])),
+							multi.hmset('pads:' + id, 'id', id, 'token', token, 'titre', donnees.pad.titre, 'identifiant', identifiant, 'fond', donnees.pad.fond, 'acces', donnees.pad.acces, 'code', code, 'contributions', donnees.pad.contributions, 'affichage', donnees.pad.affichage, 'registreActivite', registreActivite, 'conversation', conversation, 'listeUtilisateurs', listeUtilisateurs, 'editionNom', editionNom, 'fichiers', donnees.pad.fichiers, 'liens', donnees.pad.liens, 'documents', donnees.pad.documents, 'commentaires', donnees.pad.commentaires, 'evaluations', donnees.pad.evaluations, 'ordre', ordre, 'date', date, 'colonnes', donnees.pad.colonnes, 'bloc', donnees.pad.bloc, 'activite', activiteId, 'admins', JSON.stringify([]))
 							multi.sadd('pads-crees:' + identifiant, id)
 							multi.sadd('utilisateurs-pads:' + id, identifiant)
 							multi.hmset('couleurs:' + identifiant, 'pad' + id, couleur)
@@ -1759,7 +1592,7 @@ io.on('connection', function (socket) {
 					}
 					multi.exec(function () {
 						io.in('pad-' + pad).emit('ajouterbloc', { bloc: bloc, titre: titre, texte: texte, media: media, iframe: iframe, type: type, source: source, vignette: vignette, identifiant: identifiant, nom: nom, date: date, couleur: couleur, commentaires: 0, evaluations: [], colonne: colonne, visibilite: visibilite, activiteId: activiteId })
-						socket.handshake.session.cookie.expires = new Date(Date.now() + (3600 * 24 * 7 * 1000))
+						socket.handshake.session.cookie.expires = new Date(Date.now() + dureeSession)
 						socket.handshake.session.save()
 					})
 				}
@@ -1801,7 +1634,7 @@ io.on('connection', function (socket) {
 										multi.zadd('activite:' + pad, activiteId, JSON.stringify({ id: activiteId, bloc: bloc, identifiant: identifiant, titre: titre, date: date, couleur: couleur, type: 'bloc-modifie' }))
 										multi.exec(function () {
 											io.in('pad-' + pad).emit('modifierbloc', { bloc: bloc, titre: titre, texte: texte, media: media, iframe: iframe, type: type, source: source, vignette: vignette, identifiant: identifiant, nom: nom, modifie: date, couleur: couleur, colonne: colonne, visibilite: visibilite, activiteId: activiteId })
-											socket.handshake.session.cookie.expires = new Date(Date.now() + (3600 * 24 * 7 * 1000))
+											socket.handshake.session.cookie.expires = new Date(Date.now() + dureeSession)
 											socket.handshake.session.save()
 										})
 									} else if (visibilite === 'privee' || visibilite === 'masquee') {
@@ -1809,12 +1642,12 @@ io.on('connection', function (socket) {
 										multi.hmset('pad-' + pad + ':' + bloc, 'titre', titre, 'texte', texte, 'media', media, 'iframe', iframe, 'type', type, 'source', source, 'vignette', vignette, 'visibilite', visibilite, 'modifie', date)
 										multi.exec(function () {
 											io.in('pad-' + pad).emit('modifierbloc', { bloc: bloc, titre: titre, texte: texte, media: media, iframe: iframe, type: type, source: source, vignette: vignette, identifiant: identifiant, nom: nom, modifie: date, couleur: couleur, colonne: colonne, visibilite: visibilite })
-											socket.handshake.session.cookie.expires = new Date(Date.now() + (3600 * 24 * 7 * 1000))
+											socket.handshake.session.cookie.expires = new Date(Date.now() + dureeSession)
 											socket.handshake.session.save()
 										})
 									} else {
 										io.in('pad-' + pad).emit('modifierbloc', { bloc: bloc, titre: titre, texte: texte, media: media, iframe: iframe, type: type, source: source, vignette: vignette, identifiant: identifiant, nom: nom, modifie: date, couleur: couleur, colonne: colonne, visibilite: visibilite })
-										socket.handshake.session.cookie.expires = new Date(Date.now() + (3600 * 24 * 7 * 1000))
+										socket.handshake.session.cookie.expires = new Date(Date.now() + dureeSession)
 										socket.handshake.session.save()
 									}
 								}
@@ -1847,7 +1680,7 @@ io.on('connection', function (socket) {
 							multi.zadd('activite:' + pad, activiteId, JSON.stringify({ id: activiteId, bloc: item.bloc, identifiant: item.identifiant, titre: item.titre, date: date, couleur: item.couleur, type: 'bloc-ajoute' }))
 							multi.exec(function () {
 								io.in('pad-' + pad).emit('autoriserbloc', { bloc: item.bloc, titre: item.titre, texte: item.texte, media: item.media, iframe: item.iframe, type: item.type, source: item.source, vignette: item.vignette, identifiant: item.identifiant, nom: item.nom, date: date, couleur: item.couleur, commentaires: 0, evaluations: [], colonne: item.colonne, visibilite: 'visible', activiteId: activiteId, moderation: moderation, admin: identifiant })
-								socket.handshake.session.cookie.expires = new Date(Date.now() + (3600 * 24 * 7 * 1000))
+								socket.handshake.session.cookie.expires = new Date(Date.now() + dureeSession)
 								socket.handshake.session.save()
 							})
 						}
@@ -1955,7 +1788,7 @@ io.on('connection', function (socket) {
 									multi.zadd('activite:' + pad, activiteId, JSON.stringify({ id: activiteId, bloc: bloc, identifiant: identifiant, titre: titre, date: date, couleur: couleur, type: 'bloc-supprime' }))
 									multi.exec(function () {
 										io.in('pad-' + pad).emit('supprimerbloc', { bloc: bloc, identifiant: identifiant, nom: nom, titre: titre, date: date, couleur: couleur, colonne: colonne, activiteId: activiteId })
-										socket.handshake.session.cookie.expires = new Date(Date.now() + (3600 * 24 * 7 * 1000))
+										socket.handshake.session.cookie.expires = new Date(Date.now() + dureeSession)
 										socket.handshake.session.save()
 									})
 								}
@@ -1989,7 +1822,7 @@ io.on('connection', function (socket) {
 						multi.zadd('activite:' + pad, activiteId, JSON.stringify({ id: activiteId, bloc: bloc, identifiant: identifiant, titre: titre, date: date, couleur: couleur, type: 'bloc-commente' }))
 						multi.exec(function () {
 							io.in('pad-' + pad).emit('commenterbloc', { id: commentaireId, bloc: bloc, identifiant: identifiant, nom: nom, texte: texte, titre: titre, date: date, couleur: couleur, commentaires: parseInt(commentaires) + 1, activiteId: activiteId })
-							socket.handshake.session.cookie.expires = new Date(Date.now() + (3600 * 24 * 7 * 1000))
+							socket.handshake.session.cookie.expires = new Date(Date.now() + dureeSession)
 							socket.handshake.session.save()
 						})
 					})
@@ -2012,7 +1845,7 @@ io.on('connection', function (socket) {
 				multi.zadd('commentaires:' + bloc, id, JSON.stringify(commentaire))
 				multi.exec(function () {
 					io.in('pad-' + pad).emit('modifiercommentaire', { id: id, texte: texte })
-					socket.handshake.session.cookie.expires = new Date(Date.now() + (3600 * 24 * 7 * 1000))
+					socket.handshake.session.cookie.expires = new Date(Date.now() + dureeSession)
 					socket.handshake.session.save()
 				})
 			})
@@ -2027,7 +1860,7 @@ io.on('connection', function (socket) {
 			db.zcard('commentaires:' + bloc, function (err, commentaires) {
 				if (err) { socket.emit('erreur'); return false }
 				io.in('pad-' + pad).emit('supprimercommentaire', { id: id, bloc: bloc, commentaires: commentaires })
-				socket.handshake.session.cookie.expires = new Date(Date.now() + (3600 * 24 * 7 * 1000))
+				socket.handshake.session.cookie.expires = new Date(Date.now() + dureeSession)
 				socket.handshake.session.save()
 			})
 		} else {
@@ -2094,7 +1927,7 @@ io.on('connection', function (socket) {
 					multi.zadd('activite:' + pad, activiteId, JSON.stringify({ id: activiteId, bloc: bloc, identifiant: identifiant, titre: titre, date: date, couleur: couleur, type: 'bloc-evalue' }))
 					multi.exec(function () {
 						io.in('pad-' + pad).emit('evaluerbloc', { id: evaluationId, bloc: bloc, identifiant: identifiant, nom: nom, titre: titre, date: date, couleur: couleur, evaluation: evaluation, activiteId: activiteId })
-						socket.handshake.session.cookie.expires = new Date(Date.now() + (3600 * 24 * 7 * 1000))
+						socket.handshake.session.cookie.expires = new Date(Date.now() + dureeSession)
 						socket.handshake.session.save()
 					})
 				})
@@ -2115,7 +1948,7 @@ io.on('connection', function (socket) {
 				multi.zadd('evaluations:' + bloc, id, JSON.stringify(evaluation))
 				multi.exec(function () {
 					io.in('pad-' + pad).emit('modifierevaluation', { id: id, bloc: bloc, date: date, etoiles: etoiles })
-					socket.handshake.session.cookie.expires = new Date(Date.now() + (3600 * 24 * 7 * 1000))
+					socket.handshake.session.cookie.expires = new Date(Date.now() + dureeSession)
 					socket.handshake.session.save()
 				})
 			})
@@ -2129,7 +1962,7 @@ io.on('connection', function (socket) {
 			db.zremrangebyscore('evaluations:' + bloc, id, id, function (err) {
 				if (err) { socket.emit('erreur'); return false }
 				io.in('pad-' + pad).emit('supprimerevaluation', { id: id, bloc: bloc })
-				socket.handshake.session.cookie.expires = new Date(Date.now() + (3600 * 24 * 7 * 1000))
+				socket.handshake.session.cookie.expires = new Date(Date.now() + dureeSession)
 				socket.handshake.session.save()
 			})
 		} else {
@@ -2144,7 +1977,7 @@ io.on('connection', function (socket) {
 					if (err) { socket.emit('erreur'); return false }
 					io.in('pad-' + pad).emit('modifiernom', { identifiant: identifiant, nom: nom })
 					socket.handshake.session.nom = nom
-					socket.handshake.session.cookie.expires = new Date(Date.now() + (3600 * 24 * 7 * 1000))
+					socket.handshake.session.cookie.expires = new Date(Date.now() + dureeSession)
 					socket.handshake.session.save()
 				})
 			} else if (statut === 'auteur') {
@@ -2152,7 +1985,7 @@ io.on('connection', function (socket) {
 					if (err) { socket.emit('erreur'); return false }
 					io.in('pad-' + pad).emit('modifiernom', { identifiant: identifiant, nom: nom })
 					socket.handshake.session.nom = nom
-					socket.handshake.session.cookie.expires = new Date(Date.now() + (3600 * 24 * 7 * 1000))
+					socket.handshake.session.cookie.expires = new Date(Date.now() + dureeSession)
 					socket.handshake.session.save()
 				})
 			}
@@ -2166,7 +1999,7 @@ io.on('connection', function (socket) {
 			db.hmset('couleurs:' + identifiant, 'pad' + pad, couleur, function (err) {
 				if (err) { socket.emit('erreur'); return false }
 				io.in('pad-' + pad).emit('modifiercouleur', { identifiant: identifiant, couleur: couleur })
-				socket.handshake.session.cookie.expires = new Date(Date.now() + (3600 * 24 * 7 * 1000))
+				socket.handshake.session.cookie.expires = new Date(Date.now() + dureeSession)
 				socket.handshake.session.save()
 			})
 		} else {
@@ -2179,7 +2012,7 @@ io.on('connection', function (socket) {
 			db.hmset('pads:' + pad, 'titre', titre, function (err) {
 				if (err) { socket.emit('erreur'); return false }
 				io.in('pad-' + pad).emit('modifiertitre', titre)
-				socket.handshake.session.cookie.expires = new Date(Date.now() + (3600 * 24 * 7 * 1000))
+				socket.handshake.session.cookie.expires = new Date(Date.now() + dureeSession)
 				socket.handshake.session.save()
 			})
 		} else {
@@ -2209,7 +2042,7 @@ io.on('connection', function (socket) {
 				})
 				multi.exec(function () {
 					io.in('pad-' + pad).emit('modifieradmins', admins)
-					socket.handshake.session.cookie.expires = new Date(Date.now() + (3600 * 24 * 7 * 1000))
+					socket.handshake.session.cookie.expires = new Date(Date.now() + dureeSession)
 					socket.handshake.session.save()
 				})
 			})
@@ -2231,7 +2064,7 @@ io.on('connection', function (socket) {
 				db.hmset('pads:' + pad, 'acces', acces, 'code', code, function (err) {
 					if (err) { socket.emit('erreur'); return false }
 					io.in('pad-' + pad).emit('modifieracces', { acces: acces, code: code })
-					socket.handshake.session.cookie.expires = new Date(Date.now() + (3600 * 24 * 7 * 1000))
+					socket.handshake.session.cookie.expires = new Date(Date.now() + dureeSession)
 					socket.handshake.session.save()
 				})
 			})
@@ -2245,7 +2078,7 @@ io.on('connection', function (socket) {
 			db.hmset('pads:' + pad, 'contributions', contributions, function (err) {
 				if (err) { socket.emit('erreur'); return false }
 				io.in('pad-' + pad).emit('modifiercontributions', { contributions: contributions, contributionsPrecedentes: contributionsPrecedentes })
-				socket.handshake.session.cookie.expires = new Date(Date.now() + (3600 * 24 * 7 * 1000))
+				socket.handshake.session.cookie.expires = new Date(Date.now() + dureeSession)
 				socket.handshake.session.save()
 			})
 		} else {
@@ -2258,7 +2091,7 @@ io.on('connection', function (socket) {
 			db.hmset('pads:' + pad, 'affichage', affichage, function (err) {
 				if (err) { socket.emit('erreur'); return false }
 				io.in('pad-' + pad).emit('modifieraffichage', affichage)
-				socket.handshake.session.cookie.expires = new Date(Date.now() + (3600 * 24 * 7 * 1000))
+				socket.handshake.session.cookie.expires = new Date(Date.now() + dureeSession)
 				socket.handshake.session.save()
 			})
 		} else {
@@ -2271,7 +2104,7 @@ io.on('connection', function (socket) {
 			db.hmset('pads:' + pad, 'ordre', ordre, function (err) {
 				if (err) { socket.emit('erreur'); return false }
 				io.in('pad-' + pad).emit('modifierordre', ordre)
-				socket.handshake.session.cookie.expires = new Date(Date.now() + (3600 * 24 * 7 * 1000))
+				socket.handshake.session.cookie.expires = new Date(Date.now() + dureeSession)
 				socket.handshake.session.save()
 			})
 		} else {
@@ -2288,7 +2121,7 @@ io.on('connection', function (socket) {
 					const chemin = path.join(__dirname, '..', '/static' + ancienfond)
 					fs.removeSync(chemin)
 				}
-				socket.handshake.session.cookie.expires = new Date(Date.now() + (3600 * 24 * 7 * 1000))
+				socket.handshake.session.cookie.expires = new Date(Date.now() + dureeSession)
 				socket.handshake.session.save()
 			})
 		} else {
@@ -2305,7 +2138,7 @@ io.on('connection', function (socket) {
 					const chemin = path.join(__dirname, '..', '/static' + ancienfond)
 					fs.removeSync(chemin)
 				}
-				socket.handshake.session.cookie.expires = new Date(Date.now() + (3600 * 24 * 7 * 1000))
+				socket.handshake.session.cookie.expires = new Date(Date.now() + dureeSession)
 				socket.handshake.session.save()
 			})
 		} else {
@@ -2317,7 +2150,7 @@ io.on('connection', function (socket) {
 		if (identifiant !== '' && identifiant !== undefined && socket.handshake.session.identifiant === identifiant) {
 			db.hmset('pads:' + pad, 'registreActivite', statut, function () {
 				io.in('pad-' + pad).emit('modifieractivite', statut)
-				socket.handshake.session.cookie.expires = new Date(Date.now() + (3600 * 24 * 7 * 1000))
+				socket.handshake.session.cookie.expires = new Date(Date.now() + dureeSession)
 				socket.handshake.session.save()
 			})
 		} else {
@@ -2329,7 +2162,7 @@ io.on('connection', function (socket) {
 		if (identifiant !== '' && identifiant !== undefined && socket.handshake.session.identifiant === identifiant) {
 			db.hmset('pads:' + pad, 'conversation', statut, function () {
 				io.in('pad-' + pad).emit('modifierconversation', statut)
-				socket.handshake.session.cookie.expires = new Date(Date.now() + (3600 * 24 * 7 * 1000))
+				socket.handshake.session.cookie.expires = new Date(Date.now() + dureeSession)
 				socket.handshake.session.save()
 			})
 		} else {
@@ -2341,7 +2174,7 @@ io.on('connection', function (socket) {
 		if (identifiant !== '' && identifiant !== undefined && socket.handshake.session.identifiant === identifiant) {
 			db.hmset('pads:' + pad, 'listeUtilisateurs', statut, function () {
 				io.in('pad-' + pad).emit('modifierlisteutilisateurs', statut)
-				socket.handshake.session.cookie.expires = new Date(Date.now() + (3600 * 24 * 7 * 1000))
+				socket.handshake.session.cookie.expires = new Date(Date.now() + dureeSession)
 				socket.handshake.session.save()
 			})
 		} else {
@@ -2353,7 +2186,7 @@ io.on('connection', function (socket) {
 		if (identifiant !== '' && identifiant !== undefined && socket.handshake.session.identifiant === identifiant) {
 			db.hmset('pads:' + pad, 'editionNom', statut, function () {
 				io.in('pad-' + pad).emit('modifiereditionnom', statut)
-				socket.handshake.session.cookie.expires = new Date(Date.now() + (3600 * 24 * 7 * 1000))
+				socket.handshake.session.cookie.expires = new Date(Date.now() + dureeSession)
 				socket.handshake.session.save()
 			})
 		} else {
@@ -2365,7 +2198,7 @@ io.on('connection', function (socket) {
 		if (identifiant !== '' && identifiant !== undefined && socket.handshake.session.identifiant === identifiant) {
 			db.hmset('pads:' + pad, 'fichiers', statut, function () {
 				io.in('pad-' + pad).emit('modifierfichiers', statut)
-				socket.handshake.session.cookie.expires = new Date(Date.now() + (3600 * 24 * 7 * 1000))
+				socket.handshake.session.cookie.expires = new Date(Date.now() + dureeSession)
 				socket.handshake.session.save()
 			})
 		} else {
@@ -2377,7 +2210,7 @@ io.on('connection', function (socket) {
 		if (identifiant !== '' && identifiant !== undefined && socket.handshake.session.identifiant === identifiant) {
 			db.hmset('pads:' + pad, 'liens', statut, function () {
 				io.in('pad-' + pad).emit('modifierliens', statut)
-				socket.handshake.session.cookie.expires = new Date(Date.now() + (3600 * 24 * 7 * 1000))
+				socket.handshake.session.cookie.expires = new Date(Date.now() + dureeSession)
 				socket.handshake.session.save()
 			})
 		} else {
@@ -2389,7 +2222,7 @@ io.on('connection', function (socket) {
 		if (identifiant !== '' && identifiant !== undefined && socket.handshake.session.identifiant === identifiant) {
 			db.hmset('pads:' + pad, 'documents', statut, function () {
 				io.in('pad-' + pad).emit('modifierdocuments', statut)
-				socket.handshake.session.cookie.expires = new Date(Date.now() + (3600 * 24 * 7 * 1000))
+				socket.handshake.session.cookie.expires = new Date(Date.now() + dureeSession)
 				socket.handshake.session.save()
 			})
 		} else {
@@ -2401,7 +2234,7 @@ io.on('connection', function (socket) {
 		if (identifiant !== '' && identifiant !== undefined && socket.handshake.session.identifiant === identifiant) {
 			db.hmset('pads:' + pad, 'commentaires', statut, function () {
 				io.in('pad-' + pad).emit('modifiercommentaires', statut)
-				socket.handshake.session.cookie.expires = new Date(Date.now() + (3600 * 24 * 7 * 1000))
+				socket.handshake.session.cookie.expires = new Date(Date.now() + dureeSession)
 				socket.handshake.session.save()
 			})
 		} else {
@@ -2413,7 +2246,7 @@ io.on('connection', function (socket) {
 		if (identifiant !== '' && identifiant !== undefined && socket.handshake.session.identifiant === identifiant) {
 			db.hmset('pads:' + pad, 'evaluations', statut, function () {
 				io.in('pad-' + pad).emit('modifierevaluations', statut)
-				socket.handshake.session.cookie.expires = new Date(Date.now() + (3600 * 24 * 7 * 1000))
+				socket.handshake.session.cookie.expires = new Date(Date.now() + dureeSession)
 				socket.handshake.session.save()
 			})
 		} else {
@@ -2425,7 +2258,7 @@ io.on('connection', function (socket) {
 		if (identifiant !== '' && identifiant !== undefined && socket.handshake.session.identifiant === identifiant) {
 			const date = moment().format()
 			io.in('pad-' + pad).emit('message', { texte: texte, identifiant: identifiant, nom: nom, date: date })
-			socket.handshake.session.cookie.expires = new Date(Date.now() + (3600 * 24 * 7 * 1000))
+			socket.handshake.session.cookie.expires = new Date(Date.now() + dureeSession)
 			socket.handshake.session.save()
 		} else {
 			socket.emit('deconnecte')
@@ -2435,7 +2268,7 @@ io.on('connection', function (socket) {
 	socket.on('reinitialisermessages', function (pad, identifiant) {
 		if (identifiant !== '' && identifiant !== undefined && socket.handshake.session.identifiant === identifiant) {
 			io.in('pad-' + pad).emit('reinitialisermessages')
-			socket.handshake.session.cookie.expires = new Date(Date.now() + (3600 * 24 * 7 * 1000))
+			socket.handshake.session.cookie.expires = new Date(Date.now() + dureeSession)
 			socket.handshake.session.save()
 		} else {
 			socket.emit('deconnecte')
@@ -2446,7 +2279,7 @@ io.on('connection', function (socket) {
 		if (identifiant !== '' && identifiant !== undefined && socket.handshake.session.identifiant === identifiant) {
 			db.del('activite:' + pad, function () {
 				io.in('pad-' + pad).emit('reinitialiseractivite')
-				socket.handshake.session.cookie.expires = new Date(Date.now() + (3600 * 24 * 7 * 1000))
+				socket.handshake.session.cookie.expires = new Date(Date.now() + dureeSession)
 				socket.handshake.session.save()
 			})
 		} else {
@@ -2468,7 +2301,7 @@ io.on('connection', function (socket) {
 				multi.zadd('activite:' + pad, activiteId, JSON.stringify({ id: activiteId, identifiant: identifiant, titre: titre, date: date, couleur: couleur, type: 'colonne-ajoutee' }))
 				multi.exec(function () {
 					io.in('pad-' + pad).emit('ajoutercolonne', { identifiant: identifiant, nom: nom, titre: titre, colonnes: colonnes, date: date, couleur: couleur, activiteId: activiteId })
-					socket.handshake.session.cookie.expires = new Date(Date.now() + (3600 * 24 * 7 * 1000))
+					socket.handshake.session.cookie.expires = new Date(Date.now() + dureeSession)
 					socket.handshake.session.save()
 				})
 			})
@@ -2485,7 +2318,7 @@ io.on('connection', function (socket) {
 				colonnes[index] = titre
 				db.hmset('pads:' + pad, 'colonnes', JSON.stringify(colonnes), function () {
 					io.in('pad-' + pad).emit('modifiercolonne', colonnes)
-					socket.handshake.session.cookie.expires = new Date(Date.now() + (3600 * 24 * 7 * 1000))
+					socket.handshake.session.cookie.expires = new Date(Date.now() + dureeSession)
 					socket.handshake.session.save()
 				})
 			})
@@ -2578,7 +2411,7 @@ io.on('connection', function (socket) {
 							multi.zadd('activite:' + pad, activiteId, JSON.stringify({ id: activiteId, identifiant: identifiant, titre: titre, date: date, couleur: couleur, type: 'colonne-supprimee' }))
 							multi.exec(function () {
 								io.in('pad-' + pad).emit('supprimercolonne', { identifiant: identifiant, nom: nom, titre: titre, colonne: colonne, colonnes: colonnes, date: date, couleur: couleur, activiteId: activiteId })
-								socket.handshake.session.cookie.expires = new Date(Date.now() + (3600 * 24 * 7 * 1000))
+								socket.handshake.session.cookie.expires = new Date(Date.now() + dureeSession)
 								socket.handshake.session.save()
 							})
 						})
@@ -2659,7 +2492,7 @@ io.on('connection', function (socket) {
 							multi.zadd('activite:' + pad, activiteId, JSON.stringify({ id: activiteId, identifiant: identifiant, titre: titre, date: date, couleur: couleur, type: 'colonne-deplacee' }))
 							multi.exec(function () {
 								io.in('pad-' + pad).emit('deplacercolonne', { identifiant: identifiant, nom: nom, titre: titre, direction: direction, colonne: colonne, colonnes: colonnes, date: date, couleur: couleur, activiteId: activiteId })
-								socket.handshake.session.cookie.expires = new Date(Date.now() + (3600 * 24 * 7 * 1000))
+								socket.handshake.session.cookie.expires = new Date(Date.now() + dureeSession)
 								socket.handshake.session.save()
 							})
 						})
@@ -2686,7 +2519,7 @@ io.on('connection', function (socket) {
 						socket.handshake.session.nom = utilisateur.nom
 						socket.handshake.session.statut = 'auteur'
 						socket.handshake.session.langue = utilisateur.langue
-						socket.handshake.session.cookie.expires = new Date(Date.now() + (3600 * 24 * 7 * 1000))
+						socket.handshake.session.cookie.expires = new Date(Date.now() + dureeSession)
 						socket.handshake.session.save()
 						socket.emit('debloquerpad', { identifiant: identifiant, nom: utilisateur.nom, langue: utilisateur.langue, couleur: couleur })
 					})
@@ -2701,7 +2534,7 @@ io.on('connection', function (socket) {
 		db.hgetall('pads:' + pad, function () {
 			db.hmset('pads:' + pad, 'notification', JSON.stringify(admins), function () {
 				io.in('pad-' + pad).emit('modifiernotification', admins)
-				socket.handshake.session.cookie.expires = new Date(Date.now() + (3600 * 24 * 7 * 1000))
+				socket.handshake.session.cookie.expires = new Date(Date.now() + dureeSession)
 				socket.handshake.session.save()
 			})
 		})
@@ -2710,7 +2543,7 @@ io.on('connection', function (socket) {
 	socket.on('verifiermodifierbloc', function (pad, bloc, identifiant) {
 		if (identifiant !== '' && identifiant !== undefined && socket.handshake.session.identifiant === identifiant) {
 			socket.to('pad-' + pad).emit('verifiermodifierbloc', { bloc: bloc, identifiant: identifiant })
-			socket.handshake.session.cookie.expires = new Date(Date.now() + (3600 * 24 * 7 * 1000))
+			socket.handshake.session.cookie.expires = new Date(Date.now() + dureeSession)
 			socket.handshake.session.save()
 		}
 	})
@@ -2718,7 +2551,7 @@ io.on('connection', function (socket) {
 	socket.on('reponsemodifierbloc', function (pad, identifiant, reponse) {
 		if (identifiant !== '' && identifiant !== undefined && socket.handshake.session.identifiant === identifiant) {
 			socket.to('pad-' + pad).emit('reponsemodifierbloc', { identifiant: identifiant, reponse: reponse })
-			socket.handshake.session.cookie.expires = new Date(Date.now() + (3600 * 24 * 7 * 1000))
+			socket.handshake.session.cookie.expires = new Date(Date.now() + dureeSession)
 			socket.handshake.session.save()
 		}
 	})
@@ -2727,7 +2560,7 @@ io.on('connection', function (socket) {
 		if (identifiant !== '' && identifiant !== undefined && socket.handshake.session.identifiant === identifiant) {
 			db.zremrangebyscore('activite:' + pad, id, id, function () {
 				io.in('pad-' + pad).emit('supprimeractivite', id)
-				socket.handshake.session.cookie.expires = new Date(Date.now() + (3600 * 24 * 7 * 1000))
+				socket.handshake.session.cookie.expires = new Date(Date.now() + dureeSession)
 				socket.handshake.session.save()
 			})
 		} else {
@@ -2962,6 +2795,375 @@ function recupererDonnees (identifiant) {
 		})
 	})
 	return Promise.all([donneesPadsCrees, donneesPadsRejoints, donneesPadsAdmins, donneesPadsFavoris])
+}
+
+function exporterPadsJson () {
+	db.keys('pads:*', function (err, pads) {
+		if (pads !== null) {
+			pads.forEach(function (pad) {
+				const id = pad.substring(5)
+				const chemin = path.join(__dirname, '..', '/static/pads')
+				db.hgetall('pads:' + id, function (err, donnees) {
+					fs.exists(path.normalize(chemin + '/' + id + '.json'), function (existe) {
+						if (existe === false && donnees.hasOwnProperty('date') && moment(donnees.date).isBefore(moment().subtract(10, 'days'))) {
+							const donneesPad = new Promise(function (resolveMain) {
+								db.hgetall('pads:' + id, function (err, resultats) {
+									if (err) { resolveMain({}) }
+									resolveMain(resultats)
+								})
+							})
+							const blocsPad = new Promise(function (resolveMain) {
+								const donneesBlocs = []
+								db.zrange('blocs:' + id, 0, -1, function (err, blocs) {
+									if (err) { resolveMain(donneesBlocs) }
+									for (const bloc of blocs) {
+										const donneesBloc = new Promise(function (resolve) {
+											db.hgetall('pad-' + id + ':' + bloc, function (err, donnees) {
+												if (err) { resolve({}) }
+												if (donnees && Object.keys(donnees).length > 0) {
+													const donneesCommentaires = []
+													db.zrange('commentaires:' + bloc, 0, -1, function (err, commentaires) {
+														if (err) { resolve(donnees) }
+														for (let commentaire of commentaires) {
+															donneesCommentaires.push(JSON.parse(commentaire))
+														}
+														donnees.commentaires = donneesCommentaires.length
+														donnees.listeCommentaires = donneesCommentaires
+														db.zrange('evaluations:' + bloc, 0, -1, function (err, evaluations) {
+															if (err) { resolve(donnees) }
+															const donneesEvaluations = []
+															evaluations.forEach(function (evaluation) {
+																donneesEvaluations.push(JSON.parse(evaluation))
+															})
+															donnees.evaluations = donneesEvaluations.length
+															donnees.listeEvaluations = donneesEvaluations
+															resolve(donnees)
+														})
+													})
+												} else {
+													resolve({})
+												}
+											})
+										})
+										donneesBlocs.push(donneesBloc)
+									}
+									Promise.all(donneesBlocs).then(function (resultat) {
+										resolveMain(resultat)
+									})
+								})
+							})
+							const activitePad = new Promise(function (resolveMain) {
+								const donneesEntrees = []
+								db.zrange('activite:' + id, 0, -1, function (err, entrees) {
+									if (err) { resolveMain(donneesEntrees) }
+									for (let entree of entrees) {
+										entree = JSON.parse(entree)
+										const donneesEntree = new Promise(function (resolve) {
+											db.exists('utilisateurs:' + entree.identifiant, function (err) {
+												if (err) { resolve({}) }
+												resolve(entree)
+											})
+										})
+										donneesEntrees.push(donneesEntree)
+									}
+									Promise.all(donneesEntrees).then(function (resultat) {
+										resolveMain(resultat)
+									})
+								})
+							})
+							Promise.all([donneesPad, blocsPad, activitePad]).then(function (donnees) {
+								if (donnees.length > 0 && donnees[0].id) {
+									const parametres = {}
+									parametres.pad = donnees[0]
+									parametres.blocs = donnees[1]
+									parametres.activite = donnees[2]
+									fs.writeFile(path.normalize(chemin + '/' + id + '.json'), JSON.stringify(parametres, '', 4), 'utf8', function () {
+										// Suppression données redis
+										db.zrange('blocs:' + id, 0, -1, function (err, blocs) {
+											const multi = db.multi()
+											for (let i = 0; i < blocs.length; i++) {
+												multi.del('commentaires:' + blocs[i])
+												multi.del('evaluations:' + blocs[i])
+												multi.del('pad-' + id + ':' + blocs[i])
+											}
+											multi.del('blocs:' + id)
+											multi.del('pads:' + id)
+											multi.del('activite:' + id)
+											multi.exec()
+										})
+									})
+								}
+							})
+						}
+					})
+				})
+			})
+		}
+	})
+}
+
+function recupererDonneesPad (id, token, identifiant, statut, res) {
+	db.hgetall('pads:' + id, function (err, pad) {
+		if (err) { res.send('erreur_pad'); return false }
+		if (pad.id === id && pad.token === token) {
+			let nombreColonnes = 0
+			if (pad.hasOwnProperty('colonnes')) {
+				nombreColonnes = JSON.parse(pad.colonnes).length
+				pad.colonnes = JSON.parse(pad.colonnes)
+			}
+			if (pad.hasOwnProperty('notification')) {
+				pad.notification = JSON.parse(pad.notification)
+			}
+			let vues = 0
+			if (pad.hasOwnProperty('vues')) {
+				vues = parseInt(pad.vues) + 1
+			}
+			// Pour homogénéité des paramètres de pad
+			if (!pad.hasOwnProperty('ordre')) {
+				pad.ordre = 'croissant'
+			}
+			// Pour homogénéité des paramètres de pad avec coadministration
+			if (!pad.hasOwnProperty('admins')) {
+				pad.admins = []
+			} else {
+				pad.admins = JSON.parse(pad.admins)
+			}
+			const blocsPad = new Promise(function (resolveMain) {
+				const donneesBlocs = []
+				db.zrange('blocs:' + id, 0, -1, function (err, blocs) {
+					if (err) { resolveMain(donneesBlocs) }
+					for (const bloc of blocs) {
+						const donneesBloc = new Promise(function (resolve) {
+							db.hgetall('pad-' + id + ':' + bloc, function (err, donnees) {
+								if (err) { resolve({}) }
+								if (donnees && Object.keys(donnees).length > 0) {
+									// Pour résoudre le problème des capsules qui sont référencées dans une colonne inexistante
+									if (parseInt(donnees.colonne) >= nombreColonnes) {
+										donnees.colonne = nombreColonnes - 1
+									}
+									// Pour homogénéité des paramètres du bloc avec modération activée
+									if (!donnees.hasOwnProperty('visibilite')) {
+										donnees.visibilite = 'visible'
+									}
+									// Pour résoudre le problème lié au changement de domaine de digidoc
+									if (donnees.hasOwnProperty('iframe') && donnees.iframe.includes('env-7747481.jcloud-ver-jpe.ik-server.com') === true) {
+										donnees.iframe = donnees.iframe.replace('https://env-7747481.jcloud-ver-jpe.ik-server.com', process.env.ETHERPAD)
+									}
+									// Pour résoudre le problème lié au changement de domaine de digidoc
+									if (donnees.hasOwnProperty('media') && donnees.media.includes('env-7747481.jcloud-ver-jpe.ik-server.com') === true) {
+										donnees.media = donnees.media.replace('https://env-7747481.jcloud-ver-jpe.ik-server.com', process.env.ETHERPAD)
+									}
+									// Ne pas ajouter les capsules en attente de modération ou privées
+									if (((pad.contributions === 'moderees' && donnees.visibilite === 'masquee') || donnees.visibilite === 'privee') && donnees.identifiant !== identifiant && pad.identifiant !== identifiant && !pad.admins.includes(identifiant)) {
+										resolve({})
+									}
+									db.zcard('commentaires:' + bloc, function (err, commentaires) {
+										if (err) { resolve({}) }
+										donnees.commentaires = commentaires
+										db.zrange('evaluations:' + bloc, 0, -1, function (err, evaluations) {
+											if (err) { resolve({}) }
+											const donneesEvaluations = []
+											evaluations.forEach(function (evaluation) {
+												donneesEvaluations.push(JSON.parse(evaluation))
+											})
+											donnees.evaluations = donneesEvaluations
+											db.exists('utilisateurs:' + donnees.identifiant, function (err, resultat) {
+												if (err) { resolve({}) }
+												if (resultat === 1) {
+													db.hgetall('utilisateurs:' + donnees.identifiant, function (err, utilisateur) {
+														if (err) { resolve({}) }
+														donnees.nom = utilisateur.nom
+														db.hget('couleurs:' + donnees.identifiant, 'pad' + id, function (err, couleur) {
+															if (err || couleur === null) {
+																donnees.couleur = ''
+															} else {
+																donnees.couleur = couleur
+															}
+															resolve(donnees)
+														})
+													})
+												} else {
+													db.exists('noms:' + donnees.identifiant, function (err, resultat) {
+														if (err) { resolve({}) }
+														if (resultat === 1) {
+															db.hget('noms:' + donnees.identifiant, 'nom', function (err, nom) {
+																if (err) { resolve({}) }
+																donnees.nom = nom
+																db.hget('couleurs:' + donnees.identifiant, 'pad' + id, function (err, couleur) {
+																	if (err || couleur === null) {
+																		donnees.couleur = ''
+																	} else {
+																		donnees.couleur = couleur
+																	}
+																	resolve(donnees)
+																})
+															})
+														} else {
+															donnees.nom = ''
+															donnees.couleur = ''
+															resolve(donnees)
+														}
+													})
+												}
+											})
+										})
+									})
+								} else {
+									resolve({})
+								}
+							})
+						})
+						donneesBlocs.push(donneesBloc)
+					}
+					Promise.all(donneesBlocs).then(function (resultat) {
+						resolveMain(resultat)
+					})
+				})
+			})
+			const activitePad = new Promise(function (resolveMain) {
+				const donneesEntrees = []
+				db.zrange('activite:' + id, 0, -1, function (err, entrees) {
+					if (err) { resolveMain(donneesEntrees) }
+					for (let entree of entrees) {
+						entree = JSON.parse(entree)
+						const donneesEntree = new Promise(function (resolve) {
+							db.exists('utilisateurs:' + entree.identifiant, function (err, resultat) {
+								if (err) { resolve({}) }
+								if (resultat === 1) {
+									db.hgetall('utilisateurs:' + entree.identifiant, function (err, utilisateur) {
+										if (err) { resolve({}) }
+										entree.nom = utilisateur.nom
+										db.hget('couleurs:' + entree.identifiant, 'pad' + id, function (err, couleur) {
+											if (err || couleur === null) {
+												entree.couleur = ''
+											} else {
+												entree.couleur = couleur
+											}
+											resolve(entree)
+										})
+									})
+								} else {
+									db.exists('noms:' + entree.identifiant, function (err, resultat) {
+										if (err) { resolve({}) }
+										if (resultat === 1) {
+											db.hget('noms:' + entree.identifiant, 'nom', function (err, nom) {
+												if (err) { resolve({}) }
+												entree.nom = nom
+												db.hget('couleurs:' + entree.identifiant, 'pad' + id, function (err, couleur) {
+													if (err) { resolve({}) }
+													entree.couleur = couleur
+													resolve(entree)
+												})
+											})
+										} else {
+											entree.nom = ''
+											entree.couleur = ''
+											resolve(entree)
+										}
+									})
+								}
+							})
+						})
+						donneesEntrees.push(donneesEntree)
+					}
+					Promise.all(donneesEntrees).then(function (resultat) {
+						resolveMain(resultat)
+					})
+				})
+			})
+			Promise.all([blocsPad, activitePad]).then(function ([blocs, activite]) {
+				// Définir la même couleur pour les utilisateurs qui ne sont plus dans la base de données
+				const utilisateursSansCouleur = []
+				const couleurs = []
+				blocs = blocs.filter(function (element) {
+					return Object.keys(element).length > 0
+				})
+				blocs.forEach(function (bloc) {
+					if ((bloc.couleur === '' || bloc.couleur === null) && utilisateursSansCouleur.includes(bloc.identifiant) === false) {
+						utilisateursSansCouleur.push(bloc.identifiant)
+					}
+				})
+				activite = activite.filter(function (element) {
+					return Object.keys(element).length > 0
+				})
+				activite.forEach(function (item) {
+					if ((item.couleur === '' || item.couleur === null) && utilisateursSansCouleur.includes(item.identifiant) === false) {
+						utilisateursSansCouleur.push(item.identifiant)
+					}
+				})
+				utilisateursSansCouleur.forEach(function () {
+					const couleur = choisirCouleur()
+					couleurs.push(couleur)
+				})
+				blocs.forEach(function (bloc, indexBloc) {
+					if (utilisateursSansCouleur.includes(bloc.identifiant) === true) {
+						const index = utilisateursSansCouleur.indexOf(bloc.identifiant)
+						blocs[indexBloc].couleur = couleurs[index]
+					}
+				})
+				activite.forEach(function (item, indexItem) {
+					if (utilisateursSansCouleur.includes(item.identifiant) === true) {
+						const index = utilisateursSansCouleur.indexOf(item.identifiant)
+						activite[indexItem].couleur = couleurs[index]
+					}
+				})
+				let ordre = 'croissant'
+				if (pad.hasOwnProperty('ordre')) {
+					ordre = pad.ordre
+				}
+				if (ordre === 'decroissant') {
+					blocs.reverse()
+				}
+				// Ajouter nombre de vues
+				db.hmset('pads:' + id, 'vues', vues, function () {
+					// Ajouter dans pads rejoints
+					if (pad.identifiant !== identifiant && statut === 'utilisateur') {
+						db.smembers('pads-rejoints:' + identifiant, function (err, padsRejoints) {
+							if (err) { res.send('erreur_pad'); return false }
+							let padDejaRejoint = false
+							for (const padRejoint of padsRejoints) {
+								if (padRejoint === id) {
+									padDejaRejoint = true
+								}
+							}
+							if (padDejaRejoint === false) {
+								const multi = db.multi()
+								multi.sadd('pads-rejoints:' + identifiant, id)
+								multi.sadd('pads-utilisateurs:' + identifiant, id)
+								multi.hmset('couleurs:' + identifiant, 'pad' + id, choisirCouleur())
+								multi.sadd('utilisateurs-pads:' + id, identifiant)
+								multi.exec(function () {
+									res.json({ pad: pad, blocs: blocs, activite: activite.reverse() })
+								})
+							} else {
+								// Vérifier notification mise à jour pad
+								if (pad.hasOwnProperty('notification') && pad.notification.includes(identifiant)) {
+									pad.notification.splice(pad.notification.indexOf(identifiant), 1)
+									db.hmset('pads:' + id, 'notification', JSON.stringify(pad.notification), function () {
+										res.json({ pad: pad, blocs: blocs, activite: activite.reverse() })
+									})
+								} else {
+									res.json({ pad: pad, blocs: blocs, activite: activite.reverse() })
+								}
+							}
+						})
+					} else {
+						// Vérifier notification mise à jour pad
+						if (pad.hasOwnProperty('notification') && pad.notification.includes(identifiant)) {
+							pad.notification.splice(pad.notification.indexOf(identifiant), 1)
+							db.hmset('pads:' + id, 'notification', JSON.stringify(pad.notification), function () {
+								res.json({ pad: pad, blocs: blocs, activite: activite.reverse() })
+							})
+						} else {
+							res.json({ pad: pad, blocs: blocs, activite: activite.reverse() })
+						}
+					}
+				})
+			})
+		} else {
+			res.send('erreur_pad')
+		}
+	})
 }
 
 function choisirCouleur () {
