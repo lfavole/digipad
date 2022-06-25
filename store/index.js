@@ -10,6 +10,7 @@ export const state = () => ({
 	alerte: '',
 	identifiant: '',
 	nom: '',
+	email: '',
 	langue: 'fr',
 	langues: ['fr', 'es', 'it', 'hr', 'en'],
 	statut: '',
@@ -33,6 +34,9 @@ export const mutations = {
 	},
 	modifierNom (state, nom) {
 		state.nom = nom
+	},
+	modifierEmail (state, email) {
+		state.email = email
 	},
 	modifierLangue (state, langue) {
 		state.langue = langue
@@ -75,9 +79,16 @@ export const actions = {
 		if (donnees.hasOwnProperty('filtre')) {
 			commit('modifierFiltre', donnees.filtre)
 		}
+		if (donnees.hasOwnProperty('email')) {
+			commit('modifierEmail', donnees.email)
+		}
 	},
 	modifierNom ({ commit }, nom) {
 		commit('modifierNom', nom)
+	},
+	modifierInformations ({ commit }, donnees) {
+		commit('modifierNom', donnees.nom)
+		commit('modifierEmail', donnees.email)
 	},
 	modifierLangue ({ commit }, langue) {
 		commit('modifierLangue', langue)
@@ -91,6 +102,7 @@ export const actions = {
 	reinitialiser ({ commit }) {
 		commit('modifierIdentifiant', '')
 		commit('modifierNom', '')
+		commit('modifierEmail', '')
 		commit('modifierLangue', 'fr')
 		commit('modifierStatut', '')
 		commit('modifierAffichage', 'liste')

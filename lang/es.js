@@ -61,6 +61,7 @@ export default {
 	padDuplique: 'Pad duplicado.',
 	padImporte: 'Pad importado.',
 	nomModifie: 'Nombre modificado.',
+	informationsModifiees: 'Información modificada.',
 	langueModifiee: 'Idioma modificado.',
 	motDePasseModifie: 'Contraseña modificada.',
 	motDePasseActuelPasCorrect: 'La contraseña actual no es correcta.',
@@ -318,5 +319,10 @@ export default {
 	capsuleVisible: 'Cápsula visible para todos los usuarios.',
 	afficherCapsule: 'Ver cápsula',
 	vues: 'vistas',
-	vue: 'vista'
+	vue: 'vista',
+	erreurEmail: 'La dirección de correo electrónico no es válida.',
+	email: 'Correo electrónico',
+	motDePasseOublie: '¿Ha olvidado su contraseña?',
+	emailNonValide: 'Esta dirección de correo electrónico no está asociada a este usario.',
+	emailEnvoye: 'Se ha enviado un correo electrónico de cambio de contraseña.'
 }

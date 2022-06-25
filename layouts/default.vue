@@ -20,8 +20,6 @@
 </template>
 
 <script>
-import imagesLoaded from 'imagesloaded'
-
 export default {
 	name: 'Base',
 	data () {
@@ -57,9 +55,7 @@ export default {
 		}
 	},
 	mounted () {
-		imagesLoaded('#app', { background: true }, function () {
-			this.chargement = false
-		}.bind(this))
+		this.chargement = false
 	},
 	methods: {
 		reinitialiserAlerte () {

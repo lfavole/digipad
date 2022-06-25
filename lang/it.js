@@ -61,6 +61,7 @@ export default {
 	padDuplique: 'Pad duplicato.',
 	padImporte: 'Pad importato.',
 	nomModifie: 'Nome modificato.',
+	informationsModifiees: 'Informazioni modificate.',
 	langueModifiee: 'Lingua modificata.',
 	motDePasseModifie: 'Password modificata.',
 	motDePasseActuelPasCorrect: 'La password attuale è errata.',
@@ -318,5 +319,10 @@ export default {
 	capsuleVisible: 'Capsula visibile a tutti gli utenti.',
 	afficherCapsule: 'Visualizza la capsula',
 	vues: 'viste',
-	vue: 'vista'
+	vue: 'vista',
+	erreurEmail: 'L\'indirizzo e-mail non è valido.',
+	email: 'Indirizzo e-mail',
+	motDePasseOublie: 'Avete dimenticato la password?',
+	emailNonValide: 'Questo indirizzo e-mail non è associato a questo utente.',
+	emailEnvoye: 'Email di modifica della password inviata.'
 }

@@ -26,3 +26,8 @@ Vue.prototype.$formaterDate = function (date, langue) {
 Vue.prototype.$formaterDateRelative = function (date, langue) {
 	return moment(date).locale(langue).fromNow()
 }
+
+Vue.prototype.$verifierEmail = function (email) {
+	const regexExp = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/gi
+	return regexExp.test(email)
+}

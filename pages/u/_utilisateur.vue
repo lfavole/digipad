@@ -34,10 +34,14 @@
 				</div>
 				<div class="conteneur">
 					<label for="nom">{{ $t('nom') }}</label>
-					<input id="nom" type="text" maxlength="48" :value="nom" @keydown.enter="modifierNom">
+					<input id="nom" type="text" maxlength="48" :value="nom" @keydown.enter="modifierInformations">
+				</div>
+				<div class="conteneur">
+					<label for="email">{{ $t('email') }}</label>
+					<input id="email" type="text" :value="email" @keydown.enter="modifierInformations">
 				</div>
 				<div class="conteneur conteneur-bouton">
-					<span role="button" tabindex="0" class="bouton-vert" @click="modifierNom">{{ $t('enregistrer') }}</span>
+					<span role="button" tabindex="0" class="bouton-vert" @click="modifierInformations">{{ $t('enregistrer') }}</span>
 				</div>
 				<div class="conteneur conteneur-bouton">
 					<span role="button" tabindex="0" class="bouton-bleu" @click="afficherModaleMotDePasse">{{ $t('modifierMotDePasse') }}</span>
@@ -483,6 +487,9 @@ export default {
 		},
 		nom () {
 			return this.$store.state.nom
+		},
+		email () {
+			return this.$store.state.email
 		},
 		langue () {
 			return this.$store.state.langue
@@ -989,22 +996,28 @@ export default {
 				}.bind(this))
 			}
 		},
-		modifierNom () {
-			const nom = document.querySelector('#nom').value
-			if (nom !== '' && nom !== this.nom) {
+		modifierInformations () {
+			const nom = document.querySelector('#nom').value.trim()
+			const email = document.querySelector('#email').value.trim()
+			if ((nom !== '' && nom !== this.nom) || (email !== '' && email !== this.email)) {
+				if (email !== '' && this.$verifierEmail(email) === false) {
+					this.$store.dispatch('modifierAlerte', this.$t('erreurEmail'))
+					return false
+				}
 				this.menu = false
 				this.chargement = true
-				axios.post(this.hote + '/api/modifier-nom', {
+				axios.post(this.hote + '/api/modifier-informations', {
 					identifiant: this.identifiant,
-					nom: nom
+					nom: nom,
+					email: email
 				}).then(function (reponse) {
 					this.chargement = false
 					const donnees = reponse.data
 					if (donnees === 'non_connecte') {
 						this.$router.push('/')
 					} else {
-						this.$store.dispatch('modifierNom', nom)
-						this.$store.dispatch('modifierMessage', this.$t('nomModifie'))
+						this.$store.dispatch('modifierInformations', { nom: nom, email: email })
+						this.$store.dispatch('modifierMessage', this.$t('informationsModifiees'))
 					}
 				}.bind(this)).catch(function () {
 					this.chargement = false

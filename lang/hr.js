@@ -61,6 +61,7 @@ export default {
 	padDuplique: 'Podloga je duplicirana.',
 	padImporte: 'Podloga je uvezena',
 	nomModifie: 'Ime promijenjeno',
+	informationsModifiees: 'Izmijenjene informacije.',
 	langueModifiee: 'Jezik promijenjen',
 	motDePasseModifie: 'Promijenjena lozinka',
 	motDePasseActuelPasCorrect: 'Trenutna lozinka nije točna.',
@@ -318,5 +319,10 @@ export default {
 	capsuleVisible: 'Objava vidljiva svim korisnicima.',
 	afficherCapsule: 'Prikažite objavu',
 	vues: 'posjeta',
-	vue: 'posjet'
+	vue: 'posjet',
+	erreurEmail: 'Adresa e-pošte nije valjana.',
+	email: 'Adresa e-pošte',
+	motDePasseOublie: 'Zaboravili ste lozinku?',
+	emailNonValide: 'Ova adresa e-pošte nije pridružena ovom identifikatoru.',
+	emailEnvoye: 'Poslana je poruka e-pošte za promjenu lozinke.'
 }

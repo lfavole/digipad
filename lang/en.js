@@ -61,6 +61,7 @@ export default {
 	padDuplique: 'Pad duplicated.',
 	padImporte: 'Pad imported.',
 	nomModifie: 'Name changed.',
+	informationsModifiees: 'Information changed.',
 	langueModifiee: 'Language changed.',
 	motDePasseModifie: 'Password changed.',
 	motDePasseActuelPasCorrect: 'The current password is not correct.',
@@ -318,5 +319,10 @@ export default {
 	capsuleVisible: 'Capsule visible for all users.',
 	afficherCapsule: 'Display the capsule',
 	vues: 'views',
-	vue: 'view'
+	vue: 'view',
+	erreurEmail: 'The email address is not valid.',
+	email: 'Email address',
+	motDePasseOublie: 'Forgot your password?',
+	emailNonValide: 'This email address is not associated with this username.',
+	emailEnvoye: 'Password change email sent.'
 }

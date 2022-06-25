@@ -16,6 +16,9 @@ export default function (context) {
 		if (context.req.session.hasOwnProperty('filtre')) {
 			donnees.filtre = context.req.session.filtre
 		}
+		if (context.req.session.hasOwnProperty('email')) {
+			donnees.email = context.req.session.email
+		}
 		context.store.dispatch('modifierUtilisateur', donnees)
 	}
 }

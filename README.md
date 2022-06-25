@@ -34,11 +34,15 @@ HOST (IP publique du serveur de production)
 DB_HOST (IP du serveur de base de données Redis)
 DB_PWD (mot de passe de la base de données Redis)
 SESSION_KEY (clé de session Express Session)
+SESSION_DURATION (durée de la session de connexion des utilisateurs en millisecondes)
 ETHERPAD (lien vers un serveur Etherpad pour les documents collaboratifs)
 ETHERPAD_API_KEY (clé API Etherpad)
 UPLOAD_LIMIT (limite de téléversement des fichiers en Mo)
 PAD_LIMIT (nombre maximum de pads par compte utilisateur)
 ADMIN_PASSWORD (mot de passe pour accéder à la page d'administration /admin)
+EMAIL_HOST (hôte pour l'envoi d'emails)
+EMAIL_ADDRESS (adresse pour l'envoi d'emails)
+EMAIL_PASSWORD (mot de passe de l'adresse emails)
 ```
 
 ### Projet Nuxt.js avec serveur Node.js (Express) et base de données Redis
