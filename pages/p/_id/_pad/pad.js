@@ -1,11 +1,11 @@
 import axios from 'axios'
 import imagesLoaded from 'imagesloaded'
-import draggable from 'vuedraggable'
 import pell from 'pell'
 import linkifyHtml from 'linkifyjs/html'
 import saveAs from 'file-saver'
 import Panzoom from '@panzoom/panzoom'
 import ClipboardJS from 'clipboard'
+import draggable from 'vuedraggable'
 import chargement from '@/components/chargement.vue'
 import emojis from '@/components/emojis.vue'
 
@@ -948,10 +948,38 @@ export default {
 				// eslint-disable-next-line
 				correctLevel : QRCode.CorrectLevel.H
 			})
+
 			setTimeout(function () {
 				this.$nuxt.$loading.finish()
 				document.getElementsByTagName('html')[0].setAttribute('lang', this.langue)
 			}.bind(this), 100)
+
+			document.querySelector('#pad').addEventListener('dragover', function (event) {
+				event.preventDefault()
+				event.stopPropagation()
+			}, false)
+
+			document.querySelector('#pad').addEventListener('dragcenter', function (event) {
+				event.preventDefault()
+				event.stopPropagation()
+			}, false)
+
+			document.querySelector('#pad').addEventListener('drop', function (event) {
+				event.preventDefault()
+				event.stopPropagation()
+				if (event.dataTransfer.files && event.dataTransfer.files[0]) {
+					let indexColonne = 0
+					if (this.pad.affichage === 'colonnes') {
+						this.pad.colonnes.forEach(function (colonne, index) {
+							if (document.querySelector('#colonne' + index).contains(event.target) === true) {
+								indexColonne = index
+							}
+						})
+					}
+					this.ouvrirModaleBloc('creation', '', indexColonne)
+					this.ajouterFichier(event.dataTransfer)
+				}
+			}.bind(this), false)
 		}.bind(this))
 	},
 	beforeDestroy () {
@@ -1315,8 +1343,7 @@ export default {
 		modifierCouleurCommentaireModifie (event) {
 			pell.exec('foreColor', event.target.value)
 		},
-		ajouterFichier () {
-			const champ = document.querySelector('#televerser-fichier')
+		ajouterFichier (champ) {
 			const formats = ['jpg', 'jpeg', 'png', 'gif', 'mp4', 'm4v', 'mp3', 'm4a', 'ogg', 'wav', 'pdf', 'ppt', 'pptx', 'odp', 'doc', 'docx', 'odt', 'ods', 'odg', 'xls', 'xlsx', 'flipchart', 'notebook', 'ubz', 'ipynb', 'dgs', 'dgc', 'dgb', 'sb3', 'epub', 'sprite3', 'pages', 'numbers', 'keynote']
 			const extension = champ.files[0].name.substring(champ.files[0].name.lastIndexOf('.') + 1).toLowerCase()
 			if (champ.files && champ.files[0] && formats.includes(extension) && champ.files[0].size < this.limite * 1024000) {
@@ -1351,9 +1378,9 @@ export default {
 							this.vignetteDefaut = vignette
 						}
 						if (this.mode === 'edition') {
-							this.fichiers.push(this.media)
-							if (this.vignette !== '' && this.vignette.substring(1, 9) === 'fichiers') {
-								this.vignettes.push(this.vignette)
+							this.fichiers.push(donnees.fichier)
+							if (vignette !== '' && vignette.substring(1, 9) === 'fichiers') {
+								this.vignettes.push(vignette)
 							}
 						}
 						switch (this.type) {
