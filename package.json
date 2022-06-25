@@ -1,6 +1,6 @@
 {
   "name": "digipad",
-  "version": "0.8.5",
+  "version": "0.9.0",
   "homepage": "https://digipad.app",
   "repository": {
     "type": "git",
@@ -44,6 +44,7 @@
     "moment": "^2.29.1",
     "multer": "^1.4.4",
     "node-cron": "^3.0.0",
+    "nodemailer": "^6.7.5",
     "nuxt": "^2.15.8",
     "nuxt-i18n": "^6.28.1",
     "pell": "^1.0.6",
