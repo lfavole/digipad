@@ -92,8 +92,11 @@ if (config.dev) {
 	nuxt.ready()
 }
 
-cron.schedule('59 23 * * Saturday', () => {
+cron.schedule('59 23 * * Saturday', () => { // tous les samedis à 23h59
 	fs.emptyDirSync(path.join(__dirname, '..', '/static/temp'))
+})
+
+cron.schedule('0 0 1,15 * *', () => { // tous les 1er et 15 du mois
 	exporterPadsJson()
 })
 
