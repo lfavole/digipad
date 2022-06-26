@@ -100,6 +100,10 @@ cron.schedule('0 0 1,15 * *', () => { // tous les 1er et 15 du mois
 	exporterPadsJson()
 })
 
+/* cron.schedule('0 0 5 * *', () => { // tous les 5 du mois
+	supprimerAnciensPads()
+}) */
+
 app.set('trust proxy', true)
 app.use(helmet({ frameguard: false }))
 app.use(bodyParser.json({ limit: '100mb' }))
@@ -345,7 +349,13 @@ app.post('/api/recuperer-donnees-utilisateur', function (req, res) {
 							if (resultat === 1) {
 								resolve()
 							} else {
-								resolve(parseInt(pad))
+								fs.exists(path.join(__dirname, '..', '/static/pads/pad-' + pad + '.json'), async function (existe) {
+									if (existe === true) {
+										resolve()
+									} else {
+										resolve(parseInt(pad))
+									}
+								})
 							}
 						})
 					})
@@ -499,6 +509,7 @@ app.post('/api/creer-pad', function (req, res) {
 					multi.hmset('pads:' + id, 'id', id, 'token', token, 'titre', titre, 'identifiant', identifiant, 'fond', '/img/fond1.png', 'acces', 'public', 'contributions', 'ouvertes', 'affichage', 'mur', 'registreActivite', 'active', 'conversation', 'desactivee', 'listeUtilisateurs', 'activee', 'editionNom', 'desactivee', 'fichiers', 'actives', 'liens', 'actives', 'documents', 'desactives', 'commentaires', 'desactives', 'evaluations', 'desactivees', 'ordre', 'croissant', 'date', date, 'colonnes', JSON.stringify([]), 'bloc', 0, 'activite', 0, 'admins', JSON.stringify([]))
 					multi.sadd('pads-crees:' + identifiant, id)
 					multi.sadd('utilisateurs-pads:' + id, identifiant)
+					multi.hset('dates-pads:' + id, 'date', date)
 					multi.hset('couleurs:' + identifiant, 'pad' + id, couleur)
 					multi.exec(function () {
 						const chemin = path.join(__dirname, '..', '/static/fichiers/' + id)
@@ -1156,6 +1167,7 @@ app.post('/api/supprimer-pad', function (req, res) {
 							multi.del('blocs:' + pad)
 							multi.del('pads:' + pad)
 							multi.del('activite:' + pad)
+							multi.del('dates-pads:' + pad)
 							multi.srem('pads-crees:' + identifiant, pad)
 							multi.smembers('utilisateurs-pads:' + pad, function (err, utilisateurs) {
 								if (err) { res.send('erreur_suppression'); return false }
@@ -1369,6 +1381,7 @@ app.post('/api/supprimer-compte', function (req, res) {
 								multi.del('blocs:' + pad)
 								multi.del('pads:' + pad)
 								multi.del('activite:' + pad)
+								multi.del('dates-pads:' + pad)
 								multi.smembers('utilisateurs-pads:' + pad, function (err, utilisateurs) {
 									if (err) { resolve() }
 									for (let j = 0; j < utilisateurs.length; j++) {
@@ -1966,6 +1979,7 @@ io.on('connection', function (socket) {
 					}
 					multi.hmset('pad-' + pad + ':' + bloc, 'id', id, 'bloc', bloc, 'titre', titre, 'texte', texte, 'media', media, 'iframe', iframe, 'type', type, 'source', source, 'vignette', vignette, 'date', date, 'identifiant', identifiant, 'commentaires', 0, 'evaluations', 0, 'colonne', colonne, 'visibilite', visibilite)
 					multi.zadd('blocs:' + pad, id, bloc)
+					multi.hset('dates-pads:' + pad, 'date', date)
 					if (visibilite === 'visible') {
 						// Enregistrer entrée du registre d'activité
 						multi.hincrby('pads:' + pad, 'activite', 1)
@@ -2011,6 +2025,7 @@ io.on('connection', function (socket) {
 										const activiteId = parseInt(donnees.activite) + 1
 										const multi = db.multi()
 										multi.hmset('pad-' + pad + ':' + bloc, 'titre', titre, 'texte', texte, 'media', media, 'iframe', iframe, 'type', type, 'source', source, 'vignette', vignette, 'visibilite', 'visible', 'modifie', date)
+										multi.hset('dates-pads:' + pad, 'date', date)
 										multi.hincrby('pads:' + pad, 'activite', 1)
 										multi.zadd('activite:' + pad, activiteId, JSON.stringify({ id: activiteId, bloc: bloc, identifiant: identifiant, titre: titre, date: date, couleur: couleur, type: 'bloc-modifie' }))
 										multi.exec(function () {
@@ -2021,6 +2036,7 @@ io.on('connection', function (socket) {
 									} else if (visibilite === 'privee' || visibilite === 'masquee') {
 										const multi = db.multi()
 										multi.hmset('pad-' + pad + ':' + bloc, 'titre', titre, 'texte', texte, 'media', media, 'iframe', iframe, 'type', type, 'source', source, 'vignette', vignette, 'visibilite', visibilite, 'modifie', date)
+										multi.hset('dates-pads:' + pad, 'date', date)
 										multi.exec(function () {
 											io.in('pad-' + pad).emit('modifierbloc', { bloc: bloc, titre: titre, texte: texte, media: media, iframe: iframe, type: type, source: source, vignette: vignette, identifiant: identifiant, nom: nom, modifie: date, couleur: couleur, colonne: colonne, visibilite: visibilite })
 											socket.handshake.session.cookie.expires = new Date(Date.now() + dureeSession)
@@ -2056,6 +2072,7 @@ io.on('connection', function (socket) {
 								multi.hdel('pad-' + pad + ':' + item.bloc, 'modifie')
 							}
 							multi.hmset('pad-' + pad + ':' + item.bloc, 'visibilite', 'visible', 'date', date)
+							multi.hset('dates-pads:' + pad, 'date', date)
 							// Enregistrer entrée du registre d'activité
 							multi.hincrby('pads:' + pad, 'activite', 1)
 							multi.zadd('activite:' + pad, activiteId, JSON.stringify({ id: activiteId, bloc: item.bloc, identifiant: item.identifiant, titre: item.titre, date: date, couleur: item.couleur, type: 'bloc-ajoute' }))
@@ -2164,6 +2181,7 @@ io.on('connection', function (socket) {
 									multi.zrem('blocs:' + pad, bloc)
 									multi.del('commentaires:' + bloc)
 									multi.del('evaluations:' + bloc)
+									multi.hset('dates-pads:' + pad, 'date', date)
 									// Enregistrer entrée du registre d'activité
 									multi.hincrby('pads:' + pad, 'activite', 1)
 									multi.zadd('activite:' + pad, activiteId, JSON.stringify({ id: activiteId, bloc: bloc, identifiant: identifiant, titre: titre, date: date, couleur: couleur, type: 'bloc-supprime' }))
@@ -2197,6 +2215,7 @@ io.on('connection', function (socket) {
 						const multi = db.multi()
 						const commentaire = { id: commentaireId, identifiant: identifiant, date: date, texte: texte }
 						multi.hincrby('pad-' + pad + ':' + bloc, 'commentaires', 1)
+						multi.hset('dates-pads:' + pad, 'date', date)
 						multi.zadd('commentaires:' + bloc, commentaireId, JSON.stringify(commentaire))
 						// Enregistrer entrée du registre d'activité
 						multi.hincrby('pads:' + pad, 'activite', 1)
@@ -2224,6 +2243,7 @@ io.on('connection', function (socket) {
 				const multi = db.multi()
 				multi.zremrangebyscore('commentaires:' + bloc, id, id)
 				multi.zadd('commentaires:' + bloc, id, JSON.stringify(commentaire))
+				multi.hset('dates-pads:' + pad, 'date', dateModification)
 				multi.exec(function () {
 					io.in('pad-' + pad).emit('modifiercommentaire', { id: id, texte: texte })
 					socket.handshake.session.cookie.expires = new Date(Date.now() + dureeSession)
@@ -2237,12 +2257,17 @@ io.on('connection', function (socket) {
 
 	socket.on('supprimercommentaire', function (bloc, pad, id, identifiant) {
 		if (identifiant !== '' && identifiant !== undefined && socket.handshake.session.identifiant === identifiant) {
-			db.zremrangebyscore('commentaires:' + bloc, id, id)
-			db.zcard('commentaires:' + bloc, function (err, commentaires) {
-				if (err) { socket.emit('erreur'); return false }
-				io.in('pad-' + pad).emit('supprimercommentaire', { id: id, bloc: bloc, commentaires: commentaires })
-				socket.handshake.session.cookie.expires = new Date(Date.now() + dureeSession)
-				socket.handshake.session.save()
+			const date = moment().format()
+			const multi = db.multi()
+			multi.zremrangebyscore('commentaires:' + bloc, id, id)
+			multi.hset('dates-pads:' + pad, 'date', date)
+			multi.exec(function () {
+				db.zcard('commentaires:' + bloc, function (err, commentaires) {
+					if (err) { socket.emit('erreur'); return false }
+					io.in('pad-' + pad).emit('supprimercommentaire', { id: id, bloc: bloc, commentaires: commentaires })
+					socket.handshake.session.cookie.expires = new Date(Date.now() + dureeSession)
+					socket.handshake.session.save()
+				})
 			})
 		} else {
 			socket.emit('deconnecte')
@@ -2303,6 +2328,7 @@ io.on('connection', function (socket) {
 					const multi = db.multi()
 					multi.hincrby('pad-' + pad + ':' + bloc, 'evaluations', 1)
 					multi.zadd('evaluations:' + bloc, evaluationId, JSON.stringify(evaluation))
+					multi.hset('dates-pads:' + pad, 'date', date)
 					// Enregistrer entrée du registre d'activité
 					multi.hincrby('pads:' + pad, 'activite', 1)
 					multi.zadd('activite:' + pad, activiteId, JSON.stringify({ id: activiteId, bloc: bloc, identifiant: identifiant, titre: titre, date: date, couleur: couleur, type: 'bloc-evalue' }))
@@ -2327,6 +2353,7 @@ io.on('connection', function (socket) {
 				const multi = db.multi()
 				multi.zremrangebyscore('evaluations:' + bloc, id, id)
 				multi.zadd('evaluations:' + bloc, id, JSON.stringify(evaluation))
+				multi.hset('dates-pads:' + pad, 'date', date)
 				multi.exec(function () {
 					io.in('pad-' + pad).emit('modifierevaluation', { id: id, bloc: bloc, date: date, etoiles: etoiles })
 					socket.handshake.session.cookie.expires = new Date(Date.now() + dureeSession)
@@ -2340,8 +2367,11 @@ io.on('connection', function (socket) {
 
 	socket.on('supprimerevaluation', function (bloc, pad, id, identifiant) {
 		if (identifiant !== '' && identifiant !== undefined && socket.handshake.session.identifiant === identifiant) {
-			db.zremrangebyscore('evaluations:' + bloc, id, id, function (err) {
-				if (err) { socket.emit('erreur'); return false }
+			const date = moment().format()
+			const multi = db.multi()
+			multi.hset('dates-pads:' + pad, 'date', date)
+			multi.zremrangebyscore('evaluations:' + bloc, id, id)
+			multi.exec(function () {
 				io.in('pad-' + pad).emit('supprimerevaluation', { id: id, bloc: bloc })
 				socket.handshake.session.cookie.expires = new Date(Date.now() + dureeSession)
 				socket.handshake.session.save()
@@ -3302,7 +3332,7 @@ function exporterPadsJson () {
 				const chemin = path.join(__dirname, '..', '/static/pads')
 				db.hgetall('pads:' + id, function (err, donnees) {
 					fs.exists(path.normalize(chemin + '/' + id + '.json'), function (existe) {
-						if (existe === false && donnees.hasOwnProperty('date') && moment(donnees.date).isBefore(moment().subtract(15, 'days'))) {
+						if (existe === false && ((donnees.hasOwnProperty('modifie') && moment(donnees.modifie).isBefore(moment().subtract(15, 'days'))) || (donnees.hasOwnProperty('date') && moment(donnees.date).isBefore(moment().subtract(15, 'days'))))) {
 							const donneesPad = new Promise(function (resolveMain) {
 								db.hgetall('pads:' + id, function (err, resultats) {
 									if (err) { resolveMain({}) }
