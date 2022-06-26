@@ -94,9 +94,6 @@ if (config.dev) {
 
 cron.schedule('59 23 * * Saturday', () => {
 	fs.emptyDirSync(path.join(__dirname, '..', '/static/temp'))
-})
-
-cron.schedule('0 0 1 * *', () => {
 	exporterPadsJson()
 })
 
