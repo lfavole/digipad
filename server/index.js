@@ -400,97 +400,100 @@ app.post('/api/recuperer-donnees-pad', function (req, res) {
 	const statut = req.body.statut
 	db.exists('pads:' + id, function (err, resultat) {
 		if (err) { res.send('erreur_pad'); return false }
-		if (resultat === 1) {
-			recupererDonneesPad(id, token, identifiant, statut, res)
-		} else {
-			fs.exists(path.join(__dirname, '..', '/static/pads/' + id + '.json'), async function (existe) {
-				if (existe === true) {
-					const donnees = await fs.readJson(path.join(__dirname, '..', '/static/pads/' + id + '.json'))
-					const donneesBlocs = []
-					for (const [indexBloc, bloc] of donnees.blocs.entries()) {
-						const donneesBloc = new Promise(function (resolve) {
-							if (bloc.hasOwnProperty('id') && bloc.hasOwnProperty('bloc') && bloc.hasOwnProperty('titre') && bloc.hasOwnProperty('texte') && bloc.hasOwnProperty('media') && bloc.hasOwnProperty('iframe') && bloc.hasOwnProperty('type') && bloc.hasOwnProperty('source') && bloc.hasOwnProperty('vignette') && bloc.hasOwnProperty('identifiant') && bloc.hasOwnProperty('commentaires') && bloc.hasOwnProperty('evaluations') && bloc.hasOwnProperty('colonne') && bloc.hasOwnProperty('listeCommentaires') && bloc.hasOwnProperty('listeEvaluations')) {
-								let visibilite = 'visible'
-								if (bloc.hasOwnProperty('visibilite')) {
-									visibilite = bloc.visibilite
-								}
-								const multi = db.multi()
-								multi.hmset('pad-' + id + ':' + bloc.bloc, 'id', bloc.id, 'bloc', bloc.bloc, 'titre', bloc.titre, 'texte', bloc.texte, 'media', bloc.media, 'iframe', bloc.iframe, 'type', bloc.type, 'source', bloc.source, 'vignette', bloc.vignette, 'date', bloc.date, 'identifiant', bloc.identifiant, 'commentaires', bloc.commentaires, 'evaluations', bloc.evaluations, 'colonne', bloc.colonne, 'visibilite', visibilite)
-								multi.zadd('blocs:' + id, indexBloc, bloc.bloc)
-								for (const commentaire of bloc.listeCommentaires) {
-									if (commentaire.hasOwnProperty('id') && commentaire.hasOwnProperty('identifiant') && commentaire.hasOwnProperty('date') && commentaire.hasOwnProperty('texte')) {
-										multi.zadd('commentaires:' + bloc.bloc, commentaire.id, JSON.stringify(commentaire))
+		db.hgetall('pads:' + id, function (err, pad) {
+			if (err) { res.send('erreur_pad'); return false }
+			if (resultat === 1 && pad !== null) {
+				recupererDonneesPad(id, token, identifiant, statut, res)
+			} else {
+				fs.exists(path.join(__dirname, '..', '/static/pads/' + id + '.json'), async function (existe) {
+					if (existe === true) {
+						const donnees = await fs.readJson(path.join(__dirname, '..', '/static/pads/' + id + '.json'))
+						const donneesBlocs = []
+						for (const [indexBloc, bloc] of donnees.blocs.entries()) {
+							const donneesBloc = new Promise(function (resolve) {
+								if (bloc.hasOwnProperty('id') && bloc.hasOwnProperty('bloc') && bloc.hasOwnProperty('titre') && bloc.hasOwnProperty('texte') && bloc.hasOwnProperty('media') && bloc.hasOwnProperty('iframe') && bloc.hasOwnProperty('type') && bloc.hasOwnProperty('source') && bloc.hasOwnProperty('vignette') && bloc.hasOwnProperty('identifiant') && bloc.hasOwnProperty('commentaires') && bloc.hasOwnProperty('evaluations') && bloc.hasOwnProperty('colonne') && bloc.hasOwnProperty('listeCommentaires') && bloc.hasOwnProperty('listeEvaluations')) {
+									let visibilite = 'visible'
+									if (bloc.hasOwnProperty('visibilite')) {
+										visibilite = bloc.visibilite
 									}
-								}
-								for (const evaluation of bloc.listeEvaluations) {
-									if (evaluation.hasOwnProperty('id') && evaluation.hasOwnProperty('identifiant') && evaluation.hasOwnProperty('date') && evaluation.hasOwnProperty('etoiles')) {
-										multi.zadd('evaluations:' + bloc.bloc, evaluation.id, JSON.stringify(evaluation))
+									const multi = db.multi()
+									multi.hmset('pad-' + id + ':' + bloc.bloc, 'id', bloc.id, 'bloc', bloc.bloc, 'titre', bloc.titre, 'texte', bloc.texte, 'media', bloc.media, 'iframe', bloc.iframe, 'type', bloc.type, 'source', bloc.source, 'vignette', bloc.vignette, 'date', bloc.date, 'identifiant', bloc.identifiant, 'commentaires', bloc.commentaires, 'evaluations', bloc.evaluations, 'colonne', bloc.colonne, 'visibilite', visibilite)
+									multi.zadd('blocs:' + id, indexBloc, bloc.bloc)
+									for (const commentaire of bloc.listeCommentaires) {
+										if (commentaire.hasOwnProperty('id') && commentaire.hasOwnProperty('identifiant') && commentaire.hasOwnProperty('date') && commentaire.hasOwnProperty('texte')) {
+											multi.zadd('commentaires:' + bloc.bloc, commentaire.id, JSON.stringify(commentaire))
+										}
 									}
-								}
-								multi.exec(function () {
+									for (const evaluation of bloc.listeEvaluations) {
+										if (evaluation.hasOwnProperty('id') && evaluation.hasOwnProperty('identifiant') && evaluation.hasOwnProperty('date') && evaluation.hasOwnProperty('etoiles')) {
+											multi.zadd('evaluations:' + bloc.bloc, evaluation.id, JSON.stringify(evaluation))
+										}
+									}
+									multi.exec(function () {
+										resolve()
+									})
+								} else {
 									resolve()
-								})
+								}
+							})
+							donneesBlocs.push(donneesBloc)
+						}
+						Promise.all(donneesBlocs).then(function () {
+							let registreActivite = 'active'
+							let conversation = 'desactivee'
+							let listeUtilisateurs = 'activee'
+							let editionNom = 'desactivee'
+							let ordre = 'croissant'
+							let admins = []
+							let vues = 0
+							if (donnees.pad.hasOwnProperty('registreActivite')) {
+								registreActivite = donnees.pad.registreActivite
+							}
+							if (donnees.pad.hasOwnProperty('conversation')) {
+								conversation = donnees.pad.conversation
+							}
+							if (donnees.pad.hasOwnProperty('listeUtilisateurs')) {
+								listeUtilisateurs = donnees.pad.listeUtilisateurs
+							}
+							if (donnees.pad.hasOwnProperty('editionNom')) {
+								editionNom = donnees.pad.editionNom
+							}
+							if (donnees.pad.hasOwnProperty('ordre')) {
+								ordre = donnees.pad.ordre
+							}
+							if (donnees.pad.hasOwnProperty('admins')) {
+								admins = donnees.pad.admins
+							}
+							if (donnees.pad.hasOwnProperty('vues')) {
+								vues = donnees.pad.vues
+							}
+							const multi = db.multi()
+							if (donnees.pad.hasOwnProperty('motdepasse') && donnees.pad.hasOwnProperty('code')) {
+								multi.hmset('pads:' + id, 'id', id, 'token', donnees.pad.token, 'titre', donnees.pad.titre, 'identifiant', donnees.pad.identifiant, 'fond', donnees.pad.fond, 'acces', donnees.pad.acces, 'motdepasse', donnees.pad.motdepasse, 'code', donnees.pad.code, 'contributions', donnees.pad.contributions, 'affichage', donnees.pad.affichage, 'registreActivite', registreActivite, 'conversation', conversation, 'listeUtilisateurs', listeUtilisateurs, 'editionNom', editionNom, 'fichiers', donnees.pad.fichiers, 'liens', donnees.pad.liens, 'documents', donnees.pad.documents, 'commentaires', donnees.pad.commentaires, 'evaluations', donnees.pad.evaluations, 'ordre', ordre, 'date', donnees.pad.date, 'colonnes', donnees.pad.colonnes, 'bloc', donnees.pad.bloc, 'activite', donnees.pad.activite, 'admins', admins, 'vues', vues)
+							} else if (donnees.pad.hasOwnProperty('motdepasse') && !donnees.pad.hasOwnProperty('code')) {
+								multi.hmset('pads:' + id, 'id', id, 'token', donnees.pad.token, 'titre', donnees.pad.titre, 'identifiant', donnees.pad.identifiant, 'fond', donnees.pad.fond, 'acces', donnees.pad.acces, 'motdepasse', donnees.pad.motdepasse, 'contributions', donnees.pad.contributions, 'affichage', donnees.pad.affichage, 'registreActivite', registreActivite, 'conversation', conversation, 'listeUtilisateurs', listeUtilisateurs, 'editionNom', editionNom, 'fichiers', donnees.pad.fichiers, 'liens', donnees.pad.liens, 'documents', donnees.pad.documents, 'commentaires', donnees.pad.commentaires, 'evaluations', donnees.pad.evaluations, 'ordre', ordre, 'date', donnees.pad.date, 'colonnes', donnees.pad.colonnes, 'bloc', donnees.pad.bloc, 'activite', donnees.pad.activite, 'admins', admins, 'vues', vues)
+							} else if (donnees.pad.hasOwnProperty('code')) {
+								multi.hmset('pads:' + id, 'id', id, 'token', donnees.pad.token, 'titre', donnees.pad.titre, 'identifiant', donnees.pad.identifiant, 'fond', donnees.pad.fond, 'acces', donnees.pad.acces, 'code', donnees.pad.code, 'contributions', donnees.pad.contributions, 'affichage', donnees.pad.affichage, 'registreActivite', registreActivite, 'conversation', conversation, 'listeUtilisateurs', listeUtilisateurs, 'editionNom', editionNom, 'fichiers', donnees.pad.fichiers, 'liens', donnees.pad.liens, 'documents', donnees.pad.documents, 'commentaires', donnees.pad.commentaires, 'evaluations', donnees.pad.evaluations, 'ordre', ordre, 'date', donnees.pad.date, 'colonnes', donnees.pad.colonnes, 'bloc', donnees.pad.bloc, 'activite', donnees.pad.activite, 'admins', admins, 'vues', vues)
 							} else {
-								resolve()
+								multi.hmset('pads:' + id, 'id', id, 'token', donnees.pad.token, 'titre', donnees.pad.titre, 'identifiant', donnees.pad.identifiant, 'fond', donnees.pad.fond, 'acces', donnees.pad.acces, 'contributions', donnees.pad.contributions, 'affichage', donnees.pad.affichage, 'registreActivite', registreActivite, 'conversation', conversation, 'listeUtilisateurs', listeUtilisateurs, 'editionNom', editionNom, 'fichiers', donnees.pad.fichiers, 'liens', donnees.pad.liens, 'documents', donnees.pad.documents, 'commentaires', donnees.pad.commentaires, 'evaluations', donnees.pad.evaluations, 'ordre', ordre, 'date', donnees.pad.date, 'colonnes', donnees.pad.colonnes, 'bloc', donnees.pad.bloc, 'activite', donnees.pad.activite, 'admins', admins, 'vues', vues)
 							}
-						})
-						donneesBlocs.push(donneesBloc)
-					}
-					Promise.all(donneesBlocs).then(function () {
-						let registreActivite = 'active'
-						let conversation = 'desactivee'
-						let listeUtilisateurs = 'activee'
-						let editionNom = 'desactivee'
-						let ordre = 'croissant'
-						let admins = []
-						let vues = 0
-						if (donnees.pad.hasOwnProperty('registreActivite')) {
-							registreActivite = donnees.pad.registreActivite
-						}
-						if (donnees.pad.hasOwnProperty('conversation')) {
-							conversation = donnees.pad.conversation
-						}
-						if (donnees.pad.hasOwnProperty('listeUtilisateurs')) {
-							listeUtilisateurs = donnees.pad.listeUtilisateurs
-						}
-						if (donnees.pad.hasOwnProperty('editionNom')) {
-							editionNom = donnees.pad.editionNom
-						}
-						if (donnees.pad.hasOwnProperty('ordre')) {
-							ordre = donnees.pad.ordre
-						}
-						if (donnees.pad.hasOwnProperty('admins')) {
-							admins = donnees.pad.admins
-						}
-						if (donnees.pad.hasOwnProperty('vues')) {
-							vues = donnees.pad.vues
-						}
-						const multi = db.multi()
-						if (donnees.pad.hasOwnProperty('motdepasse') && donnees.pad.hasOwnProperty('code')) {
-							multi.hmset('pads:' + id, 'id', id, 'token', donnees.pad.token, 'titre', donnees.pad.titre, 'identifiant', donnees.pad.identifiant, 'fond', donnees.pad.fond, 'acces', donnees.pad.acces, 'motdepasse', donnees.pad.motdepasse, 'code', donnees.pad.code, 'contributions', donnees.pad.contributions, 'affichage', donnees.pad.affichage, 'registreActivite', registreActivite, 'conversation', conversation, 'listeUtilisateurs', listeUtilisateurs, 'editionNom', editionNom, 'fichiers', donnees.pad.fichiers, 'liens', donnees.pad.liens, 'documents', donnees.pad.documents, 'commentaires', donnees.pad.commentaires, 'evaluations', donnees.pad.evaluations, 'ordre', ordre, 'date', donnees.pad.date, 'colonnes', donnees.pad.colonnes, 'bloc', donnees.pad.bloc, 'activite', donnees.pad.activite, 'admins', admins, 'vues', vues)
-						} else if (donnees.pad.hasOwnProperty('motdepasse') && !donnees.pad.hasOwnProperty('code')) {
-							multi.hmset('pads:' + id, 'id', id, 'token', donnees.pad.token, 'titre', donnees.pad.titre, 'identifiant', donnees.pad.identifiant, 'fond', donnees.pad.fond, 'acces', donnees.pad.acces, 'motdepasse', donnees.pad.motdepasse, 'contributions', donnees.pad.contributions, 'affichage', donnees.pad.affichage, 'registreActivite', registreActivite, 'conversation', conversation, 'listeUtilisateurs', listeUtilisateurs, 'editionNom', editionNom, 'fichiers', donnees.pad.fichiers, 'liens', donnees.pad.liens, 'documents', donnees.pad.documents, 'commentaires', donnees.pad.commentaires, 'evaluations', donnees.pad.evaluations, 'ordre', ordre, 'date', donnees.pad.date, 'colonnes', donnees.pad.colonnes, 'bloc', donnees.pad.bloc, 'activite', donnees.pad.activite, 'admins', admins, 'vues', vues)
-						} else if (donnees.pad.hasOwnProperty('code')) {
-							multi.hmset('pads:' + id, 'id', id, 'token', donnees.pad.token, 'titre', donnees.pad.titre, 'identifiant', donnees.pad.identifiant, 'fond', donnees.pad.fond, 'acces', donnees.pad.acces, 'code', donnees.pad.code, 'contributions', donnees.pad.contributions, 'affichage', donnees.pad.affichage, 'registreActivite', registreActivite, 'conversation', conversation, 'listeUtilisateurs', listeUtilisateurs, 'editionNom', editionNom, 'fichiers', donnees.pad.fichiers, 'liens', donnees.pad.liens, 'documents', donnees.pad.documents, 'commentaires', donnees.pad.commentaires, 'evaluations', donnees.pad.evaluations, 'ordre', ordre, 'date', donnees.pad.date, 'colonnes', donnees.pad.colonnes, 'bloc', donnees.pad.bloc, 'activite', donnees.pad.activite, 'admins', admins, 'vues', vues)
-						} else {
-							multi.hmset('pads:' + id, 'id', id, 'token', donnees.pad.token, 'titre', donnees.pad.titre, 'identifiant', donnees.pad.identifiant, 'fond', donnees.pad.fond, 'acces', donnees.pad.acces, 'contributions', donnees.pad.contributions, 'affichage', donnees.pad.affichage, 'registreActivite', registreActivite, 'conversation', conversation, 'listeUtilisateurs', listeUtilisateurs, 'editionNom', editionNom, 'fichiers', donnees.pad.fichiers, 'liens', donnees.pad.liens, 'documents', donnees.pad.documents, 'commentaires', donnees.pad.commentaires, 'evaluations', donnees.pad.evaluations, 'ordre', ordre, 'date', donnees.pad.date, 'colonnes', donnees.pad.colonnes, 'bloc', donnees.pad.bloc, 'activite', donnees.pad.activite, 'admins', admins, 'vues', vues)
-						}
-						for (const activite of donnees.activite) {
-							if (activite.hasOwnProperty('bloc') && activite.hasOwnProperty('identifiant') && activite.hasOwnProperty('titre') && activite.hasOwnProperty('date') && activite.hasOwnProperty('couleur') && activite.hasOwnProperty('type') && activite.hasOwnProperty('id')) {
-								multi.zadd('activite:' + id, activite.id, JSON.stringify(activite))
+							for (const activite of donnees.activite) {
+								if (activite.hasOwnProperty('bloc') && activite.hasOwnProperty('identifiant') && activite.hasOwnProperty('titre') && activite.hasOwnProperty('date') && activite.hasOwnProperty('couleur') && activite.hasOwnProperty('type') && activite.hasOwnProperty('id')) {
+									multi.zadd('activite:' + id, activite.id, JSON.stringify(activite))
+								}
 							}
-						}
-						multi.exec(function () {
-							fs.remove(path.join(__dirname, '..', '/static/pads/' + id + '.json'), function () {
-								recupererDonneesPad(id, token, identifiant, statut, res)
+							multi.exec(function () {
+								fs.remove(path.join(__dirname, '..', '/static/pads/' + id + '.json'), function () {
+									recupererDonneesPad(id, token, identifiant, statut, res)
+								})
 							})
 						})
-					})
-				} else {
-					res.send('erreur_pad')
-				}
-			})
-		}
+					} else {
+						res.send('erreur_pad')
+					}
+				})
+			}
+		})
 	})
 })
 
@@ -3439,7 +3442,7 @@ function exporterPadsJson () {
 function recupererDonneesPad (id, token, identifiant, statut, res) {
 	db.hgetall('pads:' + id, function (err, pad) {
 		if (err) { res.send('erreur_pad'); return false }
-		if (pad.id === id && pad.token === token) {
+		if (pad.hasOwnProperty('id') && pad.id === id && pad.hasOwnProperty('token') && pad.token === token) {
 			let nombreColonnes = 0
 			if (pad.hasOwnProperty('colonnes')) {
 				nombreColonnes = JSON.parse(pad.colonnes).length
