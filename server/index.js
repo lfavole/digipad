@@ -3442,7 +3442,7 @@ function exporterPadsJson () {
 function recupererDonneesPad (id, token, identifiant, statut, res) {
 	db.hgetall('pads:' + id, function (err, pad) {
 		if (err) { res.send('erreur_pad'); return false }
-		if (pad.hasOwnProperty('id') && pad.id === id && pad.hasOwnProperty('token') && pad.token === token) {
+		if (pad !== null && pad.hasOwnProperty('id') && pad.id === id && pad.hasOwnProperty('token') && pad.token === token) {
 			let nombreColonnes = 0
 			if (pad.hasOwnProperty('colonnes')) {
 				nombreColonnes = JSON.parse(pad.colonnes).length
