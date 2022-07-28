@@ -548,13 +548,14 @@ export default {
     left: 0;
     right: 0;
     bottom: 0;
-	z-index: 100000;
+	z-index: -1;
 }
 
 #hub.ouvert {
 	visibility: visible;
 	opacity: 1;
     animation: fonduEntrant linear 0.1s;
+	z-index: 100000;
 }
 
 #hub iframe {
