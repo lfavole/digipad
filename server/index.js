@@ -442,7 +442,7 @@ app.post('/api/recuperer-donnees-pad', function (req, res) {
 						let listeUtilisateurs = 'activee'
 						let editionNom = 'desactivee'
 						let ordre = 'croissant'
-						let admins = JSON.stringify([])
+						let admins = []
 						let vues = 0
 						if (donnees.pad.hasOwnProperty('registreActivite')) {
 							registreActivite = donnees.pad.registreActivite
@@ -460,7 +460,7 @@ app.post('/api/recuperer-donnees-pad', function (req, res) {
 							ordre = donnees.pad.ordre
 						}
 						if (donnees.pad.hasOwnProperty('admins')) {
-							admins = JSON.stringify(donnees.pad.admins)
+							admins = donnees.pad.admins
 						}
 						if (donnees.pad.hasOwnProperty('vues')) {
 							vues = donnees.pad.vues
@@ -2439,7 +2439,9 @@ io.on('connection', function (socket) {
 			db.hgetall('pads:' + pad, function (err, donnees) {
 				if (err) { socket.emit('erreur'); return false }
 				let listeAdmins = []
-				if (donnees.hasOwnProperty('admins')) {
+				if (donnees.hasOwnProperty('admins') && donnees.admins.substring(0, 1) === '"') {
+					listeAdmins = JSON.parse(JSON.parse(donnees.admins))
+				} else if (donnees.hasOwnProperty('admins')) {
 					listeAdmins = JSON.parse(donnees.admins)
 				}
 				const multi = db.multi()
@@ -3457,7 +3459,9 @@ function recupererDonneesPad (id, token, identifiant, statut, res) {
 			// Pour homogénéité des paramètres de pad avec coadministration
 			if (!pad.hasOwnProperty('admins')) {
 				pad.admins = []
-			} else {
+			} else if (pad.hasOwnProperty('admins') && pad.admins.substring(0, 1) === '"') {
+				pad.admins = JSON.parse(JSON.parse(pad.admins))
+			} else if (pad.hasOwnProperty('admins')) {
 				pad.admins = JSON.parse(pad.admins)
 			}
 			const blocsPad = new Promise(function (resolveMain) {
