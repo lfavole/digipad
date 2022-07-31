@@ -461,7 +461,7 @@ app.post('/api/recuperer-donnees-pad', function (req, res) {
 							if (donnees.pad.hasOwnProperty('ordre')) {
 								ordre = donnees.pad.ordre
 							}
-							if (donnees.pad.hasOwnProperty('admins')) {
+							if (donnees.pad.hasOwnProperty('admins') && donnees.pad.admins.substring(0, 2) !== '"\\') { // fix bug update 0.9.0
 								admins = donnees.pad.admins
 							}
 							if (donnees.pad.hasOwnProperty('vues')) {
@@ -3460,7 +3460,7 @@ function recupererDonneesPad (id, token, identifiant, statut, res) {
 				pad.ordre = 'croissant'
 			}
 			// Pour homogénéité des paramètres de pad avec coadministration
-			if (!pad.hasOwnProperty('admins')) {
+			if (!pad.hasOwnProperty('admins') || (pad.hasOwnProperty('admins') && pad.admins.substring(0, 2) === '"\\')) { // fix bug update 0.9.0
 				pad.admins = []
 			} else if (pad.hasOwnProperty('admins') && pad.admins.substring(0, 1) === '"') { // fix bug update 0.9.0
 				pad.admins = JSON.parse(JSON.parse(pad.admins))
