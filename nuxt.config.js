@@ -12,7 +12,13 @@ module.exports = {
 			{ name: 'apple-mobile-web-app-capable', content: 'yes' },
 			{ name: 'mobile-web-app-capable', content: 'yes' },
 			{ name: 'HandheldFriendly', content: 'true' },
-			{ hid: 'description', name: 'description', content: 'une application collaborative proposée par La Digitale' }
+			{ name: 'description', content: 'Une application collaborative proposée par La Digitale' },
+			{ property: 'og:title', content: 'Digipad by La Digitale' },
+			{ property: 'og:description', content: 'Une application collaborative proposée par La Digitale' },
+			{ property: 'og:type', content: 'website' },
+			{ property: 'og:url', content: 'https://digipad.app/' },
+			{ property: 'og:image', content: 'https://digipad.app/img/digipad.img' },
+			{ property: 'og:locale', content: 'fr_FR' }
 		],
 		noscript: [
 			{ innerHTML: 'Vous devez activer Javascript sur votre navigateur pour utiliser cette application...' }
