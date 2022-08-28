@@ -4,7 +4,7 @@
   "homepage": "https://digipad.app",
   "repository": {
     "type": "git",
-    "url": "https://gitlab.com/ladigitale/digipad.git"
+    "url": "https://codeberg.org/ladigitale/digipad.git"
   },
   "author": {
     "name": "Emmanuel ZIMMERT",
