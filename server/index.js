@@ -14,7 +14,7 @@ const session = require('express-session')
 const RedisStore = require('connect-redis')(session)
 let db
 if (process.env.NODE_ENV === 'production') {
-	db = redis.createClient({ host: process.env.DB_HOST, port: '6379', password: process.env.DB_PWD })
+	db = redis.createClient({ host: process.env.DB_HOST, port: process.env.DB_PORT, password: process.env.DB_PWD })
 } else {
 	db = redis.createClient()
 }
@@ -34,7 +34,7 @@ let storeOptions, cookie, dureeSession
 if (process.env.NODE_ENV === 'production') {
 	storeOptions = {
 		host: process.env.DB_HOST,
-		port: '6379',
+		port: process.env.DB_PORT,
 		pass: process.env.DB_PWD,
 		client: db,
 		prefix: 'sessions:'
