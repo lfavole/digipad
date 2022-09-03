@@ -377,7 +377,7 @@
 		</div>
 	</div>
 
-	<div id="pad" :class="{'fond-personnalise': pad.fond.substring(1, 9) === 'fichiers', 'organiser': action === 'organiser'}" :style="definirFond(pad.fond)" v-if="pad.acces !== 'code' || (pad.acces === 'code' && accesAutorise)">
+	<div id="pad" :class="{'fond-personnalise': pad.fond.substring(1, definirDossierFichiers(pad.id).length + 1) === definirDossierFichiers(pad.id), 'organiser': action === 'organiser'}" :style="definirFond(pad.fond)" v-if="pad.acces !== 'code' || (pad.acces === 'code' && accesAutorise)">
 		<!-- Affichage mur // sans recherche -->
 		<transition name="fondu">
 			<masonry id="blocs" class="mur" :cols="{default: 6, 1729: 5, 1449: 4, 1365: 3, 899: 2, 499: 1}" :gutter="0" v-if="pad.affichage === 'mur' && action !== 'organiser' && !recherche">
@@ -388,11 +388,11 @@
 						</div>
 						<div class="texte" v-if="item.texte !== ''" v-html="item.texte" />
 						<div class="media" v-if="item.media !== ''">
-							<img v-if="item.type === 'image'" :src="'/fichiers/' + pad.id + '/' + item.media" @click="afficherVisionneuse(item)">
+							<img v-if="item.type === 'image'" :src="'/' + definirDossierFichiers(pad.id) + '/' + pad.id + '/' + item.media" @click="afficherVisionneuse(item)">
 							<img v-else-if="item.type === 'lien-image'" :src="item.media" @click="afficherVisionneuse(item)">
 							<span v-else-if="item.type === 'audio' || item.type === 'video' || item.type === 'document' || item.type === 'pdf' || item.type === 'office' || item.type === 'embed'" @click="afficherVisionneuse(item)"><img :class="{'vignette': definirVignette(item).substring(0, 3) !== 'img'}" :src="definirVignette(item)"></span>
 							<span v-else-if="item.type === 'lien'"><a :href="item.media" target="_blank"><img :class="{'vignette': definirVignette(item).substring(0, 3) !== 'img'}" :src="definirVignette(item)"></a></span>
-							<span v-else><a :href="'/fichiers/' + pad.id + '/' + item.media" download><img :class="{'vignette': definirVignette(item).substring(0, 3) !== 'img'}" :src="definirVignette(item)"></a></span>
+							<span v-else><a :href="'/' + definirDossierFichiers(pad.id) + '/' + pad.id + '/' + item.media" download><img :class="{'vignette': definirVignette(item).substring(0, 3) !== 'img'}" :src="definirVignette(item)"></a></span>
 						</div>
 						<div class="evaluation" v-if="pad.evaluations === 'activees'">
 							<span class="etoiles">
@@ -431,11 +431,11 @@
 						</div>
 						<div class="texte" v-if="item.texte !== ''" v-html="item.texte" />
 						<div class="media" v-if="item.media !== ''">
-							<img v-if="item.type === 'image'" :src="'/fichiers/' + pad.id + '/' + item.media" @click="afficherVisionneuse(item)">
+							<img v-if="item.type === 'image'" :src="'/' + definirDossierFichiers(pad.id) + '/' + pad.id + '/' + item.media" @click="afficherVisionneuse(item)">
 							<img v-else-if="item.type === 'lien-image'" :src="item.media" @click="afficherVisionneuse(item)">
 							<span v-else-if="item.type === 'audio' || item.type === 'video' || item.type === 'document' || item.type === 'pdf' || item.type === 'office' || item.type === 'embed'" @click="afficherVisionneuse(item)"><img :class="{'vignette': definirVignette(item).substring(0, 3) !== 'img'}" :src="definirVignette(item)"></span>
 							<span v-else-if="item.type === 'lien'"><a :href="item.media" target="_blank"><img :class="{'vignette': definirVignette(item).substring(0, 3) !== 'img'}" :src="definirVignette(item)"></a></span>
-							<span v-else><a :href="'/fichiers/' + pad.id + '/' + item.media" download><img :class="{'vignette': definirVignette(item).substring(0, 3) !== 'img'}" :src="definirVignette(item)"></a></span>
+							<span v-else><a :href="'/' + definirDossierFichiers(pad.id) + '/' + pad.id + '/' + item.media" download><img :class="{'vignette': definirVignette(item).substring(0, 3) !== 'img'}" :src="definirVignette(item)"></a></span>
 						</div>
 						<div class="evaluation" v-if="pad.evaluations === 'activees'">
 							<span class="etoiles">
@@ -474,11 +474,11 @@
 						</div>
 						<div class="texte" v-if="item.texte !== ''" v-html="item.texte" />
 						<div class="media" v-if="item.media !== ''">
-							<img v-if="item.type === 'image'" :src="'/fichiers/' + pad.id + '/' + item.media" @click="afficherVisionneuse(item)">
+							<img v-if="item.type === 'image'" :src="'/' + definirDossierFichiers(pad.id) + '/' + pad.id + '/' + item.media" @click="afficherVisionneuse(item)">
 							<img v-else-if="item.type === 'lien-image'" :src="item.media" @click="afficherVisionneuse(item)">
 							<span v-else-if="item.type === 'audio' || item.type === 'video' || item.type === 'document' || item.type === 'pdf' || item.type === 'office' || item.type === 'embed'" @click="afficherVisionneuse(item)"><img :class="{'vignette': definirVignette(item).substring(0, 3) !== 'img'}" :src="definirVignette(item)"></span>
 							<span v-else-if="item.type === 'lien'"><a :href="item.media" target="_blank"><img :class="{'vignette': definirVignette(item).substring(0, 3) !== 'img'}" :src="definirVignette(item)"></a></span>
-							<span v-else><a :href="'/fichiers/' + pad.id + '/' + item.media" download><img :class="{'vignette': definirVignette(item).substring(0, 3) !== 'img'}" :src="definirVignette(item)"></a></span>
+							<span v-else><a :href="'/' + definirDossierFichiers(pad.id) + '/' + pad.id + '/' + item.media" download><img :class="{'vignette': definirVignette(item).substring(0, 3) !== 'img'}" :src="definirVignette(item)"></a></span>
 						</div>
 						<div class="evaluation" v-if="pad.evaluations === 'activees'">
 							<span class="etoiles">
@@ -517,11 +517,11 @@
 						</div>
 						<div class="texte" v-if="item.texte !== ''" v-html="item.texte" />
 						<div class="media" v-if="item.media !== ''">
-							<img v-if="item.type === 'image'" :src="'/fichiers/' + pad.id + '/' + item.media" @click="afficherVisionneuse(item)">
+							<img v-if="item.type === 'image'" :src="'/' + definirDossierFichiers(pad.id) + '/' + pad.id + '/' + item.media" @click="afficherVisionneuse(item)">
 							<img v-else-if="item.type === 'lien-image'" :src="item.media" @click="afficherVisionneuse(item)">
 							<span v-else-if="item.type === 'audio' || item.type === 'video' || item.type === 'document' || item.type === 'pdf' || item.type === 'office' || item.type === 'embed'" @click="afficherVisionneuse(item)"><img :class="{'vignette': definirVignette(item).substring(0, 3) !== 'img'}" :src="definirVignette(item)"></span>
 							<span v-else-if="item.type === 'lien'"><a :href="item.media" target="_blank"><img :class="{'vignette': definirVignette(item).substring(0, 3) !== 'img'}" :src="definirVignette(item)"></a></span>
-							<span v-else><a :href="'/fichiers/' + pad.id + '/' + item.media" download><img :class="{'vignette': definirVignette(item).substring(0, 3) !== 'img'}" :src="definirVignette(item)"></a></span>
+							<span v-else><a :href="'/' + definirDossierFichiers(pad.id) + '/' + pad.id + '/' + item.media" download><img :class="{'vignette': definirVignette(item).substring(0, 3) !== 'img'}" :src="definirVignette(item)"></a></span>
 						</div>
 						<div class="evaluation" v-if="pad.evaluations === 'activees'">
 							<span class="etoiles">
@@ -571,11 +571,11 @@
 								</div>
 								<div class="texte" v-if="item.texte !== ''" v-html="item.texte" />
 								<div class="media" v-if="item.media !== ''">
-									<img v-if="item.type === 'image'" :src="'/fichiers/' + pad.id + '/' + item.media" @click="afficherVisionneuse(item)">
+									<img v-if="item.type === 'image'" :src="'/' + definirDossierFichiers(pad.id) + '/' + pad.id + '/' + item.media" @click="afficherVisionneuse(item)">
 									<img v-else-if="item.type === 'lien-image'" :src="item.media" @click="afficherVisionneuse(item)">
 									<span v-else-if="item.type === 'audio' || item.type === 'video' || item.type === 'document' || item.type === 'pdf' || item.type === 'office' || item.type === 'embed'" @click="afficherVisionneuse(item)"><img :class="{'vignette': definirVignette(item).substring(0, 3) !== 'img'}" :src="definirVignette(item)"></span>
 									<span v-else-if="item.type === 'lien'"><a :href="item.media" target="_blank"><img :class="{'vignette': definirVignette(item).substring(0, 3) !== 'img'}" :src="definirVignette(item)"></a></span>
-									<span v-else><a :href="'/fichiers/' + pad.id + '/' + item.media" download><img :class="{'vignette': definirVignette(item).substring(0, 3) !== 'img'}" :src="definirVignette(item)"></a></span>
+									<span v-else><a :href="'/' + definirDossierFichiers(pad.id) + '/' + pad.id + '/' + item.media" download><img :class="{'vignette': definirVignette(item).substring(0, 3) !== 'img'}" :src="definirVignette(item)"></a></span>
 								</div>
 								<div class="evaluation" v-if="pad.evaluations === 'activees'">
 									<span class="etoiles">
@@ -635,11 +635,11 @@
 								</div>
 								<div class="texte" v-if="item.texte !== ''" v-html="item.texte" />
 								<div class="media" v-if="item.media !== ''">
-									<img v-if="item.type === 'image'" :src="'/fichiers/' + pad.id + '/' + item.media" @click="afficherVisionneuse(item)">
+									<img v-if="item.type === 'image'" :src="'/' + definirDossierFichiers(pad.id) + '/' + pad.id + '/' + item.media" @click="afficherVisionneuse(item)">
 									<img v-else-if="item.type === 'lien-image'" :src="item.media" @click="afficherVisionneuse(item)">
 									<span v-else-if="item.type === 'audio' || item.type === 'video' || item.type === 'document' || item.type === 'pdf' || item.type === 'office' || item.type === 'embed'" @click="afficherVisionneuse(item)"><img :class="{'vignette': definirVignette(item).substring(0, 3) !== 'img'}" :src="definirVignette(item)"></span>
 									<span v-else-if="item.type === 'lien'"><a :href="item.media" target="_blank"><img :class="{'vignette': definirVignette(item).substring(0, 3) !== 'img'}" :src="definirVignette(item)"></a></span>
-									<span v-else><a :href="'/fichiers/' + pad.id + '/' + item.media" download><img :class="{'vignette': definirVignette(item).substring(0, 3) !== 'img'}" :src="definirVignette(item)"></a></span>
+									<span v-else><a :href="'/' + definirDossierFichiers(pad.id) + '/' + pad.id + '/' + item.media" download><img :class="{'vignette': definirVignette(item).substring(0, 3) !== 'img'}" :src="definirVignette(item)"></a></span>
 								</div>
 								<div class="evaluation" v-if="pad.evaluations === 'activees'">
 									<span class="etoiles">
@@ -681,7 +681,7 @@
 						</div>
 						<div class="texte" v-if="item.texte !== ''" v-html="item.texte" />
 						<div class="media" v-if="item.media !== ''">
-							<img v-if="item.type === 'image'" :src="'/fichiers/' + pad.id + '/' + item.media">
+							<img v-if="item.type === 'image'" :src="'/' + definirDossierFichiers(pad.id) + '/' + pad.id + '/' + item.media">
 							<img v-else-if="item.type === 'lien-image'" :src="item.media">
 							<span v-else-if="item.type === 'audio' || item.type === 'video' || item.type === 'document' || item.type === 'pdf' || item.type === 'embed'"><img :class="{'vignette': definirVignette(item).substring(0, 3) !== 'img'}" :src="definirVignette(item)"></span>
 							<span v-else-if="item.type === 'lien'"><img :class="{'vignette': definirVignette(item).substring(0, 3) !== 'img'}" :src="definirVignette(item)"></span>
@@ -731,7 +731,7 @@
 								</div>
 								<div class="texte" v-if="item.texte !== ''" v-html="item.texte" />
 								<div class="media" v-if="item.media !== ''">
-									<img v-if="item.type === 'image'" :src="'/fichiers/' + pad.id + '/' + item.media">
+									<img v-if="item.type === 'image'" :src="'/' + definirDossierFichiers(pad.id) + '/' + pad.id + '/' + item.media">
 									<img v-else-if="item.type === 'lien-image'" :src="item.media">
 									<span v-else-if="item.type === 'audio' || item.type === 'video' || item.type === 'document' || item.type === 'pdf' || item.type === 'office' || item.type === 'embed'"><img :class="{'vignette': definirVignette(item).substring(0, 3) !== 'img'}" :src="definirVignette(item)"></span>
 									<span v-else-if="item.type === 'lien'"><img :class="{'vignette': definirVignette(item).substring(0, 3) !== 'img'}" :src="definirVignette(item)"></span>
@@ -854,18 +854,18 @@
 						<div class="conteneur-chargement" v-if="chargementMedia">
 							<div class="chargement" />
 						</div>
-						<img id="image" :src="'/fichiers/' + pad.id + '/' + media" v-if="type === 'image'">
+						<img id="image" :src="'/' + definirDossierFichiers(pad.id) + '/' + pad.id + '/' + media" v-if="type === 'image'">
 						<img id="image" :src="media" v-else-if="type === 'lien-image'">
-						<audio id="audio" controls :src="'/fichiers/' + pad.id + '/' + media" v-else-if="type === 'audio'" />
-						<video id="video" controls playsinline crossOrigin="anonymous" :src="'/fichiers/' + pad.id + '/' + media" v-else-if="type === 'video'" />
-						<iframe id="document" :src="'/pdfjs/web/viewer.html?file=../../fichiers/' + pad.id + '/' + media" allowfullscreen v-else-if="type === 'pdf'" />
-						<iframe id="document" :src="'https://view.officeapps.live.com/op/embed.aspx?src=' + hote + '/fichiers/' + pad.id + '/' + media" allowfullscreen v-else-if="type === 'office' || type === 'document'" />
+						<audio id="audio" controls :src="'/' + definirDossierFichiers(pad.id) + '/' + pad.id + '/' + media" v-else-if="type === 'audio'" />
+						<video id="video" controls playsinline crossOrigin="anonymous" :src="'/' + definirDossierFichiers(pad.id) + '/' + pad.id + '/' + media" v-else-if="type === 'video'" />
+						<iframe id="document" :src="'/pdfjs/web/viewer.html?file=../../' + definirDossierFichiers(pad.id) + '/' + pad.id + '/' + media" allowfullscreen v-else-if="type === 'pdf'" />
+						<iframe id="document" :src="'https://view.officeapps.live.com/op/embed.aspx?src=' + hote + '/' + definirDossierFichiers(pad.id) + '/' + pad.id + '/' + media" allowfullscreen v-else-if="type === 'office' || type === 'document'" />
 						<a id="lien" :href="media" target="_blank" v-else-if="type === 'lien'">
 							<span class="type">{{ $t('lienExterne') }}</span>
 							<span class="nom">{{ definirNomFichier(media) }}</span>
 							<span class="icone"><i class="material-icons">link</i></span>
 						</a>
-						<a id="fichier" :href="'/fichiers/' + pad.id + '/' + media" download v-else>
+						<a id="fichier" :href="'/' + definirDossierFichiers(pad.id) + '/' + pad.id + '/' + media" download v-else>
 							<span class="type">{{ definirExtensionFichier(media) }}</span>
 							<span class="nom">{{ definirNomFichier(media) }}</span>
 							<span class="icone"><i class="material-icons">attachment</i></span>
@@ -920,12 +920,12 @@
 				</div>
 				<div class="conteneur conteneur-media" v-if="donneesBloc.media !== ''">
 					<div class="media" v-if="donneesBloc.iframe === ''">
-						<img :src="'/fichiers/' + pad.id + '/' + donneesBloc.media" v-if="donneesBloc.type === 'image'">
+						<img :src="'/' + definirDossierFichiers(pad.id) + '/' + pad.id + '/' + donneesBloc.media" v-if="donneesBloc.type === 'image'">
 						<img :src="donneesBloc.media" v-else-if="donneesBloc.type === 'lien-image'">
-						<audio controls :src="'/fichiers/' + pad.id + '/' + donneesBloc.media" v-else-if="donneesBloc.type === 'audio'" />
-						<video controls playsinline crossOrigin="anonymous" :src="'/fichiers/' + pad.id + '/' + donneesBloc.media" v-else-if="donneesBloc.type === 'video'" />
-						<iframe class="document" :src="'/pdfjs/web/viewer.html?file=../../fichiers/' + pad.id + '/' + donneesBloc.media" allowfullscreen v-else-if="donneesBloc.type === 'pdf'" />
-						<iframe class="document" :src="'https://view.officeapps.live.com/op/embed.aspx?src=' + hote + '/fichiers/' + pad.id + '/' + donneesBloc.media" allowfullscreen v-else-if="donneesBloc.type === 'office' || donneesBloc.type === 'document'" />
+						<audio controls :src="'/' + definirDossierFichiers(pad.id) + '/' + pad.id + '/' + donneesBloc.media" v-else-if="donneesBloc.type === 'audio'" />
+						<video controls playsinline crossOrigin="anonymous" :src="'/' + definirDossierFichiers(pad.id) + '/' + pad.id + '/' + donneesBloc.media" v-else-if="donneesBloc.type === 'video'" />
+						<iframe class="document" :src="'/pdfjs/web/viewer.html?file=../../' + definirDossierFichiers(pad.id) + '/' + pad.id + '/' + donneesBloc.media" allowfullscreen v-else-if="donneesBloc.type === 'pdf'" />
+						<iframe class="document" :src="'https://view.officeapps.live.com/op/embed.aspx?src=' + hote + '/' + definirDossierFichiers(pad.id) + '/' + pad.id + '/' + donneesBloc.media" allowfullscreen v-else-if="donneesBloc.type === 'office' || donneesBloc.type === 'document'" />
 						<span v-else-if="donneesBloc.type === 'lien'">
 							<a :href="donneesBloc.media" target="_blank">
 								<img :src="donneesBloc.vignette" v-if="donneesBloc.vignette && donneesBloc.vignette !== ''">
@@ -933,7 +933,7 @@
 							</a>
 						</span>
 						<span v-else>
-							<a :href="'/fichiers/' + pad.id + '/' + donneesBloc.media" download>
+							<a :href="'/' + definirDossierFichiers(pad.id) + '/' + pad.id + '/' + donneesBloc.media" download>
 								<img :src="donneesBloc.vignette" v-if="donneesBloc.vignette && donneesBloc.vignette !== ''">
 								<img src="/img/telechargement.png" v-else>
 							</a>

@@ -136,10 +136,14 @@ app.get('/p/:id/:token', function (req) {
 	if (req.session.identifiant === '' || req.session.identifiant === undefined) {
 		const identifiant = 'u' + Math.random().toString(16).slice(3)
 		const nom = choisirNom() + ' ' + choisirAdjectif()
+		let langue = 'fr'
+		if (req.session.hasOwnProperty('langue') && req.session.langue !== '' && req.session.langue !== undefined) {
+			langue = req.session.langue
+		}
 		db.hset('noms:' + identifiant, 'nom', nom, function () {
 			req.session.identifiant = identifiant
 			req.session.nom = nom
-			req.session.langue = 'fr'
+			req.session.langue = langue
 			req.session.statut = 'invite'
 			req.session.cookie.expires = new Date(Date.now() + dureeSession)
 			req.next()
@@ -157,20 +161,22 @@ app.post('/api/inscription', function (req, res) {
 		if (reponse === 0) {
 			const hash = bcrypt.hashSync(motdepasse, 10)
 			const date = moment().format()
+			let langue = 'fr'
+			if (req.session.hasOwnProperty('langue') && req.session.langue !== '' && req.session.langue !== undefined) {
+				langue = req.session.langue
+			}
 			const multi = db.multi()
-			multi.hmset('utilisateurs:' + identifiant, 'id', identifiant, 'motdepasse', hash, 'date', date, 'nom', '', 'email', '', 'langue', 'fr', 'affichage', 'liste', 'filtre', 'date-asc')
+			multi.hmset('utilisateurs:' + identifiant, 'id', identifiant, 'motdepasse', hash, 'date', date, 'nom', '', 'email', '', 'langue', langue, 'affichage', 'liste', 'filtre', 'date-asc')
 			multi.exec(function () {
 				req.session.identifiant = identifiant
 				req.session.nom = ''
 				req.session.email = ''
-				if (req.session.langue === '' || req.session.langue === undefined) {
-					req.session.langue = 'fr'
-				}
+				req.session.langue = langue
 				req.session.statut = 'utilisateur'
 				req.session.affichage = 'liste'
 				req.session.filtre = 'date-asc'
 				req.session.cookie.expires = new Date(Date.now() + dureeSession)
-				res.json({ identifiant: identifiant, nom: '', email: '', langue: 'fr', statut: 'utilisateur', affichage: 'liste' })
+				res.json({ identifiant: identifiant, nom: '', email: '', langue: langue, statut: 'utilisateur', affichage: 'liste' })
 			})
 		} else {
 			res.send('utilisateur_existe_deja')
@@ -518,7 +524,7 @@ app.post('/api/creer-pad', function (req, res) {
 					multi.hset('dates-pads:' + id, 'date', date)
 					multi.hset('couleurs:' + identifiant, 'pad' + id, couleur)
 					multi.exec(function () {
-						const chemin = path.join(__dirname, '..', '/static/fichiers/' + id)
+						const chemin = path.join(__dirname, '..', '/static/' + definirDossierFichiers(id) + '/' + id)
 						fs.mkdirsSync(chemin)
 						res.json({ id: id, token: token, titre: titre, identifiant: identifiant, fond: '/img/fond1.png', acces: 'public', contributions: 'ouvertes', affichage: 'mur', registreActivite: 'active', conversation: 'desactivee', listeUtilisateurs: 'activee', editionNom: 'desactivee', fichiers: 'actives', liens: 'actives', documents: 'desactives', commentaires: 'desactives', evaluations: 'desactivees', ordre: 'croissant', date: date, colonnes: [], bloc: 0, activite: 0, admins: [] })
 					})
@@ -558,6 +564,10 @@ app.post('/api/creer-pad-sans-compte', function (req, res) {
 	const hash = bcrypt.hashSync(motdepasse, 10)
 	const token = Math.random().toString(16).slice(2)
 	const date = moment().format()
+	let langue = 'fr'
+	if (req.session.hasOwnProperty('langue') && req.session.langue !== '' && req.session.langue !== undefined) {
+		langue = req.session.langue
+	}
 	db.exists('pad', function (err, resultat) {
 		if (err) { res.send('erreur_creation'); return false }
 		if (resultat === 1) {
@@ -567,13 +577,11 @@ app.post('/api/creer-pad-sans-compte', function (req, res) {
 				const multi = db.multi()
 				multi.incr('pad')
 				multi.hmset('pads:' + id, 'id', id, 'token', token, 'titre', titre, 'identifiant', identifiant, 'motdepasse', hash, 'fond', '/img/fond1.png', 'acces', 'public', 'contributions', 'ouvertes', 'affichage', 'mur', 'registreActivite', 'active', 'conversation', 'desactivee', 'listeUtilisateurs', 'activee', 'editionNom', 'desactivee', 'fichiers', 'actives', 'liens', 'actives', 'documents', 'desactives', 'commentaires', 'desactives', 'evaluations', 'desactivees', 'ordre', 'croissant', 'date', date, 'colonnes', JSON.stringify([]), 'bloc', 0, 'activite', 0)
-				multi.hmset('utilisateurs:' + identifiant, 'id', identifiant, 'motdepasse', '', 'date', date, 'nom', nom, 'langue', 'fr')
+				multi.hmset('utilisateurs:' + identifiant, 'id', identifiant, 'motdepasse', '', 'date', date, 'nom', nom, 'langue', langue)
 				multi.exec(function () {
-					const chemin = path.join(__dirname, '..', '/static/fichiers/' + id)
+					const chemin = path.join(__dirname, '..', '/static/' + definirDossierFichiers(id) + '/' + id)
 					fs.mkdirsSync(chemin)
-					if (req.session.langue === '' || req.session.langue === undefined) {
-						req.session.langue = 'fr'
-					}
+					req.session.langue = langue
 					req.session.statut = 'auteur'
 					req.session.cookie.expires = new Date(Date.now() + dureeSession)
 					res.json({ id: id, token: token, titre: titre, identifiant: identifiant, fond: '/img/fond1.png', acces: 'public', contributions: 'ouvertes', affichage: 'mur', registreActivite: 'active', conversation: 'desactivee', listeUtilisateurs: 'activee', editionNom: 'desactivee', fichiers: 'actives', liens: 'actives', liens: 'actives', documents: 'desactives', commentaires: 'desactives', evaluations: 'desactivees', ordre: 'croissant', date: date, colonnes: [], bloc: 0, activite: 0 })
@@ -583,13 +591,11 @@ app.post('/api/creer-pad-sans-compte', function (req, res) {
 			const multi = db.multi()
 			multi.incr('pad')
 			multi.hmset('pads:1', 'id', 1, 'token', token, 'titre', titre, 'identifiant', identifiant, 'motdepasse', hash, 'fond', '/img/fond1.png', 'acces', 'public', 'contributions', 'ouvertes', 'affichage', 'mur', 'registreActivite', 'active', 'conversation', 'desactivee', 'listeUtilisateurs', 'activee', 'editionNom', 'desactivee', 'fichiers', 'actives', 'liens', 'actives', 'documents', 'desactives', 'commentaires', 'desactives', 'evaluations', 'desactivees', 'ordre', 'croissant', 'date', date, 'colonnes', JSON.stringify([]), 'bloc', 0, 'activite', 0)
-			multi.hmset('utilisateurs:' + identifiant, 'id', identifiant, 'motdepasse', '', 'date', date, 'nom', nom, 'langue', 'fr')
+			multi.hmset('utilisateurs:' + identifiant, 'id', identifiant, 'motdepasse', '', 'date', date, 'nom', nom, 'langue', langue)
 			multi.exec(function () {
 				const chemin = path.join(__dirname, '..', '/static/fichiers/1')
 				fs.mkdirsSync(chemin)
-				if (req.session.langue === '' || req.session.langue === undefined) {
-					req.session.langue = 'fr'
-				}
+				req.session.langue = langue
 				req.session.statut = 'auteur'
 				req.session.cookie.expires = new Date(Date.now() + dureeSession)
 				res.json({ id: 1, token: token, titre: titre, identifiant: identifiant, fond: '/img/fond1.png', acces: 'public', contributions: 'ouvertes', affichage: 'mur', registreActivite: 'active', conversation: 'desactivee', listeUtilisateurs: 'activee', editionNom: 'desactivee', fichiers: 'actives', liens: 'actives', liens: 'actives', documents: 'desactives', commentaires: 'desactives', evaluations: 'desactivees', ordre: 'croissant', date: date, colonnes: [], bloc: 0, activite: 0 })
@@ -702,7 +708,7 @@ app.post('/api/dupliquer-pad', function (req, res) {
 										if (err) { resolve({}) }
 										const date = moment().format()
 										if (infos.vignette !== '') {
-											infos.vignette = infos.vignette.replace('/fichiers/' + pad, '/fichiers/' + id)
+											infos.vignette = infos.vignette.replace('/' + definirDossierFichiers(pad) + '/' + pad, '/' + definirDossierFichiers(id) + '/' + id)
 										}
 										let visibilite = 'visible'
 										if (infos.hasOwnProperty('visibilite')) {
@@ -765,8 +771,8 @@ app.post('/api/dupliquer-pad', function (req, res) {
 								multi.sadd('utilisateurs-pads:' + id, identifiant)
 								multi.hset('couleurs:' + identifiant, 'pad' + id, couleur)
 								multi.exec(function () {
-									if (fs.existsSync(path.join(__dirname, '..', '/static/fichiers/' + pad))) {
-										fs.copySync(path.join(__dirname, '..', '/static/fichiers/' + pad), path.join(__dirname, '..', '/static/fichiers/' + id))
+									if (fs.existsSync(path.join(__dirname, '..', '/static/' + definirDossierFichiers(pad) + '/' + pad))) {
+										fs.copySync(path.join(__dirname, '..', '/static/' + definirDossierFichiers(pad) + '/' + pad), path.join(__dirname, '..', '/static/' + definirDossierFichiers(id) + '/' + id))
 									}
 									res.json({ id: id, token: token, titre: 'Copie de ' + donnees.titre, identifiant: identifiant, fond: donnees.fond, acces: donnees.acces, code: code, contributions: donnees.contributions, affichage: donnees.affichage, registreActivite: registreActivite, conversation: conversation, listeUtilisateurs: listeUtilisateurs, editionNom: editionNom, fichiers: donnees.fichiers, liens: donnees.liens, documents: donnees.documents, commentaires: donnees.commentaires, evaluations: donnees.evaluations, ordre: ordre, date: date, colonnes: donnees.colonnes, bloc: donnees.bloc, activite: 0 })
 								})
@@ -783,7 +789,7 @@ app.post('/api/dupliquer-pad', function (req, res) {
 								const donneesBloc = new Promise(function (resolve) {
 									if (Object.keys(bloc).length > 0) {
 										if (bloc.vignette !== '') {
-											bloc.vignette = bloc.vignette.replace('/fichiers/' + pad, '/fichiers/' + id)
+											bloc.vignette = bloc.vignette.replace('/' + definirDossierFichiers(pad) + '/' + pad, '/' + definirDossierFichiers(id) + '/' + id)
 										}
 										let visibilite = 'visible'
 										if (bloc.hasOwnProperty('visibilite')) {
@@ -847,8 +853,8 @@ app.post('/api/dupliquer-pad', function (req, res) {
 								multi.sadd('utilisateurs-pads:' + id, identifiant)
 								multi.hset('couleurs:' + identifiant, 'pad' + id, couleur)
 								multi.exec(function () {
-									if (fs.existsSync(path.join(__dirname, '..', '/static/fichiers/' + pad))) {
-										fs.copySync(path.join(__dirname, '..', '/static/fichiers/' + pad), path.join(__dirname, '..', '/static/fichiers/' + id))
+									if (fs.existsSync(path.join(__dirname, '..', '/static/' + definirDossierFichiers(pad) + '/' + pad))) {
+										fs.copySync(path.join(__dirname, '..', '/static/' + definirDossierFichiers(pad) + '/' + pad), path.join(__dirname, '..', '/static/' + definirDossierFichiers(id) + '/' + id))
 									}
 									res.json({ id: id, token: token, titre: 'Copie de ' + donnees.pad.titre, identifiant: identifiant, fond: donnees.pad.fond, acces: donnees.pad.acces, code: code, contributions: donnees.pad.contributions, affichage: donnees.pad.affichage, registreActivite: registreActivite, conversation: conversation, listeUtilisateurs: listeUtilisateurs, editionNom: editionNom, fichiers: donnees.pad.fichiers, liens: donnees.pad.liens, documents: donnees.pad.documents, commentaires: donnees.pad.commentaires, evaluations: donnees.pad.evaluations, ordre: ordre, date: date, colonnes: donnees.pad.colonnes, bloc: donnees.pad.bloc, activite: 0 })
 								})
@@ -941,11 +947,11 @@ app.post('/api/exporter-pad', function (req, res) {
 						fs.mkdirpSync(path.normalize(chemin + '/' + id + '/fichiers'))
 						fs.writeFileSync(path.normalize(chemin + '/' + id + '/donnees.json'), JSON.stringify(parametres, '', 4), 'utf8')
 						for (const bloc of parametres.blocs) {
-							if (Object.keys(bloc).length > 0 && bloc.media !== '' && bloc.type !== 'embed' && fs.existsSync(path.join(__dirname, '..', '/static/fichiers/' + id + '/' + bloc.media))) {
-								fs.copySync(path.join(__dirname, '..', '/static/fichiers/' + id + '/' + bloc.media), path.normalize(chemin + '/' + id + '/fichiers/' + bloc.media, { overwrite: true }))
+							if (Object.keys(bloc).length > 0 && bloc.media !== '' && bloc.type !== 'embed' && fs.existsSync(path.join(__dirname, '..', '/static/' + definirDossierFichiers(id) + '/' + id + '/' + bloc.media))) {
+								fs.copySync(path.join(__dirname, '..', '/static/' + definirDossierFichiers(id) + '/' + id + '/' + bloc.media), path.normalize(chemin + '/' + id + '/fichiers/' + bloc.media, { overwrite: true }))
 							}
-							if (Object.keys(bloc).length > 0 && bloc.vignette !== '' && bloc.vignette.substring(1, 9) === 'fichiers' && fs.existsSync(path.join(__dirname, '..', '/static' + bloc.vignette))) {
-								fs.copySync(path.join(__dirname, '..', '/static' + bloc.vignette), path.normalize(chemin + '/' + id + '/fichiers/' + bloc.vignette.replace('/fichiers/' + id + '/', ''), { overwrite: true }))
+							if (Object.keys(bloc).length > 0 && bloc.vignette !== '' && bloc.vignette.substring(1, definirDossierFichiers(id).length + 1) === definirDossierFichiers(id) && fs.existsSync(path.join(__dirname, '..', '/static' + bloc.vignette))) {
+								fs.copySync(path.join(__dirname, '..', '/static' + bloc.vignette), path.normalize(chemin + '/' + id + '/fichiers/' + bloc.vignette.replace('/' + definirDossierFichiers(id) + '/' + id + '/', ''), { overwrite: true }))
 							}
 						}
 						const archiveId = Math.floor((Math.random() * 100000) + 1)
@@ -973,11 +979,11 @@ app.post('/api/exporter-pad', function (req, res) {
 						fs.mkdirpSync(path.normalize(chemin + '/' + id + '/fichiers'))
 						fs.writeFileSync(path.normalize(chemin + '/' + id + '/donnees.json'), JSON.stringify(donnees, '', 4), 'utf8')
 						for (const bloc of donnees.blocs) {
-							if (Object.keys(bloc).length > 0 && bloc.media !== '' && bloc.type !== 'embed' && fs.existsSync(path.join(__dirname, '..', '/static/fichiers/' + id + '/' + bloc.media))) {
-								fs.copySync(path.join(__dirname, '..', '/static/fichiers/' + id + '/' + bloc.media), path.normalize(chemin + '/' + id + '/fichiers/' + bloc.media, { overwrite: true }))
+							if (Object.keys(bloc).length > 0 && bloc.media !== '' && bloc.type !== 'embed' && fs.existsSync(path.join(__dirname, '..', '/static/' + definirDossierFichiers(id) + '/' + id + '/' + bloc.media))) {
+								fs.copySync(path.join(__dirname, '..', '/static/' + definirDossierFichiers(id) + '/' + id + '/' + bloc.media), path.normalize(chemin + '/' + id + '/fichiers/' + bloc.media, { overwrite: true }))
 							}
-							if (Object.keys(bloc).length > 0 && bloc.vignette !== '' && bloc.vignette.substring(1, 9) === 'fichiers' && fs.existsSync(path.join(__dirname, '..', '/static' + bloc.vignette))) {
-								fs.copySync(path.join(__dirname, '..', '/static' + bloc.vignette), path.normalize(chemin + '/' + id + '/fichiers/' + bloc.vignette.replace('/fichiers/' + id + '/', ''), { overwrite: true }))
+							if (Object.keys(bloc).length > 0 && bloc.vignette !== '' && bloc.vignette.substring(1, definirDossierFichiers(id).length + 1) === definirDossierFichiers(id) && fs.existsSync(path.join(__dirname, '..', '/static' + bloc.vignette))) {
+								fs.copySync(path.join(__dirname, '..', '/static' + bloc.vignette), path.normalize(chemin + '/' + id + '/fichiers/' + bloc.vignette.replace('/' + definirDossierFichiers(id) + '/' + id + '/', ''), { overwrite: true }))
 							}
 						}
 						const archiveId = Math.floor((Math.random() * 100000) + 1)
@@ -1019,7 +1025,7 @@ app.post('/api/importer-pad', function (req, res) {
 					db.get('pad', function (err, resultat) {
 						if (err) { res.send('erreur_import'); return false }
 						const id = parseInt(resultat) + 1
-						const chemin = path.join(__dirname, '..', '/static/fichiers/' + id)
+						const chemin = path.join(__dirname, '..', '/static/' + definirDossierFichiers(id) + '/' + id)
 						const donneesBlocs = []
 						fs.mkdirpSync(chemin)
 						for (const [indexBloc, bloc] of donnees.blocs.entries()) {
@@ -1035,7 +1041,7 @@ app.post('/api/importer-pad', function (req, res) {
 										evaluations = bloc.evaluations
 									}
 									if (bloc.vignette !== '') {
-										bloc.vignette = bloc.vignette.replace('/fichiers/' + donnees.pad.id, '/fichiers/' + id)
+										bloc.vignette = bloc.vignette.replace('/' + definirDossierFichiers(donnees.pad.id) + '/' + donnees.pad.id, '/' + definirDossierFichiers(id) + '/' + id)
 									}
 									let visibilite = 'visible'
 									if (bloc.hasOwnProperty('visibilite')) {
@@ -1063,8 +1069,8 @@ app.post('/api/importer-pad', function (req, res) {
 										if (bloc.media !== '' && bloc.type !== 'embed' && fs.existsSync(path.normalize(cible + '/fichiers/' + bloc.media))) {
 											fs.copySync(path.normalize(cible + '/fichiers/' + bloc.media), path.normalize(chemin + '/' + bloc.media, { overwrite: true }))
 										}
-										if (bloc.vignette !== '' && bloc.vignette.substring(1, 9) === 'fichiers' && fs.existsSync(path.normalize(cible + '/fichiers/' + bloc.vignette.replace('/fichiers/' + id + '/', '')))) {
-											fs.copySync(path.normalize(cible + '/fichiers/' + bloc.vignette.replace('/fichiers/' + id + '/', '')), path.normalize(chemin + '/' + bloc.vignette.replace('/fichiers/' + id + '/', ''), { overwrite: true }))
+										if (bloc.vignette !== '' && bloc.vignette.substring(1, definirDossierFichiers(id).length + 1) === definirDossierFichiers(id) && fs.existsSync(path.normalize(cible + '/fichiers/' + bloc.vignette.replace('/' + definirDossierFichiers(id) + '/' + id + '/', '')))) {
+											fs.copySync(path.normalize(cible + '/fichiers/' + bloc.vignette.replace('/' + definirDossierFichiers(id) + '/' + id + '/', '')), path.normalize(chemin + '/' + bloc.vignette.replace('/' + definirDossierFichiers(id) + '/' + id + '/', ''), { overwrite: true }))
 										}
 										resolve({ bloc: bloc.bloc, blocId: blocId })
 									})
@@ -1187,7 +1193,7 @@ app.post('/api/supprimer-pad', function (req, res) {
 							})
 							multi.del('utilisateurs-pads:' + pad)
 							multi.exec(function () {
-								const chemin = path.join(__dirname, '..', '/static/fichiers/' + pad)
+								const chemin = path.join(__dirname, '..', '/static/' + definirDossierFichiers(pad) + '/' + pad)
 								fs.removeSync(chemin)
 								res.send('pad_supprime')
 							})
@@ -1256,7 +1262,7 @@ app.post('/api/supprimer-pad', function (req, res) {
 							})
 							multi.del('utilisateurs-pads:' + pad)
 							multi.exec(function () {
-								fs.removeSync(path.join(__dirname, '..', '/static/fichiers/' + pad))
+								fs.removeSync(path.join(__dirname, '..', '/static/' + definirDossierFichiers(pad) + '/' + pad))
 								fs.removeSync(path.join(__dirname, '..', '/static/pads/' + pad + '.json'))
 								fs.removeSync(path.join(__dirname, '..', '/static/pads/pad-' + pad + '.json'))
 								res.send('pad_supprime')
@@ -1400,7 +1406,7 @@ app.post('/api/supprimer-compte', function (req, res) {
 								})
 								multi.del('utilisateurs-pads:' + pad)
 								multi.exec(function () {
-									const chemin = path.join(__dirname, '..', '/static/fichiers/' + pad)
+									const chemin = path.join(__dirname, '..', '/static/' + definirDossierFichiers(pad) + '/' + pad)
 									fs.removeSync(chemin)
 									resolve(pad)
 								})
@@ -1421,7 +1427,7 @@ app.post('/api/supprimer-compte', function (req, res) {
 									})
 									multi.del('utilisateurs-pads:' + pad)
 									multi.exec(function () {
-										fs.removeSync(path.join(__dirname, '..', '/static/fichiers/' + pad))
+										fs.removeSync(path.join(__dirname, '..', '/static/' + definirDossierFichiers(pad) + '/' + pad))
 										fs.removeSync(path.join(__dirname, '..', '/static/pads/' + pad + '.json'))
 										fs.removeSync(path.join(__dirname, '..', '/static/pads/pad-' + pad + '.json'))
 										resolve(pad)
@@ -1455,7 +1461,7 @@ app.post('/api/supprimer-compte', function (req, res) {
 													if (donnees.media !== '' && donnees.type !== 'embed') {
 														supprimerFichier(pad, donnees.media)
 													}
-													if (donnees.vignette !== '' && donnees.vignette.substring(1, 9) === 'fichiers') {
+													if (donnees.vignette !== '' && donnees.vignette.substring(1, definirDossierFichiers(pad).length + 1) === definirDossierFichiers(pad)) {
 														supprimerVignette(donnees.vignette)
 													}
 													const multi = db.multi()
@@ -1544,7 +1550,7 @@ app.post('/api/supprimer-compte', function (req, res) {
 													if (blocs[i].media !== '' && blocs[i].type !== 'embed') {
 														supprimerFichier(pad, blocs[i].media)
 													}
-													if (blocs[i].vignette !== '' && blocs[i].vignette.substring(1, 9) === 'fichiers') {
+													if (blocs[i].vignette !== '' && blocs[i].vignette.substring(1, definirDossierFichiers(pad).length + 1) === definirDossierFichiers(pad)) {
 														supprimerVignette(blocs[i].vignette)
 													}
 													const multi = db.multi()
@@ -1688,14 +1694,14 @@ app.post('/api/verifier-code-acces', function (req, res) {
 
 app.post('/api/modifier-langue', function (req, res) {
 	const identifiant = req.body.identifiant
+	const langue = req.body.langue
 	if (req.session.identifiant && req.session.identifiant === identifiant) {
-		const langue = req.body.langue
 		db.hset('utilisateurs:' + identifiant, 'langue', langue)
 		req.session.langue = langue
-		res.send('langue_modifiee')
 	} else {
-		res.send('non_connecte')
+		req.session.langue = langue
 	}
+	res.send('langue_modifiee')
 })
 
 app.post('/api/modifier-affichage', function (req, res) {
@@ -1800,7 +1806,7 @@ app.post('/api/televerser-fichier', function (req, res) {
 			const fichier = req.file
 			const pad = req.body.pad
 			let mimetype = fichier.mimetype
-			const chemin = path.join(__dirname, '..', '/static/fichiers/' + pad + '/' + fichier.filename)
+			const chemin = path.join(__dirname, '..', '/static/' + definirDossierFichiers(pad) + '/' + pad + '/' + fichier.filename)
 			if (mimetype.split('/')[0] === 'image') {
 				const extension = path.parse(fichier.filename).ext
 				if (extension.toLowerCase() === '.jpg' || extension.toLowerCase() === '.jpeg') {
@@ -1825,7 +1831,7 @@ app.post('/api/televerser-fichier', function (req, res) {
 					})
 				}
 			} else if (mimetype === 'application/pdf') {
-				const destination = path.join(__dirname, '..', '/static/fichiers/' + pad + '/' + path.parse(fichier.filename).name + '.jpg')
+				const destination = path.join(__dirname, '..', '/static/' + definirDossierFichiers(pad) + '/' + pad + '/' + path.parse(fichier.filename).name + '.jpg')
 				gm(chemin + '[0]').setFormat('jpg').resize(450).quality(75).write(destination, function (erreur) {
 					if (erreur) {
 						res.json({ fichier: fichier.filename, mimetype: 'document' })
@@ -1854,7 +1860,7 @@ app.post('/api/televerser-vignette', function (req, res) {
 			if (err) { res.send('erreur_televersement'); return false }
 			const fichier = req.file
 			const pad = req.body.pad
-			const chemin = path.join(__dirname, '..', '/static/fichiers/' + pad + '/' + fichier.filename)
+			const chemin = path.join(__dirname, '..', '/static/' + definirDossierFichiers(pad) + '/' + pad + '/' + fichier.filename)
 			const extension = path.parse(fichier.filename).ext
 			if (extension.toLowerCase() === '.jpg' || extension.toLowerCase() === '.jpeg') {
 				sharp(chemin).withMetadata().rotate().jpeg().resize(400, 400, {
@@ -1863,7 +1869,7 @@ app.post('/api/televerser-vignette', function (req, res) {
 				}).toBuffer((err, buffer) => {
 					if (err) { res.send('erreur_televersement'); return false }
 					fs.writeFile(chemin, buffer, function() {
-						res.send('/fichiers/' + pad + '/' + fichier.filename)
+						res.send('/' + definirDossierFichiers(pad) + '/' + pad + '/' + fichier.filename)
 					})
 				})
 			} else {
@@ -1873,7 +1879,7 @@ app.post('/api/televerser-vignette', function (req, res) {
 				}).toBuffer((err, buffer) => {
 					if (err) { res.send('erreur_televersement'); return false }
 					fs.writeFile(chemin, buffer, function() {
-						res.send('/fichiers/' + pad + '/' + fichier.filename)
+						res.send('/' + definirDossierFichiers(pad) + '/' + pad + '/' + fichier.filename)
 					})
 				})
 			}
@@ -1890,7 +1896,7 @@ app.post('/api/televerser-fond', function (req, res) {
 			if (err) { res.send('erreur_televersement'); return false }
 			const fichier = req.file
 			const pad = req.body.pad
-			const chemin = path.join(__dirname, '..', '/static/fichiers/' + pad + '/' + fichier.filename)
+			const chemin = path.join(__dirname, '..', '/static/' + definirDossierFichiers(pad) + '/' + pad + '/' + fichier.filename)
 			const extension = path.parse(fichier.filename).ext
 			if (extension.toLowerCase() === '.jpg' || extension.toLowerCase() === '.jpeg') {
 				sharp(chemin).withMetadata().rotate().jpeg().resize(1200, 1200, {
@@ -1899,7 +1905,7 @@ app.post('/api/televerser-fond', function (req, res) {
 				}).toBuffer((err, buffer) => {
 					if (err) { res.send('erreur_televersement'); return false }
 					fs.writeFile(chemin, buffer, function() {
-						res.send('/fichiers/' + pad + '/' + fichier.filename)
+						res.send('/' + definirDossierFichiers(pad) + '/' + pad + '/' + fichier.filename)
 					})
 				})
 			} else {
@@ -1909,7 +1915,7 @@ app.post('/api/televerser-fond', function (req, res) {
 				}).toBuffer((err, buffer) => {
 					if (err) { res.send('erreur_televersement'); return false }
 					fs.writeFile(chemin, buffer, function() {
-						res.send('/fichiers/' + pad + '/' + fichier.filename)
+						res.send('/' + definirDossierFichiers(pad) + '/' + pad + '/' + fichier.filename)
 					})
 				})
 			}
@@ -2163,7 +2169,7 @@ io.on('connection', function (socket) {
 								if (objet.media !== '' && objet.type !== 'embed') {
 									supprimerFichier(pad, objet.media)
 								}
-								if (objet.vignette !== '' && objet.vignette.substring(1, 9) === 'fichiers') {
+								if (objet.vignette !== '' && objet.vignette.substring(1, definirDossierFichiers(pad).length + 1) === definirDossierFichiers(pad)) {
 									supprimerVignette(objet.vignette)
 								}
 								const etherpad = process.env.ETHERPAD
@@ -2536,7 +2542,7 @@ io.on('connection', function (socket) {
 			db.hset('pads:' + pad, 'fond', fond, function (err) {
 				if (err) { socket.emit('erreur'); return false }
 				io.in('pad-' + pad).emit('modifierfond', fond)
-				if (ancienfond.substring(1, 9) === 'fichiers') {
+				if (ancienfond.substring(1, definirDossierFichiers(pad).length + 1) === definirDossierFichiers(pad)) {
 					const chemin = path.join(__dirname, '..', '/static' + ancienfond)
 					fs.removeSync(chemin)
 				}
@@ -2553,7 +2559,7 @@ io.on('connection', function (socket) {
 			db.hset('pads:' + pad, 'fond', fond, function (err) {
 				if (err) { socket.emit('erreur'); return false }
 				io.in('pad-' + pad).emit('modifiercouleurfond', fond)
-				if (ancienfond.substring(1, 9) === 'fichiers') {
+				if (ancienfond.substring(1, definirDossierFichiers(pad).length + 1) === definirDossierFichiers(pad)) {
 					const chemin = path.join(__dirname, '..', '/static' + ancienfond)
 					fs.removeSync(chemin)
 				}
@@ -2989,7 +2995,7 @@ io.on('connection', function (socket) {
 
 	socket.on('supprimerfichier', function (donnees) {
 		supprimerFichier(donnees.pad, donnees.fichier)
-		if (donnees.vignette && donnees.vignette.substring(1, 9) === 'fichiers') {
+		if (donnees.vignette && donnees.vignette.substring(1, definirDossierFichiers(donnees.pad).length + 1) === definirDossierFichiers(donnees.pad)) {
 			supprimerVignette(donnees.vignette)
 		}
 	})
@@ -3000,17 +3006,17 @@ io.on('connection', function (socket) {
 		}
 	})
 
-	socket.on('supprimervignettes', function (vignettes) {
-		for (let i = 0; i < vignettes.length; i++) {
-			if (vignettes[i].substring(1, 9) === 'fichiers') {
-				supprimerVignette(vignettes[i])
+	socket.on('supprimervignettes', function (donnees) {
+		for (let i = 0; i < donnees.vignettes.length; i++) {
+			if (donnees.vignettes[i].substring(1, definirDossierFichiers(donnees.pad).length + 1) === definirDossierFichiers(donnees.pad)) {
+				supprimerVignette(donnees.vignettes[i])
 			}
 		}
 	})
 
-	socket.on('supprimervignette', function (vignette) {
-		if (vignette.substring(1, 9) === 'fichiers') {
-			supprimerVignette(vignette)
+	socket.on('supprimervignette', function (donnees) {
+		if (donnees.vignette.substring(1, definirDossierFichiers(donnees.pad).length + 1) === definirDossierFichiers(donnees.pad)) {
+			supprimerVignette(donnees.vignette)
 		}
 	})
 
@@ -3764,7 +3770,7 @@ const televerser = multer({
 	storage: multer.diskStorage({
 		destination: function (req, fichier, callback) {
 			const pad = req.body.pad
-			const chemin = path.join(__dirname, '..', '/static/fichiers/' + pad + '/')
+			const chemin = path.join(__dirname, '..', '/static/' + definirDossierFichiers(pad) + '/' + pad + '/')
 			callback(null, chemin)
 		},
 		filename: function (req, fichier, callback) {
@@ -3804,11 +3810,19 @@ const televerserArchive = multer({
 }).single('fichier')
 
 function supprimerFichier (pad, fichier) {
-	const chemin = path.join(__dirname, '..', '/static/fichiers/' + pad + '/' + fichier)
+	const chemin = path.join(__dirname, '..', '/static/' + definirDossierFichiers(pad) + '/' + pad + '/' + fichier)
 	fs.removeSync(chemin)
 }
 
 function supprimerVignette (vignette) {
 	const chemin = path.join(__dirname, '..', '/static' + vignette)
 	fs.removeSync(chemin)
+}
+
+function definirDossierFichiers (id) {
+	if (process.env.NFS_PAD_NUMBER && process.env.NFS_PAD_NUMBER !== '' && process.env.NFS_FOLDER && process.env.NFS_FOLDER !== '' && id > process.env.NFS_PAD_NUMBER) {
+		return process.env.NFS_FOLDER
+	} else {
+		return 'fichiers'
+	}
 }

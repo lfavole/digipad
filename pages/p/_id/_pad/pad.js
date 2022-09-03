@@ -1,7 +1,7 @@
 import axios from 'axios'
 import imagesLoaded from 'imagesloaded'
 import pell from 'pell'
-import linkifyHtml from 'linkifyjs/html'
+import linkifyHtml from 'linkify-html'
 import saveAs from 'file-saver'
 import Panzoom from '@panzoom/panzoom'
 import ClipboardJS from 'clipboard'
@@ -1080,7 +1080,7 @@ export default {
 					vignette = '/img/video.png'
 					break
 				case 'pdf':
-					vignette = '/fichiers/' + this.pad.id + '/' + item.fichier.replace(/\.[^/.]+$/, '') + '.jpg'
+					vignette = '/' + this.definirDossierFichiers(this.pad.id) + '/' + this.pad.id + '/' + item.fichier.replace(/\.[^/.]+$/, '') + '.jpg'
 					break
 				case 'document':
 					vignette = '/img/document.png'
@@ -1302,7 +1302,8 @@ export default {
 						let texte = html.replace(/(<a [^>]*)(target="[^"]*")([^>]*>)/gi, '$1$3')
 						texte = texte.replace(/(<a [^>]*)(>)/gi, '$1 target="_blank"$2')
 						texte = linkifyHtml(texte, {
-							defaultProtocol: 'https'
+							defaultProtocol: 'https',
+							target: '_blank'
 						})
 						this.texte = texte
 					}.bind(this),
@@ -1379,7 +1380,7 @@ export default {
 						}
 						if (this.mode === 'edition') {
 							this.fichiers.push(donnees.fichier)
-							if (vignette !== '' && vignette.substring(1, 9) === 'fichiers') {
+							if (vignette !== '' && vignette.substring(1, this.definirDossierFichiers(this.pad.id).length + 1) === this.definirDossierFichiers(this.pad.id)) {
 								this.vignettes.push(vignette)
 							}
 						}
@@ -1458,7 +1459,7 @@ export default {
 				if (this.verifierURL(this.media) === false) {
 					this.fichiers.push(this.media)
 				}
-				if (this.vignette !== '' && this.vignette.substring(1, 9) === 'fichiers') {
+				if (this.vignette !== '' && this.vignette.substring(1, this.definirDossierFichiers(this.pad.id).length + 1) === this.definirDossierFichiers(this.pad.id)) {
 					this.vignettes.push(this.vignette)
 				}
 			}
@@ -1651,9 +1652,9 @@ export default {
 				const url = this.etherpad + '/api/1/deletePad?apikey=' + this.etherpadApi + '&padID=' + etherpadId
 				axios.get(url)
 			}
-			if (this.mode === 'creation' && this.vignette !== '' && this.vignette.substring(1, 9) === 'fichiers') {
+			if (this.mode === 'creation' && this.vignette !== '' && this.vignette.substring(1, this.definirDossierFichiers(this.pad.id).length + 1) === this.definirDossierFichiers(this.pad.id)) {
 				this.$socket.emit('supprimerfichier', { pad: this.pad.id, fichier: this.media, vignette: this.vignette })
-			} else if (this.mode === 'edition' && this.vignette !== '' && this.vignette.substring(1, 9) === 'fichiers') {
+			} else if (this.mode === 'edition' && this.vignette !== '' && this.vignette.substring(1, this.definirDossierFichiers(this.pad.id).length + 1) === this.definirDossierFichiers(this.pad.id)) {
 				this.vignettes.push(this.vignette)
 			}
 			this.media = ''
@@ -1701,9 +1702,9 @@ export default {
 						this.progressionVignette = pourcentage
 					}.bind(this)
 				}).then(function (reponse) {
-					if (this.mode === 'creation' && this.vignette !== '' && this.vignette.substring(1, 9) === 'fichiers') {
+					if (this.mode === 'creation' && this.vignette !== '' && this.vignette.substring(1, this.definirDossierFichiers(this.pad.id).length + 1) === this.definirDossierFichiers(this.pad.id)) {
 						this.$socket.emit('supprimerfichier', { pad: this.pad.id, fichier: this.media, vignette: this.vignette })
-					} else if (this.mode !== 'creation' && this.vignette !== '' && this.vignette.substring(1, 9) === 'fichiers') {
+					} else if (this.mode !== 'creation' && this.vignette !== '' && this.vignette.substring(1, this.definirDossierFichiers(this.pad.id).length + 1) === this.definirDossierFichiers(this.pad.id)) {
 						this.vignettes.push(this.vignette)
 					}
 					const donnees = reponse.data
@@ -1743,8 +1744,8 @@ export default {
 		remettreVignetteDefaut () {
 			const vignette = this.vignette
 			this.vignette = this.vignetteDefaut
-			if (vignette.substring(1, 9) === 'fichiers') {
-				this.$socket.emit('supprimervignette', vignette)
+			if (vignette.substring(1, this.definirDossierFichiers(this.pad.id).length + 1) === this.definirDossierFichiers(this.pad.id)) {
+				this.$socket.emit('supprimervignette', { pad: this.pad, vignette: vignette })
 			}
 			this.vignettes.forEach(function (item, index) {
 				if (item === this.vignetteDefaut) {
@@ -1782,7 +1783,7 @@ export default {
 					}
 				}.bind(this))
 				if (this.vignettes.length > 0) {
-					this.$socket.emit('supprimervignettes', this.vignettes)
+					this.$socket.emit('supprimervignettes', { pad: this.pad, vignettes: this.vignettes })
 				}
 			}
 		},
@@ -1836,11 +1837,11 @@ export default {
 					this.vignettes.splice(index, 1)
 				}
 			}.bind(this))
-			if (this.vignette !== this.vignetteDefaut && this.vignette.substring(1, 9) === 'fichiers') {
+			if (this.vignette !== this.vignetteDefaut && this.vignette.substring(1, this.definirDossierFichiers(this.pad.id).length + 1) === this.definirDossierFichiers(this.pad.id)) {
 				this.vignettes.push(this.vignette)
 			}
 			if (this.vignettes.length > 0) {
-				this.$socket.emit('supprimervignettes', this.vignettes)
+				this.$socket.emit('supprimervignettes', { pad: this.pad, vignettes: this.vignettes })
 			}
 			this.fermerModaleBloc()
 		},
@@ -1870,23 +1871,23 @@ export default {
 				let html
 				switch (item.type) {
 				case 'image':
-					html = '<span id="' + imageId + '" class="image"><img src="/fichiers/' + this.pad.id + '/' + item.media + '"></span>'
+					html = '<span id="' + imageId + '" class="image"><img src="/' + this.definirDossierFichiers(this.pad.id) + '/' + this.pad.id + '/' + item.media + '"></span>'
 					break
 				case 'lien-image':
 					html = '<span id="' + imageId + '" class="image"><img src="' + item.media + '"></span>'
 					break
 				case 'audio':
-					html = '<audio controls preload="metadata" src="/fichiers/' + this.pad.id + '/' + item.media + '"></audio>'
+					html = '<audio controls preload="metadata" src="/' + this.definirDossierFichiers(this.pad.id) + '/' + this.pad.id + '/' + item.media + '"></audio>'
 					break
 				case 'video':
-					html = '<video controls playsinline crossOrigin="anonymous" src="/fichiers/' + this.pad.id + '/' + item.media + '"></video>'
+					html = '<video controls playsinline crossOrigin="anonymous" src="/' + this.definirDossierFichiers(this.pad.id) + '/' + this.pad.id + '/' + item.media + '"></video>'
 					break
 				case 'pdf':
-					html = '<iframe src="/pdfjs/web/viewer.html?file=../../fichiers/' + this.pad.id + '/' + item.media + '" allowfullscreen></iframe>'
+					html = '<iframe src="/pdfjs/web/viewer.html?file=../../' + this.definirDossierFichiers(this.pad.id) + '/' + this.pad.id + '/' + item.media + '" allowfullscreen></iframe>'
 					break
 				case 'document':
 				case 'office':
-					html = '<iframe src="https://view.officeapps.live.com/op/embed.aspx?src=' + this.hote + '/fichiers/' + this.pad.id + '/' + item.media + '" allowfullscreen></iframe>'
+					html = '<iframe src="https://view.officeapps.live.com/op/embed.aspx?src=' + this.hote + '/' + this.definirDossierFichiers(this.pad.id) + '/' + this.pad.id + '/' + item.media + '" allowfullscreen></iframe>'
 					break
 				case 'embed':
 					if (item.source === 'etherpad') {
@@ -1980,7 +1981,7 @@ export default {
 								})
 							} else if (item.type === 'pdf' || item.type === 'document' || item.type === 'office') {
 								panel.addControl({
-									html: '<a class="material-icons telecharger" href="/fichiers/' + that.pad.id + '/' + item.media + '" target="_blank">file_download</a>',
+									html: '<a class="material-icons telecharger" href="/' + that.definirDossierFichiers(that.pad.id) + '/' + that.pad.id + '/' + item.media + '" target="_blank">file_download</a>',
 									name: 'telecharger'
 								})
 							}
@@ -2343,7 +2344,8 @@ export default {
 						let commentaire = html.replace(/(<a [^>]*)(target="[^"]*")([^>]*>)/gi, '$1$3')
 						commentaire = commentaire.replace(/(<a [^>]*)(>)/gi, '$1 target="_blank"$2')
 						commentaire = linkifyHtml(commentaire, {
-							defaultProtocol: 'https'
+							defaultProtocol: 'https',
+							target: '_blank'
 						})
 						this.commentaireModifie = commentaire
 					}.bind(this),
@@ -2402,7 +2404,8 @@ export default {
 						let commentaire = html.replace(/(<a [^>]*)(target="[^"]*")([^>]*>)/gi, '$1$3')
 						commentaire = commentaire.replace(/(<a [^>]*)(>)/gi, '$1 target="_blank"$2')
 						commentaire = linkifyHtml(commentaire, {
-							defaultProtocol: 'https'
+							defaultProtocol: 'https',
+							target: '_blank'
 						})
 						this.commentaire = commentaire
 					}.bind(this),
@@ -3137,6 +3140,13 @@ export default {
 				if (adminsNonConnectes.length > 0) {
 					this.$socket.emit('modifiernotification', this.pad.id, adminsNonConnectes)
 				}
+			}
+		},
+		definirDossierFichiers (id) {
+			if (process.env.nfsPadNumber && process.env.nfsPadNumber !== '' && process.env.nfsFolder && process.env.nfsFolder !== '' && id > process.env.nfsPadNumber) {
+				return process.env.nfsFolder
+			} else {
+				return 'fichiers'
 			}
 		},
 		quitterPage () {
