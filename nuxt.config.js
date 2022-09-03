@@ -43,7 +43,8 @@ module.exports = {
 	plugins: [
 		{ src: '~/plugins/vue-socket-io', mode: 'client' },
 		{ src: '~/plugins/vue-methods', mode: 'client' },
-		{ src: '~/plugins/vue-masonry-css', mode: 'client' }
+		{ src: '~/plugins/vue-masonry-css', mode: 'client' },
+		{ src: '~/plugins/matomo', mode: 'client' }
 	],
 	modules: [
 		'nuxt-i18n'
@@ -104,7 +105,10 @@ module.exports = {
 		etherpadApi: process.env.ETHERPAD_API_KEY,
 		adminPassword: process.env.ADMIN_PASSWORD,
 		uploadLimit: process.env.UPLOAD_LIMIT,
-		padLimit: process.env.PAD_LIMIT
+		padLimit: process.env.PAD_LIMIT,
+		matomo: process.env.MATOMO,
+		nfsPadNumber: process.env.NFS_PAD_NUMBER,
+		nfsFolder: process.env.NFS_FOLDER
 	},
 	buildModules: [
 		'@nuxtjs/eslint-module'

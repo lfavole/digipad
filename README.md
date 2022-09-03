@@ -44,6 +44,9 @@ ADMIN_PASSWORD (mot de passe pour accéder à la page d'administration /admin)
 EMAIL_HOST (hôte pour l'envoi d'emails)
 EMAIL_ADDRESS (adresse pour l'envoi d'emails)
 EMAIL_PASSWORD (mot de passe de l'adresse emails)
+MATOMO (lien vers un serveur Matomo)
+NFS_PAD_NUMBER (id de pad à partir de laquelle les fichiers seront enregistrés dans un dossier monté NFS - environ 200 000 pour 1 To de capacité disque)
+NFS_FOLDER (nom du dossier monté NFS, obligatoirement situé dans le dossier /static/)
 ```
 
 ### Projet Nuxt.js avec serveur Node.js (Express) et base de données Redis
