@@ -3820,7 +3820,7 @@ function supprimerVignette (vignette) {
 }
 
 function definirDossierFichiers (id) {
-	if (process.env.NFS_PAD_NUMBER && process.env.NFS_PAD_NUMBER !== '' && process.env.NFS_FOLDER && process.env.NFS_FOLDER !== '' && id > process.env.NFS_PAD_NUMBER) {
+	if (process.env.NFS_PAD_NUMBER && process.env.NFS_PAD_NUMBER !== '' && process.env.NFS_FOLDER && process.env.NFS_FOLDER !== '' && parseInt(id) > parseInt(process.env.NFS_PAD_NUMBER)) {
 		return process.env.NFS_FOLDER
 	} else {
 		return 'fichiers'

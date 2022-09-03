@@ -3143,7 +3143,7 @@ export default {
 			}
 		},
 		definirDossierFichiers (id) {
-			if (process.env.nfsPadNumber && process.env.nfsPadNumber !== '' && process.env.nfsFolder && process.env.nfsFolder !== '' && id > process.env.nfsPadNumber) {
+			if (process.env.nfsPadNumber && process.env.nfsPadNumber !== '' && process.env.nfsFolder && process.env.nfsFolder !== '' && parseInt(id) > parseInt(process.env.nfsPadNumber)) {
 				return process.env.nfsFolder
 			} else {
 				return 'fichiers'
