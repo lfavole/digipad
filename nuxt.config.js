@@ -2,6 +2,10 @@ let hote = 'localhost'
 if (process.env.NODE_ENV === 'production') {
 	hote = process.env.HOST
 }
+let port = 3000
+if (process.env.PORT) {
+	port = process.env.PORT
+}
 
 module.exports = {
 	head: {
@@ -84,7 +88,7 @@ module.exports = {
 		middleware: 'middleware'
 	},
 	server: {
-		port: 3000,
+		port: port,
 		host: hote
 	},
 	render: {

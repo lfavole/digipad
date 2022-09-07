@@ -31,9 +31,10 @@ pm2 start
 ```
 DOMAIN (protocole + domaine. ex : https://digipad.app)
 HOST (IP publique du serveur de production)
+PORT (port du serveur local nuxt.js / 3000 par défaut)
 DB_HOST (IP du serveur de base de données Redis)
 DB_PWD (mot de passe de la base de données Redis)
-DB_PORT (port de la base de données Redis)
+DB_PORT (port de la base de données Redis / 6379 par défaut)
 SESSION_KEY (clé de session Express Session)
 SESSION_DURATION (durée de la session de connexion des utilisateurs en millisecondes)
 ETHERPAD (lien vers un serveur Etherpad pour les documents collaboratifs)
