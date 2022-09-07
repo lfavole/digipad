@@ -20,7 +20,7 @@ if (process.env.DB_PORT) {
 if (process.env.NODE_ENV === 'production') {
 	db = redis.createClient({ host: process.env.DB_HOST, port: db_port, password: process.env.DB_PWD })
 } else {
-	db = redis.createClient()
+	db = redis.createClient({ port: db_port })
 }
 const bodyParser = require('body-parser')
 const helmet = require('helmet')
