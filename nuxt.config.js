@@ -95,7 +95,7 @@ module.exports = {
 		csp: {
 			hashAlgorithm: 'sha256',
 			policies: {
-				'script-src': ["'self'", "'unsafe-inline'"],
+				'script-src': ["'self'", "'unsafe-inline'", process.env.MATOMO],
 				'frame-ancestors': ["*"],
 				'frame-src': ["*", "blob:"]
 			}
