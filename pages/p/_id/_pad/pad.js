@@ -516,11 +516,9 @@ export default {
 			this.activite.unshift({ id: donnees.activiteId, identifiant: donnees.identifiant, nom: donnees.nom, titre: donnees.titre, date: donnees.date, couleur: donnees.couleur, type: 'colonne-supprimee' })
 			if (this.admin) {
 				this.$store.dispatch('modifierMessage', this.$t('colonneSupprimee'))
-			} else {
-				if (this.modaleBloc && parseInt(this.colonne) === parseInt(donnees.colonne)) {
-					this.fermerModaleBlocSansEnregistrement()
-					this.$store.dispatch('modifierMessage', this.$t('colonneActuelleSupprimee'))
-				}
+			} else if (!this.admin && this.modaleBloc && parseInt(this.colonne) === parseInt(donnees.colonne)) {
+				this.fermerModaleBlocSansEnregistrement()
+				this.$store.dispatch('modifierMessage', this.$t('colonneActuelleSupprimee'))
 			}
 			this.chargement = false
 		},
@@ -849,6 +847,22 @@ export default {
 						document.querySelector('#' + this.bloc).classList.add('actif')
 					} else if (this.action === 'modifier' && auteur === true) {
 						this.$store.dispatch('modifierMessage', this.$t('capsuleModifiee'))
+						this.fichiers.forEach(function (item, index) {
+							if (this.media === item) {
+								this.fichiers.splice(index, 1)
+							}
+						}.bind(this))
+						if (this.fichiers.length > 0) {
+							this.$socket.emit('supprimerfichiers', { pad: this.pad.id, fichiers: this.fichiers })
+						}
+						this.vignettes.forEach(function (item, index) {
+							if (this.vignette === item) {
+								this.vignettes.splice(index, 1)
+							}
+						}.bind(this))
+						if (this.vignettes.length > 0) {
+							this.$socket.emit('supprimervignettes', { pad: this.pad, vignettes: this.vignettes })
+						}
 					} else if (this.action === 'supprimer' && auteur === true) {
 						this.$store.dispatch('modifierMessage', this.$t('capsuleSupprimee'))
 					}
@@ -1769,22 +1783,6 @@ export default {
 				this.chargement = true
 				this.$socket.emit('modifierbloc', this.bloc, this.pad.id, this.pad.token, this.titre, this.texte, this.media, this.iframe, this.type, this.source, this.vignette, this.couleur, this.colonne, this.visibilite, this.identifiant, this.nom)
 				this.modaleBloc = false
-				this.fichiers.forEach(function (item, index) {
-					if (this.media === item) {
-						this.fichiers.splice(index, 1)
-					}
-				}.bind(this))
-				if (this.fichiers.length > 0) {
-					this.$socket.emit('supprimerfichiers', { pad: this.pad.id, fichiers: this.fichiers })
-				}
-				this.vignettes.forEach(function (item, index) {
-					if (this.vignette === item) {
-						this.vignettes.splice(index, 1)
-					}
-				}.bind(this))
-				if (this.vignettes.length > 0) {
-					this.$socket.emit('supprimervignettes', { pad: this.pad, vignettes: this.vignettes })
-				}
 			}
 		},
 		autoriserBloc (bloc, moderation) {
@@ -1825,7 +1823,7 @@ export default {
 				this.$socket.emit('supprimerfichier', { pad: this.pad.id, fichier: this.media, vignette: this.vignette })
 			}
 			this.fichiers.forEach(function (item, index) {
-				if (Object.keys(this.donneesBloc).length > 0 && item === this.donneesBloc.media) {
+				if (Object.keys(this.donneesBloc).length > 0 && this.donneesBloc.media && item === this.donneesBloc.media) {
 					this.fichiers.splice(index, 1)
 				}
 			}.bind(this))
