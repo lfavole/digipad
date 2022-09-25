@@ -21,7 +21,7 @@ module.exports = {
 			{ property: 'og:description', content: 'Une application collaborative proposée par La Digitale' },
 			{ property: 'og:type', content: 'website' },
 			{ property: 'og:url', content: 'https://digipad.app/' },
-			{ property: 'og:image', content: 'https://digipad.app/img/digipad.img' },
+			{ property: 'og:image', content: 'https://digipad.app/img/digipad.png' },
 			{ property: 'og:locale', content: 'fr_FR' }
 		],
 		noscript: [
