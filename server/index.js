@@ -3350,7 +3350,7 @@ function exporterPadsJson () {
 				const chemin = path.join(__dirname, '..', '/static/pads')
 				db.hgetall('pads:' + id, function (err, donnees) {
 					fs.exists(path.normalize(chemin + '/' + id + '.json'), function (existe) {
-						if (existe === false && ((donnees.hasOwnProperty('modifie') && moment(donnees.modifie).isBefore(moment().subtract(15, 'days'))) || (donnees.hasOwnProperty('date') && moment(donnees.date).isBefore(moment().subtract(15, 'days'))))) {
+						if (existe === false && ((donnees.hasOwnProperty('modifie') && moment(donnees.modifie).isBefore(moment().subtract(10, 'days'))) || (donnees.hasOwnProperty('date') && moment(donnees.date).isBefore(moment().subtract(10, 'days'))))) {
 							const donneesPad = new Promise(function (resolveMain) {
 								db.hgetall('pads:' + id, function (err, resultats) {
 									if (err) { resolveMain({}) }
