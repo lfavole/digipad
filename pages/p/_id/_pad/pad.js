@@ -1359,7 +1359,7 @@ export default {
 			pell.exec('foreColor', event.target.value)
 		},
 		ajouterFichier (champ) {
-			const formats = ['jpg', 'jpeg', 'png', 'gif', 'mp4', 'm4v', 'mp3', 'm4a', 'ogg', 'wav', 'pdf', 'ppt', 'pptx', 'odp', 'doc', 'docx', 'odt', 'ods', 'odg', 'xls', 'xlsx', 'flipchart', 'notebook', 'ubz', 'ipynb', 'dgs', 'dgc', 'dgb', 'sb3', 'epub', 'sprite3', 'pages', 'numbers', 'keynote']
+			const formats = ['jpg', 'jpeg', 'png', 'gif', 'mp4', 'm4v', 'mp3', 'm4a', 'ogg', 'wav', 'pdf', 'ppt', 'pptx', 'odp', 'doc', 'docx', 'odt', 'ods', 'odg', 'xls', 'xlsx', 'flipchart', 'notebook', 'ubz', 'ipynb', 'dgs', 'dgc', 'dgb', 'sb3', 'epub', 'sprite3', 'pages', 'numbers', 'keynote', 'csv', 'python', 'ltp']
 			const extension = champ.files[0].name.substring(champ.files[0].name.lastIndexOf('.') + 1).toLowerCase()
 			if (champ.files && champ.files[0] && formats.includes(extension) && champ.files[0].size < this.limite * 1024000) {
 				const fichier = champ.files[0]
@@ -1717,8 +1717,8 @@ export default {
 					}.bind(this)
 				}).then(function (reponse) {
 					if (this.mode === 'creation' && this.vignette !== '' && this.vignette.substring(1, this.definirDossierFichiers(this.pad.id).length + 1) === this.definirDossierFichiers(this.pad.id)) {
-						this.$socket.emit('supprimerfichier', { pad: this.pad.id, fichier: this.media, vignette: this.vignette })
-					} else if (this.mode !== 'creation' && this.vignette !== '' && this.vignette.substring(1, this.definirDossierFichiers(this.pad.id).length + 1) === this.definirDossierFichiers(this.pad.id)) {
+						this.$socket.emit('supprimervignette', { pad: this.pad, vignette: this.vignette })
+					} else if (this.mode === 'edition' && this.vignette !== '' && this.vignette.substring(1, this.definirDossierFichiers(this.pad.id).length + 1) === this.definirDossierFichiers(this.pad.id)) {
 						this.vignettes.push(this.vignette)
 					}
 					const donnees = reponse.data
@@ -1821,25 +1821,26 @@ export default {
 			this.titreModale = ''
 			if (this.mode === 'creation' && this.media !== '' && this.lien === '') {
 				this.$socket.emit('supprimerfichier', { pad: this.pad.id, fichier: this.media, vignette: this.vignette })
-			}
-			this.fichiers.forEach(function (item, index) {
-				if (Object.keys(this.donneesBloc).length > 0 && this.donneesBloc.media && item === this.donneesBloc.media) {
-					this.fichiers.splice(index, 1)
+			} else if (this.mode === 'edition') {
+				this.fichiers.forEach(function (item, index) {
+					if (Object.keys(this.donneesBloc).length > 0 && this.donneesBloc.hasOwnProperty('media') && item === this.donneesBloc.media) {
+						this.fichiers.splice(index, 1)
+					}
+				}.bind(this))
+				if (this.fichiers.length > 0) {
+					this.$socket.emit('supprimerfichiers', { pad: this.pad.id, fichiers: this.fichiers })
 				}
-			}.bind(this))
-			if (this.fichiers.length > 0) {
-				this.$socket.emit('supprimerfichiers', { pad: this.pad.id, fichiers: this.fichiers })
-			}
-			this.vignettes.forEach(function (item, index) {
-				if (Object.keys(this.donneesBloc).length > 0 && item === this.donneesBloc.vignette) {
-					this.vignettes.splice(index, 1)
+				this.vignettes.forEach(function (item, index) {
+					if (Object.keys(this.donneesBloc).length > 0 && this.donneesBloc.hasOwnProperty('vignette') && item === this.donneesBloc.vignette) {
+						this.vignettes.splice(index, 1)
+					}
+				}.bind(this))
+				if (this.vignette !== this.vignetteDefaut && this.vignette.substring(1, this.definirDossierFichiers(this.pad.id).length + 1) === this.definirDossierFichiers(this.pad.id)) {
+					this.vignettes.push(this.vignette)
 				}
-			}.bind(this))
-			if (this.vignette !== this.vignetteDefaut && this.vignette.substring(1, this.definirDossierFichiers(this.pad.id).length + 1) === this.definirDossierFichiers(this.pad.id)) {
-				this.vignettes.push(this.vignette)
-			}
-			if (this.vignettes.length > 0) {
-				this.$socket.emit('supprimervignettes', { pad: this.pad, vignettes: this.vignettes })
+				if (this.vignettes.length > 0) {
+					this.$socket.emit('supprimervignettes', { pad: this.pad, vignettes: this.vignettes })
+				}
 			}
 			this.fermerModaleBloc()
 		},
