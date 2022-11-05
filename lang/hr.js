@@ -23,6 +23,7 @@ export default {
 	nom: 'Ime',
 	enregistrer: 'Spremi',
 	modifierMotDePasse: 'Promjena lozinke',
+	modifierMotDePasseUtilisateur: 'Promjena korisničke lozinke',
 	padsCrees: 'Stvorene podloge',
 	padsRejoints: 'Združene podloge',
 	padsAdmins: 'Podloga za upravljanje',
@@ -324,5 +325,16 @@ export default {
 	email: 'Adresa e-pošte',
 	motDePasseOublie: 'Zaboravili ste lozinku?',
 	emailNonValide: 'Ova adresa e-pošte nije pridružena ovom identifikatoru.',
-	emailEnvoye: 'Poslana je poruka e-pošte za promjenu lozinke.'
+	emailEnvoye: 'Poslana je poruka e-pošte za promjenu lozinke.',
+	informationsGenerales: 'Opće informacije',
+	recupererDonneesPad: 'Oporavak podataka s podlogu',
+	numeroPad: 'Broj podlogu',
+	nombrePads: 'Ukupan broj podloge',
+	nombreUtilisateurs: 'Ukupan broj korisnika',
+	compteSupprime: 'Račun je izbrisan.',
+	confirmationSupprimerCompteAdmin: 'Jeste li sigurni da želite izbrisati ovaj račun?',
+	modifierDonneesPad: 'Uređivanje podataka podlogu',
+	champ: 'Sektor',
+	valeur: 'Vrijednost',
+	donneesModifiees: 'Izmijenjeni podaci.'
 }

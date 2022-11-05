@@ -23,6 +23,7 @@ export default {
 	nom: 'Nome',
 	enregistrer: 'Salva',
 	modifierMotDePasse: 'Modifica la password',
+	modifierMotDePasseUtilisateur: 'Modifica la password dell\'utente',
 	padsCrees: 'Pads creati',
 	padsRejoints: 'Pads visitati',
 	padsAdmins: 'Pads somministrati',
@@ -324,5 +325,16 @@ export default {
 	email: 'Indirizzo e-mail',
 	motDePasseOublie: 'Avete dimenticato la password?',
 	emailNonValide: 'Questo indirizzo e-mail non è associato a questo utente.',
-	emailEnvoye: 'Email di modifica della password inviata.'
+	emailEnvoye: 'Email di modifica della password inviata.',
+	informationsGenerales: 'Informazioni generali',
+	recupererDonneesPad: 'Recuperare i dati dal pad',
+	numeroPad: 'Numero di pad',
+	nombrePads: 'Numero totale di pad',
+	nombreUtilisateurs: 'Numero totale di utenti',
+	compteSupprime: 'Account eliminato.',
+	confirmationSupprimerCompteAdmin: 'Vuoi davvero eliminare questo account?',
+	modifierDonneesPad: 'Modifica dei dati del pad',
+	champ: 'Settore',
+	valeur: 'Valore',
+	donneesModifiees: 'Dati modificati.'
 }

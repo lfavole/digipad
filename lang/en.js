@@ -23,6 +23,7 @@ export default {
 	nom: 'Name',
 	enregistrer: 'Save',
 	modifierMotDePasse: 'Change the password',
+	modifierMotDePasseUtilisateur: 'Change the user password',
 	padsCrees: 'Created pads',
 	padsRejoints: 'Joined pads',
 	padsAdmins: 'Managed pads',
@@ -324,5 +325,16 @@ export default {
 	email: 'Email address',
 	motDePasseOublie: 'Forgot your password?',
 	emailNonValide: 'This email address is not associated with this username.',
-	emailEnvoye: 'Password change email sent.'
+	emailEnvoye: 'Password change email sent.',
+	informationsGenerales: 'General information',
+	recupererDonneesPad: 'Retrieve data from the pad',
+	numeroPad: 'Pad number',
+	nombrePads: 'Total number of pads',
+	nombreUtilisateurs: 'Total number of users',
+	compteSupprime: 'Account deleted.',
+	confirmationSupprimerCompteAdmin: 'Do you really want to delete this account?',
+	modifierDonneesPad: 'Change the data of the pad',
+	champ: 'Field',
+	valeur: 'value',
+	donneesModifiees: 'Data changed.'
 }
