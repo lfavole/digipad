@@ -1228,7 +1228,8 @@ export default {
 			this.chargement = true
 			const identifiant = this.identifiant
 			axios.post(this.hote + '/api/supprimer-compte', {
-				identifiant: identifiant
+				identifiant: identifiant,
+				type: 'utilisateur'
 			}).then(function (reponse) {
 				this.chargement = false
 				const donnees = reponse.data

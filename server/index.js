@@ -339,7 +339,7 @@ app.post('/api/recuperer-donnees-utilisateur', function (req, res) {
 		// Récupération et vérification des dossiers utilisateur
 		db.hgetall('utilisateurs:' + identifiant, function (err, donnees) {
 			let dossiers = []
-			if (err || !donnees.hasOwnProperty('dossiers')) {
+			if (err || donnees === null || !donnees.hasOwnProperty('dossiers')) {
 				res.json({ padsCrees: padsCrees, padsRejoints: padsRejoints, padsAdmins: padsAdmins, padsFavoris: padsFavoris, dossiers: [] })
 			} else {
 				dossiers = JSON.parse(donnees.dossiers)
@@ -1359,25 +1359,111 @@ app.post('/api/modifier-mot-de-passe-admin', function (req, res) {
 	const admin = req.body.admin
 	if (admin === process.env.ADMIN_PASSWORD) {
 		const identifiant = req.body.identifiant
-		db.exists('utilisateurs:' + identifiant, function (err, resultat) {
-			if (err) { res.send('erreur'); return false }
-			if (resultat === 1) {
-				db.hgetall('utilisateurs:' + identifiant, function (err) {
-					if (err) { res.send('erreur'); return false }
+		const email = req.body.email
+		if (identifiant !== '') {
+			db.exists('utilisateurs:' + identifiant, function (err, resultat) {
+				if (err) { res.send('erreur'); return false }
+				if (resultat === 1) {
 					const hash = bcrypt.hashSync(req.body.motdepasse, 10)
 					db.hset('utilisateurs:' + identifiant, 'motdepasse', hash)
 					res.send('motdepasse_modifie')
-				})
-			} else {
-				res.send('identifiant_non_valide')
-			}
-		})
+				} else {
+					res.send('identifiant_non_valide')
+				}
+			})
+		} else if (email !== '') {
+			db.keys('utilisateurs:*', function (err, utilisateurs) {
+				if (utilisateurs !== null) {
+					const donneesUtilisateurs = []
+					utilisateurs.forEach(function (utilisateur) {
+						const donneesUtilisateur = new Promise(function (resolve) {
+							db.hgetall('utilisateurs:' + utilisateur.substring(13), function (err, donnees) {
+								if (err) { resolve({}) }
+								if (donnees.hasOwnProperty('email')) {
+									resolve({ identifiant: utilisateur.substring(13), email: donnees.email })
+								} else {
+									resolve({})
+								}
+							})
+						})
+						donneesUtilisateurs.push(donneesUtilisateur)
+					})
+					Promise.all(donneesUtilisateurs).then(function (donnees) {
+						let utilisateurId = ''
+						donnees.forEach(function (utilisateur) {
+							if (utilisateur.hasOwnProperty('email') && utilisateur.email.toLowerCase() === email.toLowerCase()) {
+								utilisateurId = utilisateur.identifiant
+							}
+						})
+						if (utilisateurId !== '') {
+							const hash = bcrypt.hashSync(req.body.motdepasse, 10)
+							db.hset('utilisateurs:' + utilisateurId, 'motdepasse', hash)
+							res.send('motdepasse_modifie')
+						} else {
+							res.send('email_non_valide')
+						}
+					})
+				}
+			})
+		}
 	}
+})
+
+app.post('/api/recuperer-donnees-pad-admin', function (req, res) {
+	const pad = req.body.padId
+	db.exists('pads:' + pad, function (err, resultat) {
+		if (err) { res.send('erreur'); return false }
+		if (resultat === 1) {
+			db.hgetall('pads:' + pad, function (err, donneesPad) {
+				if (err) { res.send('erreur'); return false }
+				res.json(donneesPad)
+			})
+		}
+	})
+})
+
+app.post('/api/modifier-donnees-pad-admin', function (req, res) {
+	const pad = req.body.padId
+	const champ = req.body.champ
+	const valeur = req.body.valeur
+	db.exists('pads:' + pad, function (err, resultat) {
+		if (err) { res.send('erreur'); return false }
+		if (resultat === 1) {
+			if (champ === 'motdepasse') {
+				const hash = bcrypt.hashSync(valeur, 10)
+				db.hset('pads:' + pad, champ, hash)
+			} else if (champ === 'code') {
+				db.hset('pads:' + pad, champ, parseInt(valeur))
+			} else {
+				db.hset('pads:' + pad, champ, valeur)
+			}
+			res.send('donnees_modifiees')
+		}
+	})
+})
+
+app.post('/api/recuperer-donnees-admin', function (req, res) {
+	db.keys('pads:*', function (err, pads) {
+		if (err) { res.send('erreur'); return false }
+		if (pads !== null) {
+			db.keys('utilisateurs:*', function (err, utilisateurs) {
+				if (err) { res.send('erreur'); return false }
+				if (utilisateurs !== null) {
+					res.json({ pads: pads.length, utilisateurs: utilisateurs.length })
+				} else {
+					res.send('erreur')
+				}
+			})
+		} else {
+			res.send('erreur')
+		}
+	})
 })
 
 app.post('/api/supprimer-compte', function (req, res) {
 	const identifiant = req.body.identifiant
-	if (req.session.identifiant && req.session.identifiant === identifiant) {
+	const type = req.body.type
+	if ((req.session.identifiant && req.session.identifiant === identifiant) || type === 'admin') {
 		db.smembers('pads-crees:' + identifiant, function (err, pads) {
 			if (err) { res.send('erreur'); return false }
 			const donneesPads = []
@@ -1635,15 +1721,52 @@ app.post('/api/supprimer-compte', function (req, res) {
 						multi.del('couleurs:' + identifiant)
 						multi.del('noms:' + identifiant)
 						multi.exec(function () {
-							req.session.identifiant = ''
-							req.session.nom = ''
-							req.session.email = ''
-							req.session.langue = ''
-							req.session.statut = ''
-							req.session.affichage = ''
-							req.session.filtre = ''
-							req.session.destroy()
-							res.send('compte_supprime')
+							if (type === 'utilisateur') {
+								req.session.identifiant = ''
+								req.session.nom = ''
+								req.session.email = ''
+								req.session.langue = ''
+								req.session.statut = ''
+								req.session.affichage = ''
+								req.session.filtre = ''
+								req.session.destroy()
+							} else {
+								db.keys('sessions:*', function (err, sessions) {
+									if (sessions !== null) {
+										const donneesSessions = []
+										sessions.forEach(function (session) {
+											const donneesSession = new Promise(function (resolve) {
+												db.get('sessions:' + session.substring(9), function (err, donnees) {
+													if (err) { resolve({}) }
+													if (donnees !== null) {
+														donnees = JSON.parse(donnees)
+													} else {
+														resolve({})
+													}
+													if (donnees.hasOwnProperty('identifiant')) {
+														resolve({ session: session.substring(9), identifiant: donnees.identifiant })
+													} else {
+														resolve({})
+													}
+												})
+											})
+											donneesSessions.push(donneesSession)
+										})
+										Promise.all(donneesSessions).then(function (donnees) {
+											let sessionId = ''
+											donnees.forEach(function (item) {
+												if (item.hasOwnProperty('identifiant') && item.identifiant === identifiant) {
+													sessionId = item.session
+												}
+											})
+											if (sessionId !== '') {
+												db.del('sessions:' + sessionId)
+											}
+											res.send('compte_supprime')
+										})
+									}
+								})
+							}
 						})
 					})
 				})

@@ -10,18 +10,101 @@
 			</div>
 			<div id="conteneur">
 				<h1>
-					<span>{{ $t('modifierMotDePasse') }}</span>
+					<span>{{ $t('informationsGenerales') }}</span>
+				</h1>
+				<div class="conteneur">
+					<div><b>{{ $t('nombrePads') }} :</b> {{ nombrePads }}</div>
+					<div><b>{{ $t('nombreUtilisateurs') }} :</b> {{ nombreUtilisateurs }}</div>
+				</div>
+				<h1>
+					<span>{{ $t('modifierMotDePasseUtilisateur') }}</span>
 				</h1>
 				<div class="conteneur">
 					<label>{{ $t('identifiant') }}</label>
-					<input id="identifiant" type="text" maxlength="48" :value="identifiant" @input="identifiant = $event.target.value">
+					<input type="text" :value="identifiant" @input="identifiant = $event.target.value">
+				</div>
+				<div class="conteneur">
+					<label>{{ $t('email') }}</label>
+					<input type="text" :value="email" @input="email = $event.target.value">
 				</div>
 				<div class="conteneur">
 					<label>{{ $t('motDePasse') }}</label>
-					<input id="motdepasse" type="text" maxlength="48" :value="motdepasse" @input="motdepasse = $event.target.value">
+					<input type="text" maxlength="48" :value="motdepasse" @input="motdepasse = $event.target.value">
 				</div>
 				<div class="actions">
 					<span class="bouton" role="button" tabindex="0" @click="modifierMotDePasse">{{ $t('valider') }}</span>
+				</div>
+				<h1>
+					<span>{{ $t('recupererDonneesPad') }}</span>
+				</h1>
+				<div class="conteneur">
+					<label>{{ $t('numeroPad') }}</label>
+					<input type="number" :value="padId" @input="padId = $event.target.value">
+				</div>
+				<div class="conteneur" v-if="donneesPad !== ''">
+					<span class="donnees">{{ donneesPad }}</span>
+				</div>
+				<div class="actions">
+					<span class="bouton" role="button" tabindex="0" @click="recupererDonneesPad">{{ $t('valider') }}</span>
+				</div>
+				<h1>
+					<span>{{ $t('modifierDonneesPad') }}</span>
+				</h1>
+				<div class="conteneur">
+					<label>{{ $t('numeroPad') }}</label>
+					<input type="number" :value="padIdM" @input="padIdM = $event.target.value">
+				</div>
+				<div class="conteneur">
+					<label>{{ $t('champ') }}</label>
+					<select @change="champ = $event.target.value">
+						<option value="" :selected="champ === ''">-</option>
+						<option value="code" :selected="champ === 'code'">{{ $t('codeAcces') }}</option>
+						<option value="motdepasse" :selected="champ === 'motdepasse'">{{ $t('motDePasse') }}</option>
+					</select>
+				</div>
+				<div class="conteneur">
+					<label>{{ $t('valeur') }}</label>
+					<input type="text" :value="valeur" :maxlength="4" @input="valeur = $event.target.value" v-if="champ === 'code'">
+					<input type="text" :value="valeur" @input="valeur = $event.target.value" v-else>
+				</div>
+				<div class="actions">
+					<span class="bouton" role="button" tabindex="0" @click="modifierDonneesPad">{{ $t('valider') }}</span>
+				</div>
+				<h1>
+					<span>{{ $t('supprimerPad') }}</span>
+				</h1>
+				<div class="conteneur">
+					<label>{{ $t('numeroPad') }}</label>
+					<input type="number" :value="padIdS" @input="padIdS = $event.target.value">
+				</div>
+				<div class="actions">
+					<span class="bouton" role="button" tabindex="0" @click="modale = 'supprimer-pad'">{{ $t('valider') }}</span>
+				</div>
+				<h1>
+					<span>{{ $t('supprimerCompte') }}</span>
+				</h1>
+				<div class="conteneur">
+					<label>{{ $t('identifiant') }}</label>
+					<input type="text" :value="identifiantS" @input="identifiantS = $event.target.value">
+				</div>
+				<div class="actions">
+					<span class="bouton" role="button" tabindex="0" @click="modale = 'supprimer-compte'">{{ $t('valider') }}</span>
+				</div>
+			</div>
+		</div>
+
+		<div class="conteneur-modale alerte" v-if="modale !== ''">
+			<div class="modale">
+				<div class="conteneur">
+					<div class="contenu">
+						<div class="message" v-html="$t('confirmationSupprimerPad')" v-if="modale === 'supprimer-pad'" />
+						<div class="message" v-html="$t('confirmationSupprimerCompteAdmin')" v-else-if="modale === 'supprimer-compte'" />
+						<div class="actions">
+							<span role="button" tabindex="0" class="bouton" @click="modale = ''">{{ $t('non') }}</span>
+							<span role="button" tabindex="0" class="bouton" @click="supprimerPad" v-if="modale === 'supprimer-pad'">{{ $t('oui') }}</span>
+							<span role="button" tabindex="0" class="bouton" @click="supprimerCompte" v-else-if="modale === 'supprimer-compte'">{{ $t('oui') }}</span>
+						</div>
+					</div>
 				</div>
 			</div>
 		</div>
@@ -33,17 +116,37 @@ import axios from 'axios'
 
 export default {
 	name: 'Admin',
+	async asyncData (context) {
+		const { data } = await axios.post(context.store.state.hote + '/api/recuperer-donnees-admin', {
+			headers: { 'Content-Type': 'application/json' }
+		})
+		if (data !== 'erreur') {
+			return {
+				nombrePads: data.pads,
+				nombreUtilisateurs: data.utilisateurs
+			}
+		}
+	},
 	data () {
 		return {
 			acces: false,
 			admin: '',
+			modale: '',
 			identifiant: '',
-			motdepasse: ''
+			email: '',
+			motdepasse: '',
+			padId: '',
+			padIdS: '',
+			padIdM: '',
+			donneesPad: '',
+			identifiantS: '',
+			champ: '',
+			valeur: ''
 		}
 	},
 	head () {
 		return {
-			title: 'Digipad by La Digitale'
+			title: 'Admin - Digipad by La Digitale'
 		}
 	},
 	computed: {
@@ -81,23 +184,132 @@ export default {
 			}
 		},
 		modifierMotDePasse () {
-			if (this.identifiant !== '' && this.motdepasse !== '') {
+			if (this.motdepasse !== '' && (this.identifiant !== '' || this.email !== '')) {
 				this.chargement = true
 				axios.post(this.hote + '/api/modifier-mot-de-passe-admin', {
 					admin: this.admin,
 					identifiant: this.identifiant,
+					email: this.email,
 					motdepasse: this.motdepasse
 				}).then(function (reponse) {
 					this.chargement = false
 					const donnees = reponse.data
 					if (donnees === 'erreur') {
-						this.$store.dispatch('modifierAlerte', this.$t('erreurCommunicationServeur'))
+						this.$store.dispatch('modifierAlerte', this.$t('erreurActionServeur'))
 					} else if (donnees === 'identifiant_non_valide') {
 						this.$store.dispatch('modifierAlerte', this.$t('identifiantNonValide'))
+					} else if (donnees === 'email_non_valide') {
+						this.$store.dispatch('modifierAlerte', this.$t('erreurEmail'))
 					} else {
-						this.identifiant = ''
-						this.motdepasse = ''
 						this.$store.dispatch('modifierMessage', this.$t('motDePasseModifie'))
+					}
+					this.identifiant = ''
+					this.motdepasse = ''
+					this.email = ''
+				}.bind(this)).catch(function () {
+					this.chargement = false
+					this.$store.dispatch('modifierAlerte', this.$t('erreurCommunicationServeur'))
+				}.bind(this))
+			}
+		},
+		recupererDonneesPad () {
+			if (this.padId !== '') {
+				this.chargement = true
+				axios.post(this.hote + '/api/recuperer-donnees-pad-admin', {
+					padId: this.padId
+				}).then(function (reponse) {
+					this.chargement = false
+					const donnees = reponse.data
+					if (donnees === 'erreur') {
+						this.$store.dispatch('modifierAlerte', this.$t('erreurActionServeur'))
+					} else {
+						this.donneesPad = donnees
+					}
+					this.padId = ''
+				}.bind(this)).catch(function () {
+					this.chargement = false
+					this.$store.dispatch('modifierAlerte', this.$t('erreurCommunicationServeur'))
+				}.bind(this))
+			}
+		},
+		modifierDonneesPad () {
+			if (this.padIdM !== '' && this.champ !== '' && this.valeur !== '') {
+				this.chargement = true
+				axios.post(this.hote + '/api/modifier-donnees-pad-admin', {
+					padId: this.padIdM,
+					champ: this.champ,
+					valeur: this.valeur
+				}).then(function (reponse) {
+					this.chargement = false
+					const donnees = reponse.data
+					if (donnees === 'erreur') {
+						this.$store.dispatch('modifierAlerte', this.$t('erreurActionServeur'))
+					} else {
+						this.$store.dispatch('modifierMessage', this.$t('donneesModifiees'))
+					}
+					this.padIdM = ''
+					this.champ = ''
+					this.valeur = ''
+				}.bind(this)).catch(function () {
+					this.chargement = false
+					this.$store.dispatch('modifierAlerte', this.$t('erreurCommunicationServeur'))
+				}.bind(this))
+			}
+		},
+		supprimerPad () {
+			if (this.padIdS !== '') {
+				this.modale = ''
+				this.chargement = true
+				axios.post(this.hote + '/api/recuperer-donnees-pad-admin', {
+					padId: this.padIdS
+				}).then(function (reponse) {
+					this.chargement = false
+					const donnees = reponse.data
+					if (donnees === 'erreur') {
+						this.$store.dispatch('modifierAlerte', this.$t('erreurActionServeur'))
+					} else {
+						const identifiant = donnees.identifiant
+						axios.post(this.hote + '/api/supprimer-pad', {
+							padId: this.padIdS,
+							type: 'pad',
+							identifiant: identifiant
+						}).then(function (reponse) {
+							this.chargement = false
+							const donnees = reponse.data
+							if (donnees === 'erreur_suppression') {
+								this.$store.dispatch('modifierAlerte', this.$t('erreurSuppressionPad'))
+							} else {
+								this.$store.dispatch('modifierMessage', this.$t('padSupprime'))
+								this.padIdS = ''
+							}
+						}.bind(this)).catch(function () {
+							this.chargement = false
+							this.padIdS = ''
+							this.$store.dispatch('modifierAlerte', this.$t('erreurCommunicationServeur'))
+						}.bind(this))
+					}
+				}.bind(this)).catch(function () {
+					this.chargement = false
+					this.padIdS = ''
+					this.$store.dispatch('modifierAlerte', this.$t('erreurCommunicationServeur'))
+				}.bind(this))
+			}
+		},
+		supprimerCompte () {
+			if (this.identifiantS !== '') {
+				this.modale = ''
+				this.chargement = true
+				axios.post(this.hote + '/api/supprimer-compte', {
+					identifiant: this.identifiantS,
+					type: 'admin'
+				}).then(function (reponse) {
+					this.chargement = false
+					const donnees = reponse.data
+					if (donnees === 'erreur') {
+						this.$store.dispatch('modifierAlerte', this.$t('erreurActionServeur'))
+					} else {
+						this.$store.dispatch('modifierMessage', this.$t('compteSupprime'))
+						this.identifiantS = ''
 					}
 				}.bind(this)).catch(function () {
 					this.chargement = false
@@ -114,6 +326,10 @@ export default {
 #accueil {
 	width: 100%;
 	height: 100%;
+}
+
+#page {
+	overflow: auto;
 }
 
 #langues {
@@ -147,20 +363,18 @@ export default {
 
 #conteneur {
     width: 100%;
-    height: 100%;
 	max-width: 500px;
 	margin: auto;
 	padding-top: 5em;
-	overflow: auto;
+	padding-bottom: 5em;
 }
 
 #conteneur h1 {
     font-family: 'HKGroteskWide-ExtraBold', 'HKGrotesk-ExtraBold', sans-serif;
     font-size: 2rem;
 	font-weight: 900;
-    margin-bottom: 0.85em;
+	margin: 0 1.5rem 0.85em;
     line-height: 1.4;
-	text-align: center;
 }
 
 #conteneur .conteneur {
@@ -179,6 +393,7 @@ export default {
 	font-weight: 700;
 }
 
+#conteneur .conteneur select,
 #conteneur .conteneur input {
 	display: block;
     width: 100%;
@@ -189,13 +404,29 @@ export default {
 	line-height: 1.5;
 }
 
-.actions {
+#conteneur .conteneur select {
+	background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" height="14" viewBox="0 0 29 14" width="29"><path fill="%23000000" d="M9.37727 3.625l5.08154 6.93523L19.54036 3.625" /></svg>') center right no-repeat;
+	padding-right: 30px;
+}
+
+#conteneur .conteneur div:first-child {
+    margin-bottom: 10px;
+}
+
+#conteneur .conteneur .donnees {
+	user-select: text!important;
+	-webkit-user-select: text!important;
+	-webkit-touch-callout: default!important;
+}
+
+#conteneur .actions {
 	display: flex;
 	justify-content: center;
 	flex-wrap: wrap;
+	margin-bottom: 4rem;
 }
 
-.actions .bouton {
+#conteneur .actions .bouton {
 	display: inline-block;
 	width: 180px;
     line-height: 1;
@@ -212,18 +443,18 @@ export default {
     transition: all 0.1s ease-in;
 }
 
-.actions .bouton:hover {
+#conteneur .actions .bouton:hover {
     color: #fff;
 	text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.3);
 	background: #00ced1;
 }
 
-.actions .bouton:last-child {
+#conteneur .actions .bouton:last-child {
 	margin-right: 0;
 }
 
 @media screen and (max-width: 359px) {
-	.actions .bouton {
+	#conteneur .actions .bouton {
 		font-size: 0.75em!important;
 		width: 130px;
 		padding: 1em 0.5em;
@@ -231,7 +462,7 @@ export default {
 }
 
 @media screen and (min-width: 360px) and (max-width: 599px) {
-	.actions .bouton {
+	#conteneur .actions .bouton {
 		width: 145px;
 	}
 }
@@ -248,7 +479,7 @@ export default {
 		margin-bottom: 1em;
 	}
 
-	.actions .bouton {
+	#conteneur .actions .bouton {
 		font-size: 0.85em;
 		margin-bottom: 1em;
 	}
@@ -260,7 +491,7 @@ export default {
 		margin-bottom: 1em;
 	}
 
-	.actions .bouton {
+	#conteneur .actions .bouton {
 		font-size: 0.85em!important;
 	}
 }
