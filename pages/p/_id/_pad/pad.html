@@ -876,7 +876,7 @@
 					</div>
 					<div id="recherche" v-if="pad.liens === 'actives' && !chargementLien && Object.keys(resultats).length > 0 && media === ''">
 						<div id="resultats">
-							<div class="item" :data-w="resultat.previewWidth" :data-h="resultat.previewHeight" v-for="(resultat, index) in resultats.hits" @click="selectionnerImage(resultat.largeImageURL)" :key="'image_' + index">
+							<div class="item" :data-w="resultat.previewWidth" :data-h="resultat.previewHeight" v-for="(resultat, index) in resultats.hits" @click="selectionnerImage(resultat.previewURL.replace('_150', '_1280'))" :key="'image_' + index">
 								<img :src="resultat.previewURL">
 							</div>
 						</div>
