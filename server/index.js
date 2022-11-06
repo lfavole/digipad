@@ -1443,20 +1443,41 @@ app.post('/api/modifier-donnees-pad-admin', function (req, res) {
 })
 
 app.post('/api/recuperer-donnees-admin', function (req, res) {
-	db.keys('pads:*', function (err, pads) {
-		if (err) { res.send('erreur'); return false }
-		if (pads !== null) {
-			db.keys('utilisateurs:*', function (err, utilisateurs) {
-				if (err) { res.send('erreur'); return false }
-				if (utilisateurs !== null) {
-					res.json({ pads: pads.length, utilisateurs: utilisateurs.length })
-				} else {
-					res.send('erreur')
-				}
-			})
-		} else {
-			res.send('erreur')
-		}
+	const donneesPads = new Promise(function (resolve) {
+		db.keys('pads:*', function (err, pads) {
+			if (err) { resolve(0) }
+			if (pads !== null) {
+				resolve(pads.length)
+			} else {
+				resolve(0)
+			}
+		})
+	})
+	const donneesUtilisateurs = new Promise(function (resolve) {
+		db.keys('utilisateurs:*', function (err, utilisateurs) {
+			if (err) { resolve(0) }
+			if (utilisateurs !== null) {
+				resolve(utilisateurs.length)
+			} else {
+				resolve(0)
+			}
+		})
+	})
+	const donneesSessions = new Promise(function (resolve) {
+		db.keys('sessions:*', function (err, sessions) {
+			if (err) { resolve(0) }
+			if (sessions !== null) {
+				resolve(sessions.length)
+			} else {
+				resolve(0)
+			}
+		})
+	})
+	Promise.all([donneesPads, donneesUtilisateurs, donneesSessions]).then(function (donnees) {
+		const totalPads = donnees[0]
+		const totalUtilisateurs = donnees[1]
+		const totalSessions = donnees[2]
+		res.json({ pads: totalPads, utilisateurs: totalUtilisateurs, sessions: totalSessions })
 	})
 })
 

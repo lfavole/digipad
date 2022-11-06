@@ -15,6 +15,7 @@
 				<div class="conteneur">
 					<div><b>{{ $t('nombrePads') }} :</b> {{ nombrePads }}</div>
 					<div><b>{{ $t('nombreUtilisateurs') }} :</b> {{ nombreUtilisateurs }}</div>
+					<div><b>{{ $t('nombreSessions') }} :</b> {{ nombreSessions }}</div>
 				</div>
 				<h1>
 					<span>{{ $t('modifierMotDePasseUtilisateur') }}</span>
@@ -123,7 +124,8 @@ export default {
 		if (data !== 'erreur') {
 			return {
 				nombrePads: data.pads,
-				nombreUtilisateurs: data.utilisateurs
+				nombreUtilisateurs: data.utilisateurs,
+				nombreSessions: data.sessions
 			}
 		}
 	},
@@ -409,8 +411,13 @@ export default {
 	padding-right: 30px;
 }
 
-#conteneur .conteneur div:first-child {
+#conteneur .conteneur div:first-child,
+#conteneur .conteneur div:nth-child(2) {
     margin-bottom: 10px;
+}
+
+#conteneur .conteneur div:last-child {
+    margin-bottom: 3rem;
 }
 
 #conteneur .conteneur .donnees {

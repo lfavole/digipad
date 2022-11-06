@@ -330,6 +330,7 @@ export default {
 	recupererDonneesPad: 'Oporavak podataka s podlogu',
 	numeroPad: 'Broj podlogu',
 	nombrePads: 'Ukupan broj podloge',
+	nombreSessions: 'Ukupan broj trenutnih sesija',
 	nombreUtilisateurs: 'Ukupan broj korisnika',
 	compteSupprime: 'Račun je izbrisan.',
 	confirmationSupprimerCompteAdmin: 'Jeste li sigurni da želite izbrisati ovaj račun?',

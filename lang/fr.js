@@ -330,6 +330,7 @@ export default {
 	recupererDonneesPad: 'Récupérer les données du pad',
 	numeroPad: 'Numéro du pad',
 	nombrePads: 'Nombre total de pads',
+	nombreSessions: 'Nombre total de sessions en cours',
 	nombreUtilisateurs: 'Nombre total d\'utilisateurs',
 	compteSupprime: 'Compte supprimé.',
 	confirmationSupprimerCompteAdmin: 'Souhaitez-vous vraiment supprimer ce compte&nbsp;?',
