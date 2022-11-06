@@ -1443,7 +1443,7 @@ app.post('/api/modifier-donnees-pad-admin', function (req, res) {
 })
 
 app.post('/api/recuperer-donnees-admin', function (req, res) {
-	const donneesPads = new Promise(function (resolve) {
+	const donneesPadsDb = new Promise(function (resolve) {
 		db.keys('pads:*', function (err, pads) {
 			if (err) { resolve(0) }
 			if (pads !== null) {
@@ -1453,7 +1453,30 @@ app.post('/api/recuperer-donnees-admin', function (req, res) {
 			}
 		})
 	})
+	const donneesPadsFichiers = new Promise(function (resolve) {
+		fs.readdir(path.join(__dirname, '..', '/static/pads'), function (err, fichiers) {
+			if (err) { resolve(0) }
+			if (fichiers !== null) {
+				fichiers = fichiers.filter(function (fichier) {
+					return fichier !== '.gitignore' && !fichier.includes('pad-')
+				})
+				resolve(fichiers.length)
+			} else {
+				resolve(0)
+			}
+		})
+	})
 	const donneesUtilisateurs = new Promise(function (resolve) {
+		db.keys('couleurs:*', function (err, couleurs) {
+			if (err) { resolve(0) }
+			if (couleurs !== null) {
+				resolve(couleurs.length)
+			} else {
+				resolve(0)
+			}
+		})
+	})
+	const donneesComptes = new Promise(function (resolve) {
 		db.keys('utilisateurs:*', function (err, utilisateurs) {
 			if (err) { resolve(0) }
 			if (utilisateurs !== null) {
@@ -1473,11 +1496,12 @@ app.post('/api/recuperer-donnees-admin', function (req, res) {
 			}
 		})
 	})
-	Promise.all([donneesPads, donneesUtilisateurs, donneesSessions]).then(function (donnees) {
-		const totalPads = donnees[0]
-		const totalUtilisateurs = donnees[1]
-		const totalSessions = donnees[2]
-		res.json({ pads: totalPads, utilisateurs: totalUtilisateurs, sessions: totalSessions })
+	Promise.all([donneesPadsDb, donneesPadsFichiers, donneesUtilisateurs, donneesComptes, donneesSessions]).then(function (donnees) {
+		const totalPads = donnees[0] + donnees[1]
+		const totalUtilisateurs = donnees[2]
+		const totalComptes = donnees[3]
+		const totalSessions = donnees[4]
+		res.json({ pads: totalPads, utilisateurs: totalUtilisateurs, comptes: totalComptes, sessions: totalSessions })
 	})
 })
 
