@@ -76,8 +76,8 @@ const expressSession = session(sessionOptions)
 const sharedsession = require('express-socket.io-session')
 const transporter = nodemailer.createTransport({
 	host: process.env.EMAIL_HOST,
-	port: 465,
-	secure: true,
+	port: process.env.EMAIL_PORT,
+	secure: process.env.EMAIL_SECURE,
 	auth: {
 		user: process.env.EMAIL_ADDRESS,
 		pass: process.env.EMAIL_PASSWORD
@@ -100,14 +100,6 @@ cron.schedule('59 23 * * Saturday', () => { // tous les samedis à 23h59
 	fs.emptyDirSync(path.join(__dirname, '..', '/static/temp'))
 	exporterPadsJson()
 })
-
-/* cron.schedule('0 0 1,15 * *', () => { // tous les 1er et 15 du mois
-	exporterPadsJson()
-})
-
-cron.schedule('0 0 5 * *', () => { // tous les 5 du mois
-	supprimerAnciensPads()
-}) */
 
 app.set('trust proxy', true)
 app.use(helmet({ frameguard: false }))
