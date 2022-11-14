@@ -1767,6 +1767,7 @@ app.post('/api/supprimer-compte', function (req, res) {
 								req.session.affichage = ''
 								req.session.filtre = ''
 								req.session.destroy()
+								res.send('compte_supprime')
 							} else {
 								db.keys('sessions:*', function (err, sessions) {
 									if (sessions !== null) {
