@@ -65,13 +65,13 @@
 }
 
 #ajouter-admin input,
-#copier-code input,
-#code-acces input {
+#copier-code input {
 	display: block;
 	width: calc(100% - 34px);
 	margin-right: 10px;
 }
 
+#code-acces input,
 #copier-lien input {
 	display: block;
 	width: calc(100% - 68px);
@@ -86,6 +86,7 @@
 	cursor: pointer;
 }
 
+#code-acces span:last-child,
 #copier-lien span:last-child {
 	margin-left: 10px;
 }

@@ -338,5 +338,8 @@ export default {
 	modifierDonneesPad: 'Modifier les données du pad',
 	champ: 'Champ',
 	valeur: 'Valeur',
-	donneesModifiees: 'Données modifiées.'
+	donneesModifiees: 'Données modifiées.',
+	codeAccesModifie: 'Code d\'accès modifié.',
+	modifierCode: 'Modifier le code d\'accès',
+	annulerModifierCode: 'Annuler la modification du code d\'accès'
 }

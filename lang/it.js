@@ -338,5 +338,8 @@ export default {
 	modifierDonneesPad: 'Modifica dei dati del pad',
 	champ: 'Settore',
 	valeur: 'Valore',
-	donneesModifiees: 'Dati modificati.'
+	donneesModifiees: 'Dati modificati.',
+	codeAccesModifie: 'Codice di accesso modificato.',
+	modifierCode: 'Modifica del codice di accesso',
+	annulerModifierCode: 'Annullamento della modifica del codice di accesso'
 }

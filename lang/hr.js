@@ -338,5 +338,8 @@ export default {
 	modifierDonneesPad: 'Uređivanje podataka podlogu',
 	champ: 'Sektor',
 	valeur: 'Vrijednost',
-	donneesModifiees: 'Izmijenjeni podaci.'
+	donneesModifiees: 'Izmijenjeni podaci.',
+	codeAccesModifie: 'Pristupni kod je promijenjen.',
+	modifierCode: 'Promjena pristupnog koda',
+	annulerModifierCode: 'Nepromijenjena šifra'
 }

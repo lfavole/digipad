@@ -311,6 +311,14 @@ export default {
 				this.$store.dispatch('modifierMessage', this.$t('titrePadModifie'))
 			}
 		},
+		modifiercodeacces: function (code) {
+			this.pad.code = code
+			this.chargement = false
+			this.modificationCode = false
+			if (this.admin) {
+				this.$store.dispatch('modifierMessage', this.$t('codeAccesModifie'))
+			}
+		},
 		modifieradmins: function (admins) {
 			this.pad.admins = admins
 			this.chargement = false
@@ -688,6 +696,7 @@ export default {
 			accesAutorise: false,
 			codeAcces: '',
 			codeVisible: false,
+			modificationCode: false,
 			modaleCodeAcces: false,
 			codeqr: '',
 			modaleCodeQR: false,
@@ -902,7 +911,13 @@ export default {
 			this.$socket.emit('connexion', { pad: this.pad.id, identifiant: this.identifiant, nom: this.nom })
 		} else if (this.pad.acces === 'code') {
 			this.$nuxt.$loading.start()
-			if (this.admin || this.acces.includes(this.pad.id)) {
+			let autorisation = false
+			this.acces.forEach(function (acces) {
+				if (acces.hasOwnProperty('code') && acces.code === this.pad.code && acces.hasOwnProperty('pad') && acces.pad === this.pad.id) {
+					autorisation = true
+				}
+			}.bind(this))
+			if (this.admin || autorisation === true) {
 				this.accesAutorise = true
 				this.$socket.emit('connexion', { pad: this.pad.id, identifiant: this.identifiant, nom: this.nom })
 			}
@@ -2717,7 +2732,23 @@ export default {
 			this.codeVisible = true
 		},
 		masquerCodeAcces () {
+			this.modificationCode = false
 			this.codeVisible = false
+		},
+		afficherModifierCodeAcces () {
+			this.codeVisible = true
+			this.modificationCode = true
+		},
+		annulerModifierCodeAcces () {
+			this.codeVisible = false
+			this.modificationCode = false
+		},
+		modifierCodeAcces () {
+			const code = document.querySelector('#code-acces input').value
+			if (this.pad.code !== code && code !== '') {
+				this.$socket.emit('modifiercodeacces', this.pad.id, code, this.identifiant)
+				this.chargement = true
+			}
 		},
 		verifierCodeAcces () {
 			this.chargement = true

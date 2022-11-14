@@ -1846,8 +1846,54 @@ app.post('/api/verifier-code-acces', function (req, res) {
 			if (!req.session.acces) {
 				req.session.acces = []
 			}
-			if (!req.session.acces.includes(pad)) {
-				req.session.acces.push(pad)
+			const padAcces = req.session.acces.map(function (e) {
+				if (e.hasOwnProperty('pad')) {
+					return e.pad 
+				} else {
+					return ''
+				}
+			})
+			if (padAcces === pad) {
+				req.session.acces.forEach(function (acces, index) {
+					if (acces.pad === pad) {
+						req.session.acces[index].code = donnees.code
+					}
+				})
+			} else {
+				req.session.acces.push({ code: donnees.code, pad: pad })
+			}
+			res.send('code_correct')
+		} else {
+			res.send('code_incorrect')
+		}
+	})
+})
+
+app.post('/api/modifier-code-acces', function (req, res) {
+	const pad = req.body.pad
+	const code = req.body.code
+	if (req.session.identifiant && req.session.identifiant === identifiant) {
+		const affichage = req.body.affichage
+		db.hset('utilisateurs:' + identifiant, 'affichage', affichage)
+		req.session.affichage = affichage
+		res.send('affichage_modifie')
+	} else {
+		res.send('non_connecte')
+	}
+	db.hgetall('pads:' + pad, function (err, donnees) {
+		if (err) { res.send('erreur'); return false }
+		if (req.body.code === donnees.code) {
+			if (!req.session.acces) {
+				req.session.acces = []
+			}
+			if (req.session.acces.map(function (e) { return e.pad }) === pad) {
+				req.session.acces.forEach(function (acces, index) {
+					if (acces.pad === pad) {
+						req.session.acces[index].code = donnees.code
+					}
+				})
+			} else {
+				req.session.acces.push({ code: donnees.code, pad: pad })
 			}
 			res.send('code_correct')
 		} else {
@@ -2599,6 +2645,19 @@ io.on('connection', function (socket) {
 			db.hset('pads:' + pad, 'titre', titre, function (err) {
 				if (err) { socket.emit('erreur'); return false }
 				io.in('pad-' + pad).emit('modifiertitre', titre)
+				socket.handshake.session.cookie.expires = new Date(Date.now() + dureeSession)
+				socket.handshake.session.save()
+			})
+		} else {
+			socket.emit('deconnecte')
+		}
+	})
+
+	socket.on('modifiercodeacces', function (pad, code, identifiant) {
+		if (identifiant !== '' && identifiant !== undefined && socket.handshake.session.identifiant === identifiant) {
+			db.hset('pads:' + pad, 'code', code, function (err) {
+				if (err) { socket.emit('erreur'); return false }
+				io.in('pad-' + pad).emit('modifiercodeacces', code)
 				socket.handshake.session.cookie.expires = new Date(Date.now() + dureeSession)
 				socket.handshake.session.save()
 			})

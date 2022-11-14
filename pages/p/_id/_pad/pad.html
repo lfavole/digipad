@@ -180,11 +180,16 @@
 			<div class="conteneur" v-if="pad.acces === 'code'">
 				<label>{{ $t('codeAcces') }}</label>
 				<div id="code-acces">
-					<input type="text" disabled :value="pad.code" v-if="codeVisible">
-					<input type="password" disabled :value="pad.code" v-else>
+					<input type="text" maxlength="18" :disabled="modificationCode === false" :value="pad.code" v-if="codeVisible">
+					<input type="password" :disabled="modificationCode === false" :value="pad.code" v-else>
+					<span class="icone" role="button" tabindex="0" :title="$t('modifierCode')" @click="afficherModifierCodeAcces" v-if="!modificationCode"><i class="material-icons">edit</i></span>
+					<span class="icone" role="button" tabindex="0" :title="$t('annulerModifierCode')" @click="annulerModifierCodeAcces" v-else><i class="material-icons">edit_off</i></span>
 					<span class="icone" role="button" tabindex="0" :title="$t('masquerCode')" @click="masquerCodeAcces" v-if="codeVisible"><i class="material-icons">visibility_off</i></span>
 					<span class="icone" role="button" tabindex="0" :title="$t('afficherCode')" @click="afficherCodeAcces" v-else><i class="material-icons">visibility</i></span>
 				</div>
+			</div>
+			<div class="conteneur conteneur-bouton" v-if="modificationCode">
+				<span role="button" tabindex="0" class="bouton-vert" @click="modifierCodeAcces">{{ $t('enregistrer') }}</span>
 			</div>
 			<div class="conteneur" v-if="pad.acces !== 'prive'">
 				<label>{{ $t('contributions') }}</label>
@@ -1169,7 +1174,7 @@
 			<div class="conteneur">
 				<div class="contenu">
 					<label for="champ-code">{{ $t('codeAcces') }}</label>
-					<input id="champ-code" type="text" maxlength="6" :value="codeAcces" @input="codeAcces = $event.target.value" @keydown.enter="verifierCodeAcces">
+					<input id="champ-code" type="text" maxlength="18" :value="codeAcces" @input="codeAcces = $event.target.value" @keydown.enter="verifierCodeAcces">
 					<div class="actions">
 						<span role="button" tabindex="0" class="bouton" @click="verifierCodeAcces">{{ $t('valider') }}</span>
 					</div>
