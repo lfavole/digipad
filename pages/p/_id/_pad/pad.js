@@ -917,6 +917,10 @@ export default {
 					autorisation = true
 				}
 			}.bind(this))
+			const code = this.$route.query.code
+			if (code === this.pad.code) {
+				autorisation = true
+			}
 			if (this.admin || autorisation === true) {
 				this.accesAutorise = true
 				this.$socket.emit('connexion', { pad: this.pad.id, identifiant: this.identifiant, nom: this.nom })
