@@ -756,6 +756,9 @@ export default {
 		limite () {
 			return process.env.uploadLimit
 		},
+		fichiersAutorises () {
+			return process.env.uploadFileTypes
+		},
 		blocsRecherche () {
 			let resultats = []
 			let blocs = []
@@ -1378,9 +1381,9 @@ export default {
 			pell.exec('foreColor', event.target.value)
 		},
 		ajouterFichier (champ) {
-			const formats = ['jpg', 'jpeg', 'png', 'gif', 'mp4', 'm4v', 'mp3', 'm4a', 'ogg', 'wav', 'pdf', 'ppt', 'pptx', 'odp', 'doc', 'docx', 'odt', 'ods', 'odg', 'xls', 'xlsx', 'flipchart', 'notebook', 'ubz', 'ipynb', 'dgs', 'dgc', 'dgb', 'sb3', 'epub', 'sprite3', 'pages', 'numbers', 'keynote', 'csv', 'python', 'ltp']
+			const fichiersAutorises = this.fichiersAutorises.split(',').map((e) => { return e.trim().substring(1) })
 			const extension = champ.files[0].name.substring(champ.files[0].name.lastIndexOf('.') + 1).toLowerCase()
-			if (champ.files && champ.files[0] && formats.includes(extension) && champ.files[0].size < this.limite * 1024000) {
+			if (champ.files && champ.files[0] && fichiersAutorises.includes(extension) && champ.files[0].size < this.limite * 1024000) {
 				const fichier = champ.files[0]
 				const formulaire = new FormData()
 				formulaire.append('pad', this.pad.id)
@@ -1469,7 +1472,7 @@ export default {
 					this.$store.dispatch('modifierAlerte', this.$t('erreurCommunicationServeur'))
 				}.bind(this))
 			} else {
-				if (formats.includes(extension) === false) {
+				if (fichiersAutorises.includes(extension) === false) {
 					this.$store.dispatch('modifierAlerte', this.$t('formatFichierPasAccepte'))
 				} else if (champ.files[0].size > this.limite * 1024000) {
 					this.$store.dispatch('modifierAlerte', this.$t('tailleMaximale', { taille: this.limite }))

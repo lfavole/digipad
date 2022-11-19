@@ -34,7 +34,7 @@ const moment = require('moment')
 const bcrypt = require('bcrypt')
 const cron = require('node-cron')
 const nodemailer = require('nodemailer')
-let storeOptions, cookie, dureeSession
+let storeOptions, cookie, dureeSession, dateCron, jours
 if (process.env.NODE_ENV === 'production') {
 	storeOptions = {
 		host: process.env.DB_HOST,
@@ -96,9 +96,19 @@ if (config.dev) {
 	nuxt.ready()
 }
 
-cron.schedule('59 23 * * Saturday', () => { // tous les samedis à 23h59
+if (process.env.CRON_TASK_DATE) {
+	dateCron = process.env.CRON_TASK_DATE
+} else {
+	dateCron = '59 23 * * Saturday' // tous les samedis à 23h59
+}
+cron.schedule(dateCron, () => {
 	fs.emptyDirSync(path.join(__dirname, '..', '/static/temp'))
-	exporterPadsJson()
+	if (process.env.BACKUP_PADS) {
+		jours = parseInt(process.env.BACKUP_PADS)
+	} else {
+		jours = 10
+	}
+	exporterPadsJson(jours)
 })
 
 app.set('trust proxy', true)
@@ -1349,7 +1359,7 @@ app.post('/api/modifier-mot-de-passe', function (req, res) {
 
 app.post('/api/modifier-mot-de-passe-admin', function (req, res) {
 	const admin = req.body.admin
-	if (admin === process.env.ADMIN_PASSWORD) {
+	if (admin !== '' && admin === process.env.ADMIN_PASSWORD) {
 		const identifiant = req.body.identifiant
 		const email = req.body.email
 		if (identifiant !== '') {
@@ -3562,14 +3572,14 @@ function recupererDonnees (identifiant) {
 	return Promise.all([donneesPadsCrees, donneesPadsRejoints, donneesPadsAdmins, donneesPadsFavoris])
 }
 
-function exporterPadsJson () {
+function exporterPadsJson (jours) {
 	db.keys('pads:*', function (err, pads) {
 		if (pads !== null) {
 			pads.forEach(function (pad) {
 				const id = pad.substring(5)
 				const chemin = path.join(__dirname, '..', '/static/pads')
 				db.hgetall('pads:' + id, function (err, donnees) {
-					if ((donnees.hasOwnProperty('modifie') && moment(donnees.modifie).isBefore(moment().subtract(10, 'days'))) || (donnees.hasOwnProperty('date') && moment(donnees.date).isBefore(moment().subtract(10, 'days')))) {
+					if ((donnees.hasOwnProperty('modifie') && moment(donnees.modifie).isBefore(moment().subtract(jours, 'days'))) || (donnees.hasOwnProperty('date') && moment(donnees.date).isBefore(moment().subtract(jours, 'days')))) {
 						const donneesPad = new Promise(function (resolveMain) {
 							db.hgetall('pads:' + id, function (err, resultats) {
 								if (err) { resolveMain({}) }

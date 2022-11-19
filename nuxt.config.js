@@ -6,6 +6,10 @@ let port = 3000
 if (process.env.PORT) {
 	port = process.env.PORT
 }
+let fichiersAutorises = '.jpg,.jpeg,.png,.gif,.mp4,.m4v,.mp3,.m4a,.ogg,.wav,.pdf,.ppt,.pptx,.odp,.doc,.docx,.odt,.ods,.odg,.xls,.xlsx'
+if (process.env.UPLOAD_FILE_TYPES) {
+	fichiersAutorises = process.env.UPLOAD_FILE_TYPES
+}
 
 module.exports = {
 	head: {
@@ -109,6 +113,7 @@ module.exports = {
 		etherpadApi: process.env.ETHERPAD_API_KEY,
 		adminPassword: process.env.ADMIN_PASSWORD,
 		uploadLimit: process.env.UPLOAD_LIMIT,
+		uploadFileTypes: fichiersAutorises,
 		padLimit: process.env.PAD_LIMIT,
 		matomo: process.env.MATOMO,
 		nfsPadNumber: process.env.NFS_PAD_NUMBER,
