@@ -9,7 +9,7 @@
 				<span class="bouton" role="button" tabindex="0" :class="{'selectionne': langue === 'en'}" @click="modifierLangue('en')">EN</span>
 			</div>
 			<div id="conteneur">
-				<h1>
+				<!-- <h1>
 					<span>{{ $t('informationsGenerales') }}</span>
 				</h1>
 				<div class="conteneur">
@@ -17,7 +17,7 @@
 					<div><b>{{ $t('nombreUtilisateurs') }} :</b> {{ nombreUtilisateurs }}</div>
 					<div><b>{{ $t('nombreComptes') }} :</b> {{ nombreComptes }}</div>
 					<div><b>{{ $t('nombreSessions') }} :</b> {{ nombreSessions }}</div>
-				</div>
+				</div> -->
 				<h1>
 					<span>{{ $t('modifierMotDePasseUtilisateur') }}</span>
 				</h1>
@@ -118,19 +118,6 @@ import axios from 'axios'
 
 export default {
 	name: 'Admin',
-	async asyncData (context) {
-		const { data } = await axios.post(context.store.state.hote + '/api/recuperer-donnees-admin', {
-			headers: { 'Content-Type': 'application/json' }
-		})
-		if (data !== 'erreur') {
-			return {
-				nombrePads: data.pads,
-				nombreUtilisateurs: data.utilisateurs,
-				nombreSessions: data.sessions,
-				nombreComptes: data.comptes
-			}
-		}
-	},
 	data () {
 		return {
 			acces: false,
