@@ -341,5 +341,8 @@ export default {
 	donneesModifiees: 'Données modifiées.',
 	codeAccesModifie: 'Code d\'accès modifié.',
 	modifierCode: 'Modifier le code d\'accès',
-	annulerModifierCode: 'Annuler la modification du code d\'accès'
+	annulerModifierCode: 'Annuler la modification du code d\'accès',
+	afficherColonne: 'Afficher la colonne',
+	masquerColonne: 'Masquer la colonne',
+	affichageColonneModifie: 'Affichage de la colonne modifié.'
 }

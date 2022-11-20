@@ -232,6 +232,10 @@
 	height: 100%;
 }
 
+#blocs.colonnes .colonne.masquee {
+	opacity: 0.75;
+}
+
 #blocs.colonnes .conteneur-colonne {
 	display: flex;
 	flex-direction: row;
@@ -336,7 +340,8 @@
     background: rgba(0, 0, 0, 0.25);
 }
 
-#blocs.colonnes .bloc.haut .menu-colonne .bouton:first-child {
+#blocs.colonnes .bloc.haut .menu-colonne .bouton:first-child,
+#blocs.colonnes .bloc.haut .menu-colonne .bouton:nth-child(2) {
 	font-size: 24px;
 	color: #fff;
 	margin-right: 0.7rem;

@@ -341,5 +341,8 @@ export default {
 	donneesModifiees: 'Izmijenjeni podaci.',
 	codeAccesModifie: 'Pristupni kod je promijenjen.',
 	modifierCode: 'Promjena pristupnog koda',
-	annulerModifierCode: 'Nepromijenjena šifra'
+	annulerModifierCode: 'Nepromijenjena šifra',
+	afficherColonne: 'Pokaži stupac',
+	masquerColonne: 'Sakrij stupac',
+	affichageColonneModifie: 'Prikaz izmijenjenog stupca.'
 }

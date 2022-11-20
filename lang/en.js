@@ -341,5 +341,8 @@ export default {
 	donneesModifiees: 'Data changed.',
 	codeAccesModifie: 'Access code changed.',
 	modifierCode: 'Edit access code',
-	annulerModifierCode: 'Cancel modification of access code'
+	annulerModifierCode: 'Cancel modification of access code',
+	afficherColonne: 'Show column',
+	masquerColonne: 'Hide column',
+	affichageColonneModifie: 'Display of the column changed.'
 }

@@ -341,5 +341,8 @@ export default {
 	donneesModifiees: 'Dati modificati.',
 	codeAccesModifie: 'Codice di accesso modificato.',
 	modifierCode: 'Modifica del codice di accesso',
-	annulerModifierCode: 'Annullamento della modifica del codice di accesso'
+	annulerModifierCode: 'Annullamento della modifica del codice di accesso',
+	afficherColonne: 'Mostra colonna',
+	masquerColonne: 'Nascondi colonna',
+	affichageColonneModifie: 'La colonna di visualizzazione è stata modificata.'
 }

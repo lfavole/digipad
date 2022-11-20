@@ -52,13 +52,15 @@ export default {
 				if (donnees.visibilite === 'visible' || this.admin || (this.pad.contributions === 'moderees' && (this.utilisateur === this.identifiant))) {
 					this.activite.unshift({ id: donnees.activiteId, bloc: donnees.bloc, identifiant: donnees.identifiant, nom: donnees.nom, titre: donnees.titre, date: donnees.date, couleur: donnees.couleur, type: 'bloc-ajoute' })
 				}
-				this.$nextTick(function () {
-					const bloc = document.querySelector('#' + donnees.bloc)
-					bloc.classList.add('anime')
-					bloc.addEventListener('animationend', function () {
-						bloc.classList.remove('anime')
+				if (this.admin || this.pad.affichage !== 'colonnes' || (this.pad.affichage === 'colonnes' && this.affichageColonnes[donnees.colonne])) {
+					this.$nextTick(function () {
+						const bloc = document.querySelector('#' + donnees.bloc)
+						bloc.classList.add('anime')
+						bloc.addEventListener('animationend', function () {
+							bloc.classList.remove('anime')
+						})
 					})
-				})
+				}
 				if (this.utilisateur === this.identifiant) {
 					this.$nextTick(function () {
 						const bloc = document.querySelector('#' + donnees.bloc)
@@ -171,7 +173,7 @@ export default {
 				this.blocs = donnees.blocs
 			}
 			this.$nextTick(function () {
-				if (blocActif && this.utilisateur !== this.identifiant) {
+				if (blocActif && this.utilisateur !== this.identifiant && document.querySelector('#' + blocId)) {
 					blocActif.classList.remove('actif')
 					document.querySelector('#' + blocId).classList.add('actif')
 				}
@@ -496,17 +498,26 @@ export default {
 		},
 		ajoutercolonne: function (donnees) {
 			this.colonnes.push([])
+			this.affichageColonnes.push(true)
 			this.pad.colonnes = donnees.colonnes
+			this.pad.affichageColonnes = donnees.affichageColonnes
 			this.activite.unshift({ id: donnees.activiteId, identifiant: donnees.identifiant, nom: donnees.nom, titre: donnees.titre, date: donnees.date, couleur: donnees.couleur, type: 'colonne-ajoutee' })
 			if (this.admin) {
 				this.$store.dispatch('modifierMessage', this.$t('colonneAjoutee'))
 			}
 			this.chargement = false
 		},
-		modifiercolonne: function (colonnes) {
+		modifiertitrecolonne: function (colonnes) {
 			this.pad.colonnes = colonnes
 			if (this.admin) {
 				this.$store.dispatch('modifierMessage', this.$t('nomColonneModifie'))
+			}
+			this.chargement = false
+		},
+		modifieraffichagecolonne: function (affichageColonnes) {
+			this.pad.affichageColonnes = affichageColonnes
+			if (this.admin) {
+				this.$store.dispatch('modifierMessage', this.$t('affichageColonneModifie'))
 			}
 			this.chargement = false
 		},
@@ -520,6 +531,7 @@ export default {
 				blocs.push(...colonne)
 			})
 			this.pad.colonnes = donnees.colonnes
+			this.pad.affichageColonnes = donnees.affichageColonnes
 			this.blocs = blocs
 			this.activite.unshift({ id: donnees.activiteId, identifiant: donnees.identifiant, nom: donnees.nom, titre: donnees.titre, date: donnees.date, couleur: donnees.couleur, type: 'colonne-supprimee' })
 			if (this.admin) {
@@ -533,14 +545,21 @@ export default {
 		deplacercolonne: function (donnees) {
 			const blocs = []
 			const donneesColonnes = this.colonnes[parseInt(donnees.colonne)]
+			const donneesAffichageColonnes = this.affichageColonnes[parseInt(donnees.colonne)]
 			if (donnees.direction === 'gauche') {
 				this.colonnes.splice((parseInt(donnees.colonne) - 1), 0, donneesColonnes)
 				this.colonnes.splice((parseInt(donnees.colonne) + 1), 1)
+				this.affichageColonnes.splice((parseInt(donnees.colonne) - 1), 0, donneesAffichageColonnes)
+				this.affichageColonnes.splice((parseInt(donnees.colonne) + 1), 1)
 			} else if (donnees.direction === 'droite') {
 				const donneesColonneDeplacee = this.colonnes[parseInt(donnees.colonne) + 1]
 				this.colonnes.splice((parseInt(donnees.colonne) + 1), 0, donneesColonnes)
 				this.colonnes.splice(parseInt(donnees.colonne), 1, donneesColonneDeplacee)
 				this.colonnes.splice((parseInt(donnees.colonne) + 2), 1)
+				const donneesAffichageColonneDeplacee = this.affichageColonnes[parseInt(donnees.colonne) + 1]
+				this.affichageColonnes.splice((parseInt(donnees.colonne) + 1), 0, donneesAffichageColonnes)
+				this.affichageColonnes.splice(parseInt(donnees.colonne), 1, donneesAffichageColonneDeplacee)
+				this.affichageColonnes.splice((parseInt(donnees.colonne) + 2), 1)
 			}
 			this.colonnes.forEach(function (colonne, index) {
 				colonne.forEach(function (bloc) {
@@ -549,6 +568,7 @@ export default {
 				blocs.push(...colonne)
 			})
 			this.pad.colonnes = donnees.colonnes
+			this.pad.affichageColonnes = donnees.affichageColonnes
 			this.blocs = blocs
 			this.activite.unshift({ id: donnees.activiteId, identifiant: donnees.identifiant, nom: donnees.nom, titre: donnees.titre, date: donnees.date, couleur: donnees.couleur, type: 'colonne-deplacee' })
 			if (this.admin) {
@@ -628,6 +648,7 @@ export default {
 			mode: '',
 			affichage: '',
 			colonnes: [],
+			affichageColonnes: [],
 			colonne: 0,
 			modaleColonne: false,
 			titreModaleColonne: '',
@@ -1080,6 +1101,7 @@ export default {
 		},
 		definirColonnes (blocs) {
 			const colonnes = []
+			const affichageColonnes = []
 			if (this.pad.colonnes && this.pad.colonnes.length > 0) {
 				this.pad.colonnes.forEach(function () {
 					colonnes.push([])
@@ -1092,6 +1114,9 @@ export default {
 						colonnes[bloc.colonne].push(bloc)
 					}
 				})
+				this.pad.affichageColonnes.forEach(function (affichage) {
+					affichageColonnes.push(affichage)
+				})
 			} else {
 				this.pad.colonnes.push(this.$t('colonneSansTitre'))
 				colonnes.push([])
@@ -1099,9 +1124,12 @@ export default {
 					blocs[index].colonne = 0
 					colonnes[0].push(bloc)
 				})
+				this.pad.affichageColonnes.push(true)
+				affichageColonnes.push(true)
 			}
 			this.blocs = blocs
 			this.colonnes = colonnes
+			this.affichageColonnes = affichageColonnes
 		},
 		definirVignette (item) {
 			let vignette
@@ -1257,16 +1285,24 @@ export default {
 		ajouterColonne () {
 			if (this.titreColonne !== '') {
 				this.chargement = true
-				this.$socket.emit('ajoutercolonne', this.pad.id, this.titreColonne, this.pad.colonnes, this.couleur, this.identifiant, this.nom)
+				this.$socket.emit('ajoutercolonne', this.pad.id, this.titreColonne, this.pad.colonnes, this.pad.affichageColonnes, this.couleur, this.identifiant, this.nom)
 				this.fermerModaleColonne()
 			}
 		},
 		modifierColonne () {
 			if (this.titreColonne !== '') {
 				this.chargement = true
-				this.$socket.emit('modifiercolonne', this.pad.id, this.titreColonne, this.colonne, this.identifiant)
+				this.$socket.emit('modifiertitrecolonne', this.pad.id, this.titreColonne, this.colonne, this.identifiant)
 				this.fermerModaleColonne()
 			}
+		},
+		afficherColonne (colonne) {
+			this.chargement = true
+			this.$socket.emit('modifieraffichagecolonne', this.pad.id, true, colonne, this.identifiant)
+		},
+		masquerColonne (colonne) {
+			this.chargement = true
+			this.$socket.emit('modifieraffichagecolonne', this.pad.id, false, colonne, this.identifiant)
 		},
 		afficherSupprimerColonne (index) {
 			this.colonne = index
@@ -1290,7 +1326,7 @@ export default {
 		},
 		deplacerColonne (direction, colonne) {
 			this.chargement = true
-			this.$socket.emit('deplacercolonne', this.pad.id, this.pad.colonnes[colonne], direction, colonne, this.couleur, this.identifiant, this.nom)
+			this.$socket.emit('deplacercolonne', this.pad.id, this.pad.colonnes[colonne], this.pad.affichageColonnes[colonne], direction, colonne, this.couleur, this.identifiant, this.nom)
 		},
 		ouvrirModaleBloc (mode, item, colonne) {
 			this.mode = mode
