@@ -459,7 +459,7 @@ app.post('/api/recuperer-donnees-pad', function (req, res) {
 							let ordre = 'croissant'
 							let admins = JSON.stringify([])
 							let vues = 0
-							let affichageColonnes = JSON.stringify([])
+							let affichageColonnes = []
 							if (donnees.pad.hasOwnProperty('registreActivite')) {
 								registreActivite = donnees.pad.registreActivite
 							}
@@ -483,6 +483,13 @@ app.post('/api/recuperer-donnees-pad', function (req, res) {
 							}
 							if (donnees.pad.hasOwnProperty('affichageColonnes')) {
 								affichageColonnes = donnees.pad.affichageColonnes
+							} else if (donnees.pad.colonnes.length > 0) {
+								donnees.pad.colonnes.forEach(function () {
+									affichageColonnes.push(true)
+								})
+								affichageColonnes = JSON.stringify(affichageColonnes)
+							} else {
+								affichageColonnes = JSON.stringify(affichageColonnes)
 							}
 							const multi = db.multi()
 							if (donnees.pad.hasOwnProperty('motdepasse') && donnees.pad.hasOwnProperty('code')) {
@@ -3784,6 +3791,15 @@ function recupererDonneesPad (id, token, identifiant, statut, res) {
 			}
 			if (pad.hasOwnProperty('affichageColonnes')) {
 				pad.affichageColonnes = JSON.parse(pad.affichageColonnes)
+				if ((pad.hasOwnProperty('colonnes') && pad.affichageColonnes.length === 0) || (pad.hasOwnProperty('colonnes') && pad.affichageColonnes.length < pad.colonnes.length)) { // fix bug update 0.9.11
+					const affichageColonnes = []
+					if (pad.hasOwnProperty('colonnes')) {
+						pad.colonnes.forEach(function () {
+							affichageColonnes.push(true)
+						})
+					}
+					pad.affichageColonnes = affichageColonnes
+				}
 			} else {
 				const affichageColonnes = []
 				if (pad.hasOwnProperty('colonnes')) {
