@@ -484,7 +484,8 @@ app.post('/api/recuperer-donnees-pad', function (req, res) {
 							if (donnees.pad.hasOwnProperty('affichageColonnes')) {
 								affichageColonnes = donnees.pad.affichageColonnes
 							} else if (donnees.pad.colonnes.length > 0) {
-								donnees.pad.colonnes.forEach(function () {
+								const colonnes = JSON.parse(donnees.pad.colonnes)
+								colonnes.forEach(function () {
 									affichageColonnes.push(true)
 								})
 								affichageColonnes = JSON.stringify(affichageColonnes)
