@@ -1145,7 +1145,7 @@ app.post('/api/importer-pad', function (req, res) {
 							if (donnees.pad.hasOwnProperty('affichageColonnes')) {
 								affichageColonnes = JSON.parse(donnees.pad.affichageColonnes)
 							} else {
-								donnees.pad.colonnes.forEach(function () {
+								JSON.parse(donnees.pad.colonnes).forEach(function () {
 									affichageColonnes.push(true)
 								})
 							}
