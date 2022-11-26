@@ -783,7 +783,7 @@ app.post('/api/dupliquer-pad', function (req, res) {
 								if (donnees.hasOwnProperty('affichageColonnes')) {
 									affichageColonnes = JSON.parse(donnees.affichageColonnes)
 								} else {
-									donnees.colonnes.forEach(function () {
+									JSON.parse(donnees.colonnes).forEach(function () {
 										affichageColonnes.push(true)
 									})
 								}
@@ -873,7 +873,7 @@ app.post('/api/dupliquer-pad', function (req, res) {
 								if (donnees.pad.hasOwnProperty('affichageColonnes')) {
 									affichageColonnes = JSON.parse(donnees.pad.affichageColonnes)
 								} else {
-									donnees.pad.colonnes.forEach(function () {
+									JSON.parse(donnees.pad.colonnes).forEach(function () {
 										affichageColonnes.push(true)
 									})
 								}
