@@ -344,5 +344,9 @@ export default {
 	annulerModifierCode: 'Nepromijenjena šifra',
 	afficherColonne: 'Pokaži stupac',
 	masquerColonne: 'Sakrij stupac',
-	affichageColonneModifie: 'Prikaz izmijenjenog stupca.'
+	affichageColonneModifie: 'Prikaz izmijenjenog stupca.',
+	largeurCapsules: 'Širina kapsule',
+	normale: 'normalan',
+	large: 'širok',
+	parametreLargeurModifie: 'Modificirana širina kapsule.'
 }

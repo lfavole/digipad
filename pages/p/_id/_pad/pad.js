@@ -385,6 +385,19 @@ export default {
 				this.$store.dispatch('modifierMessage', this.$t('parametreOrdreModifie'))
 			}
 		},
+		modifierlargeur: function (largeur) {
+			this.pad.largeur = largeur
+			if (this.pad.affichage === 'mur') {
+				this.pad.affichage = ''
+				setTimeout(function () {
+					this.pad.affichage = 'mur'
+				}.bind(this), 10)
+			}
+			this.chargement = false
+			if (this.admin) {
+				this.$store.dispatch('modifierMessage', this.$t('parametreLargeurModifie'))
+			}
+		},
 		modifierfond: function (fond) {
 			this.pad.fond = fond
 			imagesLoaded('#pad', { background: true }, function () {
@@ -1327,6 +1340,18 @@ export default {
 		deplacerColonne (direction, colonne) {
 			this.chargement = true
 			this.$socket.emit('deplacercolonne', this.pad.id, this.pad.colonnes[colonne], this.pad.affichageColonnes[colonne], direction, colonne, this.couleur, this.identifiant, this.nom)
+		},
+		definirLargeurCapsules () {
+			let donnees
+			switch (this.pad.largeur) {
+			case 'large':
+				donnees = { default: 4, 1729: 4, 1449: 3, 1365: 2, 899: 2, 499: 1 }
+				break
+			case 'normale':
+				donnees = { default: 6, 1729: 5, 1449: 4, 1365: 3, 899: 2, 499: 1 }
+				break
+			}
+			return donnees
 		},
 		ouvrirModaleBloc (mode, item, colonne) {
 			this.mode = mode
@@ -2836,6 +2861,12 @@ export default {
 		modifierOrdre (ordre) {
 			if (this.pad.ordre !== ordre) {
 				this.$socket.emit('modifierordre', this.pad.id, ordre, this.identifiant)
+				this.chargement = true
+			}
+		},
+		modifierLargeur (largeur) {
+			if (this.pad.largeur !== largeur) {
+				this.$socket.emit('modifierlargeur', this.pad.id, largeur, this.identifiant)
 				this.chargement = true
 			}
 		},

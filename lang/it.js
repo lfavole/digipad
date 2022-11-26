@@ -344,5 +344,9 @@ export default {
 	annulerModifierCode: 'Annullamento della modifica del codice di accesso',
 	afficherColonne: 'Mostra colonna',
 	masquerColonne: 'Nascondi colonna',
-	affichageColonneModifie: 'La colonna di visualizzazione è stata modificata.'
+	affichageColonneModifie: 'La colonna di visualizzazione è stata modificata.',
+	largeurCapsules: 'Larghezza della capsula',
+	normale: 'normale',
+	large: 'ampio',
+	parametreLargeurModifie: 'Larghezza della capsula modificata.'
 }

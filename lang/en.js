@@ -344,5 +344,9 @@ export default {
 	annulerModifierCode: 'Cancel modification of access code',
 	afficherColonne: 'Show column',
 	masquerColonne: 'Hide column',
-	affichageColonneModifie: 'Display of the column changed.'
+	affichageColonneModifie: 'Display of the column changed.',
+	largeurCapsules: 'Width of the capsules',
+	normale: 'normal',
+	large: 'wide',
+	parametreLargeurModifie: 'Width of the capsules changed.'
 }

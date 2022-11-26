@@ -236,6 +236,17 @@
 					<span class="coche" />
 				</label>
 			</div>
+			<div class="conteneur">
+				<label>{{ $t('largeurCapsules') }}</label>
+				<label class="bouton-radio">{{ $t('normale') }}
+					<input type="radio" name="largeur" :checked="pad.largeur === 'normale'" @change="modifierLargeur('normale')">
+					<span class="coche" />
+				</label>
+				<label class="bouton-radio">{{ $t('large') }}
+					<input type="radio" name="largeur" :checked="pad.largeur === 'large'" @change="modifierLargeur('large')">
+					<span class="coche" />
+				</label>
+			</div>
 			<div class="conteneur fond">
 				<label>{{ $t('arrierePlan') }}</label>
 				<div class="fonds">
@@ -385,7 +396,7 @@
 	<div id="pad" :class="{'fond-personnalise': pad.fond.substring(1, definirDossierFichiers(pad.id).length + 1) === definirDossierFichiers(pad.id), 'organiser': action === 'organiser'}" :style="definirFond(pad.fond)" v-if="pad.acces !== 'code' || (pad.acces === 'code' && accesAutorise)">
 		<!-- Affichage mur // sans recherche -->
 		<transition name="fondu">
-			<masonry id="blocs" class="mur" :cols="{default: 6, 1729: 5, 1449: 4, 1365: 3, 899: 2, 499: 1}" :gutter="0" v-if="pad.affichage === 'mur' && action !== 'organiser' && !recherche">
+			<masonry id="blocs" class="mur" :cols="definirLargeurCapsules()" :gutter="0" v-if="pad.affichage === 'mur' && action !== 'organiser' && !recherche">
 				<div :id="item.bloc" class="bloc" :class="{'privee': item.visibilite === 'privee'}" v-for="(item, indexItem) in blocs" :style="{'border-color': item.couleur}" :data-bloc="item.bloc" :key="'bloc' + indexItem">
 					<div class="contenu">
 						<div class="titre" v-if="item.titre !== ''" :style="{'background': eclaircirCouleur(item.couleur)}">
@@ -428,7 +439,7 @@
 		</transition>
 		<!-- Affichage mur // avec recherche -->
 		<transition name="fondu">
-			<masonry id="blocs" class="mur" :cols="{default: 6, 1729: 5, 1449: 4, 1365: 3, 899: 2, 499: 1}" :gutter="0" v-if="pad.affichage === 'mur' && action !== 'organiser' && recherche">
+			<masonry id="blocs" class="mur" :cols="definirLargeurCapsules()" :gutter="0" v-if="pad.affichage === 'mur' && action !== 'organiser' && recherche">
 				<div :id="item.bloc" class="bloc" :class="{'privee': item.visibilite === 'privee'}" v-for="(item, indexItem) in blocsRecherche" :style="{'border-color': item.couleur}" :data-bloc="item.bloc" :key="'bloc' + indexItem">
 					<div class="contenu">
 						<div class="titre" v-if="item.titre !== ''" :style="{'background': eclaircirCouleur(item.couleur)}">
@@ -471,7 +482,7 @@
 		</transition>
 		<!-- Affichage flux vertical // sans recherche -->
 		<transition name="fondu">
-			<div id="blocs" class="flux-vertical" v-if="pad.affichage === 'flux-vertical' && action !== 'organiser' && !recherche">
+			<div id="blocs" class="flux-vertical" :class="{'large': pad.hasOwnProperty('largeur') && pad.largeur === 'large'}" v-if="pad.affichage === 'flux-vertical' && action !== 'organiser' && !recherche">
 				<div :id="item.bloc" class="bloc" :class="{'privee': item.visibilite === 'privee'}" v-for="(item, indexItem) in blocs" :style="{'border-color': item.couleur}" :data-bloc="item.bloc" :key="'bloc' + indexItem">
 					<div class="contenu">
 						<div class="titre" v-if="item.titre !== ''" :style="{'background': eclaircirCouleur(item.couleur)}">
@@ -514,7 +525,7 @@
 		</transition>
 		<!-- Affichage flux vertical // avec recherche -->
 		<transition name="fondu">
-			<div id="blocs" class="flux-vertical" v-if="pad.affichage === 'flux-vertical' && action !== 'organiser' && recherche">
+			<div id="blocs" class="flux-vertical" :class="{'large': pad.hasOwnProperty('largeur') && pad.largeur === 'large'}" v-if="pad.affichage === 'flux-vertical' && action !== 'organiser' && recherche">
 				<div :id="item.bloc" class="bloc" :class="{'privee': item.visibilite === 'privee'}" v-for="(item, indexItem) in blocsRecherche" :style="{'border-color': item.couleur}" :data-bloc="item.bloc" :key="'bloc' + indexItem">
 					<div class="contenu">
 						<div class="titre" v-if="item.titre !== ''" :style="{'background': eclaircirCouleur(item.couleur)}">
@@ -559,7 +570,7 @@
 		<transition name="fondu">
 			<div id="blocs" class="colonnes" v-if="pad.affichage === 'colonnes' && action !== 'organiser' && !recherche">
 				<template v-for="(col, indexCol) in pad.colonnes">
-					<section :id="'colonne' + indexCol" class="colonne" :class="{'masquee': admin && pad.hasOwnProperty('affichageColonnes') && !pad.affichageColonnes[indexCol]}" v-if="!pad.hasOwnProperty('affichageColonnes') || admin || (pad.hasOwnProperty('affichageColonnes') && pad.affichageColonnes[indexCol])" :key="'colonne' + indexCol">
+					<section :id="'colonne' + indexCol" class="colonne" :class="{'masquee': admin && pad.hasOwnProperty('affichageColonnes') && !pad.affichageColonnes[indexCol], 'large': pad.hasOwnProperty('largeur') && pad.largeur === 'large'}" v-if="!pad.hasOwnProperty('affichageColonnes') || admin || (pad.hasOwnProperty('affichageColonnes') && pad.affichageColonnes[indexCol])" :key="'colonne' + indexCol">
 						<div class="bloc haut">
 							<div class="titre-colonne">
 								<span>{{ col }}</span>
@@ -631,7 +642,7 @@
 		<transition name="fondu">
 			<div id="blocs" class="colonnes" v-if="pad.affichage === 'colonnes' && action !== 'organiser' && recherche">
 				<template v-for="(col, indexCol) in pad.colonnes">
-					<section :id="'colonne' + indexCol" class="colonne" :class="{'masquee': admin && pad.hasOwnProperty('affichageColonnes') && !pad.affichageColonnes[indexCol]}" v-if="!pad.hasOwnProperty('affichageColonnes') || admin || (pad.hasOwnProperty('affichageColonnes') && pad.affichageColonnes[indexCol])" :key="'colonne' + indexCol">
+					<section :id="'colonne' + indexCol" class="colonne" :class="{'masquee': admin && pad.hasOwnProperty('affichageColonnes') && !pad.affichageColonnes[indexCol], 'large': pad.hasOwnProperty('largeur') && pad.largeur === 'large'}" v-if="!pad.hasOwnProperty('affichageColonnes') || admin || (pad.hasOwnProperty('affichageColonnes') && pad.affichageColonnes[indexCol])" :key="'colonne' + indexCol">
 						<div class="bloc haut">
 							<div class="titre-colonne">
 								<span>{{ col }}</span>
@@ -683,7 +694,7 @@
 		</transition>
 		<!-- Mode Organiser // Affichage mur et flux vertical -->
 		<transition name="fondu">
-			<draggable id="blocs" :class="{'mur': pad.affichage === 'mur', 'flux-vertical': pad.affichage === 'flux-vertical'}" v-model="blocs" draggable=".bloc" :sort="true" :animation="250" :swap-threshold="0.5" :force-fallback="true" :fallback-tolerance="10" :scroll-sensitivity="convertirRem(4)" :scroll-speed="convertirRem(4)" @start="demarrerDeplacerBloc" @end="deplacerBloc" v-if="(pad.affichage === 'mur' || pad.affichage === 'flux-vertical') && action === 'organiser'">
+			<draggable id="blocs" :class="{'mur': pad.affichage === 'mur', 'flux-vertical': pad.affichage === 'flux-vertical', 'large': pad.hasOwnProperty('largeur') && pad.largeur === 'large'}" v-model="blocs" draggable=".bloc" :sort="true" :animation="250" :swap-threshold="0.5" :force-fallback="true" :fallback-tolerance="10" :scroll-sensitivity="convertirRem(4)" :scroll-speed="convertirRem(4)" @start="demarrerDeplacerBloc" @end="deplacerBloc" v-if="(pad.affichage === 'mur' || pad.affichage === 'flux-vertical') && action === 'organiser'">
 				<div :id="item.bloc" class="bloc" :class="{'privee': item.visibilite === 'privee'}" v-for="(item, indexItem) in blocs" :style="{'border-color': item.couleur}" :data-bloc="item.bloc" :key="'bloc' + indexItem">
 					<div class="contenu">
 						<div class="titre" v-if="item.titre !== ''" :style="{'background': eclaircirCouleur(item.couleur)}">
@@ -723,7 +734,7 @@
 		<!-- Mode Organiser // Affichage colonnes -->
 		<transition name="fondu">
 			<div id="blocs" class="colonnes" v-if="pad.affichage === 'colonnes' && action === 'organiser'">
-				<section :id="'colonne' + indexCol" class="colonne" :class="{'masquee': admin && pad.hasOwnProperty('affichageColonnes') && !pad.affichageColonnes[indexCol]}" v-for="(col, indexCol) in pad.colonnes" :key="'colonne' + indexCol">
+				<section :id="'colonne' + indexCol" class="colonne" :class="{'masquee': admin && pad.hasOwnProperty('affichageColonnes') && !pad.affichageColonnes[indexCol], 'large': pad.hasOwnProperty('largeur') && pad.largeur === 'large'}" v-for="(col, indexCol) in pad.colonnes" :key="'colonne' + indexCol">
 					<div class="bloc haut">
 						<div class="titre-colonne">
 							<span>{{ col }}</span>
