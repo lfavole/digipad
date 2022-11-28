@@ -2319,10 +2319,12 @@ io.on('connection', function (socket) {
 					}
 					multi.exec(function () {
 						if (media !== '' && type !== 'embed' && fs.existsSync(path.join(__dirname, '..', '/static/temp/' + media))) {
-							fs.renameSync(path.join(__dirname, '..', '/static/temp/' + media), path.join(__dirname, '..', '/static/' + definirDossierFichiers(pad) + '/' + pad + '/' + media))
+							fs.copyFileSync(path.join(__dirname, '..', '/static/temp/' + media), path.join(__dirname, '..', '/static/' + definirDossierFichiers(pad) + '/' + pad + '/' + media))
+							fs.removeSync(path.join(__dirname, '..', '/static/temp/' + media))
 						}
 						if (vignette !== '' && !vignette.includes('/img/') && fs.existsSync(path.join(__dirname, '..', '/static/temp/' + path.basename(vignette)))) {
-							fs.renameSync(path.join(__dirname, '..', '/static/temp/' + path.basename(vignette)), path.join(__dirname, '..', '/static' + vignette))
+							fs.copyFileSync(path.join(__dirname, '..', '/static/temp/' + path.basename(vignette)), path.join(__dirname, '..', '/static' + vignette))
+							fs.removeSync(path.join(__dirname, '..', '/static/temp/' + path.basename(vignette)))
 						}
 						io.in('pad-' + pad).emit('ajouterbloc', { bloc: bloc, titre: titre, texte: texte, media: media, iframe: iframe, type: type, source: source, vignette: vignette, identifiant: identifiant, nom: nom, date: date, couleur: couleur, commentaires: 0, evaluations: [], colonne: colonne, visibilite: visibilite, activiteId: activiteId })
 						socket.handshake.session.cookie.expires = new Date(Date.now() + dureeSession)
@@ -2371,13 +2373,15 @@ io.on('connection', function (socket) {
 										multi.zadd('activite:' + pad, activiteId, JSON.stringify({ id: activiteId, bloc: bloc, identifiant: identifiant, titre: titre, date: date, couleur: couleur, type: 'bloc-modifie' }))
 										multi.exec(function () {
 											if (objet.media !== media && media !== '' && type !== 'embed' && fs.existsSync(path.join(__dirname, '..', '/static/temp/' + media))) {
-												fs.renameSync(path.join(__dirname, '..', '/static/temp/' + media), path.join(__dirname, '..', '/static/' + definirDossierFichiers(pad) + '/' + pad + '/' + media))
+												fs.copyFileSync(path.join(__dirname, '..', '/static/temp/' + media), path.join(__dirname, '..', '/static/' + definirDossierFichiers(pad) + '/' + pad + '/' + media))
+												fs.removeSync(path.join(__dirname, '..', '/static/temp/' + media))
 											}
 											if (objet.media !== media && objet.media !== '' && objet.type !== 'embed') {
 												supprimerFichier(pad, objet.media)
 											}
 											if (objet.vignette !== vignette && vignette !== '' && !vignette.includes('/img/') && fs.existsSync(path.join(__dirname, '..', '/static/temp/' + path.basename(vignette)))) {
-												fs.renameSync(path.join(__dirname, '..', '/static/temp/' + path.basename(vignette)), path.join(__dirname, '..', '/static' + vignette))
+												fs.copyFileSync(path.join(__dirname, '..', '/static/temp/' + path.basename(vignette)), path.join(__dirname, '..', '/static' + vignette))
+												fs.removeSync(path.join(__dirname, '..', '/static/temp/' + path.basename(vignette)))
 											}
 											if (objet.vignette !== vignette && objet.vignette.substring(1, definirDossierFichiers(pad).length + 1) === definirDossierFichiers(pad)) {
 												supprimerVignette(objet.vignette)
@@ -2392,13 +2396,15 @@ io.on('connection', function (socket) {
 										multi.hset('dates-pads:' + pad, 'date', date)
 										multi.exec(function () {
 											if (objet.media !== media && media !== '' && type !== 'embed' && fs.existsSync(path.join(__dirname, '..', '/static/temp/' + media))) {
-												fs.renameSync(path.join(__dirname, '..', '/static/temp/' + media), path.join(__dirname, '..', '/static/' + definirDossierFichiers(pad) + '/' + pad + '/' + media))
+												fs.copyFileSync(path.join(__dirname, '..', '/static/temp/' + media), path.join(__dirname, '..', '/static/' + definirDossierFichiers(pad) + '/' + pad + '/' + media))
+												fs.removeSync(path.join(__dirname, '..', '/static/temp/' + media))
 											}
 											if (objet.media !== media && objet.media !== '' && objet.type !== 'embed') {
 												supprimerFichier(pad, objet.media)
 											}
 											if (objet.vignette !== vignette && vignette !== '' && !vignette.includes('/img/') && fs.existsSync(path.join(__dirname, '..', '/static/temp/' + path.basename(vignette)))) {
-												fs.renameSync(path.join(__dirname, '..', '/static/temp/' + path.basename(vignette)), path.join(__dirname, '..', '/static' + vignette))
+												fs.copyFileSync(path.join(__dirname, '..', '/static/temp/' + path.basename(vignette)), path.join(__dirname, '..', '/static' + vignette))
+												fs.removeSync(path.join(__dirname, '..', '/static/temp/' + path.basename(vignette)))
 											}
 											if (objet.vignette !== vignette && objet.vignette.substring(1, definirDossierFichiers(pad).length + 1) === definirDossierFichiers(pad)) {
 												supprimerVignette(objet.vignette)
@@ -2409,13 +2415,15 @@ io.on('connection', function (socket) {
 										})
 									} else {
 										if (objet.media !== media && media !== '' && type !== 'embed' && fs.existsSync(path.join(__dirname, '..', '/static/temp/' + media))) {
-											fs.renameSync(path.join(__dirname, '..', '/static/temp/' + media), path.join(__dirname, '..', '/static/' + definirDossierFichiers(pad) + '/' + pad + '/' + media))
+											fs.copyFileSync(path.join(__dirname, '..', '/static/temp/' + media), path.join(__dirname, '..', '/static/' + definirDossierFichiers(pad) + '/' + pad + '/' + media))
+											fs.removeSync(path.join(__dirname, '..', '/static/temp/' + media))
 										}
 										if (objet.media !== media && objet.media !== '' && objet.type !== 'embed') {
 											supprimerFichier(pad, objet.media)
 										}
 										if (objet.vignette !== vignette && vignette !== '' && !vignette.includes('/img/') && fs.existsSync(path.join(__dirname, '..', '/static/temp/' + path.basename(vignette)))) {
-											fs.renameSync(path.join(__dirname, '..', '/static/temp/' + path.basename(vignette)), path.join(__dirname, '..', '/static' + vignette))
+											fs.copyFileSync(path.join(__dirname, '..', '/static/temp/' + path.basename(vignette)), path.join(__dirname, '..', '/static' + vignette))
+											fs.removeSync(path.join(__dirname, '..', '/static/temp/' + path.basename(vignette)))
 										}
 										if (objet.vignette !== vignette && objet.vignette.substring(1, definirDossierFichiers(pad).length + 1) === definirDossierFichiers(pad)) {
 											supprimerVignette(objet.vignette)
