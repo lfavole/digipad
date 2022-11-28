@@ -2188,22 +2188,29 @@ app.post('/api/recuperer-icone', function (req, res) {
 			const recupererTaille = function (el) {
 				return (el.attribs.sizes && parseInt(el.attribs.sizes, 10)) || 0
 			}
-			const favicons = [
-				...$('link[rel="shortcut icon"], link[rel="icon"], link[rel="apple-touch-icon"]')
-			].sort((a, b) => {
-				return recupererTaille(b) - recupererTaille(a)
-			})
+			let favicons = [
+				...$('meta[property="og:image"]')
+			]
 			if (favicons.length > 0) {
+				favicon = favicons[0].attribs.content
+			} else {
+				favicons = [
+					...$('link[rel="shortcut icon"], link[rel="icon"], link[rel="apple-touch-icon"]')
+				].sort((a, b) => {
+					return recupererTaille(b) - recupererTaille(a)
+				})
 				favicon = favicons[0].attribs.href
 			}
-			if (verifierURL(favicon, ['https', 'http']) === true) {
+			if (favicon !== '' && verifierURL(favicon, ['https', 'http']) === true) {
 				res.send(favicon)
-			} else if (favicon.substring(0, 1) === '.') {
+			} else if (favicon !== '' && favicon.substring(0, 1) === '.') {
 				res.send(protocole + '//' + domaine + favicon.substring(1))
-			} else if (favicon.substring(0, 1) !== '/') {
+			} else if (favicon !== '' && favicon.substring(0, 1) !== '/') {
 				res.send(protocole + '//' + domaine + '/' + favicon)
-			} else {
+			} else if (favicon !== '') {
 				res.send(protocole + '//' + domaine + favicon)
+			} else {
+				res.send(favicon)
 			}
 		}).catch(function () {
 			res.send('erreur')
