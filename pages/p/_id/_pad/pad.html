@@ -311,6 +311,13 @@
 					</label>
 				</div>
 				<div class="conteneur-interrupteur">
+					<span>{{ $t('enregistrementsAudio') }}</span>
+					<label class="bouton-interrupteur">
+						<input type="checkbox" :checked="pad.enregistrements === 'actives'" @change="modifierEnregistrements">
+						<span class="barre" />
+					</label>
+				</div>
+				<div class="conteneur-interrupteur">
 					<span>{{ $t('liens') }}</span>
 					<label class="bouton-interrupteur">
 						<input type="checkbox" :checked="pad.liens === 'actives'" @change="modifierLiens">
@@ -817,7 +824,7 @@
 		<div id="bloc" class="modale">
 			<div class="en-tete">
 				<span class="titre">{{ titreModale }}</span>
-				<span role="button" tabindex="0" class="fermer" @click="fermerModaleBlocSansEnregistrement"><i class="material-icons">close</i></span>
+				<span role="button" tabindex="0" class="fermer" @click="fermerModaleBloc"><i class="material-icons">close</i></span>
 			</div>
 			<div class="conteneur ascenseur">
 				<div class="contenu">
@@ -832,7 +839,7 @@
 					<input id="champ-titre" type="text" maxlength="96" :placeholder="$t('ajouterTitre')" :value="titre" @input="titre = $event.target.value">
 					<label>{{ $t('texte') }}</label>
 					<div id="texte" />
-					<div class="televerser fichier" v-show="media === '' && !chargementLien" v-if="pad.fichiers === 'actives'">
+					<div class="televerser fichier" v-show="media === '' && !chargementLien && !enregistrement" v-if="pad.fichiers === 'actives'">
 						<label for="televerser-fichier" class="bouton" role="button" tabindex="0" v-show="progressionFichier === 0">{{ $t('ajouterFichier') }}</label>
 						<input id="televerser-fichier" type="file" style="display: none" :accept="fichiersAutorises" @change="ajouterFichier($event.target)">
 						<div class="conteneur-chargement progression" v-if="progressionFichier > 0">
@@ -840,20 +847,35 @@
 							<div class="chargement" />
 						</div>
 					</div>
-					<div class="separateur" v-show="media === '' && progressionFichier === 0 && !chargementLien" v-if="pad.fichiers === 'actives' && pad.liens === 'actives'">
+					<div class="separateur" v-show="media === '' && progressionFichier === 0 && !chargementLien && !enregistrement" v-if="pad.fichiers === 'actives' && pad.enregistrements === 'actives'">
 						<span>{{ $t('ou') }}</span>
 					</div>
-					<div id="ajouter-lien" v-show="media === '' && progressionFichier === 0" v-if="pad.liens === 'actives'">
+					<div class="enregistrer audio" v-show="media === '' && progressionFichier === 0 && !chargementLien" v-if="pad.enregistrements === 'actives'">
+						<template v-if="!enregistrement">
+							<span id="enregistrer" class="bouton" role="button" tabindex="0" @click="enregistrerAudio"><i class="material-icons">fiber_manual_record</i><span>{{ $t('enregistrerAudio') }}</span></span>
+						</template>
+						<div id="enregistrement" v-else>
+							<canvas id="visualisation" width="360" height="60" />
+							<div class="enregistrement">
+								<span class="bouton stopper" role="button" tabindex="0" @click="arreterEnregistrementAudio"><i class="material-icons">stop</i></span>
+								<span class="duree">{{ dureeEnregistrement }}</span>
+							</div>
+						</div>
+					</div>
+					<div class="separateur" v-show="media === '' && progressionFichier === 0 && !chargementLien && !enregistrement" v-if="(pad.fichiers === 'actives' || pad.enregistrements === 'actives') && pad.liens === 'actives'">
+						<span>{{ $t('ou') }}</span>
+					</div>
+					<div id="ajouter-lien" v-show="media === '' && progressionFichier === 0 && !enregistrement" v-if="pad.liens === 'actives'">
 						<input type="text" :value="lien" @input="lien = $event.target.value" :placeholder="$t('ajouterLien')" @keydown.enter="ajouterLien" v-if="!chargementLien">
 						<span role="button" tabindex="0" class="bouton rechercher" :title="$t('valider')" @click="ajouterLien" v-if="!chargementLien"><i class="material-icons">search</i></span>
 						<div class="conteneur-chargement" v-else>
 							<div class="chargement" />
 						</div>
 					</div>
-					<div class="separateur" v-show="media === '' && progressionFichier === 0 && !chargementLien" v-if="(pad.fichiers === 'actives' || pad.liens === 'actives') && pad.documents === 'actives'">
+					<div class="separateur" v-show="media === '' && progressionFichier === 0 && !chargementLien && !enregistrement" v-if="(pad.fichiers === 'actives' || pad.liens === 'actives' || pad.enregistrements === 'actives') && pad.documents === 'actives'">
 						<span>{{ $t('ou') }}</span>
 					</div>
-					<div id="ajouter-document" v-show="media === '' && progressionFichier === 0 && !chargementLien" v-if="pad.documents === 'actives'">
+					<div id="ajouter-document" v-show="media === '' && progressionFichier === 0 && !chargementLien && !enregistrement" v-if="pad.documents === 'actives'">
 						<span role="button" tabindex="0" class="bouton" @click="ajouterDocument">{{ $t('creerDocCollaboratif') }}</span>
 					</div>
 					<label v-show="media !== ''" v-if="source !== 'etherpad'">{{ $t('media') }}</label>
@@ -876,18 +898,19 @@
 						<div class="conteneur-chargement" v-if="chargementMedia">
 							<div class="chargement" />
 						</div>
-						<img id="image" :src="'/' + definirDossierFichiers(pad.id) + '/' + pad.id + '/' + media" v-if="type === 'image'">
+						<img id="image" :src="definirLienFichier(pad.id, media)" v-if="type === 'image'">
 						<img id="image" :src="media" v-else-if="type === 'lien-image'">
-						<audio id="audio" controls :src="'/' + definirDossierFichiers(pad.id) + '/' + pad.id + '/' + media" v-else-if="type === 'audio'" />
-						<video id="video" controls playsinline crossOrigin="anonymous" :src="'/' + definirDossierFichiers(pad.id) + '/' + pad.id + '/' + media" v-else-if="type === 'video'" />
-						<iframe id="document" :src="'/pdfjs/web/viewer.html?file=../../' + definirDossierFichiers(pad.id) + '/' + pad.id + '/' + media" allowfullscreen v-else-if="type === 'pdf'" />
-						<iframe id="document" :src="'https://view.officeapps.live.com/op/embed.aspx?src=' + hote + '/' + definirDossierFichiers(pad.id) + '/' + pad.id + '/' + media" allowfullscreen v-else-if="type === 'office' || type === 'document'" />
+						<audio id="audio" controls :src="media" v-else-if="type === 'enregistrement'" />
+						<audio id="audio" controls :src="definirLienFichier(pad.id, media)" v-else-if="type === 'audio'" />
+						<video id="video" controls playsinline crossOrigin="anonymous" :src="definirLienFichier(pad.id, media)" v-else-if="type === 'video'" />
+						<iframe id="document" :src="'/pdfjs/web/viewer.html?file=' + hote + definirLienFichier(pad.id, media)" allowfullscreen v-else-if="type === 'pdf'" />
+						<iframe id="document" :src="'https://view.officeapps.live.com/op/embed.aspx?src=' + hote + definirLienFichier(pad.id, media)" allowfullscreen v-else-if="type === 'office' || type === 'document'" />
 						<a id="lien" :href="media" target="_blank" v-else-if="type === 'lien'">
 							<span class="type">{{ $t('lienExterne') }}</span>
 							<span class="nom">{{ definirNomFichier(media) }}</span>
 							<span class="icone"><i class="material-icons">link</i></span>
 						</a>
-						<a id="fichier" :href="'/' + definirDossierFichiers(pad.id) + '/' + pad.id + '/' + media" download v-else>
+						<a id="fichier" :href="definirLienFichier(pad.id, media)" download v-else>
 							<span class="type">{{ definirExtensionFichier(media) }}</span>
 							<span class="nom">{{ definirNomFichier(media) }}</span>
 							<span class="icone"><i class="material-icons">attachment</i></span>
@@ -946,7 +969,7 @@
 						<img :src="donneesBloc.media" v-else-if="donneesBloc.type === 'lien-image'">
 						<audio controls :src="'/' + definirDossierFichiers(pad.id) + '/' + pad.id + '/' + donneesBloc.media" v-else-if="donneesBloc.type === 'audio'" />
 						<video controls playsinline crossOrigin="anonymous" :src="'/' + definirDossierFichiers(pad.id) + '/' + pad.id + '/' + donneesBloc.media" v-else-if="donneesBloc.type === 'video'" />
-						<iframe class="document" :src="'/pdfjs/web/viewer.html?file=../../' + definirDossierFichiers(pad.id) + '/' + pad.id + '/' + donneesBloc.media" allowfullscreen v-else-if="donneesBloc.type === 'pdf'" />
+						<iframe class="document" :src="'/pdfjs/web/viewer.html?file=' + hote + '/' + definirDossierFichiers(pad.id) + '/' + pad.id + '/' + donneesBloc.media" allowfullscreen v-else-if="donneesBloc.type === 'pdf'" />
 						<iframe class="document" :src="'https://view.officeapps.live.com/op/embed.aspx?src=' + hote + '/' + definirDossierFichiers(pad.id) + '/' + pad.id + '/' + donneesBloc.media" allowfullscreen v-else-if="donneesBloc.type === 'office' || donneesBloc.type === 'document'" />
 						<span v-else-if="donneesBloc.type === 'lien'">
 							<a :href="donneesBloc.media" target="_blank">
@@ -1164,6 +1187,19 @@
 					<div class="actions">
 						<span role="button" tabindex="0" class="bouton" @click="modifierMotDePasse">{{ $t('modifier') }}</span>
 					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<div class="conteneur-modale" v-if="transcodage || progressionEnregistrement">
+		<div id="transcodage" class="modale">
+			<div class="conteneur">
+				<div class="contenu">
+					<div class="conteneur-chargement">
+						<div class="chargement" />
+					</div>
+					<span class="patienter">{{ $t('transcodage') }}</span>
 				</div>
 			</div>
 		</div>

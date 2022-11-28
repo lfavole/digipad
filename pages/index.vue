@@ -266,6 +266,7 @@ export default {
 						this.$store.dispatch('modifierAlerte', this.$t('informationsConnexionIncorrectes'))
 					} else {
 						this.$store.dispatch('modifierUtilisateur', donnees)
+						this.$socket.emit('connexioncompte', donnees)
 						this.$router.push('/u/' + donnees.identifiant)
 					}
 				}.bind(this)).catch(function () {
@@ -295,6 +296,7 @@ export default {
 						this.$store.dispatch('modifierAlerte', this.$t('identifiantExisteDeja', { identifiant: this.identifiant }))
 					} else {
 						this.$store.dispatch('modifierUtilisateur', donnees)
+						this.$socket.emit('connexioncompte', donnees)
 						this.$router.push('/u/' + donnees.identifiant)
 					}
 				}.bind(this)).catch(function () {

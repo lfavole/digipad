@@ -232,6 +232,7 @@ export default {
 	parametreActiviteModifie: 'Paramètre d\'affichage de l\'onglet Activité du pad modifié.',
 	parametreConversationModifie: 'Paramètre d\'affichage de l\'onglet Conversation modifié.',
 	parametreFichiersModifie: 'Paramètre d\'ajout de fichiers dans les capsules modifié.',
+	parametreEnregistrementsModifie: 'Paramètre d\'ajout d\'enregistrements audio dans les capsules modifié.',
 	parametreLiensModifie: 'Paramètre d\'ajout de liens dans les capsules modifié.',
 	parametreDocumentsModifie: 'Paramètre de création de documents collaboratifs dans les capsules modifié.',
 	languePad: 'Langue du pad',
@@ -348,5 +349,12 @@ export default {
 	largeurCapsules: 'Largeur des capsules',
 	normale: 'normale',
 	large: 'large',
-	parametreLargeurModifie: 'Largeur des capsules modifiée.'
+	parametreLargeurModifie: 'Largeur des capsules modifiée.',
+	padInexistant: 'Ce pad n\'existe pas.',
+	enregistrementsAudio: 'Enregistrements audio',
+	enregistrerAudio: 'Enregistrer audio',
+	transcodage: 'Transcodage en mp3 et téléversement de l\'enregistrement, veuillez patienter...',
+	enregistrementNonSupporte: 'Ce navigateur n\'est pas pris en charge.',
+	erreurMicro: 'Votre microphone ne dispose pas des autorisations nécessaires pour lancer l\'enregistrement.',
+	aucuneEntreeAudio: 'Aucune entrée audio n\'a été détectée sur votre appareil.'
 }

@@ -232,6 +232,7 @@ export default {
 	parametreActiviteModifie: 'Promijenjena je postavka prikaza kartice Aktivnost Digitalne podloge.',
 	parametreConversationModifie: 'Promijenjena je postavka prikaza kartice Razgovor.',
 	parametreFichiersModifie: 'Promijenjene su opcije dodavanja datoteka u objave.',
+	parametreEnregistrementsModifie: 'Paramètre d\'ajout d\'enregistrements audio dans les capsules modifié.',
 	parametreLiensModifie: 'Promijenjene su opcije dodavanja poveznica u objave.',
 	parametreDocumentsModifie: 'Promijenjene su mogućnosti izrade suradničkih dokumenata u objavama.',
 	languePad: 'PJezik Digitalne podloge',
@@ -348,5 +349,12 @@ export default {
 	largeurCapsules: 'Širina kapsule',
 	normale: 'normalan',
 	large: 'širok',
-	parametreLargeurModifie: 'Modificirana širina kapsule.'
+	parametreLargeurModifie: 'Modificirana širina kapsule.',
+	padInexistant: 'Ovaj podlogu ne postoji.',
+	enregistrementsAudio: 'Audiosnimke',
+	enregistrerAudio: 'Snimanje zvuka',
+	transcodage: 'Transcoding na mp3 i prijenos snimke, pričekajte...',
+	enregistrementNonSupporte: 'Ovaj preglednik nije podržan.',
+	erreurMicro: 'Mikrofon nema dozvole za pokretanje snimanja.',
+	aucuneEntreeAudio: 'Na uređaju nije otkriven audioulaz.'
 }

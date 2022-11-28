@@ -232,6 +232,7 @@ export default {
 	parametreActiviteModifie: 'Display setting of the Pad Activity tab changed.',
 	parametreConversationModifie: 'Display setting of the Conversation tab changed.',
 	parametreFichiersModifie: 'Parameter for adding files to capsules changed.',
+	parametreEnregistrementsModifie: 'Paramètre d\'ajout d\'enregistrements audio dans les capsules modifié.',
 	parametreLiensModifie: 'Parameter for adding links in capsules changed.',
 	parametreDocumentsModifie: 'Parameter for the creation of collaborative documents in capsules changed.',
 	languePad: 'Pad language',
@@ -348,5 +349,12 @@ export default {
 	largeurCapsules: 'Width of the capsules',
 	normale: 'normal',
 	large: 'wide',
-	parametreLargeurModifie: 'Width of the capsules changed.'
+	parametreLargeurModifie: 'Width of the capsules changed.',
+	padInexistant: 'This pad does not exist.',
+	enregistrementsAudio: 'Audio recordings',
+	enregistrerAudio: 'Record audio',
+	transcodage: 'Transcoding in mp3 and uploading the recording, please wait...',
+	enregistrementNonSupporte: 'This browser is not supported.',
+	erreurMicro: 'Your microphone does not have the necessary permissions to start recording.',
+	aucuneEntreeAudio: 'No audio input has been detected on your device.'
 }

@@ -213,6 +213,8 @@ export default {
 					const donnees = reponse.data
 					if (donnees === 'erreur') {
 						this.$store.dispatch('modifierAlerte', this.$t('erreurActionServeur'))
+					} else if (donnees === 'pad_inexistant') {
+						this.$store.dispatch('modifierAlerte', this.$t('padInexistant'))
 					} else {
 						this.donneesPad = donnees
 					}
@@ -258,6 +260,8 @@ export default {
 					const donnees = reponse.data
 					if (donnees === 'erreur') {
 						this.$store.dispatch('modifierAlerte', this.$t('erreurActionServeur'))
+					} else if (donnees === 'pad_inexistant') {
+						this.$store.dispatch('modifierAlerte', this.$t('padInexistant'))
 					} else {
 						const identifiant = donnees.identifiant
 						axios.post(this.hote + '/api/supprimer-pad', {

@@ -5,6 +5,7 @@ import linkifyHtml from 'linkify-html'
 import saveAs from 'file-saver'
 import Panzoom from '@panzoom/panzoom'
 import ClipboardJS from 'clipboard'
+import lamejs from 'lamejstmp'
 import draggable from 'vuedraggable'
 import chargement from '@/components/chargement.vue'
 import emojis from '@/components/emojis.vue'
@@ -124,17 +125,9 @@ export default {
 				}.bind(this))
 				this.chargement = false
 			} else {
+				this.blocs.splice(donnees.indexBloc, 0, donnees)
 				if (this.pad.affichage === 'colonnes') {
-					if (this.pad.ordre === 'croissant') {
-						this.colonnes[donnees.colonne].push(donnees)
-					} else {
-						this.colonnes[donnees.colonne].unshift(donnees)
-					}
-				}
-				if (this.pad.ordre === 'croissant') {
-					this.blocs.push(donnees)
-				} else {
-					this.blocs.unshift(donnees)
+					this.colonnes[donnees.colonne].splice(donnees.indexBlocColonne, 0, donnees)
 				}
 			}
 			this.activite.unshift({ id: donnees.activiteId, bloc: donnees.bloc, identifiant: donnees.identifiant, nom: donnees.nom, titre: donnees.titre, date: donnees.date, couleur: donnees.couleur, type: 'bloc-ajoute' })
@@ -167,10 +160,26 @@ export default {
 			if (blocActif && this.utilisateur !== this.identifiant) {
 				blocId = blocActif.id
 			}
-			if (this.pad.affichage === 'colonnes') {
+			if (this.admin && this.pad.affichage === 'colonnes') {
 				this.definirColonnes(donnees.blocs)
-			} else {
+			} else if (this.admin && this.pad.affichage !== 'colonnes') {
 				this.blocs = donnees.blocs
+			} else if (!this.admin) {
+				let blocs
+				if (this.pad.contributions === 'moderees') {
+					blocs = donnees.blocs.filter(function (element) {
+						return element.visibilite === 'visible' || (element.visibilite === 'masquee' && element.identifiant === this.identifiant)
+					}.bind(this))
+				} else {
+					blocs = donnees.blocs.filter(function (element) {
+						return element.visibilite !== 'privee'
+					})
+				}
+				if (this.pad.affichage === 'colonnes') {
+					this.definirColonnes(blocs)
+				} else {
+					this.blocs = blocs
+				}
 			}
 			this.$nextTick(function () {
 				if (blocActif && this.utilisateur !== this.identifiant && document.querySelector('#' + blocId)) {
@@ -449,6 +458,13 @@ export default {
 				this.$store.dispatch('modifierMessage', this.$t('parametreFichiersModifie'))
 			}
 		},
+		modifierenregistrements: function (statut) {
+			this.pad.enregistrements = statut
+			this.chargement = false
+			if (this.admin) {
+				this.$store.dispatch('modifierMessage', this.$t('parametreEnregistrementsModifie'))
+			}
+		},
 		modifierliens: function (statut) {
 			this.pad.liens = statut
 			this.chargement = false
@@ -550,7 +566,7 @@ export default {
 			if (this.admin) {
 				this.$store.dispatch('modifierMessage', this.$t('colonneSupprimee'))
 			} else if (!this.admin && this.modaleBloc && parseInt(this.colonne) === parseInt(donnees.colonne)) {
-				this.fermerModaleBlocSansEnregistrement()
+				this.fermerModaleBloc()
 				this.$store.dispatch('modifierMessage', this.$t('colonneActuelleSupprimee'))
 			}
 			this.chargement = false
@@ -680,8 +696,7 @@ export default {
 			progressionFichier: 0,
 			progressionVignette: 0,
 			progressionFond: 0,
-			fichiers: [],
-			vignettes: [],
+			progressionEnregistrement: false,
 			visibilite: false,
 			chargementLien: false,
 			chargementMedia: false,
@@ -738,7 +753,15 @@ export default {
 			requete: '',
 			chargementVignette: false,
 			modaleAdmins: false,
-			admins: []
+			admins: [],
+			blob: '',
+			transcodage: false,
+			mediaRecorder: '',
+			flux: [],
+			contexte: '',
+			intervalle: '',
+			enregistrement: false,
+			dureeEnregistrement: '00 : 00'
 		}
 	},
 	head () {
@@ -877,8 +900,8 @@ export default {
 			}
 		},
 		blocs: function () {
-			imagesLoaded('#pad', { background: true }, function () {
-				this.$nextTick(function () {
+			this.$nextTick(function () {
+				imagesLoaded('#pad', { background: true }, function () {
 					this.chargement = false
 					let auteur = false
 					if (this.utilisateur === this.identifiant) {
@@ -893,22 +916,6 @@ export default {
 						document.querySelector('#' + this.bloc).classList.add('actif')
 					} else if (this.action === 'modifier' && auteur === true) {
 						this.$store.dispatch('modifierMessage', this.$t('capsuleModifiee'))
-						this.fichiers.forEach(function (item, index) {
-							if (this.media === item) {
-								this.fichiers.splice(index, 1)
-							}
-						}.bind(this))
-						if (this.fichiers.length > 0) {
-							this.$socket.emit('supprimerfichiers', { pad: this.pad.id, fichiers: this.fichiers })
-						}
-						this.vignettes.forEach(function (item, index) {
-							if (this.vignette === item) {
-								this.vignettes.splice(index, 1)
-							}
-						}.bind(this))
-						if (this.vignettes.length > 0) {
-							this.$socket.emit('supprimervignettes', { pad: this.pad, vignettes: this.vignettes })
-						}
 					} else if (this.action === 'supprimer' && auteur === true) {
 						this.$store.dispatch('modifierMessage', this.$t('capsuleSupprimee'))
 					}
@@ -1151,13 +1158,14 @@ export default {
 			} else {
 				switch (item.type) {
 				case 'audio':
+				case 'enregistrement':
 					vignette = '/img/audio.png'
 					break
 				case 'video':
 					vignette = '/img/video.png'
 					break
 				case 'pdf':
-					vignette = '/' + this.definirDossierFichiers(this.pad.id) + '/' + this.pad.id + '/' + item.fichier.replace(/\.[^/.]+$/, '') + '.jpg'
+					vignette = this.definirLienVignette(this.pad.id, item.fichier.replace(/\.[^/.]+$/, '') + '.jpg')
 					break
 				case 'document':
 					vignette = '/img/document.png'
@@ -1380,6 +1388,9 @@ export default {
 				} else {
 					this.visibilite = false
 				}
+				if (item.iframe !== '') {
+					this.lien = item.media
+				}
 			}
 			if (this.pad.affichage === 'colonnes') {
 				this.colonne = colonne
@@ -1447,7 +1458,6 @@ export default {
 			if (champ.files && champ.files[0] && fichiersAutorises.includes(extension) && champ.files[0].size < this.limite * 1024000) {
 				const fichier = champ.files[0]
 				const formulaire = new FormData()
-				formulaire.append('pad', this.pad.id)
 				formulaire.append('fichier', fichier)
 				axios.post(this.hote + '/api/televerser-fichier', formulaire, {
 					headers: {
@@ -1474,12 +1484,6 @@ export default {
 						if (this.type !== 'image') {
 							this.vignette = vignette
 							this.vignetteDefaut = vignette
-						}
-						if (this.mode === 'edition') {
-							this.fichiers.push(donnees.fichier)
-							if (vignette !== '' && vignette.substring(1, this.definirDossierFichiers(this.pad.id).length + 1) === this.definirDossierFichiers(this.pad.id)) {
-								this.vignettes.push(vignette)
-							}
 						}
 						switch (this.type) {
 						case 'image':
@@ -1548,18 +1552,6 @@ export default {
 			return fichier.substring(0, fichier.lastIndexOf('.'))
 		},
 		supprimerFichier () {
-			if (this.mode === 'creation') {
-				if (this.verifierURL(this.media) === false) {
-					this.$socket.emit('supprimerfichier', { pad: this.pad.id, fichier: this.media, vignette: this.vignette })
-				}
-			} else if (this.mode === 'edition') {
-				if (this.verifierURL(this.media) === false) {
-					this.fichiers.push(this.media)
-				}
-				if (this.vignette !== '' && this.vignette.substring(1, this.definirDossierFichiers(this.pad.id).length + 1) === this.definirDossierFichiers(this.pad.id)) {
-					this.vignettes.push(this.vignette)
-				}
-			}
 			if (this.verifierURL(this.media) === true && this.media.includes(this.etherpad)) {
 				const etherpadId = this.media.replace(this.etherpad + '/p/', '')
 				const url = this.etherpad + '/api/1/deletePad?apikey=' + this.etherpadApi + '&padID=' + etherpadId
@@ -1571,6 +1563,182 @@ export default {
 			this.vignette = ''
 			this.vignetteDefaut = ''
 			this.resultats = {}
+		},
+		async ajouterAudio () {
+			this.transcodage = true
+			const blob = await this.blobEnMp3()
+			const formulaire = new FormData()
+			formulaire.append('pad', this.pad.id)
+			formulaire.append('fichier', blob, 'enregistrement.mp3')
+			axios.post(this.hote + '/api/televerser-audio', formulaire, {
+				headers: {
+					'Content-Type': 'multipart/form-data'
+				},
+				onUploadProgress: function () {
+					this.progressionEnregistrement = true
+				}.bind(this)
+			}).then(function (reponse) {
+				const donnees = reponse.data
+				if (donnees === 'non_connecte') {
+					this.$router.push('/')
+				} else if (donnees === 'erreur_televersement') {
+					this.progressionEnregistrement = false
+					this.$store.dispatch('modifierAlerte', this.$t('erreurTeleversementFichier'))
+				} else {
+					this.modaleBloc = false
+					if (this.mode === 'creation') {
+						this.$socket.emit('ajouterbloc', this.bloc, this.pad.id, this.pad.token, this.titre, this.texte, donnees, this.iframe, 'audio', this.source, this.vignette, this.couleur, this.colonne, this.visibilite, this.identifiant, this.nom)
+					} else {
+						this.$socket.emit('modifierbloc', this.bloc, this.pad.id, this.pad.token, this.titre, this.texte, donnees, this.iframe, 'audio', this.source, this.vignette, this.couleur, this.colonne, this.visibilite, this.identifiant, this.nom)
+					}
+				}
+				this.progressionEnregistrement = false
+			}.bind(this)).catch(function () {
+				this.progressionEnregistrement = false
+				this.$store.dispatch('modifierAlerte', this.$t('erreurCommunicationServeur'))
+			}.bind(this))
+		},
+		blobEnMp3 () {
+			return new Promise(function (resolve) {
+				const audioContext = new AudioContext()
+				const fileReader = new FileReader()
+				fileReader.onloadend = function () {
+					const arrayBuffer = fileReader.result
+					audioContext.decodeAudioData(arrayBuffer, function (audioBuffer) {
+						resolve(this.transcoder(audioBuffer))
+					}.bind(this))
+				}.bind(this)
+				fileReader.readAsArrayBuffer(this.blob)
+			}.bind(this))
+		},
+		enregistrerAudio () {
+			if (!navigator.mediaDevices || !navigator.mediaDevices?.enumerateDevices) {
+				this.$store.dispatch('modifierMessage', this.$t('enregistrementNonSupporte'))
+			} else {
+				navigator.mediaDevices.enumerateDevices().then(function (devices) {
+					let entreeAudio = false
+					for (const device of devices) {
+						if (device.kind === 'audioinput') {
+							entreeAudio = true
+							break
+						}
+					}
+					if (entreeAudio === true) {
+						if (!navigator.mediaDevices?.getUserMedia) {
+							this.$store.dispatch('modifierMessage', this.$t('enregistrementNonSupporte'))
+						} else {
+							navigator.mediaDevices.getUserMedia({ audio: true }).then(function (flux) {
+								this.mediaRecorder = new MediaRecorder(flux)
+								this.mediaRecorder.start()
+								this.$nextTick(function () {
+									this.visualiser(flux)
+								}.bind(this))
+								this.enregistrement = true
+								const temps = Date.now()
+								this.intervalle = setInterval(function () {
+									const delta = Date.now() - temps
+									let secondes = Math.floor((delta / 1000) % 60)
+									let minutes = Math.floor((delta / 1000 / 60) << 0)
+									if (secondes < 10) {
+										secondes = '0' + secondes
+									}
+									if (minutes < 10) {
+										minutes = '0' + minutes
+									}
+									this.dureeEnregistrement = minutes + ' : ' + secondes
+									if (this.dureeEnregistrement === '01 : 30') {
+										this.arreterEnregistrementAudio()
+									}
+								}.bind(this), 100)
+								this.mediaRecorder.onstop = function () {
+									if (this.flux.length > 0) {
+										this.blob = new Blob(this.flux, { type: 'audio/wav' })
+										this.enregistrement = false
+										this.media = URL.createObjectURL(this.blob)
+										this.type = 'enregistrement'
+										const donnees = {}
+										donnees.type = this.type
+										const vignette = this.definirVignette(donnees)
+										this.vignette = vignette
+										this.vignetteDefaut = vignette
+										this.mediaRecorder = ''
+										this.flux = []
+										this.contexte = ''
+										this.dureeEnregistrement = '00 : 00'
+										if (this.intervalle !== '') {
+											clearInterval(this.intervalle)
+											this.intervalle = ''
+										}
+									}
+								}.bind(this)
+								this.mediaRecorder.ondataavailable = function (e) {
+									this.flux.push(e.data)
+								}.bind(this)
+							}.bind(this)).catch(function () {
+								this.enregistrement = false
+								this.mediaRecorder = ''
+								this.flux = []
+								this.contexte = ''
+								this.$store.dispatch('modifierMessage', this.$t('erreurMicro'))
+							}.bind(this))
+						}
+					} else {
+						this.$store.dispatch('modifierMessage', this.$t('aucuneEntreeAudio'))
+					}
+				}.bind(this))
+			}
+		},
+		arreterEnregistrementAudio () {
+			this.mediaRecorder.stop()
+		},
+		visualiser (flux) {
+			if (!this.contexte) {
+				this.contexte = new AudioContext()
+			}
+			const source = this.contexte.createMediaStreamSource(flux)
+			const analyser = this.contexte.createAnalyser()
+			analyser.fftSize = 2048
+			const bufferLength = analyser.frequencyBinCount
+			const dataArray = new Uint8Array(bufferLength)
+			source.connect(analyser)
+
+			this.$nextTick(function () {
+				draw()
+			})
+
+			function draw () {
+				if (document.querySelector('#visualisation')) {
+					const canvas = document.querySelector('#visualisation')
+					const canvasCtx = canvas.getContext('2d')
+					const largeur = document.querySelector('#enregistrement').offsetWidth
+					const hauteur = canvas.height
+					canvas.width = largeur
+					requestAnimationFrame(draw)
+					analyser.getByteTimeDomainData(dataArray)
+
+					canvasCtx.fillStyle = '#eeeeee'
+					canvasCtx.fillRect(0, 0, largeur, hauteur)
+					canvasCtx.lineWidth = 2
+					canvasCtx.strokeStyle = '#000000'
+					canvasCtx.beginPath()
+
+					const sliceWidth = largeur * 1.0 / bufferLength
+					let x = 0
+
+					for (let i = 0; i < bufferLength; i++) {
+						const v = dataArray[i] / 128.0
+						const y = v * hauteur / 2
+						if (i === 0) {
+							canvasCtx.moveTo(x, y)
+						} else {
+							canvasCtx.lineTo(x, y)
+						}
+						x += sliceWidth
+					}
+					canvasCtx.lineTo(canvas.width, canvas.height / 2)
+					canvasCtx.stroke()
+				}
+			}
 		},
 		ajouterLien () {
 			if (this.lien !== '') {
@@ -1602,42 +1770,35 @@ export default {
 								if (this.source === 'web' && !this.media.includes('facebook.com') && !this.media.includes('vocaroo.com') && !this.media.includes('drive.google.com') && !this.media.includes('docs.google.com') && !this.media.includes('google.com/maps') && !this.media.includes('wikipedia.org') && !this.media.includes('genial.ly') && !this.media.includes('ladigitale.dev/digitools/') && !this.media.includes('framapad.org')) {
 									this.chargementLien = false
 									this.chargementVignette = true
-									let domaine = new URL(this.lien)
-									domaine = domaine.hostname
-									const xhr = new XMLHttpRequest()
-									xhr.onload = function () {
-										if (xhr.readyState === xhr.DONE && xhr.status === 200) {
-											const reponse = xhr.responseText
-											if (reponse !== '') {
-												this.chargementVignette = false
-												this.vignette = 'https://ladigitale.dev/favicons' + reponse.substring(1)
-												this.vignetteDefaut = 'https://ladigitale.dev/favicons' + reponse.substring(1)
-												this.$nextTick(function () {
-													const vignette = document.querySelector('#vignette img')
-													vignette.onerror = function() {
-														this.vignette = this.definirVignette(donnees)
-														this.vignetteDefaut = this.definirVignette(donnees)
-													}.bind(this)
-												}.bind(this))
+									const url = new URL(this.lien)
+									const domaine = url.hostname
+									const protocole = url.protocol
+									axios.post(this.hote + '/api/recuperer-icone', {
+										domaine: domaine,
+										protocole: protocole
+									}).then(async function (reponse) {
+										this.chargementVignette = false
+										if (reponse.data === 'erreur') {
+											this.vignette = this.definirVignette(donnees)
+											this.vignetteDefaut = this.definirVignette(donnees)
+										} else if (reponse.data === '') {
+											const favicon = await this.recupererIcone(domaine)
+											if (favicon !== false) {
+												this.vignette = favicon
+												this.vignetteDefaut = favicon
 											} else {
 												this.vignette = this.definirVignette(donnees)
 												this.vignetteDefaut = this.definirVignette(donnees)
-												this.chargementVignette = false
 											}
 										} else {
-											this.vignette = this.definirVignette(donnees)
-											this.vignetteDefaut = this.definirVignette(donnees)
-											this.chargementVignette = false
+											this.vignette = reponse.data
+											this.vignetteDefaut = reponse.data
 										}
-									}.bind(this)
-									xhr.open('POST', 'https://ladigitale.dev/favicons/recuperer_icone.php', true)
-									xhr.setRequestHeader('Content-type', 'application/x-www-form-urlencoded')
-									xhr.send('lien=' + domaine)
-									xhr.onerror = function () {
+									}.bind(this)).catch(function () {
 										this.vignette = this.definirVignette(donnees)
 										this.vignetteDefaut = this.definirVignette(donnees)
 										this.chargementVignette = false
-									}.bind(this)
+									}.bind(this))
 								} else {
 									this.vignette = this.definirVignette(donnees)
 									this.vignetteDefaut = this.definirVignette(donnees)
@@ -1686,6 +1847,17 @@ export default {
 					this.rechercherImage(1)
 				}
 			}
+		},
+		async recupererIcone (protocole, domaine) {
+			const favicon = protocole + '//' + domaine + '/favicon.ico'
+			const r = await fetch(favicon)
+			if (r.ok) {
+				const t = await r.blob()
+				if (t.type.includes('image')) {
+					return favicon
+				}
+			}
+			return false
 		},
 		rechercherImage (page) {
 			if (this.lien !== '') {
@@ -1742,17 +1914,15 @@ export default {
 			this.media = this.lien
 			this.source = 'web'
 			this.type = 'lien'
+			if (this.vignette === '' || this.vignette === '/img/code.png') {
+				this.vignette = '/img/lien.png'
+			}
 		},
 		supprimerLien () {
 			if (this.iframe.includes(this.etherpad)) {
 				const etherpadId = this.iframe.replace(this.etherpad + '/p/', '')
 				const url = this.etherpad + '/api/1/deletePad?apikey=' + this.etherpadApi + '&padID=' + etherpadId
 				axios.get(url)
-			}
-			if (this.mode === 'creation' && this.vignette !== '' && this.vignette.substring(1, this.definirDossierFichiers(this.pad.id).length + 1) === this.definirDossierFichiers(this.pad.id)) {
-				this.$socket.emit('supprimerfichier', { pad: this.pad.id, fichier: this.media, vignette: this.vignette })
-			} else if (this.mode === 'edition' && this.vignette !== '' && this.vignette.substring(1, this.definirDossierFichiers(this.pad.id).length + 1) === this.definirDossierFichiers(this.pad.id)) {
-				this.vignettes.push(this.vignette)
 			}
 			this.media = ''
 			this.lien = ''
@@ -1788,7 +1958,6 @@ export default {
 			if (champ.files && champ.files[0] && formats.includes(extension) && champ.files[0].size < 3072000) {
 				const fichier = champ.files[0]
 				const formulaire = new FormData()
-				formulaire.append('pad', this.pad.id)
 				formulaire.append('fichier', fichier)
 				axios.post(this.hote + '/api/televerser-vignette', formulaire, {
 					headers: {
@@ -1799,17 +1968,12 @@ export default {
 						this.progressionVignette = pourcentage
 					}.bind(this)
 				}).then(function (reponse) {
-					if (this.mode === 'creation' && this.vignette !== '' && this.vignette.substring(1, this.definirDossierFichiers(this.pad.id).length + 1) === this.definirDossierFichiers(this.pad.id)) {
-						this.$socket.emit('supprimervignette', { pad: this.pad, vignette: this.vignette })
-					} else if (this.mode === 'edition' && this.vignette !== '' && this.vignette.substring(1, this.definirDossierFichiers(this.pad.id).length + 1) === this.definirDossierFichiers(this.pad.id)) {
-						this.vignettes.push(this.vignette)
-					}
 					const donnees = reponse.data
 					if (donnees === 'non_connecte') {
 						this.$router.push('/')
 					} else if (donnees === 'erreur_televersement') {
 						champ.value = ''
-						this.progressionFichier = 0
+						this.progressionVignette = 0
 						this.$store.dispatch('modifierAlerte', this.$t('erreurTeleversementVignette'))
 					} else {
 						this.vignette = donnees
@@ -1839,38 +2003,48 @@ export default {
 			}
 		},
 		remettreVignetteDefaut () {
-			const vignette = this.vignette
 			this.vignette = this.vignetteDefaut
-			if (vignette.substring(1, this.definirDossierFichiers(this.pad.id).length + 1) === this.definirDossierFichiers(this.pad.id)) {
-				this.$socket.emit('supprimervignette', { pad: this.pad, vignette: vignette })
-			}
-			this.vignettes.forEach(function (item, index) {
-				if (item === this.vignetteDefaut) {
-					this.vignettes.splice(index, 1)
-				}
-			}.bind(this))
 		},
 		modifierVisibiliteCapsule () {
 			this.visibilite = !this.visibilite
 		},
 		ajouterBloc () {
 			this.bloc = 'bloc-id-' + (new Date()).getTime() + Math.random().toString(16).slice(10)
-			if (this.titre !== '' || this.texte !== '' || this.media !== '') {
+			if ((this.titre !== '' || this.texte !== '' || this.media !== '') && this.type !== 'enregistrement') {
 				this.chargement = true
 				this.$socket.emit('ajouterbloc', this.bloc, this.pad.id, this.pad.token, this.titre, this.texte, this.media, this.iframe, this.type, this.source, this.vignette, this.couleur, this.colonne, this.visibilite, this.identifiant, this.nom)
 				this.modaleBloc = false
+			} else if ((this.titre !== '' || this.texte !== '' || this.media !== '') && this.type === 'enregistrement') {
+				this.ajouterAudio()
 			}
 		},
 		modifierBloc () {
-			if (this.titre !== '' || this.texte !== '' || this.media !== '') {
+			if ((this.titre !== '' || this.texte !== '' || this.media !== '') && this.type !== 'enregistrement') {
 				this.chargement = true
 				this.$socket.emit('modifierbloc', this.bloc, this.pad.id, this.pad.token, this.titre, this.texte, this.media, this.iframe, this.type, this.source, this.vignette, this.couleur, this.colonne, this.visibilite, this.identifiant, this.nom)
 				this.modaleBloc = false
+			} else if ((this.titre !== '' || this.texte !== '' || this.media !== '') && this.type === 'enregistrement') {
+				this.ajouterAudio()
 			}
 		},
-		autoriserBloc (bloc, moderation) {
+		autoriserBloc (donneesBloc, moderation) {
 			this.chargement = true
-			this.$socket.emit('autoriserbloc', this.pad.id, this.pad.token, bloc, moderation, this.identifiant)
+			let indexBloc, indexBlocColonne
+			this.blocs.forEach(function (item, index) {
+				if (item.bloc === donneesBloc.bloc) {
+					indexBloc = index
+				}
+			})
+			if (this.pad.affichage === 'colonnes') {
+				this.colonnes.forEach(function (colonne) {
+					colonne.forEach(function (item, index) {
+						if (item.bloc === donneesBloc.bloc) {
+							indexBlocColonne = index
+						}
+					})
+				})
+			}
+			this.$socket.emit('autoriserbloc', this.pad.id, this.pad.token, donneesBloc, indexBloc, indexBlocColonne, moderation, this.identifiant)
 		},
 		fermerModaleBloc () {
 			this.modaleBloc = false
@@ -1890,42 +2064,24 @@ export default {
 			this.lien = ''
 			this.progressionFichier = 0
 			this.progressionVignette = 0
+			this.progressionEnregistrement = false
 			this.chargementLien = false
 			this.chargementMedia = false
 			this.chargementVignette = false
-			this.fichiers = []
-			this.vignettes = []
 			this.resultats = {}
 			this.visibilite = false
 			this.donneesBloc = {}
-		},
-		fermerModaleBlocSansEnregistrement () {
-			this.modaleBloc = false
-			this.titreModale = ''
-			if (this.mode === 'creation' && this.media !== '' && this.lien === '') {
-				this.$socket.emit('supprimerfichier', { pad: this.pad.id, fichier: this.media, vignette: this.vignette })
-			} else if (this.mode === 'edition') {
-				this.fichiers.forEach(function (item, index) {
-					if (Object.keys(this.donneesBloc).length > 0 && this.donneesBloc.hasOwnProperty('media') && item === this.donneesBloc.media) {
-						this.fichiers.splice(index, 1)
-					}
-				}.bind(this))
-				if (this.fichiers.length > 0) {
-					this.$socket.emit('supprimerfichiers', { pad: this.pad.id, fichiers: this.fichiers })
-				}
-				this.vignettes.forEach(function (item, index) {
-					if (Object.keys(this.donneesBloc).length > 0 && this.donneesBloc.hasOwnProperty('vignette') && item === this.donneesBloc.vignette) {
-						this.vignettes.splice(index, 1)
-					}
-				}.bind(this))
-				if (this.vignette !== this.vignetteDefaut && this.vignette.substring(1, this.definirDossierFichiers(this.pad.id).length + 1) === this.definirDossierFichiers(this.pad.id)) {
-					this.vignettes.push(this.vignette)
-				}
-				if (this.vignettes.length > 0) {
-					this.$socket.emit('supprimervignettes', { pad: this.pad, vignettes: this.vignettes })
-				}
+			this.blob = ''
+			this.enregistrement = false
+			this.mediaRecorder = ''
+			this.flux = []
+			this.contexte = ''
+			this.dureeEnregistrement = '00 : 00'
+			if (this.intervalle !== '') {
+				clearInterval(this.intervalle)
+				this.intervalle = ''
 			}
-			this.fermerModaleBloc()
+			this.transcodage = false
 		},
 		afficherSupprimerBloc (bloc, titre, colonne) {
 			this.bloc = bloc
@@ -1965,7 +2121,7 @@ export default {
 					html = '<video controls playsinline crossOrigin="anonymous" src="/' + this.definirDossierFichiers(this.pad.id) + '/' + this.pad.id + '/' + item.media + '"></video>'
 					break
 				case 'pdf':
-					html = '<iframe src="/pdfjs/web/viewer.html?file=../../' + this.definirDossierFichiers(this.pad.id) + '/' + this.pad.id + '/' + item.media + '" allowfullscreen></iframe>'
+					html = '<iframe src="/pdfjs/web/viewer.html?file=' + this.hote + '/' + this.definirDossierFichiers(this.pad.id) + '/' + this.pad.id + '/' + item.media + '" allowfullscreen></iframe>'
 					break
 				case 'document':
 				case 'office':
@@ -2703,6 +2859,13 @@ export default {
 					})
 				})
 			}
+			if (this.enregistrement === true) {
+				this.$nextTick(function () {
+					const largeur = document.querySelector('#enregistrement').offsetWidth
+					const canvas = document.querySelector('#visualisation')
+					canvas.width = largeur
+				})
+			}
 		},
 		afficherActivite () {
 			this.menuUtilisateurs = false
@@ -2960,6 +3123,14 @@ export default {
 				this.$socket.emit('modifierfichiers', this.pad.id, 'actives', this.identifiant)
 			} else {
 				this.$socket.emit('modifierfichiers', this.pad.id, 'desactives', this.identifiant)
+			}
+			this.chargement = true
+		},
+		modifierEnregistrements (event) {
+			if (event.target.checked === true) {
+				this.$socket.emit('modifierenregistrements', this.pad.id, 'actives', this.identifiant)
+			} else {
+				this.$socket.emit('modifierenregistrements', this.pad.id, 'desactives', this.identifiant)
 			}
 			this.chargement = true
 		},
@@ -3246,6 +3417,20 @@ export default {
 				}
 			}
 		},
+		definirLienFichier (id, media) {
+			if (this.mode === 'creation' || (this.mode === 'edition' && this.donneesBloc.media !== media)) {
+				return '/temp/' + media
+			} else if (this.mode === 'edition' && this.donneesBloc.media === media) {
+				return '/' + this.definirDossierFichiers(id) + '/' + id + '/' + media
+			}
+		},
+		definirLienVignette (id, vignette) {
+			if (this.mode === 'creation' || (this.mode === 'edition' && this.donneesBloc.vignette !== '/' + this.definirDossierFichiers(id) + '/' + id + '/' + vignette)) {
+				return '/temp/' + vignette
+			} else if (this.mode === 'edition' && this.donneesBloc.vignette === '/' + this.definirDossierFichiers(id) + '/' + id + '/' + vignette) {
+				return '/' + this.definirDossierFichiers(id) + '/' + id + '/' + vignette
+			}
+		},
 		definirDossierFichiers (id) {
 			if (process.env.nfsPadNumber && process.env.nfsPadNumber !== '' && process.env.nfsFolder && process.env.nfsFolder !== '' && parseInt(id) > parseInt(process.env.nfsPadNumber)) {
 				return process.env.nfsFolder
@@ -3255,7 +3440,97 @@ export default {
 		},
 		quitterPage () {
 			this.$socket.emit('sortie', this.pad.id, this.identifiant)
-			this.fermerModaleBlocSansEnregistrement()
+		},
+		transcoder (aBuffer) {
+			const numOfChan = aBuffer.numberOfChannels
+			const btwLength = aBuffer.length * numOfChan * 2 + 44
+			const btwArrBuff = new ArrayBuffer(btwLength)
+			const btwView = new DataView(btwArrBuff)
+			const btwChnls = []
+			let btwIndex
+			let btwSample
+			let btwOffset = 0
+			let btwPos = 0
+			setUint32(0x46464952)
+			setUint32(btwLength - 8)
+			setUint32(0x45564157)
+			// eslint-disable-next-line
+			setUint32(0x20746d66)
+			setUint32(16)
+			setUint16(1)
+			setUint16(numOfChan)
+			setUint32(aBuffer.sampleRate)
+			setUint32(aBuffer.sampleRate * 2 * numOfChan)
+			setUint16(numOfChan * 2)
+			setUint16(16)
+			setUint32(0x61746164)
+			setUint32(btwLength - btwPos - 4)
+			for (btwIndex = 0; btwIndex < aBuffer.numberOfChannels; btwIndex++) {
+				btwChnls.push(aBuffer.getChannelData(btwIndex))
+			}
+			while (btwPos < btwLength) {
+				for (btwIndex = 0; btwIndex < numOfChan; btwIndex++) {
+					btwSample = Math.max(-1, Math.min(1, btwChnls[btwIndex][btwOffset]))
+					btwSample = (0.5 + btwSample < 0 ? btwSample * 32768 : btwSample * 32767) | 0
+					btwView.setInt16(btwPos, btwSample, true)
+					btwPos += 2
+				}
+				btwOffset++
+			}
+			const wavHdr = lamejs.WavHeader.readHeader(new DataView(btwArrBuff))
+			const data = new Int16Array(btwArrBuff, wavHdr.dataOffset, wavHdr.dataLen / 2)
+			const leftData = []
+			const rightData = []
+			for (let i = 0; i < data.length; i += 2) {
+				leftData.push(data[i])
+				rightData.push(data[i + 1])
+			}
+			const left = new Int16Array(leftData)
+			const right = new Int16Array(rightData)
+			let blob
+			if (wavHdr.channels === 2) {
+				blob = wavToMp3(wavHdr.channels, wavHdr.sampleRate, left, right)
+			} else if (wavHdr.channels === 1) {
+				blob = wavToMp3(wavHdr.channels, wavHdr.sampleRate, data)
+			}
+			return blob
+
+			function setUint16 (data) {
+				btwView.setUint16(btwPos, data, true)
+				btwPos += 2
+			}
+
+			function setUint32 (data) {
+				btwView.setUint32(btwPos, data, true)
+				btwPos += 4
+			}
+
+			function wavToMp3 (channels, sampleRate, left, right = null) {
+				const buffer = []
+				const mp3enc = new lamejs.Mp3Encoder(channels, sampleRate, 96)
+				let remaining = left.length
+				const samplesPerFrame = 1152
+				for (let i = 0; remaining >= samplesPerFrame; i += samplesPerFrame) {
+					let mp3buf
+					if (!right) {
+						const mono = left.subarray(i, i + samplesPerFrame)
+						mp3buf = mp3enc.encodeBuffer(mono)
+					} else {
+						const leftChunk = left.subarray(i, i + samplesPerFrame)
+						const rightChunk = right.subarray(i, i + samplesPerFrame)
+						mp3buf = mp3enc.encodeBuffer(leftChunk, rightChunk)
+					}
+					if (mp3buf.length > 0) {
+						buffer.push(new Int8Array(mp3buf))
+					}
+					remaining -= samplesPerFrame
+				}
+				const d = mp3enc.flush()
+				if (d.length > 0) {
+					buffer.push(new Int8Array(d))
+				}
+				return new Blob(buffer, { type: 'audio/mpeg' })
+			}
 		}
 	}
 }

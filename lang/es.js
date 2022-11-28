@@ -232,6 +232,7 @@ export default {
 	parametreActiviteModifie: 'Parámetro de visualización de la pestaña Actividad del pad modificado.',
 	parametreConversationModifie: 'Parámetro de visualización de la pestaña Conversación modificado.',
 	parametreFichiersModifie: 'Parámetro del añadido de archivos en las cápsulas modificado.',
+	parametreEnregistrementsModifie: 'Paramètre d\'ajout d\'enregistrements audio dans les capsules modifié.',
 	parametreLiensModifie: 'Parámetro del añadido de enlaces en las cápsulas modificado.',
 	parametreDocumentsModifie: 'Parámetro de creación de documentos colaborativos en las cápsulas modificado.',
 	languePad: 'Idioma del pad',
@@ -348,5 +349,12 @@ export default {
 	largeurCapsules: 'Anchura de la cápsula',
 	normale: 'normal',
 	large: 'amplia',
-	parametreLargeurModifie: 'Anchura de la cápsula modificada.'
+	parametreLargeurModifie: 'Anchura de la cápsula modificada.',
+	padInexistant: 'Esta pad no existe.',
+	enregistrementsAudio: 'Grabaciones de audio',
+	enregistrerAudio: 'Grabar audio',
+	transcodage: 'Transcodificando a mp3 y subiendo la grabación, por favor espere...',
+	enregistrementNonSupporte: 'Este navegador no es compatible.',
+	erreurMicro: 'Tu micrófono no tiene los permisos necesarios para empezar a grabar.',
+	aucuneEntreeAudio: 'No se ha detectado ninguna entrada de audio en tu dispositivo.'
 }

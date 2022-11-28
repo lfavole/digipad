@@ -678,10 +678,13 @@
 	background: #394b62;
 }
 
+.enregistrer.audio,
 .televerser.fichier {
+	font-size: 0;
 	text-align: center;
 }
 
+.enregistrer.audio .bouton,
 .televerser.fichier .bouton {
 	margin-bottom: 1.5rem;
 }
@@ -777,6 +780,74 @@
     padding-right: 1.5rem;
     vertical-align: middle;
     background-color: #fff;
+}
+
+#enregistrer i {
+	font-size: 24px;
+	margin-right: 1rem;
+	color: #ff1f1f;
+}
+
+#enregistrement .enregistrement {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+}
+
+#enregistrement .enregistrement .duree {
+	font-size: 3rem;
+	font-weight: 500;
+	margin-left: 2.5rem;
+}
+
+#enregistrement .enregistrement .bouton {
+	background-color: #fff;
+	border-color: #001d1d;
+	border-width: 1px;
+	border-radius: 0;
+	line-height: 1;
+	height: auto;
+	padding: 1rem;
+	margin-bottom: 0;
+}
+
+#enregistrement .enregistrement .bouton i {
+	font-size: 48px;
+	line-height: 1;
+	margin: 0;
+}
+
+#enregistrement .enregistrement .bouton.stopper {
+	color: #001d1d;
+    animation: couleur ease-in 2s infinite;
+}
+
+#visualisation {
+	margin-bottom: 1.5rem;
+}
+
+@keyframes couleur {
+    0% {
+		background: #fff;
+	}
+    50% {
+		background: #ff1f1f;
+	}
+    100% {
+		background: #fff;
+	}
+}
+
+#transcodage {
+	max-width: 300px;
+}
+
+#transcodage .patienter {
+	display: block;
+	font-size: 14px;
+	margin-top: 10px;
+	text-align: center;
+	line-height: 1.25;
 }
 
 #media,

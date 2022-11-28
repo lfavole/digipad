@@ -232,6 +232,7 @@ export default {
 	parametreActiviteModifie: 'Parametri di aggiunta delle Attività del pad modificato.',
 	parametreConversationModifie: 'Parametri di aggiunta della Chat modificato.',
 	parametreFichiersModifie: 'Parametri di aggiunta di file nelle capsule modificati.',
+	parametreEnregistrementsModifie: 'Paramètre d\'ajout d\'enregistrements audio dans les capsules modifié.',
 	parametreLiensModifie: 'Parametri di aggiunta di link nelle capsule modificati.',
 	parametreDocumentsModifie: 'Parametri di creazione di documenti collaborativi nelle capsule modificati.',
 	languePad: 'Lingua del pad',
@@ -348,5 +349,12 @@ export default {
 	largeurCapsules: 'Larghezza della capsula',
 	normale: 'normale',
 	large: 'ampio',
-	parametreLargeurModifie: 'Larghezza della capsula modificata.'
+	parametreLargeurModifie: 'Larghezza della capsula modificata.',
+	padInexistant: 'Questo pad non esiste.',
+	enregistrementsAudio: 'Registrazioni audio',
+	enregistrerAudio: 'Registrare audio',
+	transcodage: 'Trascodifica in mp3 e caricamento della registrazione, attendere prego...',
+	enregistrementNonSupporte: 'Questo browser non è supportato.',
+	erreurMicro: 'Il microfono non dispone delle autorizzazioni necessarie per avviare la registrazione.',
+	aucuneEntreeAudio: 'Non è stato rilevato alcun ingresso audio sul dispositivo.'
 }
