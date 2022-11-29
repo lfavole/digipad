@@ -37,6 +37,8 @@ const nodemailer = require('nodemailer')
 const rp = require('request-promise')
 const { URL } = require('url')
 const cheerio = require('cheerio')
+const libre = require('libreoffice-convert')
+libre.convertAsync = require('util').promisify(libre.convert)
 let storeOptions, cookie, dureeSession, dateCron, jours
 if (process.env.NODE_ENV === 'production') {
 	storeOptions = {
@@ -2041,11 +2043,13 @@ app.post('/api/televerser-fichier', function (req, res) {
 	if (!identifiant) {
 		res.send('non_connecte')
 	} else {
-		televerserTemp(req, res, function (err) {
+		televerserTemp(req, res, async function (err) {
 			if (err) { res.send('erreur_televersement'); return false }
 			const fichier = req.file
 			let mimetype = fichier.mimetype
 			const chemin = path.join(__dirname, '..', '/static/temp/' + fichier.filename)
+			const destination = path.join(__dirname, '..', '/static/temp/' + path.parse(fichier.filename).name + '.jpg')
+			const destinationPDF = path.join(__dirname, '..', '/static/temp/' + path.parse(fichier.filename).name + '.pdf')
 			if (mimetype.split('/')[0] === 'image') {
 				const extension = path.parse(fichier.filename).ext
 				if (extension.toLowerCase() === '.jpg' || extension.toLowerCase() === '.jpeg') {
@@ -2070,20 +2074,39 @@ app.post('/api/televerser-fichier', function (req, res) {
 					})
 				}
 			} else if (mimetype === 'application/pdf') {
-				const destination = path.join(__dirname, '..', '/static/temp/' + path.parse(fichier.filename).name + '.jpg')
-				gm(chemin + '[0]').setFormat('jpg').resize(450).quality(75).write(destination, function (erreur) {
+				gm(chemin + '[0]').setFormat('jpg').resize(450).quality(80).write(destination, function (erreur) {
 					if (erreur) {
-						res.json({ fichier: fichier.filename, mimetype: 'document' })
+						res.json({ fichier: fichier.filename, mimetype: 'pdf', vignetteGeneree: false })
 					} else {
-						res.json({ fichier: fichier.filename, mimetype: 'pdf' })
+						res.json({ fichier: fichier.filename, mimetype: 'pdf', vignetteGeneree: true })
 					}
 				})
 			} else if (mimetype === 'application/vnd.oasis.opendocument.presentation' || mimetype === 'application/vnd.oasis.opendocument.text' || mimetype === 'application/vnd.oasis.opendocument.spreadsheet') {
 				mimetype = 'document'
-				res.json({ fichier: fichier.filename, mimetype: mimetype })
+				const docBuffer = await fs.readFile(chemin)
+				const pdfBuffer = await libre.convertAsync(docBuffer, '.pdf', undefined)
+				await fs.writeFile(destinationPDF, pdfBuffer)
+				gm(destinationPDF + '[0]').setFormat('jpg').resize(450).quality(80).write(destination, function (erreur) {
+					fs.removeSync(destinationPDF)
+					if (erreur) {
+						res.json({ fichier: fichier.filename, mimetype: mimetype, vignetteGeneree: false })
+					} else {
+						res.json({ fichier: fichier.filename, mimetype: mimetype, vignetteGeneree: true })
+					}
+				})
 			} else if (mimetype === 'application/msword' || mimetype === 'application/vnd.ms-powerpoint' || mimetype === 'application/vnd.ms-excel' || mimetype.includes('officedocument') === true) {
 				mimetype = 'office'
-				res.json({ fichier: fichier.filename, mimetype: mimetype })
+				const docBuffer = await fs.readFile(chemin)
+				const pdfBuffer = await libre.convertAsync(docBuffer, '.pdf', undefined)
+				await fs.writeFile(destinationPDF, pdfBuffer)
+				gm(destinationPDF + '[0]').setFormat('jpg').resize(450).quality(80).write(destination, function (erreur) {
+					fs.removeSync(destinationPDF)
+					if (erreur) {
+						res.json({ fichier: fichier.filename, mimetype: mimetype, vignetteGeneree: false })
+					} else {
+						res.json({ fichier: fichier.filename, mimetype: mimetype, vignetteGeneree: true })
+					}
+				})
 			} else {
 				res.json({ fichier: fichier.filename, mimetype: mimetype })
 			}

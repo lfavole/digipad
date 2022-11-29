@@ -1153,8 +1153,14 @@ export default {
 		},
 		definirVignette (item) {
 			let vignette
+			let vignetteGeneree = false
+			if (item.hasOwnProperty('vignetteGeneree')) {
+				vignetteGeneree = item.vignetteGeneree
+			}
 			if (item.vignette && item.vignette !== '') {
 				vignette = item.vignette
+			} else if (vignetteGeneree === true) {
+				vignette = this.definirLienVignette(this.pad.id, item.fichier.replace(/\.[^/.]+$/, '') + '.jpg')
 			} else {
 				switch (item.type) {
 				case 'audio':
@@ -1165,7 +1171,7 @@ export default {
 					vignette = '/img/video.png'
 					break
 				case 'pdf':
-					vignette = this.definirLienVignette(this.pad.id, item.fichier.replace(/\.[^/.]+$/, '') + '.jpg')
+					vignette = '/img/pdf.png'
 					break
 				case 'document':
 					vignette = '/img/document.png'
@@ -1223,8 +1229,8 @@ export default {
 						vignette = '/img/quizlet.png'
 					} else if (item.media.includes('genial.ly')) {
 						vignette = '/img/genially.png'
-					} else if (item.media.includes('ladigitale.dev/digitools/')) {
-						vignette = '/img/digitools.png'
+					} else if (item.media.includes('ladigitale.dev')) {
+						vignette = '/img/ladigitale.png'
 					} else if (item.media.includes('framapad.org')) {
 						vignette = '/img/framapad.png'
 					} else {
