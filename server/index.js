@@ -2062,7 +2062,7 @@ app.post('/api/televerser-fichier', function (req, res) {
 							res.json({ fichier: fichier.filename, mimetype: mimetype })
 						})
 					})
-				} else {
+				} else if (extension.toLowerCase() !== '.gif') {
 					sharp(chemin).withMetadata().resize(1200, 1200, {
 						kernel: sharp.kernel.nearest,
 						fit: 'inside'
@@ -2072,6 +2072,8 @@ app.post('/api/televerser-fichier', function (req, res) {
 							res.json({ fichier: fichier.filename, mimetype: mimetype })
 						})
 					})
+				} else {
+					res.json({ fichier: fichier.filename, mimetype: mimetype })
 				}
 			} else if (mimetype === 'application/pdf') {
 				gm(chemin + '[0]').setFormat('jpg').resize(450).quality(80).write(destination, function (erreur) {
