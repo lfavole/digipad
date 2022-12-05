@@ -146,7 +146,7 @@ app.get('/u/:u', function(req, res) {
 app.get('/p/:id/:token', function (req) {
 	if (req.session.identifiant === '' || req.session.identifiant === undefined) {
 		const identifiant = 'u' + Math.random().toString(16).slice(3)
-		const nom = choisirNom() + ' ' + choisirAdjectif()
+		const nom = genererPseudo()
 		let langue = 'fr'
 		if (req.session.hasOwnProperty('langue') && req.session.langue !== '' && req.session.langue !== undefined) {
 			langue = req.session.langue
@@ -583,7 +583,7 @@ app.post('/api/creer-pad-sans-compte', function (req, res) {
 	let identifiant, nom
 	if (req.session.identifiant === '' || req.session.identifiant === undefined) {
 		identifiant = 'u' + Math.random().toString(16).slice(3)
-		nom = choisirNom() + ' ' + choisirAdjectif()
+		nom = genererPseudo()
 		req.session.identifiant = identifiant
 		req.session.nom = nom
 	} else {
@@ -968,7 +968,21 @@ app.post('/api/exporter-pad', function (req, res) {
 											})
 											donnees.evaluations = donneesEvaluations.length
 											donnees.listeEvaluations = donneesEvaluations
-											resolve(donnees)
+											db.exists('noms:' + donnees.identifiant, function (err, resultat) {
+												if (err) { resolve(donnees) }
+												if (resultat === 1) {
+													db.hget('noms:' + donnees.identifiant, 'nom', function (err, nom) {
+														if (err) { resolve(donnees) }
+														donnees.nom = nom
+														donnees.info = formaterDate(donnees, req.session.langue)
+														resolve(donnees)
+													})
+												} else {
+													donnees.nom = genererPseudo()
+													donnees.info = formaterDate(donnees, req.session.langue)
+													resolve(donnees)
+												}
+											})
 										})
 									})
 								})
@@ -987,7 +1001,7 @@ app.post('/api/exporter-pad', function (req, res) {
 						for (let entree of entrees) {
 							entree = JSON.parse(entree)
 							const donneesEntree = new Promise(function (resolve) {
-								db.exists('utilisateurs:' + entree.identifiant, function (err, resultat) {
+								db.exists('utilisateurs:' + entree.identifiant, function (err) {
 									if (err) { resolve({}) }
 									resolve(entree)
 								})
@@ -1005,16 +1019,37 @@ app.post('/api/exporter-pad', function (req, res) {
 						parametres.pad = donnees[0]
 						parametres.blocs = donnees[1]
 						parametres.activite = donnees[2]
+						const html = genererHTML(donnees[0], donnees[1])
 						const chemin = path.join(__dirname, '..', '/static/temp')
 						fs.mkdirpSync(path.normalize(chemin + '/' + id))
 						fs.mkdirpSync(path.normalize(chemin + '/' + id + '/fichiers'))
+						fs.mkdirpSync(path.normalize(chemin + '/' + id + '/static'))
 						fs.writeFileSync(path.normalize(chemin + '/' + id + '/donnees.json'), JSON.stringify(parametres, '', 4), 'utf8')
+						fs.writeFileSync(path.normalize(chemin + '/' + id + '/index.html'), html, 'utf8')
+						if (!parametres.pad.fond.includes('/img/') && parametres.pad.fond.substring(0, 1) !== '#' && fs.existsSync(path.join(__dirname, '..', '/static' + parametres.pad.fond))) {
+							fs.copySync(path.join(__dirname, '..', '/static' + parametres.pad.fond), path.normalize(chemin + '/' + id + '/fichiers/' + parametres.pad.fond.split('/').pop(), { overwrite: true }))
+						} else if (parametres.pad.fond.includes('/img/')) {
+							fs.copySync(path.join(__dirname, '..', '/static' + parametres.pad.fond), path.normalize(chemin + '/' + id + '/static' + parametres.pad.fond, { overwrite: true }))
+						}
+						if (fs.existsSync(path.join(__dirname, '..', '/assets/export/css'))) {
+							fs.copySync(path.join(__dirname, '..', '/assets/export/css'), path.normalize(chemin + '/' + id + '/static/css'))
+						}
+						if (fs.existsSync(path.join(__dirname, '..', '/assets/export/js'))) {
+							fs.copySync(path.join(__dirname, '..', '/assets/export/js'), path.normalize(chemin + '/' + id + '/static/js'))
+						}
+						fs.copySync(path.join(__dirname, '..', '/assets/fonts/MaterialIcons-Regular.woff'), path.normalize(chemin + '/' + id + '/static/fonts/MaterialIcons-Regular.woff'))
+						fs.copySync(path.join(__dirname, '..', '/assets/fonts/MaterialIcons-Regular.woff2'), path.normalize(chemin + '/' + id + '/static/fonts/MaterialIcons-Regular.woff2'))
+						fs.copySync(path.join(__dirname, '..', '/assets/fonts/Roboto-Slab-Medium.woff'), path.normalize(chemin + '/' + id + '/static/fonts/Roboto-Slab-Medium.woff'))
+						fs.copySync(path.join(__dirname, '..', '/assets/fonts/Roboto-Slab-Medium.woff2'), path.normalize(chemin + '/' + id + '/static/fonts/Roboto-Slab-Medium.woff2'))
+						fs.copySync(path.join(__dirname, '..', '/static/favicon.png'), path.normalize(chemin + '/' + id + '/static/img/favicon.png'))
 						for (const bloc of parametres.blocs) {
 							if (Object.keys(bloc).length > 0 && bloc.media !== '' && bloc.type !== 'embed' && fs.existsSync(path.join(__dirname, '..', '/static/' + definirDossierFichiers(id) + '/' + id + '/' + bloc.media))) {
 								fs.copySync(path.join(__dirname, '..', '/static/' + definirDossierFichiers(id) + '/' + id + '/' + bloc.media), path.normalize(chemin + '/' + id + '/fichiers/' + bloc.media, { overwrite: true }))
 							}
 							if (Object.keys(bloc).length > 0 && bloc.vignette !== '' && bloc.vignette.substring(1, definirDossierFichiers(id).length + 1) === definirDossierFichiers(id) && fs.existsSync(path.join(__dirname, '..', '/static' + bloc.vignette))) {
 								fs.copySync(path.join(__dirname, '..', '/static' + bloc.vignette), path.normalize(chemin + '/' + id + '/fichiers/' + bloc.vignette.replace('/' + definirDossierFichiers(id) + '/' + id + '/', ''), { overwrite: true }))
+							} else if (Object.keys(bloc).length > 0 && bloc.vignette !== '' && bloc.vignette.includes('/img/')) {
+								fs.copySync(path.join(__dirname, '..', '/static' + bloc.vignette), path.normalize(chemin + '/' + id + '/static' + bloc.vignette, { overwrite: true }))
 							}
 						}
 						const archiveId = Math.floor((Math.random() * 100000) + 1)
@@ -1037,16 +1072,37 @@ app.post('/api/exporter-pad', function (req, res) {
 				fs.exists(path.join(__dirname, '..', '/static/pads/' + id + '.json'), async function (existe) {
 					if (existe === true) {
 						const donnees = await fs.readJson(path.join(__dirname, '..', '/static/pads/' + id + '.json'))
+						const html = genererHTML(donnees[0], donnees[1])
 						const chemin = path.join(__dirname, '..', '/static/temp')
 						fs.mkdirpSync(path.normalize(chemin + '/' + id))
 						fs.mkdirpSync(path.normalize(chemin + '/' + id + '/fichiers'))
+						fs.mkdirpSync(path.normalize(chemin + '/' + id + '/static'))
 						fs.writeFileSync(path.normalize(chemin + '/' + id + '/donnees.json'), JSON.stringify(donnees, '', 4), 'utf8')
+						fs.writeFileSync(path.normalize(chemin + '/' + id + '/index.html'), html, 'utf8')
+						if (!parametres.pad.fond.includes('/img/') && parametres.pad.fond.substring(0, 1) !== '#' && fs.existsSync(path.join(__dirname, '..', '/static' + parametres.pad.fond))) {
+							fs.copySync(path.join(__dirname, '..', '/static' + parametres.pad.fond), path.normalize(chemin + '/' + id + '/fichiers/' + parametres.pad.fond.split('/').pop(), { overwrite: true }))
+						} else if (parametres.pad.fond.includes('/img/')) {
+							fs.copySync(path.join(__dirname, '..', '/static' + parametres.pad.fond), path.normalize(chemin + '/' + id + '/static' + parametres.pad.fond, { overwrite: true }))
+						}
+						if (fs.existsSync(path.join(__dirname, '..', '/assets/export/css'))) {
+							fs.copySync(path.join(__dirname, '..', '/assets/export/css'), path.normalize(chemin + '/' + id + '/static/css'))
+						}
+						if (fs.existsSync(path.join(__dirname, '..', '/assets/export/js'))) {
+							fs.copySync(path.join(__dirname, '..', '/assets/export/js'), path.normalize(chemin + '/' + id + '/static/js'))
+						}
+						fs.copySync(path.join(__dirname, '..', '/assets/fonts/MaterialIcons-Regular.woff'), path.normalize(chemin + '/' + id + '/static/fonts/MaterialIcons-Regular.woff'))
+						fs.copySync(path.join(__dirname, '..', '/assets/fonts/MaterialIcons-Regular.woff2'), path.normalize(chemin + '/' + id + '/static/fonts/MaterialIcons-Regular.woff2'))
+						fs.copySync(path.join(__dirname, '..', '/assets/fonts/Roboto-Slab-Medium.woff'), path.normalize(chemin + '/' + id + '/static/fonts/Roboto-Slab-Medium.woff'))
+						fs.copySync(path.join(__dirname, '..', '/assets/fonts/Roboto-Slab-Medium.woff2'), path.normalize(chemin + '/' + id + '/static/fonts/Roboto-Slab-Medium.woff2'))
+						fs.copySync(path.join(__dirname, '..', '/static/favicon.png'), path.normalize(chemin + '/' + id + '/static/img/favicon.png'))
 						for (const bloc of donnees.blocs) {
 							if (Object.keys(bloc).length > 0 && bloc.media !== '' && bloc.type !== 'embed' && fs.existsSync(path.join(__dirname, '..', '/static/' + definirDossierFichiers(id) + '/' + id + '/' + bloc.media))) {
 								fs.copySync(path.join(__dirname, '..', '/static/' + definirDossierFichiers(id) + '/' + id + '/' + bloc.media), path.normalize(chemin + '/' + id + '/fichiers/' + bloc.media, { overwrite: true }))
 							}
 							if (Object.keys(bloc).length > 0 && bloc.vignette !== '' && bloc.vignette.substring(1, definirDossierFichiers(id).length + 1) === definirDossierFichiers(id) && fs.existsSync(path.join(__dirname, '..', '/static' + bloc.vignette))) {
 								fs.copySync(path.join(__dirname, '..', '/static' + bloc.vignette), path.normalize(chemin + '/' + id + '/fichiers/' + bloc.vignette.replace('/' + definirDossierFichiers(id) + '/' + id + '/', ''), { overwrite: true }))
+							} else if (Object.keys(bloc).length > 0 && bloc.vignette !== '' && bloc.vignette.includes('/img/')) {
+								fs.copySync(path.join(__dirname, '..', '/static' + bloc.vignette), path.normalize(chemin + '/' + id + '/static' + bloc.vignette, { overwrite: true }))
 							}
 						}
 						const archiveId = Math.floor((Math.random() * 100000) + 1)
@@ -1187,6 +1243,9 @@ app.post('/api/importer-pad', function (req, res) {
 							}
 							if (parametres.activite === true) {
 								activiteId = donnees.pad.activite
+							}
+							if (!donnees.pad.fond.includes('/img/') && donnees.pad.fond.substring(0, 1) !== '#' && fs.existsSync(path.normalize(cible + '/fichiers/' + donnees.pad.fond.split('/').pop()))) {
+								fs.copySync(path.normalize(cible + '/fichiers/' + donnees.pad.fond.split('/').pop()), path.normalize(chemin + '/' + donnees.pad.fond.split('/').pop(), { overwrite: true }))
 							}
 							const multi = db.multi()
 							multi.incr('pad')
@@ -4200,16 +4259,10 @@ function choisirCouleur () {
 	return couleur
 }
 
-function choisirNom () {
-	const noms = ['Chimpanzé', 'Hippopotame', 'Gnou', 'Yack', 'Aigle', 'Éléphant', 'Crocodile', 'Papillon', 'Humanoïde', 'Buffle', 'Hibou', 'Pingouin', 'Phoque', 'Pinson', 'Rhinocéros', 'Zèbre']
-	const nom = noms[Math.floor(Math.random() * noms.length)]
+function genererPseudo () {
+	const caracteres = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+	const nom = caracteres.charAt(Math.floor(Math.random() * caracteres.length)) + caracteres.charAt(Math.floor(Math.random() * caracteres.length)) + Math.floor(Math.random() * (9999 - 1000) + 1000)
 	return nom
-}
-
-function choisirAdjectif () {
-	const adjectifs = ['hilare', 'extraordinaire', 'fantastique', 'pétillant', 'magnifique', 'fabuleux', 'joyeux', 'sympathique', 'courageux', 'créatif', 'astucieux', 'vaillant', 'sage']
-	const adjectif = adjectifs[Math.floor(Math.random() * adjectifs.length)]
-	return adjectif
 }
 
 function genererMotDePasse (longueur) {
@@ -4317,4 +4370,482 @@ function verifierURL (s, protocoles) {
 	} catch (err) {
 		return false
 	}
+}
+
+function formaterDate (donnees, langue) {
+	let dateFormattee = ''
+	switch (langue) {
+	case 'fr':
+		if (donnees.hasOwnProperty('modifie')) {
+			dateFormattee = 'Créée le ' + moment(donnees.date).locale('fr').format('L') + ' à ' + moment(donnees.date).locale('fr').format('LT') + ' par ' + donnees.nom + '. Modifiée le ' + moment(donnees.modifie).locale('fr').format('L') + ' à ' + moment(donnees.modifie).locale('fr').format('LT') + '.'
+		} else {
+			dateFormattee = 'Créée le ' + moment(donnees.date).locale('fr').format('L') + ' à ' + moment(donnees.date).locale('fr').format('LT') + ' par ' + donnees.nom + '.'
+		}
+		break
+	case 'es':
+		if (donnees.hasOwnProperty('modifie')) {
+			dateFormattee = 'Creada el ' + moment(donnees.date).locale('es').format('L') + ' a las ' + moment(donnees.date).locale('es').format('LT') + ' por ' + donnees.nom + '. Modificada el ' + moment(donnees.modifie).locale('es').format('L') + ' a las ' + moment(donnees.modifie).locale('es').format('LT') + '.'
+		} else {
+			dateFormattee = 'Creada el ' + moment(donnees.date).locale('es').format('L') + ' a las ' + moment(donnees.date).locale('es').format('LT') + ' por ' + donnees.nom + '.'
+		}
+		break
+	case 'it':
+		if (donnees.hasOwnProperty('modifie')) {
+			dateFormattee = 'Creazione attivata ' + moment(donnees.date).locale('it').format('L') + ' alle ' + moment(donnees.date).locale('it').format('LT') + ' di ' + donnees.nom + '. Modifica attivata ' + moment(donnees.modifie).locale('it').format('L') + ' alle ' + moment(donnees.modifie).locale('it').format('LT') + '.'
+		} else {
+			dateFormattee = 'Creazione attivata ' + moment(donnees.date).locale('it').format('L') + ' alle ' + moment(donnees.date).locale('it').format('LT') + ' di ' + donnees.nom + '.'
+		}
+		break
+	case 'hr':
+		if (donnees.hasOwnProperty('modifie')) {
+			dateFormattee = 'Stvoreno na ' + moment(donnees.date).locale('hr').format('L') + ' u ' + moment(donnees.date).locale('hr').format('LT') + ' po ' + donnees.nom + '. Izmijenjeno na ' + moment(donnees.modifie).locale('hr').format('L') + ' u ' + moment(donnees.modifie).locale('hr').format('LT') + '.'
+		} else {
+			dateFormattee = 'Stvoreno na ' + moment(donnees.date).locale('hr').format('L') + ' u ' + moment(donnees.date).locale('hr').format('LT') + ' po ' + donnees.nom + '.'
+		}
+		break
+	case 'en':
+		if (donnees.hasOwnProperty('modifie')) {
+			dateFormattee = 'Created on ' + moment(donnees.date).locale('en').format('L') + ' at ' + moment(donnees.date).locale('en').format('LT') + ' by ' + donnees.nom + '. Modified on ' + moment(donnees.modifie).locale('en').format('L') + ' at ' + moment(donnees.modifie).locale('en').format('LT') + '.'
+		} else {
+			dateFormattee = 'Created on ' + moment(donnees.date).locale('en').format('L') + ' at ' + moment(donnees.date).locale('en').format('LT') + ' by ' + donnees.nom + '.'
+		}
+		break
+	}
+	return dateFormattee
+}
+
+function genererHTML (pad, blocs) {
+	return `
+	<!DOCTYPE html>
+	<html lang="fr">
+		<head>
+			<meta charset="utf-8">
+			<meta name="viewport" content="width=device-width, height=device-height, viewport-fit=cover, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+			<meta name="description" content="Digipad permet de créer des murs multimédias collaboratifs.">
+			<meta name="robots" content="index, no-follow">
+			<meta name="theme-color" content="#00ced1">
+			<meta property="og:title" content="Digipad by La Digitale">
+			<meta property="og:description" content="Digipad permet de créer des murs multimédias collaboratifs.">
+			<meta property="og:type" content="website" />
+			<meta property="og:locale" content="fr_FR" />
+			<title>Digipad by La Digitale</title>
+			<link rel="icon" type="image/png" href="./static/img/favicon.png">
+			<link rel="stylesheet" href="./static/css/destyle.css">
+			<link rel="stylesheet" href="./static/css/main.css">
+			<link rel="stylesheet" href="./static/css/pad.css">
+			<script src="./static/js/vue.js" type="text/javascript"></script>
+			<script src="./static/js/vue-masonry-css.js" type="text/javascript"></script>
+		</head>
+		<body>
+			<noscript>
+				<strong>Veuillez activer Javascript dans votre navigateur pour utiliser <i>Digipad</i>.</strong>
+			</noscript>
+			<div id="app">
+				<main id="page" :class="pad.affichage">
+					<header v-if="!chargement">
+						<span id="titre">{{ pad.titre }}</span>
+					</header>
+
+					<div id="pad" :class="{'fond-personnalise': pad.fond.substring(0, 1) !== '#' && !pad.fond.includes('/img/')}" :style="definirFond(pad.fond)" v-if="!chargement">
+						<!-- Affichage mur -->
+						<masonry id="blocs" class="mur" :cols="definirLargeurCapsules()" :gutter="0" v-if="pad.affichage === 'mur'">
+							<div :id="item.bloc" class="bloc" v-for="(item, indexItem) in blocs" :style="{'border-color': couleurs[item.identifiant]}" :data-bloc="item.bloc" :key="'bloc' + indexItem">
+								<div class="contenu">
+									<div class="titre" v-if="item.titre !== ''" :style="{'background': eclaircirCouleur(couleurs[item.identifiant])}">
+										<span>{{ item.titre }}</span>
+									</div>
+									<div class="texte" v-if="item.texte !== ''" v-html="item.texte"></div>
+									<div class="media" v-if="item.media !== ''">
+										<img v-if="item.type === 'image'" :src="'./fichiers/' + item.media" @click="afficherMedia(item)">
+										<img v-else-if="item.type === 'lien-image'" :src="item.media" @click="afficherMedia(item)">
+										<span v-else-if="item.type === 'audio' || item.type === 'video' || item.type === 'document' || item.type === 'pdf' || item.type === 'office' || item.type === 'embed'" @click="afficherMedia(item)"><img :class="{'vignette': definirVignette(item).substring(0, 9) !== './static/'}" :src="definirVignette(item)"></span>
+										<span v-else-if="item.type === 'lien'"><a :href="item.media" target="_blank"><img :class="{'vignette': definirVignette(item).substring(0, 9) !== './static/'}" :src="definirVignette(item)"></a></span>
+										<span v-else><a :href="'./fichiers/' + item.media" download><img :class="{'vignette': definirVignette(item).substring(0, 9) !== './static/'}" :src="definirVignette(item)"></a></span>
+									</div>
+									<div class="evaluation" v-if="pad.evaluations === 'activees'">
+										<span class="etoiles">
+											<i class="material-icons" v-for="etoile in definirEvaluationCapsule(item.listeEvaluations)" :key="'etoilepleine_' + etoile">star</i>
+											<i class="material-icons" v-for="etoile in (5 - definirEvaluationCapsule(item.listeEvaluations))" :key="'etoilevide_' + etoile">star_outline</i>
+											<span>({{ item.listeEvaluations.length }})</span>
+										</span>
+									</div>
+									<div class="action" :style="{'color': couleurs[item.identifiant]}">
+										<span role="button" tabindex="0" class="bouton" @click="ouvrirModaleCommentaires(item.bloc, item.titre)" v-if="pad.commentaires === 'actives'"><i class="material-icons">comment</i><span class="badge">{{ item.commentaires }}</span></span>
+										<span role="button" tabindex="0" class="bouton info" :data-description="item.info"><i class="material-icons">info</i></span>
+										<span class="media-type" v-if="item.media !== ''"><i class="material-icons">{{ definirIconeMedia(item) }}</i></span>
+									</div>
+								</div>
+							</div>
+						</masonry>
+						<!-- Affichage flux vertical -->
+						<div id="blocs" class="flux-vertical" :class="{'large': pad.hasOwnProperty('largeur') && pad.largeur === 'large'}" v-else-if="pad.affichage === 'flux-vertical'">
+							<div :id="item.bloc" class="bloc" v-for="(item, indexItem) in blocs" :style="{'border-color': couleurs[item.identifiant]}" :data-bloc="item.bloc" :key="'bloc' + indexItem">
+								<div class="contenu">
+									<div class="titre" v-if="item.titre !== ''" :style="{'background': eclaircirCouleur(couleurs[item.identifiant])}">
+										<span>{{ item.titre }}</span>
+									</div>
+									<div class="texte" v-if="item.texte !== ''" v-html="item.texte"></div>
+									<div class="media" v-if="item.media !== ''">
+										<img v-if="item.type === 'image'" :src="'./fichiers/' + item.media" @click="afficherMedia(item)">
+										<img v-else-if="item.type === 'lien-image'" :src="item.media" @click="afficherMedia(item)">
+										<span v-else-if="item.type === 'audio' || item.type === 'video' || item.type === 'document' || item.type === 'pdf' || item.type === 'office' || item.type === 'embed'" @click="afficherMedia(item)"><img :class="{'vignette': definirVignette(item).substring(0, 9) !== './static/'}" :src="definirVignette(item)"></span>
+										<span v-else-if="item.type === 'lien'"><a :href="item.media" target="_blank"><img :class="{'vignette': definirVignette(item).substring(0, 9) !== './static/'}" :src="definirVignette(item)"></a></span>
+										<span v-else><a :href="'./fichiers/' + item.media" download><img :class="{'vignette': definirVignette(item).substring(0, 9) !== './static/'}" :src="definirVignette(item)"></a></span>
+									</div>
+									<div class="evaluation" v-if="pad.evaluations === 'activees'">
+										<span class="etoiles">
+											<i class="material-icons" v-for="etoile in definirEvaluationCapsule(item.listeEvaluations)" :key="'etoilepleine_' + etoile">star</i>
+											<i class="material-icons" v-for="etoile in (5 - definirEvaluationCapsule(item.listeEvaluations))" :key="'etoilevide_' + etoile">star_outline</i>
+											<span>({{ item.listeEvaluations.length }})</span>
+										</span>
+									</div>
+									<div class="action" :style="{'color': couleurs[item.identifiant]}">
+										<span role="button" tabindex="0" class="bouton" @click="ouvrirModaleCommentaires(item.bloc, item.titre)" v-if="pad.commentaires === 'actives'"><i class="material-icons">comment</i><span class="badge">{{ item.commentaires }}</span></span>
+										<span role="button" tabindex="0" class="bouton info" :data-description="item.info"><i class="material-icons">info</i></span>
+										<span class="media-type" v-if="item.media !== ''"><i class="material-icons">{{ definirIconeMedia(item) }}</i></span>
+									</div>
+								</div>
+							</div>
+						</div>
+						<!-- Affichage colonne -->
+						<div id="blocs" class="colonnes" v-else-if="pad.affichage === 'colonnes'">
+							<section :id="'colonne' + indexCol" class="colonne" :class="{'large': pad.hasOwnProperty('largeur') && pad.largeur === 'large'}" v-for="(col, indexCol) in pad.colonnes" :key="'colonne' + indexCol">
+								<div class="bloc haut">
+									<div class="titre-colonne">
+										<span>{{ col }}</span>
+									</div>
+								</div>
+								<div class="conteneur-colonne ascenseur" v-if="colonnes[indexCol].length > 0">
+									<div :id="item.bloc" class="bloc" v-for="(item, indexItem) in colonnes[indexCol]" :style="{'border-color': couleurs[item.identifiant]}" :data-bloc="item.bloc" :key="'bloc' + indexItem">
+										<div class="contenu">
+											<div class="titre" v-if="item.titre !== ''" :style="{'background': eclaircirCouleur(couleurs[item.identifiant])}">
+												<span>{{ item.titre }}</span>
+											</div>
+											<div class="texte" v-if="item.texte !== ''" v-html="item.texte"></div>
+											<div class="media" v-if="item.media !== ''">
+												<img v-if="item.type === 'image'" :src="'./fichiers/' + item.media" @click="afficherMedia(item)">
+												<img v-else-if="item.type === 'lien-image'" :src="item.media" @click="afficherMedia(item)">
+												<span v-else-if="item.type === 'audio' || item.type === 'video' || item.type === 'document' || item.type === 'pdf' || item.type === 'office' || item.type === 'embed'" @click="afficherMedia(item)"><img :class="{'vignette': definirVignette(item).substring(0, 9) !== './static/'}" :src="definirVignette(item)"></span>
+												<span v-else-if="item.type === 'lien'"><a :href="item.media" target="_blank"><img :class="{'vignette': definirVignette(item).substring(0, 9) !== './static/'}" :src="definirVignette(item)"></a></span>
+												<span v-else><a :href="'./fichiers/' + item.media" download><img :class="{'vignette': definirVignette(item).substring(0, 9) !== './static/'}" :src="definirVignette(item)"></a></span>
+											</div>
+											<div class="evaluation" v-if="pad.evaluations === 'activees'">
+												<span class="etoiles">
+													<i class="material-icons" v-for="etoile in definirEvaluationCapsule(item.listeEvaluations)" :key="'etoilepleine_' + etoile">star</i>
+													<i class="material-icons" v-for="etoile in (5 - definirEvaluationCapsule(item.listeEvaluations))" :key="'etoilevide_' + etoile">star_outline</i>
+													<span>({{ item.listeEvaluations.length }})</span>
+												</span>
+											</div>
+											<div class="action" :style="{'color': couleurs[item.identifiant]}">
+												<span role="button" tabindex="0" class="bouton" @click="ouvrirModaleCommentaires(item.bloc)" v-if="pad.commentaires === 'actives'"><i class="material-icons">comment</i><span class="badge">{{ item.commentaires }}</span></span>
+												<span role="button" tabindex="0" class="bouton info" :data-description="item.info"><i class="material-icons">info</i></span>
+												<span class="media-type" v-if="item.media !== ''"><i class="material-icons">{{ definirIconeMedia(item) }}</i></span>
+											</div>
+										</div>
+									</div>
+								</div>
+							</section>
+						</div>
+					</div>
+
+					<div class="conteneur-modale" v-if="modaleCommentaires">
+						<div id="discussion" class="modale">
+							<div class="en-tete">
+								<span class="titre">{{ titre }}</span>
+								<span role="button" tabindex="0" class="fermer" @click="fermerModaleCommentaires"><i class="material-icons">close</i></span>
+							</div>
+							<ul class="commentaires ascenseur">
+								<li v-for="(entreeCommentaire, indexEntreeCommentaire) in commentaires" :key="indexEntreeCommentaire">
+									<span class="meta">// {{ noms[entreeCommentaire.identifiant] }}</span>
+									<div class="texte" v-html="entreeCommentaire.texte"></div>
+								</li>
+							</ul>
+						</div>
+					</div>
+					
+					<div id="conteneur-chargement" v-if="chargement">
+						<div id="chargement">
+							<div class="spinner">
+								<div></div>
+								<div></div>
+								<div></div>
+								<div></div>
+								<div></div>
+								<div></div>
+								<div></div>
+								<div></div>
+								<div></div>
+								<div></div>
+								<div></div>
+								<div></div>
+							</div>
+						</div>
+					</div>
+				</main>
+			</div>
+			
+			<script type="text/javascript">
+				var vm = new Vue({
+					el: '#app',
+					data: {
+						chargement: true,
+						modaleCommentaires: false,
+						pad: ` + JSON.stringify(pad) + `,
+						blocs: ` + JSON.stringify(blocs) + `,
+						colonnes: [],
+						commentaires: [],
+						couleurs: {},
+						noms: {},
+						titre: '',
+						defilement: false,
+						depart: 0,
+						distance: 0
+					},
+					methods: {
+						ouvrirModaleCommentaires (bloc) {
+							let commentaires = []
+							let titre = ''
+							this.blocs.forEach(function (item) {
+								if (item.bloc === bloc) {
+									commentaires = item.listeCommentaires
+									titre = item.titre
+								}
+							})
+							if (commentaires.length > 0) {
+								this.commentaires = commentaires
+								this.titre = titre
+								this.modaleCommentaires = true
+							}
+						},
+						fermerModaleCommentaires () {
+							this.modaleCommentaires = false
+							this.commentaires = []
+							this.titre = ''
+						},
+						definirFond (fond) {
+							if (fond.substring(0, 1) === '#') {
+								return { backgroundColor: fond }
+							} else if (fond.includes('/img/')) {
+								return { backgroundImage: 'url(./static/' + fond + ')' }
+							} else {
+								return { backgroundImage: 'url(./fichiers/' + fond.split('/').pop() + ')' }
+							}
+						},
+						definirLargeurCapsules () {
+							let donnees
+							switch (this.pad.largeur) {
+							case 'large':
+								donnees = { default: 4, 1729: 4, 1449: 3, 1365: 2, 899: 2, 499: 1 }
+								break
+							case 'normale':
+								donnees = { default: 6, 1729: 5, 1449: 4, 1365: 3, 899: 2, 499: 1 }
+								break
+							}
+							return donnees
+						},
+						definirColonnes (blocs) {
+							const colonnes = []
+							if (this.pad.colonnes && JSON.parse(this.pad.colonnes).length > 0) {
+								this.pad.colonnes = JSON.parse(this.pad.colonnes)
+								this.pad.colonnes.forEach(function () {
+									colonnes.push([])
+								})
+								blocs.forEach(function (bloc, index) {
+									if (bloc.colonne !== undefined) {
+										colonnes[parseInt(bloc.colonne)].push(bloc)
+									} else {
+										blocs[index].colonne = 0
+										colonnes[bloc.colonne].push(bloc)
+									}
+								})
+							} else {
+								this.pad.colonnes.push('Colonne sans titre')
+								colonnes.push([])
+								blocs.forEach(function (bloc, index) {
+									blocs[index].colonne = 0
+									colonnes[0].push(bloc)
+								})
+							}
+							this.blocs = blocs
+							this.colonnes = colonnes
+						},
+						afficherMedia (item) {
+							let lien
+							if (this.verifierURL(item.media) === true) {
+								lien = item.media
+							} else {
+								lien = './fichiers/' + item.media
+							}
+							window.open(lien, '_blank')
+						},
+						definirVignette (item) {
+							let vignette
+							if (item.vignette && item.vignette !== '' && this.verifierURL(item.vignette) === false && item.vignette.includes('/img/')) {
+								vignette = './static/img/' + item.vignette.split('/').pop()
+							} else if (item.vignette && item.vignette !== '' && this.verifierURL(item.vignette) === false && !item.vignette.includes('/img/')) {
+								vignette = './fichiers/' + item.vignette.split('/').pop()
+							} else if (item.vignette && item.vignette !== '' && this.verifierURL(item.vignette) === true) {
+								vignette = item.vignette
+							}
+							return vignette
+						},
+						definirIconeMedia (item) {
+							let icone
+							switch (item.type) {
+							case 'image':
+							case 'lien-image':
+								icone = 'image'
+								break
+							case 'audio':
+								icone = 'volume_up'
+								break
+							case 'video':
+								icone = 'movie'
+								break
+							case 'pdf':
+							case 'document':
+							case 'office':
+								icone = 'description'
+								break
+							case 'lien':
+								icone = 'link'
+								break
+							case 'embed':
+								if (item.source === 'youtube' || item.source === 'vimeo' || item.source === 'dailymotion' || item.source === 'digiplay') {
+									icone = 'movie'
+								} else if (item.source === 'slideshare' || item.media.includes('wikipedia.org') || item.media.includes('drive.google.com') || item.media.includes('docs.google.com')) {
+									icone = 'description'
+								} else if (item.source === 'flickr') {
+									icone = 'image'
+								} else if (item.source === 'soundcloud' || item.media.includes('vocaroo.com') || item.media.includes('voca.ro')) {
+									icone = 'volume_up'
+								} else if (item.media.includes('google.com/maps')) {
+									icone = 'place'
+								} else if (item.source === 'etherpad' || item.media.includes('framapad.org')) {
+									icone = 'group_work'
+								} else {
+									icone = 'web'
+								}
+								break
+							default:
+								icone = 'save_alt'
+								break
+							}
+							return icone
+						},
+						definirEvaluationCapsule (evaluations) {
+							if (evaluations && evaluations.length > 0) {
+								let note = 0
+								evaluations.forEach(function (evaluation) {
+									note = note + evaluation.etoiles
+								})
+								if (note > 0) {
+									return Math.round(note / evaluations.length)
+								} else {
+									return 0
+								}
+							} else {
+								return 0
+							}
+						},
+						verifierURL (lien) {
+							let url
+							try {
+								url = new URL(lien)
+							} catch (_) {
+								return false
+							}
+							return url.protocol === 'http:' || url.protocol === 'https:'
+						},
+						choisirCouleur () {
+							const couleurs = ['#f76707', '#f59f00', '#74b816', '#37b24d', '#0ca678', '#1098ad', '#1c7ed6', '#4263eb', '#7048e8', '#ae3ec9', '#d6336c', '#f03e3e', '#495057']
+							const couleur = couleurs[Math.floor(Math.random() * couleurs.length)]
+							return couleur
+						},
+						genererPseudo () {
+							const caracteres = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+							const nom = caracteres.charAt(Math.floor(Math.random() * caracteres.length)) + caracteres.charAt(Math.floor(Math.random() * caracteres.length)) + Math.floor(Math.random() * (9999 - 1000) + 1000)
+							return nom
+						},
+						eclaircirCouleur (hex) {
+							if (hex && hex.substring(0, 1) === '#') {
+								const r = parseInt(hex.slice(1, 3), 16)
+								const v = parseInt(hex.slice(3, 5), 16)
+								const b = parseInt(hex.slice(5, 7), 16)
+								return 'rgba(' + r + ', ' + v + ', ' + b + ', ' + 0.15 + ')'
+							} else {
+								return 'transparent'
+							}
+						},
+						activerDefilementHorizontal () {
+							const pad = document.querySelector('#pad')
+							pad.addEventListener('mousedown', this.defilementHorizontalDebut)
+							pad.addEventListener('mouseleave', this.defilementHorizontalFin)
+							pad.addEventListener('mouseup', this.defilementHorizontalFin)
+							pad.addEventListener('mousemove', this.defilementHorizontalEnCours)
+						},
+						desactiverDefilementHorizontal () {
+							const pad = document.querySelector('#pad')
+							pad.removeEventListener('mousedown', this.defilementHorizontalDebut)
+							pad.removeEventListener('mouseleave', this.defilementHorizontalFin)
+							pad.removeEventListener('mouseup', this.defilementHorizontalFin)
+							pad.removeEventListener('mousemove', this.defilementHorizontalEnCours)
+						},
+						defilementHorizontalDebut (event) {
+							const pad = document.querySelector('#pad')
+							this.defilement = true
+							this.depart = event.pageX - pad.offsetLeft
+							this.distance = pad.scrollLeft
+						},
+						defilementHorizontalFin () {
+							this.defilement = false
+						},
+						defilementHorizontalEnCours (event) {
+							if (!this.defilement) { return }
+							event.preventDefault()
+							const pad = document.querySelector('#pad')
+							const x = event.pageX - pad.offsetLeft
+							const delta = (x - this.depart) * 1.5
+							pad.scrollLeft = this.distance - delta
+						}
+					},
+					created () {
+						if (this.pad.ordre === 'decroissant') {
+							this.blocs.reverse()
+						}
+						if (this.pad.affichage === 'colonnes') {
+							this.definirColonnes(this.blocs)
+						}
+					},
+					mounted () {
+						const couleurs = {}
+						const noms = {}
+						this.blocs.forEach(function (bloc) {
+							const couleur = this.choisirCouleur()
+							if (couleurs.hasOwnProperty(bloc.identifiant) === false) {
+								couleurs[bloc.identifiant] = couleur
+							}
+							if (noms.hasOwnProperty(bloc.identifiant) === false) {
+								noms[bloc.identifiant] = bloc.nom
+							}
+							bloc.listeCommentaires.forEach(function (commentaire) {
+								if (noms.hasOwnProperty(commentaire.identifiant) === false) {
+									noms[commentaire.identifiant] = this.genererPseudo()
+								}
+							}.bind(this))
+						}.bind(this))
+						this.couleurs = couleurs
+						this.noms = noms
+						document.title = this.pad.titre + ' - Digipad by La Digitale'
+						this.chargement = false
+						if (this.pad.affichage === 'colonnes') {
+							this.$nextTick(function () {
+								this.activerDefilementHorizontal()
+							}.bind(this))
+						}
+					}
+				})
+			</script>
+		</body>
+	</html>`
 }
