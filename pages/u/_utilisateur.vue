@@ -852,7 +852,8 @@ export default {
 			axios.post(this.hote + '/api/supprimer-pad', {
 				padId: this.padId,
 				type: type,
-				identifiant: this.identifiant
+				identifiant: this.identifiant,
+				admin: ''
 			}).then(function (reponse) {
 				this.chargement = false
 				const donnees = reponse.data
@@ -1229,7 +1230,7 @@ export default {
 			const identifiant = this.identifiant
 			axios.post(this.hote + '/api/supprimer-compte', {
 				identifiant: identifiant,
-				type: 'utilisateur'
+				admin: ''
 			}).then(function (reponse) {
 				this.chargement = false
 				const donnees = reponse.data

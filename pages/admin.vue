@@ -9,15 +9,6 @@
 				<span class="bouton" role="button" tabindex="0" :class="{'selectionne': langue === 'en'}" @click="modifierLangue('en')">EN</span>
 			</div>
 			<div id="conteneur">
-				<!-- <h1>
-					<span>{{ $t('informationsGenerales') }}</span>
-				</h1>
-				<div class="conteneur">
-					<div><b>{{ $t('nombrePads') }} :</b> {{ nombrePads }}</div>
-					<div><b>{{ $t('nombreUtilisateurs') }} :</b> {{ nombreUtilisateurs }}</div>
-					<div><b>{{ $t('nombreComptes') }} :</b> {{ nombreComptes }}</div>
-					<div><b>{{ $t('nombreSessions') }} :</b> {{ nombreSessions }}</div>
-				</div> -->
 				<h1>
 					<span>{{ $t('modifierMotDePasseUtilisateur') }}</span>
 				</h1>
@@ -267,7 +258,8 @@ export default {
 						axios.post(this.hote + '/api/supprimer-pad', {
 							padId: this.padIdS,
 							type: 'pad',
-							identifiant: identifiant
+							identifiant: identifiant,
+							admin: this.admin
 						}).then(function (reponse) {
 							this.chargement = false
 							const donnees = reponse.data
@@ -296,7 +288,7 @@ export default {
 				this.chargement = true
 				axios.post(this.hote + '/api/supprimer-compte', {
 					identifiant: this.identifiantS,
-					type: 'admin'
+					admin: this.admin
 				}).then(function (reponse) {
 					this.chargement = false
 					const donnees = reponse.data

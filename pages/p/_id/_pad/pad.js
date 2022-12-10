@@ -3389,7 +3389,9 @@ export default {
 			this.chargement = true
 			axios.post(this.hote + '/api/supprimer-pad', {
 				padId: this.pad.id,
-				identifiant: this.identifiant
+				type: 'pad',
+				identifiant: this.identifiant,
+				admin: ''
 			}).then(function (reponse) {
 				const donnees = reponse.data
 				if (donnees === 'erreur_suppression') {

@@ -1297,7 +1297,9 @@ app.post('/api/importer-pad', function (req, res) {
 
 app.post('/api/supprimer-pad', function (req, res) {
 	const identifiant = req.body.identifiant
-	if (req.session.identifiant && req.session.identifiant === identifiant) {
+	const admin = req.body.admin
+	const motdepasseAdmin = process.env.ADMIN_PASSWORD
+	if ((req.session.identifiant && req.session.identifiant === identifiant) || (admin !== '' && admin === motdepasseAdmin)) {
 		const pad = req.body.padId
 		const type = req.body.type
 		db.exists('pads:' + pad, function (err, resultat) {
@@ -1589,8 +1591,13 @@ app.post('/api/modifier-donnees-pad-admin', function (req, res) {
 
 app.post('/api/supprimer-compte', function (req, res) {
 	const identifiant = req.body.identifiant
-	const type = req.body.type
-	if ((req.session.identifiant && req.session.identifiant === identifiant) || type === 'admin') {
+	const admin = req.body.admin
+	const motdepasseAdmin = process.env.ADMIN_PASSWORD
+	let type = 'utilisateur'
+	if ((req.session.identifiant && req.session.identifiant === identifiant) || (admin !== '' && admin === motdepasseAdmin)) {
+		if (admin === motdepasseAdmin) {
+			type === 'admin'
+		}
 		db.smembers('pads-crees:' + identifiant, function (err, pads) {
 			if (err) { res.send('erreur'); return false }
 			const donneesPads = []
