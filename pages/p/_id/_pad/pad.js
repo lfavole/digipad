@@ -641,6 +641,9 @@ export default {
 		deconnecte: function () {
 			this.chargement = false
 			this.$store.dispatch('modifierMessage', this.$t('problemeConnexion'))
+		},
+		maintenance: function () {
+			window.location.href = '/maintenance'
 		}
 	},
 	async asyncData (context) {

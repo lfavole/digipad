@@ -356,5 +356,7 @@ export default {
 	transcodage: 'Transcodage en mp3 et téléversement de l\'enregistrement, veuillez patienter...',
 	enregistrementNonSupporte: 'Ce navigateur n\'est pas pris en charge.',
 	erreurMicro: 'Votre microphone ne dispose pas des autorisations nécessaires pour lancer l\'enregistrement.',
-	aucuneEntreeAudio: 'Aucune entrée audio n\'a été détectée sur votre appareil.'
+	aucuneEntreeAudio: 'Aucune entrée audio n\'a été détectée sur votre appareil.',
+	maintenance: '🔧 Maintenance 🛠️',
+	maintenanceDigipad: 'Digipad est en maintenance. Veuillez revenir plus tard.'
 }

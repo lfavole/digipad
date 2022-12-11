@@ -356,5 +356,7 @@ export default {
 	transcodage: 'Transcoding in mp3 and uploading the recording, please wait...',
 	enregistrementNonSupporte: 'This browser is not supported.',
 	erreurMicro: 'Your microphone does not have the necessary permissions to start recording.',
-	aucuneEntreeAudio: 'No audio input has been detected on your device.'
+	aucuneEntreeAudio: 'No audio input has been detected on your device.',
+	maintenance: '🔧 Maintenance 🛠️',
+	maintenanceDigipad: 'Digipad is under maintenance. Please come back later.'
 }

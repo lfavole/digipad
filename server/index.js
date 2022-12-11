@@ -40,6 +40,7 @@ const cheerio = require('cheerio')
 const libre = require('libreoffice-convert')
 libre.convertAsync = require('util').promisify(libre.convert)
 let storeOptions, cookie, dureeSession, dateCron, jours
+let maintenance = false
 if (process.env.NODE_ENV === 'production') {
 	storeOptions = {
 		host: process.env.DB_HOST,
@@ -110,10 +111,11 @@ cron.schedule(dateCron, () => {
 	fs.emptyDirSync(path.join(__dirname, '..', '/static/temp'))
 	if (process.env.BACKUP_PADS) {
 		jours = parseInt(process.env.BACKUP_PADS)
-	} else {
-		jours = 10
+		maintenance = true
 	}
-	exporterPadsJson(jours)
+	if (maintenance === true) {
+		exporterPadsJson(jours)
+	}
 })
 
 app.set('trust proxy', true)
@@ -127,7 +129,9 @@ app.use(cors())
 
 app.get('/', function (req, res) {
 	const identifiant = req.session.identifiant
-	if (identifiant && req.session.statut === 'utilisateur') {
+	if (maintenance === true) {
+		res.redirect('/maintenance')
+	} else if (identifiant && req.session.statut === 'utilisateur') {
 		res.redirect('/u/' + identifiant)
 	} else {
 		req.next()
@@ -136,14 +140,20 @@ app.get('/', function (req, res) {
 
 app.get('/u/:u', function(req, res) {
 	const identifiant = req.params.u
-	if (identifiant === req.session.identifiant && req.session.statut === 'utilisateur') {
+	if (maintenance === true) {
+		res.redirect('/maintenance')
+	} else if (identifiant === req.session.identifiant && req.session.statut === 'utilisateur') {
 		req.next()
 	} else {
 		res.redirect('/')
 	}
 })
 
-app.get('/p/:id/:token', function (req) {
+app.get('/p/:id/:token', function (req, res) {
+	if (maintenance === true) {
+		res.redirect('/maintenance')
+		return false
+	}
 	if (req.session.identifiant === '' || req.session.identifiant === undefined) {
 		const identifiant = 'u' + Math.random().toString(16).slice(3)
 		const nom = genererPseudo()
@@ -159,6 +169,14 @@ app.get('/p/:id/:token', function (req) {
 			req.session.cookie.expires = new Date(Date.now() + dureeSession)
 			req.next()
 		})
+	} else {
+		req.next()
+	}
+})
+
+app.get('/maintenance', function (req, res) {
+	if (maintenance === false) {
+		res.redirect('/')
 	} else {
 		req.next()
 	}
@@ -535,6 +553,10 @@ app.post('/api/recuperer-donnees-pad', function (req, res) {
 })
 
 app.post('/api/creer-pad', function (req, res) {
+	if (maintenance === true) {
+		res.redirect('/maintenance')
+		return false
+	}
 	const identifiant = req.body.identifiant
 	if (req.session.identifiant && req.session.identifiant === identifiant) {
 		const titre = req.body.titre
@@ -580,6 +602,10 @@ app.post('/api/creer-pad', function (req, res) {
 })
 
 app.post('/api/creer-pad-sans-compte', function (req, res) {
+	if (maintenance === true) {
+		res.redirect('/maintenance')
+		return false
+	}
 	let identifiant, nom
 	if (req.session.identifiant === '' || req.session.identifiant === undefined) {
 		identifiant = 'u' + Math.random().toString(16).slice(3)
@@ -647,6 +673,10 @@ app.post('/api/deconnecter-pad', function (req, res) {
 })
 
 app.post('/api/modifier-mot-de-passe-pad', function (req, res) {
+	if (maintenance === true) {
+		res.redirect('/maintenance')
+		return false
+	}
 	const identifiant = req.body.identifiant
 	if (req.session.identifiant && req.session.identifiant === identifiant) {
 		const pad = req.body.pad
@@ -719,6 +749,10 @@ app.post('/api/deplacer-pad', function (req, res) {
 })
 
 app.post('/api/dupliquer-pad', function (req, res) {
+	if (maintenance === true) {
+		res.redirect('/maintenance')
+		return false
+	}
 	const identifiant = req.body.identifiant
 	if (req.session.identifiant && req.session.identifiant === identifiant) {
 		const pad = req.body.padId
@@ -1127,6 +1161,10 @@ app.post('/api/exporter-pad', function (req, res) {
 })
 
 app.post('/api/importer-pad', function (req, res) {
+	if (maintenance === true) {
+		res.redirect('/maintenance')
+		return false
+	}
 	const identifiant = req.session.identifiant
 	if (!identifiant) {
 		res.send('non_connecte')
@@ -1296,6 +1334,10 @@ app.post('/api/importer-pad', function (req, res) {
 })
 
 app.post('/api/supprimer-pad', function (req, res) {
+	if (maintenance === true) {
+		res.redirect('/maintenance')
+		return false
+	}
 	const identifiant = req.body.identifiant
 	const admin = req.body.admin
 	const motdepasseAdmin = process.env.ADMIN_PASSWORD
@@ -1590,6 +1632,10 @@ app.post('/api/modifier-donnees-pad-admin', function (req, res) {
 })
 
 app.post('/api/supprimer-compte', function (req, res) {
+	if (maintenance === true) {
+		res.redirect('/maintenance')
+		return false
+	}
 	const identifiant = req.body.identifiant
 	const admin = req.body.admin
 	const motdepasseAdmin = process.env.ADMIN_PASSWORD
@@ -1952,39 +1998,6 @@ app.post('/api/verifier-code-acces', function (req, res) {
 				}
 			})
 			if (padAcces === pad) {
-				req.session.acces.forEach(function (acces, index) {
-					if (acces.pad === pad) {
-						req.session.acces[index].code = donnees.code
-					}
-				})
-			} else {
-				req.session.acces.push({ code: donnees.code, pad: pad })
-			}
-			res.send('code_correct')
-		} else {
-			res.send('code_incorrect')
-		}
-	})
-})
-
-app.post('/api/modifier-code-acces', function (req, res) {
-	const pad = req.body.pad
-	const code = req.body.code
-	if (req.session.identifiant && req.session.identifiant === identifiant) {
-		const affichage = req.body.affichage
-		db.hset('utilisateurs:' + identifiant, 'affichage', affichage)
-		req.session.affichage = affichage
-		res.send('affichage_modifie')
-	} else {
-		res.send('non_connecte')
-	}
-	db.hgetall('pads:' + pad, function (err, donnees) {
-		if (err) { res.send('erreur'); return false }
-		if (req.body.code === donnees.code) {
-			if (!req.session.acces) {
-				req.session.acces = []
-			}
-			if (req.session.acces.map(function (e) { return e.pad }) === pad) {
 				req.session.acces.forEach(function (acces, index) {
 					if (acces.pad === pad) {
 						req.session.acces[index].code = donnees.code
@@ -2377,6 +2390,10 @@ io.on('connection', function (socket) {
 	})
 
 	socket.on('ajouterbloc', function (bloc, pad, token, titre, texte, media, iframe, type, source, vignette, couleur, colonne, privee, identifiant, nom) {
+		if (maintenance === true) {
+			socket.emit('maintenance')
+			return false
+		}
 		if (identifiant !== '' && identifiant !== undefined && socket.handshake.session.identifiant === identifiant) {
 			db.hgetall('pads:' + pad, function (err, donnees) {
 				if (err) { socket.emit('erreur'); return false }
@@ -2429,6 +2446,10 @@ io.on('connection', function (socket) {
 	})
 
 	socket.on('modifierbloc', function (bloc, pad, token, titre, texte, media, iframe, type, source, vignette, couleur, colonne, privee, identifiant, nom) {
+		if (maintenance === true) {
+			socket.emit('maintenance')
+			return false
+		}
 		if (identifiant !== '' && identifiant !== undefined && socket.handshake.session.identifiant === identifiant) {
 			db.hgetall('pads:' + pad, function (err, donnees) {
 				if (donnees.id === pad && donnees.token === token) {
@@ -2535,6 +2556,10 @@ io.on('connection', function (socket) {
 	})
 
 	socket.on('autoriserbloc', function (pad, token, item, indexBloc, indexBlocColonne, moderation, identifiant) {
+		if (maintenance === true) {
+			socket.emit('maintenance')
+			return false
+		}
 		if (identifiant !== '' && identifiant !== undefined && socket.handshake.session.identifiant === identifiant) {
 			db.hgetall('pads:' + pad, function (err, donnees) {
 				if (donnees.id === pad && donnees.token === token) {
@@ -2567,6 +2592,10 @@ io.on('connection', function (socket) {
 	})
 
 	socket.on('deplacerbloc', function (items, pad, affichage, ordre, identifiant) {
+		if (maintenance === true) {
+			socket.emit('maintenance')
+			return false
+		}
 		if (identifiant !== '' && identifiant !== undefined && socket.handshake.session.identifiant === identifiant) {
 			if (ordre === 'decroissant') {
 				items.reverse()
@@ -2616,6 +2645,10 @@ io.on('connection', function (socket) {
 	})
 
 	socket.on('supprimerbloc', function (bloc, pad, token, titre, couleur, colonne, identifiant, nom) {
+		if (maintenance === true) {
+			socket.emit('maintenance')
+			return false
+		}
 		if (identifiant !== '' && identifiant !== undefined && socket.handshake.session.identifiant === identifiant) {
 			db.hgetall('pads:' + pad, function (err, donnees) {
 				if (err) { socket.emit('erreur'); return false }
@@ -2678,6 +2711,10 @@ io.on('connection', function (socket) {
 	})
 
 	socket.on('commenterbloc', function (bloc, pad, titre, texte, couleur, identifiant, nom) {
+		if (maintenance === true) {
+			socket.emit('maintenance')
+			return false
+		}
 		if (identifiant !== '' && identifiant !== undefined && socket.handshake.session.identifiant === identifiant) {
 			db.hgetall('pads:' + pad, function (err, resultat) {
 				if (err) { socket.emit('erreur'); return false }
@@ -2710,6 +2747,10 @@ io.on('connection', function (socket) {
 	})
 
 	socket.on('modifiercommentaire', function (bloc, pad, id, texte, identifiant) {
+		if (maintenance === true) {
+			socket.emit('maintenance')
+			return false
+		}
 		if (identifiant !== '' && identifiant !== undefined && socket.handshake.session.identifiant === identifiant) {
 			db.zrangebyscore('commentaires:' + bloc, id, id, function (err, donnees) {
 				if (err) { socket.emit('erreur'); return false }
@@ -2732,6 +2773,10 @@ io.on('connection', function (socket) {
 	})
 
 	socket.on('supprimercommentaire', function (bloc, pad, id, identifiant) {
+		if (maintenance === true) {
+			socket.emit('maintenance')
+			return false
+		}
 		if (identifiant !== '' && identifiant !== undefined && socket.handshake.session.identifiant === identifiant) {
 			const date = moment().format()
 			const multi = db.multi()
@@ -2792,6 +2837,10 @@ io.on('connection', function (socket) {
 	})
 
 	socket.on('evaluerbloc', function (bloc, pad, titre, etoiles, couleur, identifiant, nom) {
+		if (maintenance === true) {
+			socket.emit('maintenance')
+			return false
+		}
 		if (identifiant !== '' && identifiant !== undefined && socket.handshake.session.identifiant === identifiant) {
 			db.hgetall('pads:' + pad, function (err, resultat) {
 				if (err) { socket.emit('erreur'); return false }
@@ -2821,6 +2870,10 @@ io.on('connection', function (socket) {
 	})
 
 	socket.on('modifierevaluation', function (bloc, pad, id, etoiles, identifiant) {
+		if (maintenance === true) {
+			socket.emit('maintenance')
+			return false
+		}
 		if (identifiant !== '' && identifiant !== undefined && socket.handshake.session.identifiant === identifiant) {
 			db.zrangebyscore('evaluations:' + bloc, id, id, function (err) {
 				if (err) { socket.emit('erreur'); return false }
@@ -2842,6 +2895,10 @@ io.on('connection', function (socket) {
 	})
 
 	socket.on('supprimerevaluation', function (bloc, pad, id, identifiant) {
+		if (maintenance === true) {
+			socket.emit('maintenance')
+			return false
+		}
 		if (identifiant !== '' && identifiant !== undefined && socket.handshake.session.identifiant === identifiant) {
 			const date = moment().format()
 			const multi = db.multi()
@@ -2895,6 +2952,10 @@ io.on('connection', function (socket) {
 	})
 
 	socket.on('modifiertitre', function (pad, titre, identifiant) {
+		if (maintenance === true) {
+			socket.emit('maintenance')
+			return false
+		}
 		if (identifiant !== '' && identifiant !== undefined && socket.handshake.session.identifiant === identifiant) {
 			db.hset('pads:' + pad, 'titre', titre, function (err) {
 				if (err) { socket.emit('erreur'); return false }
@@ -2908,6 +2969,10 @@ io.on('connection', function (socket) {
 	})
 
 	socket.on('modifiercodeacces', function (pad, code, identifiant) {
+		if (maintenance === true) {
+			socket.emit('maintenance')
+			return false
+		}
 		if (identifiant !== '' && identifiant !== undefined && socket.handshake.session.identifiant === identifiant) {
 			db.hset('pads:' + pad, 'code', code, function (err) {
 				if (err) { socket.emit('erreur'); return false }
@@ -2921,6 +2986,10 @@ io.on('connection', function (socket) {
 	})
 
 	socket.on('modifieradmins', function (pad, admins, identifiant) {
+		if (maintenance === true) {
+			socket.emit('maintenance')
+			return false
+		}
 		if (identifiant !== '' && identifiant !== undefined && socket.handshake.session.identifiant === identifiant) {
 			db.hgetall('pads:' + pad, function (err, donnees) {
 				if (err) { socket.emit('erreur'); return false }
@@ -2954,6 +3023,10 @@ io.on('connection', function (socket) {
 	})
 
 	socket.on('modifieracces', function (pad, acces, identifiant) {
+		if (maintenance === true) {
+			socket.emit('maintenance')
+			return false
+		}
 		if (identifiant !== '' && identifiant !== undefined && socket.handshake.session.identifiant === identifiant) {
 			db.hgetall('pads:' + pad, function (err, donnees) {
 				if (err) { socket.emit('erreur'); return false }
@@ -2976,6 +3049,10 @@ io.on('connection', function (socket) {
 	})
 
 	socket.on('modifiercontributions', function (pad, contributions, contributionsPrecedentes, identifiant) {
+		if (maintenance === true) {
+			socket.emit('maintenance')
+			return false
+		}
 		if (identifiant !== '' && identifiant !== undefined && socket.handshake.session.identifiant === identifiant) {
 			db.hset('pads:' + pad, 'contributions', contributions, function (err) {
 				if (err) { socket.emit('erreur'); return false }
@@ -2989,6 +3066,10 @@ io.on('connection', function (socket) {
 	})
 
 	socket.on('modifieraffichage', function (pad, affichage, identifiant) {
+		if (maintenance === true) {
+			socket.emit('maintenance')
+			return false
+		}
 		if (identifiant !== '' && identifiant !== undefined && socket.handshake.session.identifiant === identifiant) {
 			db.hset('pads:' + pad, 'affichage', affichage, function (err) {
 				if (err) { socket.emit('erreur'); return false }
@@ -3002,6 +3083,10 @@ io.on('connection', function (socket) {
 	})
 
 	socket.on('modifierordre', function (pad, ordre, identifiant) {
+		if (maintenance === true) {
+			socket.emit('maintenance')
+			return false
+		}
 		if (identifiant !== '' && identifiant !== undefined && socket.handshake.session.identifiant === identifiant) {
 			db.hset('pads:' + pad, 'ordre', ordre, function (err) {
 				if (err) { socket.emit('erreur'); return false }
@@ -3015,6 +3100,10 @@ io.on('connection', function (socket) {
 	})
 
 	socket.on('modifierlargeur', function (pad, largeur, identifiant) {
+		if (maintenance === true) {
+			socket.emit('maintenance')
+			return false
+		}
 		if (identifiant !== '' && identifiant !== undefined && socket.handshake.session.identifiant === identifiant) {
 			db.hset('pads:' + pad, 'largeur', largeur, function (err) {
 				if (err) { socket.emit('erreur'); return false }
@@ -3028,6 +3117,10 @@ io.on('connection', function (socket) {
 	})
 
 	socket.on('modifierfond', function (pad, fond, ancienfond, identifiant) {
+		if (maintenance === true) {
+			socket.emit('maintenance')
+			return false
+		}
 		if (identifiant !== '' && identifiant !== undefined && socket.handshake.session.identifiant === identifiant) {
 			db.hset('pads:' + pad, 'fond', fond, function (err) {
 				if (err) { socket.emit('erreur'); return false }
@@ -3045,6 +3138,10 @@ io.on('connection', function (socket) {
 	})
 
 	socket.on('modifiercouleurfond', function (pad, fond, ancienfond, identifiant) {
+		if (maintenance === true) {
+			socket.emit('maintenance')
+			return false
+		}
 		if (identifiant !== '' && identifiant !== undefined && socket.handshake.session.identifiant === identifiant) {
 			db.hset('pads:' + pad, 'fond', fond, function (err) {
 				if (err) { socket.emit('erreur'); return false }
@@ -3062,6 +3159,10 @@ io.on('connection', function (socket) {
 	})
 
 	socket.on('modifieractivite', function (pad, statut, identifiant) {
+		if (maintenance === true) {
+			socket.emit('maintenance')
+			return false
+		}
 		if (identifiant !== '' && identifiant !== undefined && socket.handshake.session.identifiant === identifiant) {
 			db.hset('pads:' + pad, 'registreActivite', statut, function () {
 				io.in('pad-' + pad).emit('modifieractivite', statut)
@@ -3074,6 +3175,10 @@ io.on('connection', function (socket) {
 	})
 
 	socket.on('modifierconversation', function (pad, statut, identifiant) {
+		if (maintenance === true) {
+			socket.emit('maintenance')
+			return false
+		}
 		if (identifiant !== '' && identifiant !== undefined && socket.handshake.session.identifiant === identifiant) {
 			db.hset('pads:' + pad, 'conversation', statut, function () {
 				io.in('pad-' + pad).emit('modifierconversation', statut)
@@ -3086,6 +3191,10 @@ io.on('connection', function (socket) {
 	})
 
 	socket.on('modifierlisteutilisateurs', function (pad, statut, identifiant) {
+		if (maintenance === true) {
+			socket.emit('maintenance')
+			return false
+		}
 		if (identifiant !== '' && identifiant !== undefined && socket.handshake.session.identifiant === identifiant) {
 			db.hset('pads:' + pad, 'listeUtilisateurs', statut, function () {
 				io.in('pad-' + pad).emit('modifierlisteutilisateurs', statut)
@@ -3098,6 +3207,10 @@ io.on('connection', function (socket) {
 	})
 
 	socket.on('modifiereditionnom', function (pad, statut, identifiant) {
+		if (maintenance === true) {
+			socket.emit('maintenance')
+			return false
+		}
 		if (identifiant !== '' && identifiant !== undefined && socket.handshake.session.identifiant === identifiant) {
 			db.hset('pads:' + pad, 'editionNom', statut, function () {
 				io.in('pad-' + pad).emit('modifiereditionnom', statut)
@@ -3110,6 +3223,10 @@ io.on('connection', function (socket) {
 	})
 
 	socket.on('modifierfichiers', function (pad, statut, identifiant) {
+		if (maintenance === true) {
+			socket.emit('maintenance')
+			return false
+		}
 		if (identifiant !== '' && identifiant !== undefined && socket.handshake.session.identifiant === identifiant) {
 			db.hset('pads:' + pad, 'fichiers', statut, function () {
 				io.in('pad-' + pad).emit('modifierfichiers', statut)
@@ -3122,6 +3239,10 @@ io.on('connection', function (socket) {
 	})
 
 	socket.on('modifierenregistrements', function (pad, statut, identifiant) {
+		if (maintenance === true) {
+			socket.emit('maintenance')
+			return false
+		}
 		if (identifiant !== '' && identifiant !== undefined && socket.handshake.session.identifiant === identifiant) {
 			db.hset('pads:' + pad, 'enregistrements', statut, function () {
 				io.in('pad-' + pad).emit('modifierenregistrements', statut)
@@ -3134,6 +3255,10 @@ io.on('connection', function (socket) {
 	})
 
 	socket.on('modifierliens', function (pad, statut, identifiant) {
+		if (maintenance === true) {
+			socket.emit('maintenance')
+			return false
+		}
 		if (identifiant !== '' && identifiant !== undefined && socket.handshake.session.identifiant === identifiant) {
 			db.hset('pads:' + pad, 'liens', statut, function () {
 				io.in('pad-' + pad).emit('modifierliens', statut)
@@ -3146,6 +3271,10 @@ io.on('connection', function (socket) {
 	})
 
 	socket.on('modifierdocuments', function (pad, statut, identifiant) {
+		if (maintenance === true) {
+			socket.emit('maintenance')
+			return false
+		}
 		if (identifiant !== '' && identifiant !== undefined && socket.handshake.session.identifiant === identifiant) {
 			db.hset('pads:' + pad, 'documents', statut, function () {
 				io.in('pad-' + pad).emit('modifierdocuments', statut)
@@ -3158,6 +3287,10 @@ io.on('connection', function (socket) {
 	})
 
 	socket.on('modifiercommentaires', function (pad, statut, identifiant) {
+		if (maintenance === true) {
+			socket.emit('maintenance')
+			return false
+		}
 		if (identifiant !== '' && identifiant !== undefined && socket.handshake.session.identifiant === identifiant) {
 			db.hset('pads:' + pad, 'commentaires', statut, function () {
 				io.in('pad-' + pad).emit('modifiercommentaires', statut)
@@ -3170,6 +3303,10 @@ io.on('connection', function (socket) {
 	})
 
 	socket.on('modifierevaluations', function (pad, statut, identifiant) {
+		if (maintenance === true) {
+			socket.emit('maintenance')
+			return false
+		}
 		if (identifiant !== '' && identifiant !== undefined && socket.handshake.session.identifiant === identifiant) {
 			db.hset('pads:' + pad, 'evaluations', statut, function () {
 				io.in('pad-' + pad).emit('modifierevaluations', statut)
@@ -3215,6 +3352,10 @@ io.on('connection', function (socket) {
 	})
 
 	socket.on('ajoutercolonne', function (pad, titre, colonnes, affichageColonnes, couleur, identifiant, nom) {
+		if (maintenance === true) {
+			socket.emit('maintenance')
+			return false
+		}
 		if (identifiant !== '' && identifiant !== undefined && socket.handshake.session.identifiant === identifiant) {
 			db.hgetall('pads:' + pad, function (err, resultat) {
 				if (err) { socket.emit('erreur'); return false }
@@ -3239,6 +3380,10 @@ io.on('connection', function (socket) {
 	})
 
 	socket.on('modifiertitrecolonne', function (pad, titre, index, identifiant) {
+		if (maintenance === true) {
+			socket.emit('maintenance')
+			return false
+		}
 		if (identifiant !== '' && identifiant !== undefined && socket.handshake.session.identifiant === identifiant) {
 			db.hgetall('pads:' + pad, function (err, donnees) {
 				if (err) { socket.emit('erreur'); return false }
@@ -3256,6 +3401,10 @@ io.on('connection', function (socket) {
 	})
 	
 	socket.on('modifieraffichagecolonne', function (pad, valeur, index, identifiant) {
+		if (maintenance === true) {
+			socket.emit('maintenance')
+			return false
+		}
 		if (identifiant !== '' && identifiant !== undefined && socket.handshake.session.identifiant === identifiant) {
 			db.hgetall('pads:' + pad, function (err, donnees) {
 				if (err) { socket.emit('erreur'); return false }
@@ -3281,6 +3430,10 @@ io.on('connection', function (socket) {
 	})
 
 	socket.on('supprimercolonne', function (pad, titre, colonne, couleur, identifiant, nom) {
+		if (maintenance === true) {
+			socket.emit('maintenance')
+			return false
+		}
 		if (identifiant !== '' && identifiant !== undefined && socket.handshake.session.identifiant === identifiant) {
 			db.hgetall('pads:' + pad, function (err, donnees) {
 				if (err) { socket.emit('erreur'); return false }
@@ -3389,6 +3542,10 @@ io.on('connection', function (socket) {
 	})
 
 	socket.on('deplacercolonne', function (pad, titre, affichage, direction, colonne, couleur, identifiant, nom) {
+		if (maintenance === true) {
+			socket.emit('maintenance')
+			return false
+		}
 		if (identifiant !== '' && identifiant !== undefined && socket.handshake.session.identifiant === identifiant) {
 			db.hgetall('pads:' + pad, function (err, donnees) {
 				if (err) { socket.emit('erreur'); return false }
@@ -3510,6 +3667,10 @@ io.on('connection', function (socket) {
 	})
 
 	socket.on('modifiernotification', function (pad, admins) {
+		if (maintenance === true) {
+			socket.emit('maintenance')
+			return false
+		}
 		db.hgetall('pads:' + pad, function () {
 			db.hset('pads:' + pad, 'notification', JSON.stringify(admins), function () {
 				io.in('pad-' + pad).emit('modifiernotification', admins)
@@ -3867,9 +4028,10 @@ function recupererDonnees (identifiant) {
 
 function exporterPadsJson (jours) {
 	db.keys('pads:*', function (err, pads) {
+		if (err) { maintenance = false; return false }
 		if (pads !== null) {
-			pads.forEach(function (pad) {
-				const id = pad.substring(5)
+			for (let i = 0; i < pads.length; i++) {
+				const id = pads[i].substring(5)
 				const chemin = path.join(__dirname, '..', '/static/pads')
 				db.hgetall('pads:' + id, function (err, donnees) {
 					if ((donnees.hasOwnProperty('modifie') && moment(donnees.modifie).isBefore(moment().subtract(jours, 'days'))) || (donnees.hasOwnProperty('date') && moment(donnees.date).isBefore(moment().subtract(jours, 'days')))) {
@@ -3965,7 +4127,10 @@ function exporterPadsJson (jours) {
 						})
 					}
 				})
-			})
+			}
+			maintenance = false
+		} else {
+			maintenance = false
 		}
 	})
 }

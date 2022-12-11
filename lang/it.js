@@ -356,5 +356,7 @@ export default {
 	transcodage: 'Trascodifica in mp3 e caricamento della registrazione, attendere prego...',
 	enregistrementNonSupporte: 'Questo browser non è supportato.',
 	erreurMicro: 'Il microfono non dispone delle autorizzazioni necessarie per avviare la registrazione.',
-	aucuneEntreeAudio: 'Non è stato rilevato alcun ingresso audio sul dispositivo.'
+	aucuneEntreeAudio: 'Non è stato rilevato alcun ingresso audio sul dispositivo.',
+	maintenance: '🔧 Manutenzione 🛠️',
+	maintenanceDigipad: 'Digipad è in manutenzione. Tornate più tardi..'
 }

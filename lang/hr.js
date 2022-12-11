@@ -356,5 +356,7 @@ export default {
 	transcodage: 'Transcoding na mp3 i prijenos snimke, pričekajte...',
 	enregistrementNonSupporte: 'Ovaj preglednik nije podržan.',
 	erreurMicro: 'Mikrofon nema dozvole za pokretanje snimanja.',
-	aucuneEntreeAudio: 'Na uređaju nije otkriven audioulaz.'
+	aucuneEntreeAudio: 'Na uređaju nije otkriven audioulaz.',
+	maintenance: '🔧 Održavanje 🛠️',
+	maintenanceDigipad: 'Digipad je pod održavanjem. Molim vas, vratite se kasnije.'
 }

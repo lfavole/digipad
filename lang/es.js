@@ -356,5 +356,7 @@ export default {
 	transcodage: 'Transcodificando a mp3 y subiendo la grabación, por favor espere...',
 	enregistrementNonSupporte: 'Este navegador no es compatible.',
 	erreurMicro: 'Tu micrófono no tiene los permisos necesarios para empezar a grabar.',
-	aucuneEntreeAudio: 'No se ha detectado ninguna entrada de audio en tu dispositivo.'
+	aucuneEntreeAudio: 'No se ha detectado ninguna entrada de audio en tu dispositivo.',
+	maintenance: '🔧 Mantenimiento 🛠️',
+	maintenanceDigipad: 'Digipad está en mantenimiento. Por favor, vuelva más tarde.'
 }
