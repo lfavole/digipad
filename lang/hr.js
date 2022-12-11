@@ -358,5 +358,9 @@ export default {
 	erreurMicro: 'Mikrofon nema dozvole za pokretanje snimanja.',
 	aucuneEntreeAudio: 'Na uređaju nije otkriven audioulaz.',
 	maintenance: '🔧 Održavanje 🛠️',
-	maintenanceDigipad: 'Digipad je pod održavanjem. Molim vas, vratite se kasnije.'
+	maintenanceDigipad: 'Digipad je pod održavanjem. Molim vas, vratite se kasnije.',
+	dechargerPadsDb: 'Uklanjanje baze podataka i izvoz jastučića u jsonu',
+	activerMaintenance: 'Omogući način održavanja',
+	desactiverMaintenance: 'Onemogući način održavanja',
+	nombreJoursDb: 'Broj dana staža jastučića koji se čuvaju u bazi podataka'
 }

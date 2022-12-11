@@ -109,18 +109,11 @@ if (process.env.CRON_TASK_DATE) {
 }
 cron.schedule(dateCron, () => {
 	fs.emptyDirSync(path.join(__dirname, '..', '/static/temp'))
-	if (process.env.BACKUP_PADS) {
-		jours = parseInt(process.env.BACKUP_PADS)
-		maintenance = true
-	}
-	if (maintenance === true) {
-		exporterPadsJson(jours)
-	}
 })
 
 app.set('trust proxy', true)
 app.use(helmet({ frameguard: false }))
-app.use(bodyParser.json({ limit: '100mb' }))
+app.use(bodyParser.json({ limit: '200mb' }))
 app.use(expressSession)
 io.use(sharedsession(expressSession, {
 	autoSave: true
@@ -3711,6 +3704,25 @@ io.on('connection', function (socket) {
 	socket.on('modifierlangue', function (langue) {
 		socket.handshake.session.langue = langue
 		socket.handshake.session.save()
+	})
+
+	socket.on('exporterpadsjson', function (jours) {
+		maintenance = true
+		exporterPadsJson(jours)
+	})
+
+	socket.on('verifiermaintenance', function () {
+		socket.emit('verifiermaintenance', maintenance)
+	})
+
+	socket.on('activermaintenance', function () {
+		maintenance = true
+		socket.emit('verifiermaintenance', true)
+	})
+
+	socket.on('desactivermaintenance', function () {
+		maintenance = false
+		socket.emit('verifiermaintenance', false)
 	})
 })
 

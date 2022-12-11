@@ -10,6 +10,18 @@
 			</div>
 			<div id="conteneur">
 				<h1>
+					<span>{{ $t('maintenance') }}</span>
+				</h1>
+				<div class="conteneur">
+					<label>{{ $t('nombreJoursDb') }}</label>
+					<input type="text" :value="jours" @input="jours = $event.target.value">
+				</div>
+				<div class="actions">
+					<span class="bouton maintenance" role="button" tabindex="0" @click="exporterPadsJson">{{ $t('dechargerPadsDb') }}</span>
+					<span class="bouton maintenance" role="button" tabindex="0" @click="activerMaintenance" v-if="maintenance === false">{{ $t('activerMaintenance') }}</span>
+					<span class="bouton maintenance" role="button" tabindex="0" @click="desactiverMaintenance" v-else>{{ $t('desactiverMaintenance') }}</span>
+				</div>
+				<h1>
 					<span>{{ $t('modifierMotDePasseUtilisateur') }}</span>
 				</h1>
 				<div class="conteneur">
@@ -109,6 +121,11 @@ import axios from 'axios'
 
 export default {
 	name: 'Admin',
+	sockets: {
+		verifiermaintenance: function (valeur) {
+			this.maintenance = valeur
+		}
+	},
 	data () {
 		return {
 			acces: false,
@@ -123,7 +140,9 @@ export default {
 			donneesPad: '',
 			identifiantS: '',
 			champ: '',
-			valeur: ''
+			valeur: '',
+			maintenance: false,
+			jours: 10
 		}
 	},
 	head () {
@@ -141,6 +160,7 @@ export default {
 	},
 	created () {
 		this.$i18n.setLocale(this.langue)
+		this.$socket.emit('verifiermaintenance')
 	},
 	mounted () {
 		const motdepasse = prompt(this.$t('motDePasse'), '')
@@ -164,6 +184,15 @@ export default {
 					this.$store.dispatch('modifierAlerte', this.$t('erreurCommunicationServeur'))
 				}.bind(this))
 			}
+		},
+		exporterPadsJson () {
+			this.$socket.emit('exporterpadsjson', this.jours)
+		},
+		activerMaintenance () {
+			this.$socket.emit('activermaintenance')
+		},
+		desactiverMaintenance () {
+			this.$socket.emit('desactivermaintenance')
 		},
 		modifierMotDePasse () {
 			if (this.motdepasse !== '' && (this.identifiant !== '' || this.email !== '')) {
@@ -432,6 +461,15 @@ export default {
     background: #46fbff;
 	cursor: pointer;
     transition: all 0.1s ease-in;
+}
+
+#conteneur .actions .bouton.maintenance {
+	width: 100%;
+}
+
+#conteneur .actions .bouton.maintenance:first-child {
+	margin-right: 0;
+	margin-bottom: 2rem;
 }
 
 #conteneur .actions .bouton:hover {

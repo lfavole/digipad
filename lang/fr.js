@@ -358,5 +358,9 @@ export default {
 	erreurMicro: 'Votre microphone ne dispose pas des autorisations nécessaires pour lancer l\'enregistrement.',
 	aucuneEntreeAudio: 'Aucune entrée audio n\'a été détectée sur votre appareil.',
 	maintenance: '🔧 Maintenance 🛠️',
-	maintenanceDigipad: 'Digipad est en maintenance. Veuillez revenir plus tard.'
+	maintenanceDigipad: 'Digipad est en maintenance. Veuillez revenir plus tard.',
+	dechargerPadsDb: 'Décharger la base de données et exporter les pads en json',
+	activerMaintenance: 'Activer le mode maintenance',
+	desactiverMaintenance: 'Désactiver le mode maintenance',
+	nombreJoursDb: 'Nombre de jours d\'ancienneté des pads à garder dans la base de données'
 }

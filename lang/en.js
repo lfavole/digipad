@@ -358,5 +358,9 @@ export default {
 	erreurMicro: 'Your microphone does not have the necessary permissions to start recording.',
 	aucuneEntreeAudio: 'No audio input has been detected on your device.',
 	maintenance: '🔧 Maintenance 🛠️',
-	maintenanceDigipad: 'Digipad is under maintenance. Please come back later.'
+	maintenanceDigipad: 'Digipad is under maintenance. Please come back later.',
+	dechargerPadsDb: 'Unload the database and export the pads in json',
+	activerMaintenance: 'Activate maintenance mode',
+	desactiverMaintenance: 'Deactivate maintenance mode',
+	nombreJoursDb: 'Number of days of pad age to keep in the database'
 }

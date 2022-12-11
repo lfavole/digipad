@@ -358,5 +358,9 @@ export default {
 	erreurMicro: 'Il microfono non dispone delle autorizzazioni necessarie per avviare la registrazione.',
 	aucuneEntreeAudio: 'Non è stato rilevato alcun ingresso audio sul dispositivo.',
 	maintenance: '🔧 Manutenzione 🛠️',
-	maintenanceDigipad: 'Digipad è in manutenzione. Tornate più tardi..'
+	maintenanceDigipad: 'Digipad è in manutenzione. Tornate più tardi..',
+	dechargerPadsDb: 'Scaricare il database ed esportare i pad in json',
+	activerMaintenance: 'Attivare la modalità di manutenzione',
+	desactiverMaintenance: 'Disattivare la modalità di manutenzione',
+	nombreJoursDb: 'Numero di giorni di età del pad da conservare nel database'
 }
