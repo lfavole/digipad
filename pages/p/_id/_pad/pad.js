@@ -1781,9 +1781,11 @@ export default {
 									this.chargementVignette = true
 									const url = new URL(this.lien)
 									const domaine = url.hostname
+									const chemin = url.pathname
 									const protocole = url.protocol
 									axios.post(this.hote + '/api/recuperer-icone', {
 										domaine: domaine,
+										chemin: chemin,
 										protocole: protocole
 									}).then(async function (reponse) {
 										this.chargementVignette = false
