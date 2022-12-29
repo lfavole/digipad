@@ -233,7 +233,7 @@ export default {
 						this.$store.dispatch('modifierAlerte', this.$t('erreurCreationPad'))
 					} else {
 						this.$store.dispatch('modifierUtilisateur', donnees)
-						window.location = '/p/' + donnees.id + '/' + donnees.token
+						window.location.href = '/p/' + donnees.id + '/' + donnees.token
 					}
 				}.bind(this)).catch(function () {
 					this.chargement = false
