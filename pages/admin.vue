@@ -12,12 +12,12 @@
 				<h1>
 					<span>{{ $t('maintenance') }}</span>
 				</h1>
-				<!--<div class="conteneur">
+				<div class="conteneur">
 					<label>{{ $t('nombreJoursDb') }}</label>
 					<input type="text" :value="jours" @input="jours = $event.target.value">
-				</div>-->
+				</div>
 				<div class="actions">
-					<!--<span class="bouton maintenance" role="button" tabindex="0" @click="exporterPadsJson">{{ $t('dechargerPadsDb') }}</span>-->
+					<span class="bouton maintenance" role="button" tabindex="0" @click="exporterPadsJson">{{ $t('dechargerPadsDb') }}</span>
 					<span class="bouton maintenance" role="button" tabindex="0" @click="activerMaintenance" v-if="maintenance === false">{{ $t('activerMaintenance') }}</span>
 					<span class="bouton maintenance" role="button" tabindex="0" @click="desactiverMaintenance" v-else>{{ $t('desactiverMaintenance') }}</span>
 				</div>
@@ -124,6 +124,9 @@ export default {
 	sockets: {
 		verifiermaintenance: function (valeur) {
 			this.maintenance = valeur
+		},
+		exporterpadsjson: function () {
+			window.location.href = '/maintenance'
 		}
 	},
 	data () {
