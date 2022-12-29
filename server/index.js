@@ -1099,17 +1099,17 @@ app.post('/api/exporter-pad', function (req, res) {
 				fs.exists(path.join(__dirname, '..', '/static/pads/' + id + '.json'), async function (existe) {
 					if (existe === true) {
 						const donnees = await fs.readJson(path.join(__dirname, '..', '/static/pads/' + id + '.json'))
-						const html = genererHTML(donnees[0], donnees[1])
+						const html = genererHTML(donnees.pad, donnees.blocs)
 						const chemin = path.join(__dirname, '..', '/static/temp')
 						fs.mkdirpSync(path.normalize(chemin + '/' + id))
 						fs.mkdirpSync(path.normalize(chemin + '/' + id + '/fichiers'))
 						fs.mkdirpSync(path.normalize(chemin + '/' + id + '/static'))
 						fs.writeFileSync(path.normalize(chemin + '/' + id + '/donnees.json'), JSON.stringify(donnees, '', 4), 'utf8')
 						fs.writeFileSync(path.normalize(chemin + '/' + id + '/index.html'), html, 'utf8')
-						if (!parametres.pad.fond.includes('/img/') && parametres.pad.fond.substring(0, 1) !== '#' && fs.existsSync(path.join(__dirname, '..', '/static' + parametres.pad.fond))) {
-							fs.copySync(path.join(__dirname, '..', '/static' + parametres.pad.fond), path.normalize(chemin + '/' + id + '/fichiers/' + parametres.pad.fond.split('/').pop(), { overwrite: true }))
-						} else if (parametres.pad.fond.includes('/img/')) {
-							fs.copySync(path.join(__dirname, '..', '/static' + parametres.pad.fond), path.normalize(chemin + '/' + id + '/static' + parametres.pad.fond, { overwrite: true }))
+						if (!donnees.pad.fond.includes('/img/') && donnees.pad.fond.substring(0, 1) !== '#' && fs.existsSync(path.join(__dirname, '..', '/static' + donnees.pad.fond))) {
+							fs.copySync(path.join(__dirname, '..', '/static' + donnees.pad.fond), path.normalize(chemin + '/' + id + '/fichiers/' + donnees.pad.fond.split('/').pop(), { overwrite: true }))
+						} else if (donnees.pad.fond.includes('/img/')) {
+							fs.copySync(path.join(__dirname, '..', '/static' + donnees.pad.fond), path.normalize(chemin + '/' + id + '/static' + donnees.pad.fond, { overwrite: true }))
 						}
 						if (fs.existsSync(path.join(__dirname, '..', '/assets/export/css'))) {
 							fs.copySync(path.join(__dirname, '..', '/assets/export/css'), path.normalize(chemin + '/' + id + '/static/css'))
@@ -1569,7 +1569,7 @@ app.post('/api/modifier-mot-de-passe-admin', function (req, res) {
 						if (utilisateurId !== '') {
 							const hash = bcrypt.hashSync(req.body.motdepasse, 10)
 							db.hset('utilisateurs:' + utilisateurId, 'motdepasse', hash)
-							res.send('motdepasse_modifie')
+							res.send(utilisateurId)
 						} else {
 							res.send('email_non_valide')
 						}
@@ -2279,6 +2279,7 @@ app.post('/api/recuperer-icone', function (req, res) {
 	} else {
 		const domaine = req.body.domaine
 		const protocole = req.body.protocole
+		const chemin = req.body.chemin
 		rp(protocole + '//' + domaine).then(function (html) {
 			const $ = cheerio.load(html)
 			let favicon = ''
@@ -2300,12 +2301,12 @@ app.post('/api/recuperer-icone', function (req, res) {
 			}
 			if (favicon !== '' && verifierURL(favicon, ['https', 'http']) === true) {
 				res.send(favicon)
-			} else if (favicon !== '' && favicon.substring(0, 1) === '.') {
-				res.send(protocole + '//' + domaine + favicon.substring(1))
-			} else if (favicon !== '' && favicon.substring(0, 1) !== '/') {
-				res.send(protocole + '//' + domaine + '/' + favicon)
+			} else if (favicon !== '' && favicon.substring(0, 2) === './') {
+				res.send(protocole + '//' + domaine + chemin + favicon.substring(2))
+			} else if (favicon !== '' && favicon.substring(0, 1) === '/') {
+				res.send(protocole + '//' + domaine + chemin + favicon.substring(1))
 			} else if (favicon !== '') {
-				res.send(protocole + '//' + domaine + favicon)
+				res.send(protocole + '//' + domaine + chemin + favicon)
 			} else {
 				res.send(favicon)
 			}
