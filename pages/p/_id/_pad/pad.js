@@ -1441,8 +1441,11 @@ export default {
 				editeur.onpaste = function (event) {
 					event.preventDefault()
 					event.stopPropagation()
-					const texte = event.clipboardData.getData('text/html')
-					pell.exec('insertHTML', stripTags(texte, ['b', 'i', 'u', 'h3', 'h6', 'a', 'br', 'div']))
+					let html = event.clipboardData.getData('text/html')
+					html = stripTags(html, ['b', 'i', 'u', 'a', 'br', 'div', 'font', 'ul', 'ol'])
+					html = html.replace(/style="[^"]*"/, '')
+					html = html.replace(/class="[^"]*"/, '')
+					pell.exec('insertHTML', html)
 				}
 				document.querySelector('#texte .contenu-editeur').addEventListener('focus', function () {
 					document.querySelector('#texte').classList.add('focus')
@@ -2606,8 +2609,11 @@ export default {
 				editeur.onpaste = function (event) {
 					event.preventDefault()
 					event.stopPropagation()
-					const texte = event.clipboardData.getData('text/html')
-					pell.exec('insertHTML', stripTags(texte, ['b', 'i', 'u', 'h3', 'h6', 'a', 'br', 'div']))
+					let html = event.clipboardData.getData('text/html')
+					html = stripTags(html, ['b', 'i', 'u', 'a', 'br', 'div', 'font', 'ul', 'ol'])
+					html = html.replace(/style="[^"]*"/, '')
+					html = html.replace(/class="[^"]*"/, '')
+					pell.exec('insertHTML', html)
 				}
 				document.querySelector('#couleur-texte-commentaire-modifie').addEventListener('change', this.modifierCouleurCommentaireModifie)
 			}.bind(this))
@@ -2665,8 +2671,11 @@ export default {
 				this.editeurCommentaire.onpaste = function (event) {
 					event.preventDefault()
 					event.stopPropagation()
-					const texte = event.clipboardData.getData('text/html')
-					pell.exec('insertHTML', stripTags(texte, ['b', 'i', 'u', 'h3', 'h6', 'a', 'br', 'div']))
+					let html = event.clipboardData.getData('text/html')
+					html = stripTags(html, ['b', 'i', 'u', 'a', 'br', 'div', 'font', 'ul', 'ol'])
+					html = html.replace(/style="[^"]*"/, '')
+					html = html.replace(/class="[^"]*"/, '')
+					pell.exec('insertHTML', html)
 				}
 				document.querySelector('#couleur-texte-commentaire').addEventListener('change', this.modifierCouleurCommentaire)
 			}
