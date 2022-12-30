@@ -2,6 +2,7 @@ import axios from 'axios'
 import imagesLoaded from 'imagesloaded'
 import pell from 'pell'
 import linkifyHtml from 'linkify-html'
+import stripTags from 'voca/strip_tags'
 import saveAs from 'file-saver'
 import Panzoom from '@panzoom/panzoom'
 import ClipboardJS from 'clipboard'
@@ -1440,8 +1441,8 @@ export default {
 				editeur.onpaste = function (event) {
 					event.preventDefault()
 					event.stopPropagation()
-					const texte = event.clipboardData.getData('text/plain')
-					pell.exec('insertText', texte)
+					const texte = event.clipboardData.getData('text/html')
+					pell.exec('insertHTML', stripTags(texte, ['b', 'i', 'u', 'h3', 'h6', 'a', 'br', 'div']))
 				}
 				document.querySelector('#texte .contenu-editeur').addEventListener('focus', function () {
 					document.querySelector('#texte').classList.add('focus')
@@ -2605,8 +2606,8 @@ export default {
 				editeur.onpaste = function (event) {
 					event.preventDefault()
 					event.stopPropagation()
-					const texte = event.clipboardData.getData('text/plain')
-					pell.exec('insertText', texte)
+					const texte = event.clipboardData.getData('text/html')
+					pell.exec('insertHTML', stripTags(texte, ['b', 'i', 'u', 'h3', 'h6', 'a', 'br', 'div']))
 				}
 				document.querySelector('#couleur-texte-commentaire-modifie').addEventListener('change', this.modifierCouleurCommentaireModifie)
 			}.bind(this))
@@ -2664,8 +2665,8 @@ export default {
 				this.editeurCommentaire.onpaste = function (event) {
 					event.preventDefault()
 					event.stopPropagation()
-					const texte = event.clipboardData.getData('text/plain')
-					pell.exec('insertText', texte)
+					const texte = event.clipboardData.getData('text/html')
+					pell.exec('insertHTML', stripTags(texte, ['b', 'i', 'u', 'h3', 'h6', 'a', 'br', 'div']))
 				}
 				document.querySelector('#couleur-texte-commentaire').addEventListener('change', this.modifierCouleurCommentaire)
 			}
