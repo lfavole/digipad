@@ -116,6 +116,7 @@ module.exports = {
 		uploadFileTypes: fichiersAutorises,
 		padLimit: process.env.PAD_LIMIT,
 		matomo: process.env.MATOMO,
+		matomoSiteId: process.env.MATOMO_SITE_ID,
 		nfsPadNumber: process.env.NFS_PAD_NUMBER,
 		nfsFolder: process.env.NFS_FOLDER
 	},

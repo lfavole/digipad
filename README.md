@@ -50,6 +50,7 @@ EMAIL_PASSWORD (mot de passe de l'adresse emails)
 EMAIL_PORT (port pour l'envoi d'emails)
 EMAIL_SECURE (true ou false)
 MATOMO (lien vers un serveur Matomo)
+MATOMO_SITE_ID (id de site sur le serveur Matomo / 1 par défaut)
 NFS_PAD_NUMBER (id de pad à partir de laquelle les fichiers seront enregistrés dans un dossier monté NFS - environ 200 000 pour 1 To de capacité disque)
 NFS_FOLDER (nom du dossier monté NFS, obligatoirement situé dans le dossier /static/)
 ```
