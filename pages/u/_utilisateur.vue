@@ -287,7 +287,7 @@
 		</div>
 
 		<div class="conteneur-modale" v-else-if="modaleDeplacerPad">
-			<div id="creation" class="modale">
+			<div id="deplacement" class="modale">
 				<div class="en-tete">
 					<span class="titre">{{ $t('ajouterDansDossier') }}</span>
 					<span role="button" class="fermer" @click="fermerModaleDeplacerPad"><i class="material-icons">close</i></span>
@@ -1283,7 +1283,7 @@ export default {
     font-size: 1.6rem;
     font-weight: 700;
     text-transform: uppercase;
-	padding: 1em 1.5em;
+	padding: 0.75em 1em;
     border: 2px solid #00ced1;
 	border-radius: 2em;
 	margin-bottom: 1.5rem;
