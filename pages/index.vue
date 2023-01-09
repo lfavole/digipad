@@ -33,7 +33,7 @@
 			<div id="creation" class="modale">
 				<div class="en-tete">
 					<span class="titre">{{ $t('creerPad') }}</span>
-					<span role="button" tabindex="0" class="fermer" @click="fermerModaleCreer"><i class="material-icons">close</i></span>
+					<span class="fermer" role="button" tabindex="0" @click="fermerModaleCreer"><i class="material-icons">close</i></span>
 				</div>
 				<div class="conteneur">
 					<div class="contenu">
@@ -53,11 +53,11 @@
 			</div>
 		</div>
 
-		<div class="conteneur-modale" v-if="modaleConnexion">
-			<div id="connexion" class="modale">
+		<div class="conteneur-modale" v-else-if="modaleConnexion || modaleMotDePasseOublie">
+			<div id="connexion" class="modale" v-if="modaleConnexion">
 				<div class="en-tete">
 					<span class="titre">{{ $t('seConnecter') }}</span>
-					<span role="button" tabindex="0" class="fermer" @click="fermerModaleConnexion"><i class="material-icons">close</i></span>
+					<span class="fermer" role="button" tabindex="0" @click="fermerModaleConnexion"><i class="material-icons">close</i></span>
 				</div>
 				<div class="conteneur">
 					<div class="contenu">
@@ -75,10 +75,7 @@
 					</div>
 				</div>
 			</div>
-		</div>
-
-		<div class="conteneur-modale" v-if="modaleMotDePasseOublie">
-			<div class="modale">
+			<div class="modale" v-else-if="modaleMotDePasseOublie">
 				<div class="en-tete">
 					<span class="titre">{{ $t('motDePasseOublie') }}</span>
 					<span class="fermer" @click="fermerModaleMotDePasseOublie"><i class="material-icons">close</i></span>
@@ -100,7 +97,7 @@
 			</div>
 		</div>
 
-		<div class="conteneur-modale" v-if="modaleInscription">
+		<div class="conteneur-modale" v-else-if="modaleInscription">
 			<div id="inscription" class="modale">
 				<div class="en-tete">
 					<span class="titre">{{ $t('sInscrire') }}</span>
@@ -127,7 +124,7 @@
 			</div>
 		</div>
 
-		<div class="conteneur-modale" v-if="modaleMentionsLegales">
+		<div class="conteneur-modale" v-else-if="modaleMentionsLegales">
 			<div id="mentions-legales" class="modale">
 				<div class="en-tete">
 					<span class="titre">{{ $t('mentionsLegales') }}</span>
