@@ -433,7 +433,9 @@ export default {
 		}, {
 			headers: { 'Content-Type': 'application/json' }
 		}).catch(function () {
-			window.onNuxtReady(() => { window.$nuxt.$router.push('/') })
+			return {
+				redirection: '/'
+			}
 		})
 		if (reponse.data) {
 			return {
@@ -444,7 +446,9 @@ export default {
 				dossiers: reponse.data.dossiers
 			}
 		} else {
-			window.onNuxtReady(() => { window.$nuxt.$router.push('/') })
+			return {
+				redirection: '/'
+			}
 		}
 	},
 	data () {
@@ -547,6 +551,9 @@ export default {
 	},
 	watchQuery: ['page'],
 	created () {
+		if (this.redirection) {
+			this.$router.push(this.redirection)
+		}
 		if (this.identifiant === '' || this.statut === 'invite') {
 			this.$router.push('/')
 		}

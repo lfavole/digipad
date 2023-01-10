@@ -652,6 +652,7 @@ export default {
 		const token = context.route.params.pad
 		const identifiant = context.store.state.identifiant
 		const statut = context.store.state.statut
+		let redirection
 		const reponse = await axios.post(context.store.state.hote + '/api/recuperer-donnees-pad', {
 			id: id,
 			token: token,
@@ -660,22 +661,30 @@ export default {
 		}, {
 			headers: { 'Content-Type': 'application/json' }
 		}).catch(function () {
+			redirection = '/'
 			if (statut === 'utilisateur') {
-				window.onNuxtReady(() => { window.$nuxt.$router.push('/u/' + identifiant) })
-			} else if (statut === 'invite' || statut === 'auteur' || statut === '') {
-				window.onNuxtReady(() => { window.$nuxt.$router.push('/') })
+				redirection = '/u/' + identifiant
+			}
+			return {
+				redirection: redirection
 			}
 		})
 		if (!reponse || !reponse.hasOwnProperty('data')) {
+			redirection = '/'
 			if (statut === 'utilisateur') {
-				window.onNuxtReady(() => { window.$nuxt.$router.push('/u/' + identifiant) })
-			} else if (statut === 'invite' || statut === 'auteur' || statut === '') {
-				window.onNuxtReady(() => { window.$nuxt.$router.push('/') })
+				redirection = '/u/' + identifiant
+			}
+			return {
+				redirection: redirection
 			}
 		} else if (reponse.data && reponse.data === 'erreur_pad' && statut === 'utilisateur') {
-			window.onNuxtReady(() => { window.$nuxt.$router.push('/u/' + identifiant) })
+			return {
+				redirection: '/u/' + identifiant
+			}
 		} else if (reponse.data && reponse.data === 'erreur_pad' && (statut === 'invite' || statut === 'auteur' || statut === '')) {
-			window.onNuxtReady(() => { window.$nuxt.$router.push('/') })
+			return {
+				redirection: '/'
+			}
 		} else {
 			return {
 				pad: reponse.data.pad,
@@ -962,6 +971,9 @@ export default {
 	},
 	watchQuery: ['page'],
 	created () {
+		if (this.redirection) {
+			this.$router.push(this.redirection)
+		}
 		if (this.pad.affichage === 'colonnes') {
 			this.definirColonnes(this.blocs)
 		}
