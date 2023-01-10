@@ -1454,10 +1454,14 @@ export default {
 					event.preventDefault()
 					event.stopPropagation()
 					let html = event.clipboardData.getData('text/html')
-					html = stripTags(html, ['b', 'i', 'u', 'a', 'br', 'div', 'font', 'ul', 'ol'])
-					html = html.replace(/style="[^"]*"/, '')
-					html = html.replace(/class="[^"]*"/, '')
-					pell.exec('insertHTML', html)
+					if (html !== '') {
+						html = stripTags(html, ['b', 'i', 'u', 'a', 'br', 'div', 'font', 'ul', 'ol'])
+						html = html.replace(/style="[^"]*"/, '')
+						html = html.replace(/class="[^"]*"/, '')
+						pell.exec('insertHTML', html)
+					} else {
+						pell.exec('insertText', event.clipboardData.getData('text/plain'))
+					}
 				}
 				document.querySelector('#texte .contenu-editeur').addEventListener('focus', function () {
 					document.querySelector('#texte').classList.add('focus')
@@ -2626,10 +2630,14 @@ export default {
 					event.preventDefault()
 					event.stopPropagation()
 					let html = event.clipboardData.getData('text/html')
-					html = stripTags(html, ['b', 'i', 'u', 'a', 'br', 'div', 'font', 'ul', 'ol'])
-					html = html.replace(/style="[^"]*"/, '')
-					html = html.replace(/class="[^"]*"/, '')
-					pell.exec('insertHTML', html)
+					if (html !== '') {
+						html = stripTags(html, ['b', 'i', 'u', 'a', 'br', 'div', 'font', 'ul', 'ol'])
+						html = html.replace(/style="[^"]*"/, '')
+						html = html.replace(/class="[^"]*"/, '')
+						pell.exec('insertHTML', html)
+					} else {
+						pell.exec('insertText', event.clipboardData.getData('text/plain'))
+					}
 				}
 				document.querySelector('#couleur-texte-commentaire-modifie').addEventListener('change', this.modifierCouleurCommentaireModifie)
 			}.bind(this))
@@ -2688,10 +2696,14 @@ export default {
 					event.preventDefault()
 					event.stopPropagation()
 					let html = event.clipboardData.getData('text/html')
-					html = stripTags(html, ['b', 'i', 'u', 'a', 'br', 'div', 'font', 'ul', 'ol'])
-					html = html.replace(/style="[^"]*"/, '')
-					html = html.replace(/class="[^"]*"/, '')
-					pell.exec('insertHTML', html)
+					if (html !== '') {
+						html = stripTags(html, ['b', 'i', 'u', 'a', 'br', 'div', 'font', 'ul', 'ol'])
+						html = html.replace(/style="[^"]*"/, '')
+						html = html.replace(/class="[^"]*"/, '')
+						pell.exec('insertHTML', html)
+					} else {
+						pell.exec('insertText', event.clipboardData.getData('text/plain'))
+					}
 				}
 				document.querySelector('#couleur-texte-commentaire').addEventListener('change', this.modifierCouleurCommentaire)
 			}
