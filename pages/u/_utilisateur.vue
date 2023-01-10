@@ -433,7 +433,7 @@ export default {
 		}, {
 			headers: { 'Content-Type': 'application/json' }
 		}).catch(function () {
-			context.redirect('/')
+			window.onNuxtReady(() => { window.$nuxt.$router.push('/') })
 		})
 		if (reponse.data) {
 			return {
@@ -444,7 +444,7 @@ export default {
 				dossiers: reponse.data.dossiers
 			}
 		} else {
-			context.redirect('/')
+			window.onNuxtReady(() => { window.$nuxt.$router.push('/') })
 		}
 	},
 	data () {

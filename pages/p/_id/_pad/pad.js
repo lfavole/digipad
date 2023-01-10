@@ -661,21 +661,21 @@ export default {
 			headers: { 'Content-Type': 'application/json' }
 		}).catch(function () {
 			if (statut === 'utilisateur') {
-				context.redirect('/u/' + identifiant)
+				window.onNuxtReady(() => { window.$nuxt.$router.push('/u/' + identifiant) })
 			} else if (statut === 'invite' || statut === 'auteur' || statut === '') {
-				context.redirect('/')
+				window.onNuxtReady(() => { window.$nuxt.$router.push('/') })
 			}
 		})
 		if (!reponse || !reponse.hasOwnProperty('data')) {
 			if (statut === 'utilisateur') {
-				context.redirect('/u/' + identifiant)
+				window.onNuxtReady(() => { window.$nuxt.$router.push('/u/' + identifiant) })
 			} else if (statut === 'invite' || statut === 'auteur' || statut === '') {
-				context.redirect('/')
+				window.onNuxtReady(() => { window.$nuxt.$router.push('/') })
 			}
 		} else if (reponse.data && reponse.data === 'erreur_pad' && statut === 'utilisateur') {
-			context.redirect('/u/' + identifiant)
+			window.onNuxtReady(() => { window.$nuxt.$router.push('/u/' + identifiant) })
 		} else if (reponse.data && reponse.data === 'erreur_pad' && (statut === 'invite' || statut === 'auteur' || statut === '')) {
-			context.redirect('/')
+			window.onNuxtReady(() => { window.$nuxt.$router.push('/') })
 		} else {
 			return {
 				pad: reponse.data.pad,
