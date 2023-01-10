@@ -770,7 +770,9 @@ app.post('/api/dupliquer-pad', function (req, res) {
 											const etherpadId = infos.iframe.replace(etherpad + '/p/', '')
 											const destinationId = 'pad-' + id + '-' + Math.random().toString(16).slice(2)
 											const url = etherpad + '/api/1.2.14/copyPad?apikey=' + etherpadApi + '&sourceID=' + etherpadId + '&destinationID=' + destinationId
-											axios.get(url)
+											axios.get(url).catch(function (err) {
+												console.log(err)
+											})
 											infos.iframe = etherpad + '/p/' + destinationId
 											infos.media = etherpad + '/p/' + destinationId
 										}
@@ -865,7 +867,9 @@ app.post('/api/dupliquer-pad', function (req, res) {
 									const etherpadId = bloc.iframe.replace(etherpad + '/p/', '')
 									const destinationId = 'pad-' + id + '-' + Math.random().toString(16).slice(2)
 									const url = etherpad + '/api/1.2.14/copyPad?apikey=' + etherpadApi + '&sourceID=' + etherpadId + '&destinationID=' + destinationId
-									axios.get(url)
+									axios.get(url).catch(function (err) {
+										console.log(err)
+									})
 									bloc.iframe = etherpad + '/p/' + destinationId
 									bloc.media = etherpad + '/p/' + destinationId
 								}
@@ -2636,12 +2640,16 @@ io.on('connection', function (socket) {
 								if (objet.iframe !== '' && objet.iframe.includes(etherpad)) {
 									etherpadId = objet.iframe.replace(etherpad + '/p/', '')
 									url = etherpad + '/api/1/deletePad?apikey=' + etherpadApi + '&padID=' + etherpadId
-									axios.get(url)
+									axios.get(url).catch(function (err) {
+										console.log(err)
+									})
 								}
 								if (objet.media !== '' && objet.media.includes(etherpad)) {
 									etherpadId = objet.media.replace(etherpad + '/p/', '')
 									url = etherpad + '/api/1/deletePad?apikey=' + etherpadApi + '&padID=' + etherpadId
-									axios.get(url)
+									axios.get(url).catch(function (err) {
+										console.log(err)
+									})
 								}
 								if (objet.bloc === bloc && (objet.identifiant === identifiant || proprietaire === identifiant || admins.includes(identifiant))) {
 									const date = moment().format()

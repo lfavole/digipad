@@ -659,10 +659,16 @@ export default {
 			statut: statut
 		}, {
 			headers: { 'Content-Type': 'application/json' }
+		}).catch(function () {
+			if (statut === 'utilisateur') {
+				context.redirect('/u/' + identifiant)
+			} else if (statut === 'invite' || statut === 'auteur' || statut === '') {
+				context.redirect('/')
+			}
 		})
-		if (data === 'erreur_pad' && context.store.state.statut === 'utilisateur') {
-			context.redirect('/u/' + context.store.state.identifiant)
-		} else if (data === 'erreur_pad' && (context.store.state.statut === 'invite' || context.store.state.statut === 'auteur' || context.store.state.statut === '')) {
+		if (data === 'erreur_pad' && statut === 'utilisateur') {
+			context.redirect('/u/' + identifiant)
+		} else if (data === 'erreur_pad' && (statut === 'invite' || statut === 'auteur' || statut === '')) {
 			context.redirect('/')
 		} else {
 			return {
@@ -1568,7 +1574,9 @@ export default {
 			if (this.verifierURL(this.media) === true && this.media.includes(this.etherpad)) {
 				const etherpadId = this.media.replace(this.etherpad + '/p/', '')
 				const url = this.etherpad + '/api/1/deletePad?apikey=' + this.etherpadApi + '&padID=' + etherpadId
-				axios.get(url)
+				axios.get(url).catch(function () {
+					this.$store.dispatch('modifierAlerte', this.$t('erreurCommunicationServeur'))
+				}.bind(this))
 			}
 			this.media = ''
 			this.lien = ''
@@ -1937,7 +1945,9 @@ export default {
 			if (this.iframe.includes(this.etherpad)) {
 				const etherpadId = this.iframe.replace(this.etherpad + '/p/', '')
 				const url = this.etherpad + '/api/1/deletePad?apikey=' + this.etherpadApi + '&padID=' + etherpadId
-				axios.get(url)
+				axios.get(url).catch(function () {
+					this.$store.dispatch('modifierAlerte', this.$t('erreurCommunicationServeur'))
+				}.bind(this))
 			}
 			this.media = ''
 			this.lien = ''

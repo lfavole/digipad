@@ -432,6 +432,8 @@ export default {
 			identifiant: context.store.state.identifiant
 		}, {
 			headers: { 'Content-Type': 'application/json' }
+		}).catch(function () {
+			context.redirect('/')
 		})
 		return {
 			padsCrees: data.padsCrees,
