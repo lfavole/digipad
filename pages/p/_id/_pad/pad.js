@@ -666,7 +666,7 @@ export default {
 				context.redirect('/')
 			}
 		})
-		if (!reponse.hasOwnProperty('data')) {
+		if (!reponse || !reponse.hasOwnProperty('data')) {
 			if (statut === 'utilisateur') {
 				context.redirect('/u/' + identifiant)
 			} else if (statut === 'invite' || statut === 'auteur' || statut === '') {
