@@ -652,7 +652,7 @@ export default {
 		const token = context.route.params.pad
 		const identifiant = context.store.state.identifiant
 		const statut = context.store.state.statut
-		const { data } = await axios.post(context.store.state.hote + '/api/recuperer-donnees-pad', {
+		const reponse = await axios.post(context.store.state.hote + '/api/recuperer-donnees-pad', {
 			id: id,
 			token: token,
 			identifiant: identifiant,
@@ -666,15 +666,21 @@ export default {
 				context.redirect('/')
 			}
 		})
-		if (data === 'erreur_pad' && statut === 'utilisateur') {
+		if (!reponse.data) {
+			if (statut === 'utilisateur') {
+				context.redirect('/u/' + identifiant)
+			} else if (statut === 'invite' || statut === 'auteur' || statut === '') {
+				context.redirect('/')
+			}
+		} else if (reponse.data && reponse.data === 'erreur_pad' && statut === 'utilisateur') {
 			context.redirect('/u/' + identifiant)
-		} else if (data === 'erreur_pad' && (statut === 'invite' || statut === 'auteur' || statut === '')) {
+		} else if (reponse.data && reponse.data === 'erreur_pad' && (statut === 'invite' || statut === 'auteur' || statut === '')) {
 			context.redirect('/')
 		} else {
 			return {
-				pad: data.pad,
-				blocs: data.blocs,
-				activite: data.activite
+				pad: reponse.data.pad,
+				blocs: reponse.data.blocs,
+				activite: reponse.data.activite
 			}
 		}
 	},

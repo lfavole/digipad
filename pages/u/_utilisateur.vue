@@ -428,19 +428,23 @@ export default {
 		chargement
 	},
 	async asyncData (context) {
-		const { data } = await axios.post(context.store.state.hote + '/api/recuperer-donnees-utilisateur', {
+		const reponse = await axios.post(context.store.state.hote + '/api/recuperer-donnees-utilisateur', {
 			identifiant: context.store.state.identifiant
 		}, {
 			headers: { 'Content-Type': 'application/json' }
 		}).catch(function () {
 			context.redirect('/')
 		})
-		return {
-			padsCrees: data.padsCrees,
-			padsRejoints: data.padsRejoints,
-			padsAdmins: data.padsAdmins,
-			padsFavoris: data.padsFavoris,
-			dossiers: data.dossiers
+		if (reponse.data) {
+			return {
+				padsCrees: reponse.data.padsCrees,
+				padsRejoints: reponse.data.padsRejoints,
+				padsAdmins: reponse.data.padsAdmins,
+				padsFavoris: reponse.data.padsFavoris,
+				dossiers: reponse.data.dossiers
+			}
+		} else {
+			context.redirect('/')
 		}
 	},
 	data () {
