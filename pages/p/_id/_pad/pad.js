@@ -1109,7 +1109,7 @@ export default {
 			this.$router.push('/u/' + this.identifiant)
 		},
 		ecouterMessage (event) {
-			if (this.source === 'digiplay') {
+			if (this.source === 'digiview') {
 				this.vignette = event.data
 				this.vignetteDefaut = event.data
 			}
@@ -1215,8 +1215,8 @@ export default {
 						vignette = item.media.replace('/videos/watch/', '/static/thumbnails/') + '.jpg'
 					} else if (item.source === 'h5p') {
 						vignette = '/img/h5p.png'
-					} else if (item.source === 'digiplay') {
-						vignette = '/img/digiplay.png'
+					} else if (item.source === 'digiview') {
+						vignette = '/img/digiview.png'
 					} else if (item.source === 'youtube') {
 						vignette = '/img/youtube.png'
 					} else if (item.source === 'vimeo') {
@@ -1294,7 +1294,7 @@ export default {
 				icone = 'link'
 				break
 			case 'embed':
-				if (item.source === 'youtube' || item.source === 'vimeo' || item.source === 'dailymotion' || item.source === 'digiplay') {
+				if (item.source === 'youtube' || item.source === 'vimeo' || item.source === 'dailymotion' || item.source === 'digiview') {
 					icone = 'movie'
 				} else if (item.source === 'slideshare' || item.media.includes('wikipedia.org') || item.media.includes('drive.google.com') || item.media.includes('docs.google.com')) {
 					icone = 'description'
@@ -1802,8 +1802,8 @@ export default {
 									this.source = 'peertube'
 								} else if (this.lien.includes('ladigitale.dev/digiquiz/')) {
 									this.source = 'h5p'
-								} else if (this.lien.includes('ladigitale.dev/digiplay/')) {
-									this.source = 'digiplay'
+								} else if (this.lien.includes('ladigitale.dev/digiview/')) {
+									this.source = 'digiview'
 								}
 								this.type = 'embed'
 								donnees = {}
@@ -2487,7 +2487,7 @@ export default {
 			}
 		},
 		definirTypeMedia () {
-			if (this.donneesBloc.source === 'youtube' || this.donneesBloc.source === 'vimeo' || this.donneesBloc.source === 'dailymotion' || this.donneesBloc.source === 'digiplay') {
+			if (this.donneesBloc.source === 'youtube' || this.donneesBloc.source === 'vimeo' || this.donneesBloc.source === 'dailymotion' || this.donneesBloc.source === 'digiview') {
 				return 'video'
 			} else if (this.donneesBloc.source === 'slideshare' || this.donneesBloc.source === 'soundcloud' || this.donneesBloc.media.includes('clyp.it') || this.donneesBloc.media.includes('vocaroo.com') || this.donneesBloc.media.includes('voca.ro')) {
 				return 'embed'

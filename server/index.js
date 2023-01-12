@@ -4875,7 +4875,7 @@ function genererHTML (pad, blocs) {
 								icone = 'link'
 								break
 							case 'embed':
-								if (item.source === 'youtube' || item.source === 'vimeo' || item.source === 'dailymotion' || item.source === 'digiplay') {
+								if (item.source === 'youtube' || item.source === 'vimeo' || item.source === 'dailymotion' || item.source === 'digiview') {
 									icone = 'movie'
 								} else if (item.source === 'slideshare' || item.media.includes('wikipedia.org') || item.media.includes('drive.google.com') || item.media.includes('docs.google.com')) {
 									icone = 'description'
