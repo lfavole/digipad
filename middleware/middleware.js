@@ -13,8 +13,8 @@ export default function (context) {
 		if (context.req.session.hasOwnProperty('affichage')) {
 			donnees.affichage = context.req.session.affichage
 		}
-		if (context.req.session.hasOwnProperty('filtre')) {
-			donnees.filtre = context.req.session.filtre
+		if (context.req.session.hasOwnProperty('classement')) {
+			donnees.classement = context.req.session.classement
 		}
 		if (context.req.session.hasOwnProperty('email')) {
 			donnees.email = context.req.session.email

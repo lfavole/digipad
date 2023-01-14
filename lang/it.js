@@ -275,7 +275,7 @@ export default {
 	affichageListe: 'Visualizzazione a elenco',
 	affichageMosaique: 'Visualizzazione a mosaico',
 	affichageModifie: 'Vista modificato.',
-	filtreModifie: 'Filtro modificato.',
+	classementModifie: 'Classificazione modificata.',
 	ajouterDossier: 'Aggiungere una cartella',
 	erreurAjoutDossier: 'Errore durante la creazione della cartella.',
 	dossierAjoute: 'Cartella aggiunta.',

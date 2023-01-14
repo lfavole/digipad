@@ -275,7 +275,7 @@ export default {
 	affichageListe: 'Pantalla lista',
 	affichageMosaique: 'Pantalla mosaico',
 	affichageModifie: 'Pantalla cambiada.',
-	filtreModifie: 'Filtro cambiado.',
+	classementModifie: 'Clasificación modificada.',
 	ajouterDossier: 'Añadir un directorio',
 	erreurAjoutDossier: 'Error al crear el directorio.',
 	dossierAjoute: 'Directorio añadido.',

@@ -188,7 +188,7 @@ app.post('/api/inscription', function (req, res) {
 				langue = req.session.langue
 			}
 			const multi = db.multi()
-			multi.hmset('utilisateurs:' + identifiant, 'id', identifiant, 'motdepasse', hash, 'date', date, 'nom', '', 'email', '', 'langue', langue, 'affichage', 'liste', 'filtre', 'date-asc')
+			multi.hmset('utilisateurs:' + identifiant, 'id', identifiant, 'motdepasse', hash, 'date', date, 'nom', '', 'email', '', 'langue', langue, 'affichage', 'liste', 'classement', 'date-asc')
 			multi.exec(function () {
 				req.session.identifiant = identifiant
 				req.session.nom = ''
@@ -196,7 +196,7 @@ app.post('/api/inscription', function (req, res) {
 				req.session.langue = langue
 				req.session.statut = 'utilisateur'
 				req.session.affichage = 'liste'
-				req.session.filtre = 'date-asc'
+				req.session.classement = 'date-asc'
 				req.session.cookie.expires = new Date(Date.now() + dureeSession)
 				res.json({ identifiant: identifiant, nom: '', email: '', langue: langue, statut: 'utilisateur', affichage: 'liste' })
 			})
@@ -231,18 +231,18 @@ app.post('/api/connexion', function (req, res) {
 						affichage = donnees.affichage
 					}
 					req.session.affichage = affichage
-					let filtre = 'date-asc'
-					if (donnees.hasOwnProperty('filtre')) {
-						filtre = donnees.filtre
+					let classement = 'date-asc'
+					if (donnees.hasOwnProperty('classement')) {
+						classement = donnees.classement
 					}
-					req.session.filtre = filtre
+					req.session.classement = classement
 					let email = ''
 					if (donnees.hasOwnProperty('email')) {
 						email = donnees.email
 					}
 					req.session.email = email
 					req.session.cookie.expires = new Date(Date.now() + dureeSession)
-					res.json({ identifiant: identifiant, nom: nom, email: email, langue: langue, statut: 'utilisateur', affichage: affichage, filtre: filtre })
+					res.json({ identifiant: identifiant, nom: nom, email: email, langue: langue, statut: 'utilisateur', affichage: affichage, classement: classement })
 				} else {
 					res.send('erreur_connexion')
 				}
@@ -297,7 +297,7 @@ app.post('/api/deconnexion', function (req, res) {
 	req.session.langue = ''
 	req.session.statut = ''
 	req.session.affichage = ''
-	req.session.filtre = ''
+	req.session.classement = ''
 	req.session.destroy()
 	res.send('deconnecte')
 })
@@ -1873,7 +1873,7 @@ app.post('/api/supprimer-compte', function (req, res) {
 								req.session.langue = ''
 								req.session.statut = ''
 								req.session.affichage = ''
-								req.session.filtre = ''
+								req.session.classement = ''
 								req.session.destroy()
 								res.send('compte_supprime')
 							} else {
@@ -2002,13 +2002,13 @@ app.post('/api/modifier-affichage', function (req, res) {
 	}
 })
 
-app.post('/api/modifier-filtre', function (req, res) {
+app.post('/api/modifier-classement', function (req, res) {
 	const identifiant = req.body.identifiant
 	if (req.session.identifiant && req.session.identifiant === identifiant) {
-		const filtre = req.body.filtre
-		db.hset('utilisateurs:' + identifiant, 'filtre', filtre)
-		req.session.filtre = filtre
-		res.send('filtre_modifie')
+		const classement = req.body.classement
+		db.hset('utilisateurs:' + identifiant, 'classement', classement)
+		req.session.classement = classement
+		res.send('classement_modifie')
 	} else {
 		res.send('non_connecte')
 	}
@@ -2336,7 +2336,7 @@ io.on('connection', function (socket) {
 			socket.handshake.session.langue = ''
 			socket.handshake.session.statut = ''
 			socket.handshake.session.affichage = ''
-			socket.handshake.session.filtre = ''
+			socket.handshake.session.classement = ''
 			socket.handshake.session.save()
 		}
 		socket.broadcast.emit('deconnexion', identifiant)
@@ -2349,7 +2349,7 @@ io.on('connection', function (socket) {
 		socket.handshake.session.langue = session.langue
 		socket.handshake.session.statut = session.statut
 		socket.handshake.session.affichage = session.affichage
-		socket.handshake.session.filtre = session.filtre
+		socket.handshake.session.classement = session.classement
 		socket.handshake.session.cookie.expires = new Date(Date.now() + dureeSession)
 		socket.handshake.session.save()
 	})

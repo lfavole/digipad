@@ -275,7 +275,7 @@ export default {
 	affichageListe: 'List view',
 	affichageMosaique: 'Mosaic view',
 	affichageModifie: 'View changed.',
-	filtreModifie: 'Filter changed.',
+	classementModifie: 'Classification changed.',
 	ajouterDossier: 'Add a folder',
 	erreurAjoutDossier: 'Error while creating the folder.',
 	dossierAjoute: 'Folder added.',

@@ -275,7 +275,7 @@ export default {
 	affichageListe: 'Prikaz popisa',
 	affichageMosaique: 'Mozaik pogled',
 	affichageModifie: 'Pogled je promijenjen.',
-	filtreModifie: 'Filtar je promijenjen.',
+	classementModifie: 'Klasifikacija se promijenila.',
 	ajouterDossier: 'Dodajte mapu',
 	erreurAjoutDossier: 'Pogreška pri izradi mape.',
 	dossierAjoute: 'Mapa je dodana.',

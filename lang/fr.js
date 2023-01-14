@@ -275,7 +275,7 @@ export default {
 	affichageListe: 'Affichage Liste',
 	affichageMosaique: 'Affichage Mosaïque',
 	affichageModifie: 'Affichage modifié.',
-	filtreModifie: 'Filtre modifié.',
+	classementModifie: 'Classement modifié.',
 	ajouterDossier: 'Ajouter un dossier',
 	erreurAjoutDossier: 'Erreur lors de la création du dossier.',
 	dossierAjoute: 'Dossier ajouté.',

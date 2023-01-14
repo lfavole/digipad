@@ -86,18 +86,18 @@
 					<span id="bouton-creer" :class="{'desactive': padsCrees.length >= limite}" role="button" tabindex="0" @click="afficherModaleCreerPad">{{ $t('creerPad') }}</span>
 					<span id="bouton-importer" :class="{'desactive': padsCrees.length >= limite}" role="button" tabindex="0" @click="afficherModaleImporterPad">{{ $t('importerPad') }}</span>
 				</div>
-				<div id="filtrer">
+				<div id="afficher">
 					<div class="rechercher">
 						<span><i class="material-icons">search</i></span>
 						<input type="search" :value="requete" :placeholder="$t('rechercher')" @input="requete = $event.target.value">
 					</div>
-					<div class="filtrer">
+					<div class="classer">
 						<span><i class="material-icons">sort</i></span>
-						<select id="champ-filtrer" @change="modifierFiltre($event.target.value)">
-							<option value="date-asc" :selected="filtre === 'date-asc'">{{ $t('dateAsc') }}</option>
-							<option value="date-desc" :selected="filtre === 'date-desc'">{{ $t('dateDesc') }}</option>
-							<option value="alpha-asc" :selected="filtre === 'alpha-asc'">{{ $t('alphaAsc') }}</option>
-							<option value="alpha-desc" :selected="filtre === 'alpha-desc'">{{ $t('alphaDesc') }}</option>
+						<select id="champ-classer" @change="modifierClassement($event.target.value)">
+							<option value="date-asc" :selected="classement === 'date-asc'">{{ $t('dateAsc') }}</option>
+							<option value="date-desc" :selected="classement === 'date-desc'">{{ $t('dateDesc') }}</option>
+							<option value="alpha-asc" :selected="classement === 'alpha-asc'">{{ $t('alphaAsc') }}</option>
+							<option value="alpha-desc" :selected="classement === 'alpha-desc'">{{ $t('alphaDesc') }}</option>
 						</select>
 					</div>
 					<div class="afficher">
@@ -510,8 +510,8 @@ export default {
 		affichage () {
 			return this.$store.state.affichage
 		},
-		filtre () {
-			return this.$store.state.filtre
+		classement () {
+			return this.$store.state.classement
 		},
 		limite () {
 			return process.env.padLimit
@@ -563,7 +563,7 @@ export default {
 			favoris.push(pad.id)
 		})
 		this.favoris = favoris
-		this.filtrer(this.filtre)
+		this.classer(this.classement)
 		this.$nuxt.$loading.start()
 		this.$i18n.setLocale(this.langue)
 	},
@@ -735,6 +735,18 @@ export default {
 							this.favoris.splice(indexFavori, 1)
 						}
 					}.bind(this))
+					if (this.onglet === 'pads-favoris') {
+						this.pads.forEach(function (pad, indexPad) {
+							if (pad.id === padId) {
+								this.pads.splice(indexPad, 1)
+							}
+						}.bind(this))
+						this.resultats.forEach(function (pad, indexPad) {
+							if (pad.id === padId) {
+								this.resultats.splice(indexPad, 1)
+							}
+						}.bind(this))
+					}
 					this.$store.dispatch('modifierMessage', this.$t('padSupprimeFavoris'))
 				}
 			}.bind(this)).catch(function () {
@@ -905,6 +917,11 @@ export default {
 							this.pads.splice(index, 1)
 						}
 					}.bind(this))
+					this.resultats.forEach(function (pad, index) {
+						if (pad.id === this.padId) {
+							this.resultats.splice(index, 1)
+						}
+					}.bind(this))
 					this.dossiers.forEach(function (dossier, indexDossier) {
 						if (dossier.pads.includes(this.padId)) {
 							const indexPad = dossier.pads.indexOf(this.padId)
@@ -947,12 +964,12 @@ export default {
 			}
 			this.resultats = resultats
 		},
-		filtrer (filtre) {
+		classer (classement) {
 			let pads = this.pads
 			if (this.requete !== '') {
 				pads = this.resultats
 			}
-			switch (filtre) {
+			switch (classement) {
 			case 'date-asc':
 				pads.sort(function (a, b) {
 					const dateA = new Date(a.date).getTime()
@@ -988,21 +1005,21 @@ export default {
 				this.resultats = pads
 			}
 		},
-		modifierFiltre (filtre) {
-			if (this.filtre !== filtre) {
+		modifierClassement (classement) {
+			if (this.classement !== classement) {
 				this.chargement = true
-				axios.post(this.hote + '/api/modifier-filtre', {
+				axios.post(this.hote + '/api/modifier-classement', {
 					identifiant: this.identifiant,
-					filtre: filtre
+					classement: classement
 				}).then(function (reponse) {
 					this.chargement = false
 					const donnees = reponse.data
 					if (donnees === 'non_connecte') {
 						this.$router.push('/')
 					} else {
-						this.filtrer(filtre)
-						this.$store.dispatch('modifierFiltre', filtre)
-						this.$store.dispatch('modifierMessage', this.$t('filtreModifie'))
+						this.classer(classement)
+						this.$store.dispatch('modifierClassement', classement)
+						this.$store.dispatch('modifierMessage', this.$t('classementModifie'))
 					}
 				}.bind(this)).catch(function () {
 					this.chargement = false
@@ -1472,7 +1489,7 @@ export default {
     margin: 0 0 3rem;
 }
 
-#filtrer {
+#afficher {
 	display: flex;
 	justify-content: flex-end;
 	align-items: center;
@@ -1482,36 +1499,36 @@ export default {
 }
 
 .mosaique #actions-dossier,
-.mosaique #filtrer {
+.mosaique #afficher {
 	padding: 0 0.75rem;
 }
 
-#filtrer .rechercher,
-#filtrer .filtrer {
+#afficher .rechercher,
+#afficher .classer {
 	display: flex;
 	align-items: center;
 	width: calc(50% - (24px + 2.5rem));
 }
 
-#filtrer .filtrer,
-#filtrer .rechercher {
+#afficher .classer,
+#afficher .rechercher {
 	margin-right: 2rem;
 }
 
-#filtrer .afficher span,
-#filtrer .filtrer span,
-#filtrer .rechercher span {
+#afficher .afficher span,
+#afficher .classer span,
+#afficher .rechercher span {
 	font-size: 24px;
 	margin-right: 1rem;
 }
 
-#filtrer .filtrer select,
-#filtrer .rechercher input {
+#afficher .classer select,
+#afficher .rechercher input {
 	width: calc(100% - (24px + 1rem));
 }
 
-#filtrer select,
-#filtrer input[type="search"] {
+#afficher select,
+#afficher input[type="search"] {
 	font-size: 16px;
 	border: 1px solid #ddd;
 	border-radius: 4px;
@@ -1519,16 +1536,16 @@ export default {
 	text-align: left;
 }
 
-#filtrer select {
+#afficher select {
 	background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" height="14" viewBox="0 0 29 14" width="29"><path fill="%23000000" d="M9.37727 3.625l5.08154 6.93523L19.54036 3.625" /></svg>') center right no-repeat;
 	padding-right: 3rem;
 }
 
-#filtrer .afficher span {
+#afficher .afficher span {
 	cursor: pointer;
 }
 
-#filtrer .afficher span:last-child {
+#afficher .afficher span:last-child {
 	margin-right: 0;
 }
 
@@ -1818,23 +1835,23 @@ export default {
 }
 
 @media screen and (max-width: 479px) {
-	#filtrer {
+	#afficher {
 		flex-wrap: wrap;
 	}
 
-	#filtrer .rechercher {
+	#afficher .rechercher {
 		width: 100%;
 		margin-right: 0;
 		margin-bottom: 1.5rem;
 	}
 
-	#filtrer .filtrer {
+	#afficher .classer {
 		width: 100%;
 		margin-right: 0;
 		margin-bottom: 1.5rem;
 	}
 
-	#filtrer .afficher {
+	#afficher .afficher {
 		line-height: 1;
 	}
 }
