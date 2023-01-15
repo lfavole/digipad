@@ -359,8 +359,6 @@ export default {
 	aucuneEntreeAudio: 'No audio input has been detected on your device.',
 	maintenance: '🔧 Maintenance 🛠️',
 	maintenanceDigipad: 'Digipad is under maintenance. Please come back later.',
-	dechargerPadsDb: 'Unload the database and export the pads in json',
 	activerMaintenance: 'Activate maintenance mode',
-	desactiverMaintenance: 'Deactivate maintenance mode',
-	nombreJoursDb: 'Number of days of pad age to keep in the database'
+	desactiverMaintenance: 'Deactivate maintenance mode'
 }
