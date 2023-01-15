@@ -12,12 +12,7 @@
 				<h1>
 					<span>{{ $t('maintenance') }}</span>
 				</h1>
-				<div class="conteneur">
-					<label>{{ $t('nombreJoursDb') }}</label>
-					<input type="text" :value="jours" @input="jours = $event.target.value">
-				</div>
 				<div class="actions">
-					<span class="bouton maintenance" role="button" tabindex="0" @click="exporterPadsJson">{{ $t('dechargerPadsDb') }}</span>
 					<span class="bouton maintenance" role="button" tabindex="0" @click="activerMaintenance" v-if="maintenance === false">{{ $t('activerMaintenance') }}</span>
 					<span class="bouton maintenance" role="button" tabindex="0" @click="desactiverMaintenance" v-else>{{ $t('desactiverMaintenance') }}</span>
 				</div>
@@ -124,9 +119,6 @@ export default {
 	sockets: {
 		verifiermaintenance: function (valeur) {
 			this.maintenance = valeur
-		},
-		exporterpadsjson: function () {
-			window.location.href = '/maintenance'
 		}
 	},
 	data () {
@@ -144,8 +136,7 @@ export default {
 			identifiantS: '',
 			champ: '',
 			valeur: '',
-			maintenance: false,
-			jours: 10
+			maintenance: false
 		}
 	},
 	head () {
@@ -187,9 +178,6 @@ export default {
 					this.$store.dispatch('modifierAlerte', this.$t('erreurCommunicationServeur'))
 				}.bind(this))
 			}
-		},
-		exporterPadsJson () {
-			this.$socket.emit('exporterpadsjson', this.jours)
 		},
 		activerMaintenance () {
 			this.$socket.emit('activermaintenance')
