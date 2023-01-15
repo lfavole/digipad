@@ -553,9 +553,10 @@ export default {
 	created () {
 		if (this.redirection) {
 			this.$router.push(this.redirection)
-		}
-		if (this.identifiant === '' || this.statut === 'invite') {
+			return false
+		} else if (this.identifiant === '' || this.statut === 'invite') {
 			this.$router.push('/')
+			return false
 		}
 		this.pads = this.padsCrees
 		const favoris = []
