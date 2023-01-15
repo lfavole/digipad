@@ -973,6 +973,7 @@ export default {
 	created () {
 		if (this.redirection) {
 			this.$router.push(this.redirection)
+			return false
 		}
 		if (this.pad.affichage === 'colonnes') {
 			this.definirColonnes(this.blocs)
