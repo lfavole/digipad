@@ -49,7 +49,7 @@ module.exports = {
 		'@/assets/css/main.css'
 	],
 	plugins: [
-		{ src: '~/plugins/vue-socket-io', mode: 'client' },
+		{ src: '~/plugins/socket-io', mode: 'client' },
 		{ src: '~/plugins/vue-methods', mode: 'client' },
 		{ src: '~/plugins/vue-masonry-css', mode: 'client' },
 		{ src: '~/plugins/matomo', mode: 'client' }

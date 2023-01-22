@@ -18,635 +18,6 @@ export default {
 		chargement,
 		emojis
 	},
-	sockets: {
-		connexion: function (donnees) {
-			this.definirUtilisateurs(donnees)
-		},
-		deconnexion: function (identifiant) {
-			const utilisateurs = this.utilisateurs
-			utilisateurs.forEach(function (utilisateur, index) {
-				if (utilisateur.identifiant === identifiant) {
-					utilisateurs.splice(index, 1)
-				}
-			})
-			this.utilisateurs = utilisateurs
-		},
-		erreur: function () {
-			this.chargement = false
-			this.$store.dispatch('modifierAlerte', this.$t('erreurActionServeur'))
-		},
-		ajouterbloc: function (donnees) {
-			this.action = 'ajouter'
-			this.utilisateur = donnees.identifiant
-			if (donnees.visibilite === 'visible' || this.admin || (this.pad.contributions === 'moderees' && (this.utilisateur === this.identifiant))) {
-				if (this.pad.affichage === 'colonnes') {
-					if (this.pad.ordre === 'croissant') {
-						this.colonnes[donnees.colonne].push(donnees)
-					} else {
-						this.colonnes[donnees.colonne].unshift(donnees)
-					}
-				}
-				if (this.pad.ordre === 'croissant') {
-					this.blocs.push(donnees)
-				} else {
-					this.blocs.unshift(donnees)
-				}
-				if (donnees.visibilite === 'visible' || this.admin || (this.pad.contributions === 'moderees' && (this.utilisateur === this.identifiant))) {
-					this.activite.unshift({ id: donnees.activiteId, bloc: donnees.bloc, identifiant: donnees.identifiant, nom: donnees.nom, titre: donnees.titre, date: donnees.date, couleur: donnees.couleur, type: 'bloc-ajoute' })
-				}
-				if (this.admin || this.pad.affichage !== 'colonnes' || (this.pad.affichage === 'colonnes' && this.affichageColonnes[donnees.colonne])) {
-					this.$nextTick(function () {
-						const bloc = document.querySelector('#' + donnees.bloc)
-						bloc.classList.add('anime')
-						bloc.addEventListener('animationend', function () {
-							bloc.classList.remove('anime')
-						})
-					})
-				}
-				if (this.utilisateur === this.identifiant) {
-					this.$nextTick(function () {
-						const bloc = document.querySelector('#' + donnees.bloc)
-						bloc.scrollIntoView()
-					})
-				}
-				this.envoyerNotificationAdmins()
-			}
-		},
-		modifierbloc: function (donnees) {
-			this.action = 'modifier'
-			if (this.pad.affichage === 'colonnes') {
-				this.colonnes[donnees.colonne].forEach(function (item, index) {
-					if (item.bloc === donnees.bloc) {
-						if (donnees.visibilite === 'privee' && !this.admin) {
-							this.colonnes[donnees.colonne].splice(index, 1)
-						} else {
-							this.colonnes[donnees.colonne][index] = { bloc: donnees.bloc, identifiant: item.identifiant, nom: item.nom, titre: donnees.titre, texte: donnees.texte, media: donnees.media, iframe: donnees.iframe, type: donnees.type, source: donnees.source, vignette: donnees.vignette, date: item.date, modifie: donnees.modifie, couleur: item.couleur, commentaires: item.commentaires, evaluations: item.evaluations, colonne: item.colonne, visibilite: donnees.visibilite }
-						}
-					}
-				}.bind(this))
-			}
-			this.blocs.forEach(function (item, index) {
-				if (item.bloc === donnees.bloc) {
-					this.utilisateur = donnees.identifiant
-					if (donnees.visibilite === 'privee' && !this.admin) {
-						this.blocs.splice(index, 1)
-					} else {
-						this.blocs.splice(index, 1, { bloc: donnees.bloc, identifiant: item.identifiant, nom: item.nom, titre: donnees.titre, texte: donnees.texte, media: donnees.media, iframe: donnees.iframe, type: donnees.type, source: donnees.source, vignette: donnees.vignette, date: item.date, modifie: donnees.modifie, couleur: item.couleur, commentaires: item.commentaires, evaluations: item.evaluations, colonne: item.colonne, visibilite: donnees.visibilite })
-					}
-				}
-			}.bind(this))
-			if (donnees.visibilite === 'visible') {
-				this.activite.unshift({ id: donnees.activiteId, bloc: donnees.bloc, identifiant: donnees.identifiant, nom: donnees.nom, titre: donnees.titre, date: donnees.date, couleur: donnees.couleur, type: 'bloc-modifie' })
-			}
-			this.envoyerNotificationAdmins()
-		},
-		autoriserbloc: function (donnees) {
-			if ((this.pad.contributions === 'moderees' && (donnees.identifiant === this.identifiant)) || this.admin) {
-				if (this.pad.affichage === 'colonnes') {
-					this.colonnes.forEach(function (colonne, indexColonne) {
-						colonne.forEach(function (item, index) {
-							if (item.bloc === donnees.bloc) {
-								this.colonnes[indexColonne][index].visibilite = 'visible'
-								this.colonnes[indexColonne][index].date = donnees.date
-								if (this.colonnes[indexColonne][index].hasOwnProperty('modifie')) {
-									delete this.colonnes[indexColonne][index].modifie
-								}
-							}
-						}.bind(this))
-					}.bind(this))
-				}
-				this.blocs.forEach(function (item, index) {
-					if (item.bloc === donnees.bloc) {
-						this.blocs[index].visibilite = 'visible'
-						this.blocs[index].date = donnees.date
-						if (this.blocs[index].hasOwnProperty('modifie')) {
-							delete this.blocs[index].modifie
-						}
-					}
-				}.bind(this))
-				this.chargement = false
-			} else {
-				this.blocs.splice(donnees.indexBloc, 0, donnees)
-				if (this.pad.affichage === 'colonnes') {
-					this.colonnes[donnees.colonne].splice(donnees.indexBlocColonne, 0, donnees)
-				}
-			}
-			this.activite.unshift({ id: donnees.activiteId, bloc: donnees.bloc, identifiant: donnees.identifiant, nom: donnees.nom, titre: donnees.titre, date: donnees.date, couleur: donnees.couleur, type: 'bloc-ajoute' })
-			this.$nextTick(function () {
-				const bloc = document.querySelector('#' + donnees.bloc)
-				if (bloc !== null) {
-					bloc.classList.add('anime')
-					bloc.addEventListener('animationend', function () {
-						bloc.classList.remove('anime')
-					})
-				}
-			})
-			if (this.admin && this.identifiant === donnees.admin && donnees.moderation === 'moderee') {
-				this.$store.dispatch('modifierMessage', this.$t('capsuleValidee'))
-			} else if (this.admin && this.identifiant === donnees.admin && donnees.moderation === 'privee') {
-				this.$store.dispatch('modifierMessage', this.$t('capsuleVisible'))
-			} else if (!this.admin && donnees.identifiant === this.identifiant) {
-				this.$store.dispatch('modifierMessage', this.$t('capsulePubliee', { titre: donnees.titre }))
-			}
-			if (this.modaleDiaporama) {
-				this.$nextTick(function () {
-					this.chargerDiapositive()
-				}.bind(this))
-			}
-		},
-		deplacerbloc: function (donnees) {
-			this.utilisateur = donnees.identifiant
-			const blocActif = document.querySelector('.bloc.actif')
-			let blocId = ''
-			if (blocActif && this.utilisateur !== this.identifiant) {
-				blocId = blocActif.id
-			}
-			if (this.admin && this.pad.affichage === 'colonnes') {
-				this.definirColonnes(donnees.blocs)
-			} else if (this.admin && this.pad.affichage !== 'colonnes') {
-				this.blocs = donnees.blocs
-			} else if (!this.admin) {
-				let blocs
-				if (this.pad.contributions === 'moderees') {
-					blocs = donnees.blocs.filter(function (element) {
-						return element.visibilite === 'visible' || (element.visibilite === 'masquee' && element.identifiant === this.identifiant)
-					}.bind(this))
-				} else {
-					blocs = donnees.blocs.filter(function (element) {
-						return element.visibilite !== 'privee'
-					})
-				}
-				if (this.pad.affichage === 'colonnes') {
-					this.definirColonnes(blocs)
-				} else {
-					this.blocs = blocs
-				}
-			}
-			this.$nextTick(function () {
-				if (blocActif && this.utilisateur !== this.identifiant && document.querySelector('#' + blocId)) {
-					blocActif.classList.remove('actif')
-					document.querySelector('#' + blocId).classList.add('actif')
-				}
-			}.bind(this))
-			this.chargement = false
-		},
-		supprimerbloc: function (donnees) {
-			this.action = 'supprimer'
-			if (this.pad.affichage === 'colonnes') {
-				this.colonnes[donnees.colonne].forEach(function (item, index) {
-					if (item.bloc === donnees.bloc) {
-						this.colonnes[donnees.colonne].splice(index, 1)
-					}
-				}.bind(this))
-			}
-			this.blocs.forEach(function (item, index) {
-				if (item.bloc === donnees.bloc) {
-					this.utilisateur = donnees.identifiant
-					this.blocs.splice(index, 1)
-				}
-			}.bind(this))
-			this.activite.unshift({ id: donnees.activiteId, bloc: donnees.bloc, identifiant: donnees.identifiant, nom: donnees.nom, titre: donnees.titre, date: donnees.date, couleur: donnees.couleur, type: 'bloc-supprime' })
-			this.envoyerNotificationAdmins()
-		},
-		commenterbloc: function (donnees) {
-			const blocs = this.blocs
-			blocs.forEach(function (item) {
-				if (item.bloc === donnees.bloc) {
-					item.commentaires = donnees.commentaires
-				}
-			})
-			this.blocs = blocs
-			if ((this.modaleCommentaires && this.bloc === donnees.bloc) || (this.modaleDiaporama && this.donneesBloc.bloc === donnees.bloc)) {
-				this.commentaires.unshift({ id: donnees.id, identifiant: donnees.identifiant, nom: donnees.nom, texte: donnees.texte, date: donnees.date })
-			}
-			this.activite.unshift({ id: donnees.activiteId, bloc: donnees.bloc, identifiant: donnees.identifiant, nom: donnees.nom, titre: donnees.titre, date: donnees.date, couleur: donnees.couleur, type: 'bloc-commente' })
-			this.envoyerNotificationAdmins()
-		},
-		modifiercommentaire: function (donnees) {
-			const commentaires = this.commentaires
-			commentaires.forEach(function (commentaire) {
-				if (commentaire.id === donnees.id) {
-					commentaire.texte = donnees.texte
-				}
-			})
-			this.commentaires = commentaires
-		},
-		supprimercommentaire: function (donnees) {
-			const blocs = this.blocs
-			blocs.forEach(function (item) {
-				if (item.bloc === donnees.bloc) {
-					item.commentaires = donnees.commentaires
-				}
-			})
-			this.blocs = blocs
-			const commentaires = this.commentaires
-			commentaires.forEach(function (commentaire, index) {
-				if (commentaire.id === donnees.id) {
-					commentaires.splice(index, 1)
-				}
-			})
-			this.commentaires = commentaires
-		},
-		commentaires: function (donnees) {
-			this.commentaires = donnees.commentaires
-			if (donnees.type === 'discussion') {
-				this.chargement = false
-				this.modaleCommentaires = true
-				this.$nextTick(function () {
-					this.genererEditeur()
-				}.bind(this))
-			} else {
-				this.chargerDiapositive()
-			}
-		},
-		evaluerbloc: function (donnees) {
-			this.chargement = false
-			const blocs = this.blocs
-			blocs.forEach(function (item) {
-				if (item.bloc === donnees.bloc) {
-					item.evaluations.push(donnees.evaluation)
-				}
-			})
-			this.blocs = blocs
-			this.activite.unshift({ id: donnees.activiteId, bloc: donnees.bloc, identifiant: donnees.identifiant, nom: donnees.nom, titre: donnees.titre, date: donnees.date, couleur: donnees.couleur, type: 'bloc-evalue' })
-			this.envoyerNotificationAdmins()
-		},
-		modifierevaluation: function (donnees) {
-			this.chargement = false
-			const blocs = this.blocs
-			blocs.forEach(function (item, index) {
-				if (item.bloc === donnees.bloc) {
-					const evaluations = item.evaluations
-					evaluations.forEach(function (evaluation) {
-						if (evaluation.id === donnees.id) {
-							evaluation.date = donnees.date
-							evaluation.etoiles = donnees.etoiles
-						}
-					})
-				}
-			})
-			this.blocs = blocs
-		},
-		supprimerevaluation: function (donnees) {
-			this.chargement = false
-			const blocs = this.blocs
-			blocs.forEach(function (item) {
-				if (item.bloc === donnees.bloc) {
-					const evaluations = item.evaluations
-					evaluations.forEach(function (evaluation, index) {
-						if (evaluation.id === donnees.id) {
-							evaluations.splice(index, 1)
-						}
-					})
-				}
-			})
-			this.blocs = blocs
-		},
-		modifiernom: function (donnees) {
-			this.modifierCaracteristique(donnees.identifiant, 'nom', donnees.nom)
-			this.chargement = false
-			if (donnees.identifiant === this.identifiant) {
-				this.$store.dispatch('modifierNom', donnees.nom)
-				this.$store.dispatch('modifierMessage', this.$t('nomModifie'))
-			}
-		},
-		modifiercouleur: function (donnees) {
-			this.modifierCaracteristique(donnees.identifiant, 'couleur', donnees.couleur)
-			if (donnees.identifiant === this.identifiant) {
-				this.$store.dispatch('modifierMessage', this.$t('couleurModifiee'))
-			}
-		},
-		modifiertitre: function (titre) {
-			this.pad.titre = titre
-			this.chargement = false
-			if (this.admin) {
-				this.$store.dispatch('modifierMessage', this.$t('titrePadModifie'))
-			}
-		},
-		modifiercodeacces: function (code) {
-			this.pad.code = code
-			this.chargement = false
-			this.modificationCode = false
-			if (this.admin) {
-				this.$store.dispatch('modifierMessage', this.$t('codeAccesModifie'))
-			}
-		},
-		modifieradmins: function (admins) {
-			this.pad.admins = admins
-			this.chargement = false
-			if (this.admin) {
-				this.$store.dispatch('modifierMessage', this.$t('listeAdminsModifiee'))
-			}
-		},
-		modifieracces: function (donnees) {
-			this.pad.acces = donnees.acces
-			this.chargement = false
-			if (this.admin) {
-				if (donnees.acces === 'code') {
-					this.pad.code = donnees.code
-					this.codeVisible = true
-				}
-				this.$store.dispatch('modifierMessage', this.$t('accesPadModifie'))
-			} else {
-				if (donnees.acces === 'prive') {
-					this.$socket.emit('sortie', this.pad.id, this.identifiant)
-					this.$router.push('/')
-				}
-			}
-		},
-		modifiercontributions: function (donnees) {
-			this.pad.contributions = donnees.contributions
-			this.chargement = false
-			if (this.admin) {
-				this.$store.dispatch('modifierMessage', this.$t('statutPadModifie'))
-			}
-			if (!this.admin && donnees.contributionsPrecedentes === 'moderees') {
-				this.$store.dispatch('modifierMessage', this.$t('rechargerPage'))
-			}
-		},
-		modifieraffichage: function (affichage) {
-			this.pad.affichage = affichage
-			this.affichage = affichage
-			this.chargement = false
-			if (this.admin) {
-				this.action = ''
-				this.$store.dispatch('modifierMessage', this.$t('affichagePadModifie'))
-			}
-		},
-		modifierordre: function (ordre) {
-			const blocActif = document.querySelector('.bloc.actif')
-			let blocId = ''
-			if (blocActif) {
-				blocId = blocActif.id
-			}
-			this.pad.ordre = ordre
-			this.blocs.reverse()
-			if (this.pad.affichage === 'colonnes') {
-				this.definirColonnes(this.blocs)
-			}
-			this.$nextTick(function () {
-				if (blocActif) {
-					blocActif.classList.remove('actif')
-					document.querySelector('#' + blocId).classList.add('actif')
-				}
-			})
-			this.chargement = false
-			if (this.admin) {
-				this.$store.dispatch('modifierMessage', this.$t('parametreOrdreModifie'))
-			}
-		},
-		modifierlargeur: function (largeur) {
-			this.pad.largeur = largeur
-			if (this.pad.affichage === 'mur') {
-				this.pad.affichage = ''
-				setTimeout(function () {
-					this.pad.affichage = 'mur'
-				}.bind(this), 10)
-			}
-			this.chargement = false
-			if (this.admin) {
-				this.$store.dispatch('modifierMessage', this.$t('parametreLargeurModifie'))
-			}
-		},
-		modifierfond: function (fond) {
-			this.pad.fond = fond
-			imagesLoaded('#pad', { background: true }, function () {
-				this.chargement = false
-				if (this.admin) {
-					this.$store.dispatch('modifierMessage', this.$t('arrierePlanModifie'))
-				}
-			}.bind(this))
-		},
-		modifiercouleurfond: function (fond) {
-			this.pad.fond = fond
-			this.chargement = false
-			if (this.admin) {
-				this.$store.dispatch('modifierMessage', this.$t('arrierePlanModifie'))
-			}
-		},
-		modifieractivite: function (statut) {
-			this.pad.registreActivite = statut
-			this.chargement = false
-			if (this.admin) {
-				this.$store.dispatch('modifierMessage', this.$t('parametreActiviteModifie'))
-			}
-		},
-		modifierconversation: function (statut) {
-			this.pad.conversation = statut
-			this.chargement = false
-			if (this.admin) {
-				this.$store.dispatch('modifierMessage', this.$t('parametreConversationModifie'))
-			}
-		},
-		modifierlisteutilisateurs: function (statut) {
-			this.pad.listeUtilisateurs = statut
-			this.chargement = false
-			if (this.admin) {
-				this.$store.dispatch('modifierMessage', this.$t('parametreListeUtilisateursModifie'))
-			}
-		},
-		modifiereditionnom: function (statut) {
-			this.pad.editionNom = statut
-			this.chargement = false
-			if (this.admin) {
-				this.$store.dispatch('modifierMessage', this.$t('parametreEditionNomModifie'))
-			}
-		},
-		modifierfichiers: function (statut) {
-			this.pad.fichiers = statut
-			this.chargement = false
-			if (this.admin) {
-				this.$store.dispatch('modifierMessage', this.$t('parametreFichiersModifie'))
-			}
-		},
-		modifierenregistrements: function (statut) {
-			this.pad.enregistrements = statut
-			this.chargement = false
-			if (this.admin) {
-				this.$store.dispatch('modifierMessage', this.$t('parametreEnregistrementsModifie'))
-			}
-		},
-		modifierliens: function (statut) {
-			this.pad.liens = statut
-			this.chargement = false
-			if (this.admin) {
-				this.$store.dispatch('modifierMessage', this.$t('parametreLiensModifie'))
-			}
-		},
-		modifierdocuments: function (statut) {
-			this.pad.documents = statut
-			this.chargement = false
-			if (this.admin) {
-				this.$store.dispatch('modifierMessage', this.$t('parametreDocumentsModifie'))
-			}
-		},
-		modifiercommentaires: function (statut) {
-			this.pad.commentaires = statut
-			this.chargement = false
-			if (this.admin) {
-				this.$store.dispatch('modifierMessage', this.$t('parametreCommentairesModifie'))
-			}
-		},
-		modifierevaluations: function (statut) {
-			this.pad.evaluations = statut
-			this.chargement = false
-			if (this.admin) {
-				this.$store.dispatch('modifierMessage', this.$t('parametreEvaluationModifie'))
-			}
-		},
-		message: function (message) {
-			this.messages.push(message)
-			if (message.identifiant !== this.identifiant && !this.menuChat) {
-				this.nouveauxMessages++
-			}
-		},
-		reinitialisermessages: function () {
-			this.messages = []
-			this.nouveauxMessages = 0
-			this.chargement = false
-			if (this.admin) {
-				this.$store.dispatch('modifierMessage', this.$t('historiqueConversationSupprime'))
-			}
-		},
-		reinitialiseractivite: function () {
-			this.activite = []
-			this.chargement = false
-			if (this.admin) {
-				this.$store.dispatch('modifierMessage', this.$t('activiteSupprimee'))
-			}
-		},
-		supprimeractivite: function (id) {
-			this.activite.forEach(function (activite, index) {
-				if (activite.id === id) {
-					this.activite.splice(index, 1)
-				}
-			}.bind(this))
-			this.chargement = false
-			if (this.admin) {
-				this.$store.dispatch('modifierMessage', this.$t('entreeActiviteSupprimee'))
-			}
-		},
-		ajoutercolonne: function (donnees) {
-			this.colonnes.push([])
-			this.affichageColonnes.push(true)
-			this.pad.colonnes = donnees.colonnes
-			this.pad.affichageColonnes = donnees.affichageColonnes
-			this.activite.unshift({ id: donnees.activiteId, identifiant: donnees.identifiant, nom: donnees.nom, titre: donnees.titre, date: donnees.date, couleur: donnees.couleur, type: 'colonne-ajoutee' })
-			if (this.admin) {
-				this.$store.dispatch('modifierMessage', this.$t('colonneAjoutee'))
-			}
-			this.chargement = false
-		},
-		modifiertitrecolonne: function (colonnes) {
-			this.pad.colonnes = colonnes
-			if (this.admin) {
-				this.$store.dispatch('modifierMessage', this.$t('nomColonneModifie'))
-			}
-			this.chargement = false
-		},
-		modifieraffichagecolonne: function (affichageColonnes) {
-			this.pad.affichageColonnes = affichageColonnes
-			if (this.admin) {
-				this.$store.dispatch('modifierMessage', this.$t('affichageColonneModifie'))
-			}
-			this.chargement = false
-		},
-		supprimercolonne: function (donnees) {
-			this.colonnes.splice(parseInt(donnees.colonne), 1)
-			const blocs = []
-			this.colonnes.forEach(function (colonne, index) {
-				colonne.forEach(function (bloc) {
-					bloc.colonne = index
-				})
-				blocs.push(...colonne)
-			})
-			this.pad.colonnes = donnees.colonnes
-			this.pad.affichageColonnes = donnees.affichageColonnes
-			this.blocs = blocs
-			this.activite.unshift({ id: donnees.activiteId, identifiant: donnees.identifiant, nom: donnees.nom, titre: donnees.titre, date: donnees.date, couleur: donnees.couleur, type: 'colonne-supprimee' })
-			if (this.admin) {
-				this.$store.dispatch('modifierMessage', this.$t('colonneSupprimee'))
-			} else if (!this.admin && this.modaleBloc && parseInt(this.colonne) === parseInt(donnees.colonne)) {
-				this.fermerModaleBloc()
-				this.$store.dispatch('modifierMessage', this.$t('colonneActuelleSupprimee'))
-			}
-			this.chargement = false
-		},
-		deplacercolonne: function (donnees) {
-			const blocs = []
-			const donneesColonnes = this.colonnes[parseInt(donnees.colonne)]
-			const donneesAffichageColonnes = this.affichageColonnes[parseInt(donnees.colonne)]
-			if (donnees.direction === 'gauche') {
-				this.colonnes.splice((parseInt(donnees.colonne) - 1), 0, donneesColonnes)
-				this.colonnes.splice((parseInt(donnees.colonne) + 1), 1)
-				this.affichageColonnes.splice((parseInt(donnees.colonne) - 1), 0, donneesAffichageColonnes)
-				this.affichageColonnes.splice((parseInt(donnees.colonne) + 1), 1)
-			} else if (donnees.direction === 'droite') {
-				const donneesColonneDeplacee = this.colonnes[parseInt(donnees.colonne) + 1]
-				this.colonnes.splice((parseInt(donnees.colonne) + 1), 0, donneesColonnes)
-				this.colonnes.splice(parseInt(donnees.colonne), 1, donneesColonneDeplacee)
-				this.colonnes.splice((parseInt(donnees.colonne) + 2), 1)
-				const donneesAffichageColonneDeplacee = this.affichageColonnes[parseInt(donnees.colonne) + 1]
-				this.affichageColonnes.splice((parseInt(donnees.colonne) + 1), 0, donneesAffichageColonnes)
-				this.affichageColonnes.splice(parseInt(donnees.colonne), 1, donneesAffichageColonneDeplacee)
-				this.affichageColonnes.splice((parseInt(donnees.colonne) + 2), 1)
-			}
-			this.colonnes.forEach(function (colonne, index) {
-				colonne.forEach(function (bloc) {
-					bloc.colonne = index
-				})
-				blocs.push(...colonne)
-			})
-			this.pad.colonnes = donnees.colonnes
-			this.pad.affichageColonnes = donnees.affichageColonnes
-			this.blocs = blocs
-			this.activite.unshift({ id: donnees.activiteId, identifiant: donnees.identifiant, nom: donnees.nom, titre: donnees.titre, date: donnees.date, couleur: donnees.couleur, type: 'colonne-deplacee' })
-			if (this.admin) {
-				this.$store.dispatch('modifierMessage', this.$t('colonneDeplacee'))
-			} else {
-				if (this.modaleBloc && parseInt(this.colonne) === parseInt(donnees.colonne) && donnees.direction === 'gauche') {
-					this.colonne = parseInt(donnees.colonne) - 1
-				} else if (this.modaleBloc && parseInt(this.colonne) === parseInt(donnees.colonne) && donnees.direction === 'droite') {
-					this.colonne = parseInt(donnees.colonne) + 1
-				} else if (this.modaleBloc && parseInt(this.colonne) === (parseInt(donnees.colonne) - 1) && donnees.direction === 'gauche') {
-					this.colonne = parseInt(donnees.colonne)
-				} else if (this.modaleBloc && parseInt(this.colonne) === (parseInt(donnees.colonne) + 1) && donnees.direction === 'droite') {
-					this.colonne = parseInt(donnees.colonne)
-				}
-			}
-			this.chargement = false
-		},
-		debloquerpad: function (donnees) {
-			this.chargement = false
-			this.modifierCaracteristique(this.identifiant, 'identifiant', donnees.identifiant)
-			this.modifierCaracteristique(donnees.identifiant, 'nom', donnees.nom)
-			this.modifierCaracteristique(donnees.identifiant, 'couleur', donnees.couleur)
-			this.$store.dispatch('modifierUtilisateur', { identifiant: donnees.identifiant, nom: donnees.nom, langue: donnees.langue, statut: 'auteur' })
-			this.$store.dispatch('modifierMessage', this.$t('padDebloque'))
-		},
-		modifiernotification: function (donnees) {
-			this.pad.notification = donnees
-		},
-		verifiermodifierbloc: function (donnees) {
-			if (this.modaleBloc === true && this.bloc === donnees.bloc) {
-				this.$socket.emit('reponsemodifierbloc', this.pad.id, donnees.identifiant, true)
-			} else {
-				this.$socket.emit('reponsemodifierbloc', this.pad.id, donnees.identifiant, false)
-			}
-		},
-		reponsemodifierbloc: function (donnees) {
-			if (this.identifiant === donnees.identifiant && donnees.reponse === true) {
-				this.$store.dispatch('modifierMessage', this.$t('capsuleEnCoursModification'))
-			}
-		},
-		deconnecte: function () {
-			this.chargement = false
-			this.$store.dispatch('modifierMessage', this.$t('problemeConnexion'))
-		},
-		maintenance: function () {
-			window.location.href = '/maintenance'
-		}
-	},
 	async asyncData (context) {
 		const id = context.route.params.id
 		const token = context.route.params.pad
@@ -978,6 +349,7 @@ export default {
 		if (this.pad.affichage === 'colonnes') {
 			this.definirColonnes(this.blocs)
 		}
+		this.ecouterSocket()
 		if (this.pad.acces === 'public' || (this.pad.acces === 'prive' && this.admin)) {
 			this.$nuxt.$loading.start()
 			this.accesAutorise = true
@@ -3595,6 +2967,686 @@ export default {
 				}
 				return new Blob(buffer, { type: 'audio/mpeg' })
 			}
+		},
+		ecouterSocket () {
+			this.$socket.on('connexion', function (donnees) {
+				this.definirUtilisateurs(donnees)
+			}.bind(this))
+
+			this.$socket.on('deconnexion', function (identifiant) {
+				const utilisateurs = this.utilisateurs
+				utilisateurs.forEach(function (utilisateur, index) {
+					if (utilisateur.identifiant === identifiant) {
+						utilisateurs.splice(index, 1)
+					}
+				})
+				this.utilisateurs = utilisateurs
+			}.bind(this))
+
+			this.$socket.on('erreur', function () {
+				this.chargement = false
+				this.$store.dispatch('modifierAlerte', this.$t('erreurActionServeur'))
+			}.bind(this))
+
+			this.$socket.on('ajouterbloc', function (donnees) {
+				this.action = 'ajouter'
+				this.utilisateur = donnees.identifiant
+				if (donnees.visibilite === 'visible' || this.admin || (this.pad.contributions === 'moderees' && (this.utilisateur === this.identifiant))) {
+					if (this.pad.affichage === 'colonnes') {
+						if (this.pad.ordre === 'croissant') {
+							this.colonnes[donnees.colonne].push(donnees)
+						} else {
+							this.colonnes[donnees.colonne].unshift(donnees)
+						}
+					}
+					if (this.pad.ordre === 'croissant') {
+						this.blocs.push(donnees)
+					} else {
+						this.blocs.unshift(donnees)
+					}
+					if (donnees.visibilite === 'visible' || this.admin || (this.pad.contributions === 'moderees' && (this.utilisateur === this.identifiant))) {
+						this.activite.unshift({ id: donnees.activiteId, bloc: donnees.bloc, identifiant: donnees.identifiant, nom: donnees.nom, titre: donnees.titre, date: donnees.date, couleur: donnees.couleur, type: 'bloc-ajoute' })
+					}
+					if (this.admin || this.pad.affichage !== 'colonnes' || (this.pad.affichage === 'colonnes' && this.affichageColonnes[donnees.colonne])) {
+						this.$nextTick(function () {
+							const bloc = document.querySelector('#' + donnees.bloc)
+							bloc.classList.add('anime')
+							bloc.addEventListener('animationend', function () {
+								bloc.classList.remove('anime')
+							})
+						})
+					}
+					if (this.utilisateur === this.identifiant) {
+						this.$nextTick(function () {
+							const bloc = document.querySelector('#' + donnees.bloc)
+							bloc.scrollIntoView()
+						})
+					}
+					this.envoyerNotificationAdmins()
+				}
+			}.bind(this))
+
+			this.$socket.on('modifierbloc', function (donnees) {
+				this.action = 'modifier'
+				if (this.pad.affichage === 'colonnes') {
+					this.colonnes[donnees.colonne].forEach(function (item, index) {
+						if (item.bloc === donnees.bloc) {
+							if (donnees.visibilite === 'privee' && !this.admin) {
+								this.colonnes[donnees.colonne].splice(index, 1)
+							} else {
+								this.colonnes[donnees.colonne][index] = { bloc: donnees.bloc, identifiant: item.identifiant, nom: item.nom, titre: donnees.titre, texte: donnees.texte, media: donnees.media, iframe: donnees.iframe, type: donnees.type, source: donnees.source, vignette: donnees.vignette, date: item.date, modifie: donnees.modifie, couleur: item.couleur, commentaires: item.commentaires, evaluations: item.evaluations, colonne: item.colonne, visibilite: donnees.visibilite }
+							}
+						}
+					}.bind(this))
+				}
+				this.blocs.forEach(function (item, index) {
+					if (item.bloc === donnees.bloc) {
+						this.utilisateur = donnees.identifiant
+						if (donnees.visibilite === 'privee' && !this.admin) {
+							this.blocs.splice(index, 1)
+						} else {
+							this.blocs.splice(index, 1, { bloc: donnees.bloc, identifiant: item.identifiant, nom: item.nom, titre: donnees.titre, texte: donnees.texte, media: donnees.media, iframe: donnees.iframe, type: donnees.type, source: donnees.source, vignette: donnees.vignette, date: item.date, modifie: donnees.modifie, couleur: item.couleur, commentaires: item.commentaires, evaluations: item.evaluations, colonne: item.colonne, visibilite: donnees.visibilite })
+						}
+					}
+				}.bind(this))
+				if (donnees.visibilite === 'visible') {
+					this.activite.unshift({ id: donnees.activiteId, bloc: donnees.bloc, identifiant: donnees.identifiant, nom: donnees.nom, titre: donnees.titre, date: donnees.date, couleur: donnees.couleur, type: 'bloc-modifie' })
+				}
+				this.envoyerNotificationAdmins()
+			}.bind(this))
+
+			this.$socket.on('autoriserbloc', function (donnees) {
+				if ((this.pad.contributions === 'moderees' && (donnees.identifiant === this.identifiant)) || this.admin) {
+					if (this.pad.affichage === 'colonnes') {
+						this.colonnes.forEach(function (colonne, indexColonne) {
+							colonne.forEach(function (item, index) {
+								if (item.bloc === donnees.bloc) {
+									this.colonnes[indexColonne][index].visibilite = 'visible'
+									this.colonnes[indexColonne][index].date = donnees.date
+									if (this.colonnes[indexColonne][index].hasOwnProperty('modifie')) {
+										delete this.colonnes[indexColonne][index].modifie
+									}
+								}
+							}.bind(this))
+						}.bind(this))
+					}
+					this.blocs.forEach(function (item, index) {
+						if (item.bloc === donnees.bloc) {
+							this.blocs[index].visibilite = 'visible'
+							this.blocs[index].date = donnees.date
+							if (this.blocs[index].hasOwnProperty('modifie')) {
+								delete this.blocs[index].modifie
+							}
+						}
+					}.bind(this))
+					this.chargement = false
+				} else {
+					this.blocs.splice(donnees.indexBloc, 0, donnees)
+					if (this.pad.affichage === 'colonnes') {
+						this.colonnes[donnees.colonne].splice(donnees.indexBlocColonne, 0, donnees)
+					}
+				}
+				this.activite.unshift({ id: donnees.activiteId, bloc: donnees.bloc, identifiant: donnees.identifiant, nom: donnees.nom, titre: donnees.titre, date: donnees.date, couleur: donnees.couleur, type: 'bloc-ajoute' })
+				this.$nextTick(function () {
+					const bloc = document.querySelector('#' + donnees.bloc)
+					if (bloc !== null) {
+						bloc.classList.add('anime')
+						bloc.addEventListener('animationend', function () {
+							bloc.classList.remove('anime')
+						})
+					}
+				})
+				if (this.admin && this.identifiant === donnees.admin && donnees.moderation === 'moderee') {
+					this.$store.dispatch('modifierMessage', this.$t('capsuleValidee'))
+				} else if (this.admin && this.identifiant === donnees.admin && donnees.moderation === 'privee') {
+					this.$store.dispatch('modifierMessage', this.$t('capsuleVisible'))
+				} else if (!this.admin && donnees.identifiant === this.identifiant) {
+					this.$store.dispatch('modifierMessage', this.$t('capsulePubliee', { titre: donnees.titre }))
+				}
+				if (this.modaleDiaporama) {
+					this.$nextTick(function () {
+						this.chargerDiapositive()
+					}.bind(this))
+				}
+			}.bind(this))
+
+			this.$socket.on('deplacerbloc', function (donnees) {
+				this.utilisateur = donnees.identifiant
+				const blocActif = document.querySelector('.bloc.actif')
+				let blocId = ''
+				if (blocActif && this.utilisateur !== this.identifiant) {
+					blocId = blocActif.id
+				}
+				if (this.admin && this.pad.affichage === 'colonnes') {
+					this.definirColonnes(donnees.blocs)
+				} else if (this.admin && this.pad.affichage !== 'colonnes') {
+					this.blocs = donnees.blocs
+				} else if (!this.admin) {
+					let blocs
+					if (this.pad.contributions === 'moderees') {
+						blocs = donnees.blocs.filter(function (element) {
+							return element.visibilite === 'visible' || (element.visibilite === 'masquee' && element.identifiant === this.identifiant)
+						}.bind(this))
+					} else {
+						blocs = donnees.blocs.filter(function (element) {
+							return element.visibilite !== 'privee'
+						})
+					}
+					if (this.pad.affichage === 'colonnes') {
+						this.definirColonnes(blocs)
+					} else {
+						this.blocs = blocs
+					}
+				}
+				this.$nextTick(function () {
+					if (blocActif && this.utilisateur !== this.identifiant && document.querySelector('#' + blocId)) {
+						blocActif.classList.remove('actif')
+						document.querySelector('#' + blocId).classList.add('actif')
+					}
+				}.bind(this))
+				this.chargement = false
+			}.bind(this))
+
+			this.$socket.on('supprimerbloc', function (donnees) {
+				this.action = 'supprimer'
+				if (this.pad.affichage === 'colonnes') {
+					this.colonnes[donnees.colonne].forEach(function (item, index) {
+						if (item.bloc === donnees.bloc) {
+							this.colonnes[donnees.colonne].splice(index, 1)
+						}
+					}.bind(this))
+				}
+				this.blocs.forEach(function (item, index) {
+					if (item.bloc === donnees.bloc) {
+						this.utilisateur = donnees.identifiant
+						this.blocs.splice(index, 1)
+					}
+				}.bind(this))
+				this.activite.unshift({ id: donnees.activiteId, bloc: donnees.bloc, identifiant: donnees.identifiant, nom: donnees.nom, titre: donnees.titre, date: donnees.date, couleur: donnees.couleur, type: 'bloc-supprime' })
+				this.envoyerNotificationAdmins()
+			}.bind(this))
+
+			this.$socket.on('commenterbloc', function (donnees) {
+				const blocs = this.blocs
+				blocs.forEach(function (item) {
+					if (item.bloc === donnees.bloc) {
+						item.commentaires = donnees.commentaires
+					}
+				})
+				this.blocs = blocs
+				if ((this.modaleCommentaires && this.bloc === donnees.bloc) || (this.modaleDiaporama && this.donneesBloc.bloc === donnees.bloc)) {
+					this.commentaires.unshift({ id: donnees.id, identifiant: donnees.identifiant, nom: donnees.nom, texte: donnees.texte, date: donnees.date })
+				}
+				this.activite.unshift({ id: donnees.activiteId, bloc: donnees.bloc, identifiant: donnees.identifiant, nom: donnees.nom, titre: donnees.titre, date: donnees.date, couleur: donnees.couleur, type: 'bloc-commente' })
+				this.envoyerNotificationAdmins()
+			}.bind(this))
+
+			this.$socket.on('modifiercommentaire', function (donnees) {
+				const commentaires = this.commentaires
+				commentaires.forEach(function (commentaire) {
+					if (commentaire.id === donnees.id) {
+						commentaire.texte = donnees.texte
+					}
+				})
+				this.commentaires = commentaires
+			}.bind(this))
+
+			this.$socket.on('supprimercommentaire', function (donnees) {
+				const blocs = this.blocs
+				blocs.forEach(function (item) {
+					if (item.bloc === donnees.bloc) {
+						item.commentaires = donnees.commentaires
+					}
+				})
+				this.blocs = blocs
+				const commentaires = this.commentaires
+				commentaires.forEach(function (commentaire, index) {
+					if (commentaire.id === donnees.id) {
+						commentaires.splice(index, 1)
+					}
+				})
+				this.commentaires = commentaires
+			}.bind(this))
+
+			this.$socket.on('commentaires', function (donnees) {
+				this.commentaires = donnees.commentaires
+				if (donnees.type === 'discussion') {
+					this.chargement = false
+					this.modaleCommentaires = true
+					this.$nextTick(function () {
+						this.genererEditeur()
+					}.bind(this))
+				} else {
+					this.chargerDiapositive()
+				}
+			}.bind(this))
+
+			this.$socket.on('evaluerbloc', function (donnees) {
+				this.chargement = false
+				const blocs = this.blocs
+				blocs.forEach(function (item) {
+					if (item.bloc === donnees.bloc) {
+						item.evaluations.push(donnees.evaluation)
+					}
+				})
+				this.blocs = blocs
+				this.activite.unshift({ id: donnees.activiteId, bloc: donnees.bloc, identifiant: donnees.identifiant, nom: donnees.nom, titre: donnees.titre, date: donnees.date, couleur: donnees.couleur, type: 'bloc-evalue' })
+				this.envoyerNotificationAdmins()
+			}.bind(this))
+
+			this.$socket.on('modifierevaluation', function (donnees) {
+				this.chargement = false
+				const blocs = this.blocs
+				blocs.forEach(function (item, index) {
+					if (item.bloc === donnees.bloc) {
+						const evaluations = item.evaluations
+						evaluations.forEach(function (evaluation) {
+							if (evaluation.id === donnees.id) {
+								evaluation.date = donnees.date
+								evaluation.etoiles = donnees.etoiles
+							}
+						})
+					}
+				})
+				this.blocs = blocs
+			}.bind(this))
+
+			this.$socket.on('supprimerevaluation', function (donnees) {
+				this.chargement = false
+				const blocs = this.blocs
+				blocs.forEach(function (item) {
+					if (item.bloc === donnees.bloc) {
+						const evaluations = item.evaluations
+						evaluations.forEach(function (evaluation, index) {
+							if (evaluation.id === donnees.id) {
+								evaluations.splice(index, 1)
+							}
+						})
+					}
+				})
+				this.blocs = blocs
+			}.bind(this))
+
+			this.$socket.on('modifiernom', function (donnees) {
+				this.modifierCaracteristique(donnees.identifiant, 'nom', donnees.nom)
+				this.chargement = false
+				if (donnees.identifiant === this.identifiant) {
+					this.$store.dispatch('modifierNom', donnees.nom)
+					this.$store.dispatch('modifierMessage', this.$t('nomModifie'))
+				}
+			}.bind(this))
+
+			this.$socket.on('modifiercouleur', function (donnees) {
+				this.modifierCaracteristique(donnees.identifiant, 'couleur', donnees.couleur)
+				if (donnees.identifiant === this.identifiant) {
+					this.$store.dispatch('modifierMessage', this.$t('couleurModifiee'))
+				}
+			}.bind(this))
+
+			this.$socket.on('modifiertitre', function (titre) {
+				this.pad.titre = titre
+				this.chargement = false
+				if (this.admin) {
+					this.$store.dispatch('modifierMessage', this.$t('titrePadModifie'))
+				}
+			}.bind(this))
+
+			this.$socket.on('modifiercodeacces', function (code) {
+				this.pad.code = code
+				this.chargement = false
+				this.modificationCode = false
+				if (this.admin) {
+					this.$store.dispatch('modifierMessage', this.$t('codeAccesModifie'))
+				}
+			}.bind(this))
+
+			this.$socket.on('modifieradmins', function (admins) {
+				this.pad.admins = admins
+				this.chargement = false
+				if (this.admin) {
+					this.$store.dispatch('modifierMessage', this.$t('listeAdminsModifiee'))
+				}
+			}.bind(this))
+
+			this.$socket.on('modifieracces', function (donnees) {
+				this.pad.acces = donnees.acces
+				this.chargement = false
+				if (this.admin) {
+					if (donnees.acces === 'code') {
+						this.pad.code = donnees.code
+						this.codeVisible = true
+					}
+					this.$store.dispatch('modifierMessage', this.$t('accesPadModifie'))
+				} else {
+					if (donnees.acces === 'prive') {
+						this.$socket.emit('sortie', this.pad.id, this.identifiant)
+						this.$router.push('/')
+					}
+				}
+			}.bind(this))
+
+			this.$socket.on('modifiercontributions', function (donnees) {
+				this.pad.contributions = donnees.contributions
+				this.chargement = false
+				if (this.admin) {
+					this.$store.dispatch('modifierMessage', this.$t('statutPadModifie'))
+				}
+				if (!this.admin && donnees.contributionsPrecedentes === 'moderees') {
+					this.$store.dispatch('modifierMessage', this.$t('rechargerPage'))
+				}
+			}.bind(this))
+
+			this.$socket.on('modifieraffichage', function (affichage) {
+				this.pad.affichage = affichage
+				this.affichage = affichage
+				this.chargement = false
+				if (this.admin) {
+					this.action = ''
+					this.$store.dispatch('modifierMessage', this.$t('affichagePadModifie'))
+				}
+			}.bind(this))
+
+			this.$socket.on('modifierordre', function (ordre) {
+				const blocActif = document.querySelector('.bloc.actif')
+				let blocId = ''
+				if (blocActif) {
+					blocId = blocActif.id
+				}
+				this.pad.ordre = ordre
+				this.blocs.reverse()
+				if (this.pad.affichage === 'colonnes') {
+					this.definirColonnes(this.blocs)
+				}
+				this.$nextTick(function () {
+					if (blocActif) {
+						blocActif.classList.remove('actif')
+						document.querySelector('#' + blocId).classList.add('actif')
+					}
+				})
+				this.chargement = false
+				if (this.admin) {
+					this.$store.dispatch('modifierMessage', this.$t('parametreOrdreModifie'))
+				}
+			}.bind(this))
+
+			this.$socket.on('modifierlargeur', function (largeur) {
+				this.pad.largeur = largeur
+				if (this.pad.affichage === 'mur') {
+					this.pad.affichage = ''
+					setTimeout(function () {
+						this.pad.affichage = 'mur'
+					}.bind(this), 10)
+				}
+				this.chargement = false
+				if (this.admin) {
+					this.$store.dispatch('modifierMessage', this.$t('parametreLargeurModifie'))
+				}
+			}.bind(this))
+
+			this.$socket.on('modifierfond', function (fond) {
+				this.pad.fond = fond
+				imagesLoaded('#pad', { background: true }, function () {
+					this.chargement = false
+					if (this.admin) {
+						this.$store.dispatch('modifierMessage', this.$t('arrierePlanModifie'))
+					}
+				}.bind(this))
+			}.bind(this))
+
+			this.$socket.on('modifiercouleurfond', function (fond) {
+				this.pad.fond = fond
+				this.chargement = false
+				if (this.admin) {
+					this.$store.dispatch('modifierMessage', this.$t('arrierePlanModifie'))
+				}
+			}.bind(this))
+
+			this.$socket.on('modifieractivite', function (statut) {
+				this.pad.registreActivite = statut
+				this.chargement = false
+				if (this.admin) {
+					this.$store.dispatch('modifierMessage', this.$t('parametreActiviteModifie'))
+				}
+			}.bind(this))
+
+			this.$socket.on('modifierconversation', function (statut) {
+				this.pad.conversation = statut
+				this.chargement = false
+				if (this.admin) {
+					this.$store.dispatch('modifierMessage', this.$t('parametreConversationModifie'))
+				}
+			}.bind(this))
+
+			this.$socket.on('modifierlisteutilisateurs', function (statut) {
+				this.pad.listeUtilisateurs = statut
+				this.chargement = false
+				if (this.admin) {
+					this.$store.dispatch('modifierMessage', this.$t('parametreListeUtilisateursModifie'))
+				}
+			}.bind(this))
+
+			this.$socket.on('modifiereditionnom', function (statut) {
+				this.pad.editionNom = statut
+				this.chargement = false
+				if (this.admin) {
+					this.$store.dispatch('modifierMessage', this.$t('parametreEditionNomModifie'))
+				}
+			}.bind(this))
+
+			this.$socket.on('modifierfichiers', function (statut) {
+				this.pad.fichiers = statut
+				this.chargement = false
+				if (this.admin) {
+					this.$store.dispatch('modifierMessage', this.$t('parametreFichiersModifie'))
+				}
+			}.bind(this))
+
+			this.$socket.on('modifierenregistrements', function (statut) {
+				this.pad.enregistrements = statut
+				this.chargement = false
+				if (this.admin) {
+					this.$store.dispatch('modifierMessage', this.$t('parametreEnregistrementsModifie'))
+				}
+			}.bind(this))
+
+			this.$socket.on('modifierliens', function (statut) {
+				this.pad.liens = statut
+				this.chargement = false
+				if (this.admin) {
+					this.$store.dispatch('modifierMessage', this.$t('parametreLiensModifie'))
+				}
+			}.bind(this))
+
+			this.$socket.on('modifierdocuments', function (statut) {
+				this.pad.documents = statut
+				this.chargement = false
+				if (this.admin) {
+					this.$store.dispatch('modifierMessage', this.$t('parametreDocumentsModifie'))
+				}
+			}.bind(this))
+
+			this.$socket.on('modifiercommentaires', function (statut) {
+				this.pad.commentaires = statut
+				this.chargement = false
+				if (this.admin) {
+					this.$store.dispatch('modifierMessage', this.$t('parametreCommentairesModifie'))
+				}
+			}.bind(this))
+
+			this.$socket.on('modifierevaluations', function (statut) {
+				this.pad.evaluations = statut
+				this.chargement = false
+				if (this.admin) {
+					this.$store.dispatch('modifierMessage', this.$t('parametreEvaluationModifie'))
+				}
+			}.bind(this))
+
+			this.$socket.on('message', function (message) {
+				this.messages.push(message)
+				if (message.identifiant !== this.identifiant && !this.menuChat) {
+					this.nouveauxMessages++
+				}
+			}.bind(this))
+
+			this.$socket.on('reinitialisermessages', function () {
+				this.messages = []
+				this.nouveauxMessages = 0
+				this.chargement = false
+				if (this.admin) {
+					this.$store.dispatch('modifierMessage', this.$t('historiqueConversationSupprime'))
+				}
+			}.bind(this))
+
+			this.$socket.on('reinitialiseractivite', function () {
+				this.activite = []
+				this.chargement = false
+				if (this.admin) {
+					this.$store.dispatch('modifierMessage', this.$t('activiteSupprimee'))
+				}
+			}.bind(this))
+
+			this.$socket.on('supprimeractivite', function (id) {
+				this.activite.forEach(function (activite, index) {
+					if (activite.id === id) {
+						this.activite.splice(index, 1)
+					}
+				}.bind(this))
+				this.chargement = false
+				if (this.admin) {
+					this.$store.dispatch('modifierMessage', this.$t('entreeActiviteSupprimee'))
+				}
+			}.bind(this))
+
+			this.$socket.on('ajoutercolonne', function (donnees) {
+				this.colonnes.push([])
+				this.affichageColonnes.push(true)
+				this.pad.colonnes = donnees.colonnes
+				this.pad.affichageColonnes = donnees.affichageColonnes
+				this.activite.unshift({ id: donnees.activiteId, identifiant: donnees.identifiant, nom: donnees.nom, titre: donnees.titre, date: donnees.date, couleur: donnees.couleur, type: 'colonne-ajoutee' })
+				if (this.admin) {
+					this.$store.dispatch('modifierMessage', this.$t('colonneAjoutee'))
+				}
+				this.chargement = false
+			}.bind(this))
+
+			this.$socket.on('modifiertitrecolonne', function (colonnes) {
+				this.pad.colonnes = colonnes
+				if (this.admin) {
+					this.$store.dispatch('modifierMessage', this.$t('nomColonneModifie'))
+				}
+				this.chargement = false
+			}.bind(this))
+
+			this.$socket.on('modifieraffichagecolonne', function (affichageColonnes) {
+				this.pad.affichageColonnes = affichageColonnes
+				if (this.admin) {
+					this.$store.dispatch('modifierMessage', this.$t('affichageColonneModifie'))
+				}
+				this.chargement = false
+			}.bind(this))
+
+			this.$socket.on('supprimercolonne', function (donnees) {
+				this.colonnes.splice(parseInt(donnees.colonne), 1)
+				const blocs = []
+				this.colonnes.forEach(function (colonne, index) {
+					colonne.forEach(function (bloc) {
+						bloc.colonne = index
+					})
+					blocs.push(...colonne)
+				})
+				this.pad.colonnes = donnees.colonnes
+				this.pad.affichageColonnes = donnees.affichageColonnes
+				this.blocs = blocs
+				this.activite.unshift({ id: donnees.activiteId, identifiant: donnees.identifiant, nom: donnees.nom, titre: donnees.titre, date: donnees.date, couleur: donnees.couleur, type: 'colonne-supprimee' })
+				if (this.admin) {
+					this.$store.dispatch('modifierMessage', this.$t('colonneSupprimee'))
+				} else if (!this.admin && this.modaleBloc && parseInt(this.colonne) === parseInt(donnees.colonne)) {
+					this.fermerModaleBloc()
+					this.$store.dispatch('modifierMessage', this.$t('colonneActuelleSupprimee'))
+				}
+				this.chargement = false
+			}.bind(this))
+
+			this.$socket.on('deplacercolonne', function (donnees) {
+				const blocs = []
+				const donneesColonnes = this.colonnes[parseInt(donnees.colonne)]
+				const donneesAffichageColonnes = this.affichageColonnes[parseInt(donnees.colonne)]
+				if (donnees.direction === 'gauche') {
+					this.colonnes.splice((parseInt(donnees.colonne) - 1), 0, donneesColonnes)
+					this.colonnes.splice((parseInt(donnees.colonne) + 1), 1)
+					this.affichageColonnes.splice((parseInt(donnees.colonne) - 1), 0, donneesAffichageColonnes)
+					this.affichageColonnes.splice((parseInt(donnees.colonne) + 1), 1)
+				} else if (donnees.direction === 'droite') {
+					const donneesColonneDeplacee = this.colonnes[parseInt(donnees.colonne) + 1]
+					this.colonnes.splice((parseInt(donnees.colonne) + 1), 0, donneesColonnes)
+					this.colonnes.splice(parseInt(donnees.colonne), 1, donneesColonneDeplacee)
+					this.colonnes.splice((parseInt(donnees.colonne) + 2), 1)
+					const donneesAffichageColonneDeplacee = this.affichageColonnes[parseInt(donnees.colonne) + 1]
+					this.affichageColonnes.splice((parseInt(donnees.colonne) + 1), 0, donneesAffichageColonnes)
+					this.affichageColonnes.splice(parseInt(donnees.colonne), 1, donneesAffichageColonneDeplacee)
+					this.affichageColonnes.splice((parseInt(donnees.colonne) + 2), 1)
+				}
+				this.colonnes.forEach(function (colonne, index) {
+					colonne.forEach(function (bloc) {
+						bloc.colonne = index
+					})
+					blocs.push(...colonne)
+				})
+				this.pad.colonnes = donnees.colonnes
+				this.pad.affichageColonnes = donnees.affichageColonnes
+				this.blocs = blocs
+				this.activite.unshift({ id: donnees.activiteId, identifiant: donnees.identifiant, nom: donnees.nom, titre: donnees.titre, date: donnees.date, couleur: donnees.couleur, type: 'colonne-deplacee' })
+				if (this.admin) {
+					this.$store.dispatch('modifierMessage', this.$t('colonneDeplacee'))
+				} else {
+					if (this.modaleBloc && parseInt(this.colonne) === parseInt(donnees.colonne) && donnees.direction === 'gauche') {
+						this.colonne = parseInt(donnees.colonne) - 1
+					} else if (this.modaleBloc && parseInt(this.colonne) === parseInt(donnees.colonne) && donnees.direction === 'droite') {
+						this.colonne = parseInt(donnees.colonne) + 1
+					} else if (this.modaleBloc && parseInt(this.colonne) === (parseInt(donnees.colonne) - 1) && donnees.direction === 'gauche') {
+						this.colonne = parseInt(donnees.colonne)
+					} else if (this.modaleBloc && parseInt(this.colonne) === (parseInt(donnees.colonne) + 1) && donnees.direction === 'droite') {
+						this.colonne = parseInt(donnees.colonne)
+					}
+				}
+				this.chargement = false
+			}.bind(this))
+
+			this.$socket.on('debloquerpad', function (donnees) {
+				this.chargement = false
+				this.modifierCaracteristique(this.identifiant, 'identifiant', donnees.identifiant)
+				this.modifierCaracteristique(donnees.identifiant, 'nom', donnees.nom)
+				this.modifierCaracteristique(donnees.identifiant, 'couleur', donnees.couleur)
+				this.$store.dispatch('modifierUtilisateur', { identifiant: donnees.identifiant, nom: donnees.nom, langue: donnees.langue, statut: 'auteur' })
+				this.$store.dispatch('modifierMessage', this.$t('padDebloque'))
+			}.bind(this))
+
+			this.$socket.on('modifiernotification', function (donnees) {
+				this.pad.notification = donnees
+			}.bind(this))
+
+			this.$socket.on('verifiermodifierbloc', function (donnees) {
+				if (this.modaleBloc === true && this.bloc === donnees.bloc) {
+					this.$socket.emit('reponsemodifierbloc', this.pad.id, donnees.identifiant, true)
+				} else {
+					this.$socket.emit('reponsemodifierbloc', this.pad.id, donnees.identifiant, false)
+				}
+			}.bind(this))
+
+			this.$socket.on('reponsemodifierbloc', function (donnees) {
+				if (this.identifiant === donnees.identifiant && donnees.reponse === true) {
+					this.$store.dispatch('modifierMessage', this.$t('capsuleEnCoursModification'))
+				}
+			}.bind(this))
+
+			this.$socket.on('deconnecte', function () {
+				this.chargement = false
+				this.$store.dispatch('modifierMessage', this.$t('problemeConnexion'))
+			}.bind(this))
+
+			this.$socket.on('maintenance', function () {
+				window.location.href = '/maintenance'
+			}.bind(this))
 		}
 	}
 }

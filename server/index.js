@@ -2097,8 +2097,8 @@ app.post('/api/televerser-fichier', function (req, res) {
 				const extension = path.parse(fichier.filename).ext
 				if (extension.toLowerCase() === '.jpg' || extension.toLowerCase() === '.jpeg') {
 					sharp(chemin).withMetadata().rotate().jpeg().resize(1200, 1200, {
-						kernel: sharp.kernel.nearest,
-						fit: 'inside'
+						fit: sharp.fit.inside,
+						withoutEnlargement: true
 					}).toBuffer((err, buffer) => {
 						if (err) { res.send('erreur_televersement'); return false }
 						fs.writeFile(chemin, buffer, function() {
@@ -2107,8 +2107,8 @@ app.post('/api/televerser-fichier', function (req, res) {
 					})
 				} else if (extension.toLowerCase() !== '.gif') {
 					sharp(chemin).withMetadata().resize(1200, 1200, {
-						kernel: sharp.kernel.nearest,
-						fit: 'inside'
+						fit: sharp.fit.inside,
+						withoutEnlargement: true
 					}).toBuffer((err, buffer) => {
 						if (err) { res.send('erreur_televersement'); return false }
 						fs.writeFile(chemin, buffer, function() {
@@ -2184,8 +2184,8 @@ app.post('/api/televerser-vignette', function (req, res) {
 			const extension = path.parse(fichier.filename).ext
 			if (extension.toLowerCase() === '.jpg' || extension.toLowerCase() === '.jpeg') {
 				sharp(chemin).withMetadata().rotate().jpeg().resize(400, 400, {
-					kernel: sharp.kernel.nearest,
-					fit: 'inside'
+					fit: sharp.fit.inside,
+					withoutEnlargement: true
 				}).toBuffer((err, buffer) => {
 					if (err) { res.send('erreur_televersement'); return false }
 					fs.writeFile(chemin, buffer, function() {
@@ -2194,8 +2194,8 @@ app.post('/api/televerser-vignette', function (req, res) {
 				})
 			} else {
 				sharp(chemin).withMetadata().resize(400, 400, {
-					kernel: sharp.kernel.nearest,
-					fit: 'inside'
+					fit: sharp.fit.inside,
+					withoutEnlargement: true
 				}).toBuffer((err, buffer) => {
 					if (err) { res.send('erreur_televersement'); return false }
 					fs.writeFile(chemin, buffer, function() {
@@ -2220,8 +2220,8 @@ app.post('/api/televerser-fond', function (req, res) {
 			const extension = path.parse(fichier.filename).ext
 			if (extension.toLowerCase() === '.jpg' || extension.toLowerCase() === '.jpeg') {
 				sharp(chemin).withMetadata().rotate().jpeg().resize(1200, 1200, {
-					kernel: sharp.kernel.nearest,
-					fit: 'inside'
+					fit: sharp.fit.inside,
+					withoutEnlargement: true
 				}).toBuffer((err, buffer) => {
 					if (err) { res.send('erreur_televersement'); return false }
 					fs.writeFile(chemin, buffer, function() {
@@ -2230,8 +2230,8 @@ app.post('/api/televerser-fond', function (req, res) {
 				})
 			} else {
 				sharp(chemin).withMetadata().resize(1200, 1200, {
-					kernel: sharp.kernel.nearest,
-					fit: 'inside'
+					fit: sharp.fit.inside,
+					withoutEnlargement: true
 				}).toBuffer((err, buffer) => {
 					if (err) { res.send('erreur_televersement'); return false }
 					fs.writeFile(chemin, buffer, function() {
@@ -2292,7 +2292,7 @@ app.use(nuxt.render)
 server.listen(port, host)
 
 io.on('connection', function (socket) {
-	socket.on('connexion', function (donnees) {
+	socket.on('connexion', async function (donnees) {
 		const pad = donnees.pad
 		const identifiant = donnees.identifiant
 		const nom = donnees.nom
@@ -2300,19 +2300,18 @@ io.on('connection', function (socket) {
 		socket.join(room)
 		socket.identifiant = identifiant
 		socket.nom = nom
-		const clients = Object.keys(io.sockets.adapter.rooms[room].sockets)
+		const clients = await io.in(room).fetchSockets()
 		const utilisateurs = []
-		for (let client of clients) {
-			client = io.sockets.connected[client]
+		for (let i = 0; i < clients.length; i++) {
 			const donneesUtilisateur = new Promise(function (resolve) {
-				db.hget('couleurs:' + client.identifiant, 'pad' + pad, function (err, couleur) {
+				db.hget('couleurs:' + clients[i].identifiant, 'pad' + pad, function (err, couleur) {
 					if (err || couleur === null) {
 						couleur = choisirCouleur()
 						db.hset('couleurs:' + identifiant, 'pad' + pad, couleur, function () {
-							resolve({ identifiant: client.identifiant, nom: client.nom, couleur: couleur })
+							resolve({ identifiant: clients[i].identifiant, nom: clients[i].nom, couleur: couleur })
 						})
 					} else {
-						resolve({ identifiant: client.identifiant, nom: client.nom, couleur: couleur })
+						resolve({ identifiant: clients[i].identifiant, nom: clients[i].nom, couleur: couleur })
 					}
 				})
 			})

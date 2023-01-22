@@ -116,11 +116,6 @@ import axios from 'axios'
 
 export default {
 	name: 'Admin',
-	sockets: {
-		verifiermaintenance: function (valeur) {
-			this.maintenance = valeur
-		}
-	},
 	data () {
 		return {
 			acces: false,
@@ -155,6 +150,9 @@ export default {
 	created () {
 		this.$i18n.setLocale(this.langue)
 		this.$socket.emit('verifiermaintenance')
+		this.$socket.on('verifiermaintenance', function (valeur) {
+			this.maintenance = valeur
+		}.bind(this))
 	},
 	mounted () {
 		const motdepasse = prompt(this.$t('motDePasse'), '')
