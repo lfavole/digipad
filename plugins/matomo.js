@@ -1,5 +1,5 @@
 export default () => {
-	if (process.env.matomo && process.env.matomo !== '') {
+	if (process.env.NODE_ENV === 'production' && process.env.matomo && process.env.matomo !== '') {
 		const matomo = process.env.matomo
 		let matomoSiteId = 1
 		if (process.env.matomoSiteId && process.env.matomoSiteId !== '') {
