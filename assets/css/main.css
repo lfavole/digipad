@@ -110,7 +110,7 @@ textarea,
 input,
 input[disabled="disabled"] {
 	font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
-	outline: none;
+	outline: none!important;
 	opacity: 1;
 	appearance: none;
 	-webkit-appearance: none;
@@ -862,7 +862,7 @@ label.bouton-bleu {
 	position: sticky;
 	min-height: 9rem;
 	top: 0;
-	outline: 0;
+	outline: none!important;
 	user-select: text!important;
 	-webkit-user-select: text!important;
 	-webkit-touch-callout: default!important;
