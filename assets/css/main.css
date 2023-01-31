@@ -898,7 +898,7 @@ label.bouton-bleu {
 	font-size: 16px;
 	height: calc(100% - (25px + 1rem));
 	overflow: auto;
-	outline: 0;
+	outline: none!important;
 	user-select: text!important;
 	-webkit-user-select: text!important;
 	-webkit-touch-callout: default!important;
