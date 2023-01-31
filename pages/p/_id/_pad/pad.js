@@ -445,7 +445,7 @@ export default {
 			document.querySelector('#pad').addEventListener('drop', function (event) {
 				event.preventDefault()
 				event.stopPropagation()
-				if (event.dataTransfer.files && event.dataTransfer.files[0]) {
+				if (event.dataTransfer.files && event.dataTransfer.files[0] && this.accesAutorise && !this.recherche && ((this.admin && this.action !== 'organiser') || (!this.admin && this.pad.contributions !== 'fermees'))) {
 					let indexColonne = 0
 					if (this.pad.affichage === 'colonnes') {
 						this.pad.colonnes.forEach(function (colonne, index) {
@@ -3646,7 +3646,7 @@ export default {
 
 			this.$socket.on('maintenance', function () {
 				window.location.href = '/maintenance'
-			}.bind(this))
+			})
 		}
 	}
 }
