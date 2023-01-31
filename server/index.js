@@ -37,6 +37,8 @@ const nodemailer = require('nodemailer')
 const rp = require('request-promise')
 const { URL } = require('url')
 const cheerio = require('cheerio')
+const querystring = require('querystring')
+const { Curl } = require('node-libcurl')
 const libre = require('libreoffice-convert')
 libre.convertAsync = require('util').promisify(libre.convert)
 let storeOptions, cookie, dureeSession, dateCron, jours
@@ -554,31 +556,10 @@ app.post('/api/creer-pad', function (req, res) {
 				db.get('pad', function (err, resultat) {
 					if (err) { res.send('erreur_creation'); return false }
 					const id = parseInt(resultat) + 1
-					const multi = db.multi()
-					multi.incr('pad')
-					multi.hmset('pads:' + id, 'id', id, 'token', token, 'titre', titre, 'identifiant', identifiant, 'fond', '/img/fond1.png', 'acces', 'public', 'contributions', 'ouvertes', 'affichage', 'mur', 'registreActivite', 'active', 'conversation', 'desactivee', 'listeUtilisateurs', 'activee', 'editionNom', 'desactivee', 'fichiers', 'actives', 'enregistrements', 'desactives', 'liens', 'actives', 'documents', 'desactives', 'commentaires', 'desactives', 'evaluations', 'desactivees', 'ordre', 'croissant', 'largeur', 'normale', 'date', date, 'colonnes', JSON.stringify([]), 'affichageColonnes', JSON.stringify([]), 'bloc', 0, 'activite', 0, 'admins', JSON.stringify([]))
-					multi.sadd('pads-crees:' + identifiant, id)
-					multi.sadd('utilisateurs-pads:' + id, identifiant)
-					multi.hset('dates-pads:' + id, 'date', date)
-					multi.hset('couleurs:' + identifiant, 'pad' + id, couleur)
-					multi.exec(function () {
-						const chemin = path.join(__dirname, '..', '/static/' + definirDossierFichiers(id) + '/' + id)
-						fs.mkdirsSync(chemin)
-						res.json({ id: id, token: token, titre: titre, identifiant: identifiant, fond: '/img/fond1.png', acces: 'public', contributions: 'ouvertes', affichage: 'mur', registreActivite: 'active', conversation: 'desactivee', listeUtilisateurs: 'activee', editionNom: 'desactivee', fichiers: 'actives', enregistrements: 'desactives', liens: 'actives', documents: 'desactives', commentaires: 'desactives', evaluations: 'desactivees', ordre: 'croissant', largeur: 'normale', date: date, colonnes: [], affichageColonnes: [], bloc: 0, activite: 0, admins: [] })
-					})
+					creerPad(res, id, token, titre, date, identifiant, couleur)
 				})
 			} else {
-				const multi = db.multi()
-				multi.set('pad', '1')
-				multi.hmset('pads:1', 'id', 1, 'token', token, 'titre', titre, 'identifiant', identifiant, 'fond', '/img/fond1.png', 'acces', 'public', 'contributions', 'ouvertes', 'affichage', 'mur', 'registreActivite', 'active', 'conversation', 'desactivee', 'listeUtilisateurs', 'activee','editionNom', 'desactivee', 'fichiers', 'actives', 'enregistrements', 'desactives', 'liens', 'actives', 'documents', 'desactives', 'commentaires', 'desactives', 'evaluations', 'desactivees', 'ordre', 'croissant', 'largeur', 'normale', 'date', date, 'colonnes', JSON.stringify([]), 'affichageColonnes', JSON.stringify([]), 'bloc', 0, 'activite', 0, 'admins', JSON.stringify([]))
-				multi.sadd('pads-crees:' + identifiant, 1)
-				multi.sadd('utilisateurs-pads:1', identifiant)
-				multi.hset('couleurs:' + identifiant, 'pad1', couleur)
-				multi.exec(function () {
-					const chemin = path.join(__dirname, '..', '/static/fichiers/1')
-					fs.mkdirsSync(chemin)
-					res.json({ id: 1, token: token, titre: titre, identifiant: identifiant, fond: '/img/fond1.png', acces: 'public', contributions: 'ouvertes', affichage: 'mur', registreActivite: 'active', conversation: 'desactivee', listeUtilisateurs: 'activee', editionNom: 'desactivee', fichiers: 'actives', enregistrements: 'desactives', liens: 'actives', documents: 'desactives', commentaires: 'desactives', evaluations: 'desactivees', ordre: 'croissant', largeur: 'normale', date: date, colonnes: [], affichageColonnes: [], bloc: 0, activite: 0, admins: [] })
-				})
+				creerPad(res, 1, token, titre, date, identifiant, couleur)
 			}
 		})
 	} else {
@@ -616,32 +597,10 @@ app.post('/api/creer-pad-sans-compte', function (req, res) {
 			db.get('pad', function (err, resultat) {
 				if (err) { res.send('erreur_creation'); return false }
 				const id = parseInt(resultat) + 1
-				const multi = db.multi()
-				multi.incr('pad')
-				multi.hmset('pads:' + id, 'id', id, 'token', token, 'titre', titre, 'identifiant', identifiant, 'motdepasse', hash, 'fond', '/img/fond1.png', 'acces', 'public', 'contributions', 'ouvertes', 'affichage', 'mur', 'registreActivite', 'active', 'conversation', 'desactivee', 'listeUtilisateurs', 'activee', 'editionNom', 'desactivee', 'fichiers', 'actives', 'enregistrements', 'desactives', 'liens', 'actives', 'documents', 'desactives', 'commentaires', 'desactives', 'evaluations', 'desactivees', 'ordre', 'croissant', 'largeur', 'normale', 'date', date, 'colonnes', JSON.stringify([]), 'affichageColonnes', JSON.stringify([]), 'bloc', 0, 'activite', 0)
-				multi.hmset('utilisateurs:' + identifiant, 'id', identifiant, 'motdepasse', '', 'date', date, 'nom', nom, 'langue', langue)
-				multi.exec(function () {
-					const chemin = path.join(__dirname, '..', '/static/' + definirDossierFichiers(id) + '/' + id)
-					fs.mkdirsSync(chemin)
-					req.session.langue = langue
-					req.session.statut = 'auteur'
-					req.session.cookie.expires = new Date(Date.now() + dureeSession)
-					res.json({ id: id, token: token, titre: titre, identifiant: identifiant, fond: '/img/fond1.png', acces: 'public', contributions: 'ouvertes', affichage: 'mur', registreActivite: 'active', conversation: 'desactivee', listeUtilisateurs: 'activee', editionNom: 'desactivee', fichiers: 'actives', enregistrements: 'desactives', liens: 'actives', liens: 'actives', documents: 'desactives', commentaires: 'desactives', evaluations: 'desactivees', ordre: 'croissant', largeur: 'normale', date: date, colonnes: [], affichageColonnes: [], bloc: 0, activite: 0 })
-				})
+				creerPadSansCompte(req, res, id, token, titre, hash, date, identifiant, nom, langue, '')
 			})
 		} else {
-			const multi = db.multi()
-			multi.incr('pad')
-			multi.hmset('pads:1', 'id', 1, 'token', token, 'titre', titre, 'identifiant', identifiant, 'motdepasse', hash, 'fond', '/img/fond1.png', 'acces', 'public', 'contributions', 'ouvertes', 'affichage', 'mur', 'registreActivite', 'active', 'conversation', 'desactivee', 'listeUtilisateurs', 'activee', 'editionNom', 'desactivee', 'fichiers', 'actives', 'enregistrements', 'desactives', 'liens', 'actives', 'documents', 'desactives', 'commentaires', 'desactives', 'evaluations', 'desactivees', 'ordre', 'croissant', 'largeur', 'normale', 'date', date, 'colonnes', JSON.stringify([]), 'affichageColonnes', JSON.stringify([]), 'bloc', 0, 'activite', 0)
-			multi.hmset('utilisateurs:' + identifiant, 'id', identifiant, 'motdepasse', '', 'date', date, 'nom', nom, 'langue', langue)
-			multi.exec(function () {
-				const chemin = path.join(__dirname, '..', '/static/fichiers/1')
-				fs.mkdirsSync(chemin)
-				req.session.langue = langue
-				req.session.statut = 'auteur'
-				req.session.cookie.expires = new Date(Date.now() + dureeSession)
-				res.json({ id: 1, token: token, titre: titre, identifiant: identifiant, fond: '/img/fond1.png', acces: 'public', contributions: 'ouvertes', affichage: 'mur', registreActivite: 'active', conversation: 'desactivee', listeUtilisateurs: 'activee', editionNom: 'desactivee', fichiers: 'actives', enregistrements: 'desactives', liens: 'actives', liens: 'actives', documents: 'desactives', commentaires: 'desactives', evaluations: 'desactivees', ordre: 'croissant', largeur: 'normale', date: date, colonnes: [], affichageColonnes: [], bloc: 0, activite: 0 })
-			})
+			creerPadSansCompte(req, res, 1, token, titre, hash, date, identifiant, nom, langue, '')
 		}
 	})
 })
@@ -2287,6 +2246,135 @@ app.post('/api/recuperer-icone', function (req, res) {
 	}
 })
 
+app.post('/api/ladigitale', function (req, res) {
+	const tokenApi = req.body.token
+	const domaine = req.headers.host
+	const lien = req.body.lien
+	const curl = new Curl()
+	curl.setOpt(Curl.option.URL, lien)
+	curl.setOpt(Curl.option.POST, true)
+	curl.setOpt(Curl.option.POSTFIELDS,
+		querystring.stringify({
+			token: tokenApi,
+			domaine: domaine
+		})
+	)
+	curl.on('end', function (statusCode, data) {
+		if (data === 'non_autorise' || data === 'erreur') {
+			res.send('erreur_token')
+		} else if (data === 'token_autorise' && req.body.action && req.body.action === 'creer') {
+			const identifiant = req.body.identifiant
+			req.session.identifiant = identifiant
+			let nom = req.body.nomUtilisateur
+			if (nom === '') {
+				nom = genererPseudo()
+			}
+			req.session.nom = nom
+			const titre = req.body.nom
+			const motdepasse = req.body.motdepasse
+			const hash = bcrypt.hashSync(motdepasse, 10)
+			const token = Math.random().toString(16).slice(2)
+			const date = moment().format()
+			let langue = 'fr'
+			if (req.session.hasOwnProperty('langue') && req.session.langue !== '' && req.session.langue !== undefined) {
+				langue = req.session.langue
+			}
+			db.exists('pad', function (err, resultat) {
+				if (err) { res.send('erreur'); return false }
+				if (resultat === 1) {
+					db.get('pad', function (err, resultat) {
+						if (err) { res.send('erreur'); return false }
+						const id = parseInt(resultat) + 1
+						creerPadSansCompte(req, res, id, token, titre, hash, date, identifiant, nom, langue, 'api')
+					})
+				} else {
+					creerPadSansCompte(req, res, 1, token, titre, hash, date, identifiant, nom, langue, 'api')
+				}
+			})
+		} else if (data === 'token_autorise' && req.body.action && req.body.action === 'supprimer') {
+			const identifiant = req.body.identifiant
+			const pad = req.body.id
+			db.exists('pads:' + pad, async function (err, resultat) {
+				if (err) { res.send('erreur'); return false }
+				if (resultat === 1) {
+					db.hgetall('pads:' + pad, function (err, donneesPad) {
+						if (err) { res.send('erreur'); return false }
+						if (donneesPad.identifiant === identifiant) {
+							db.zrange('blocs:' + pad, 0, -1, function (err, blocs) {
+								if (err) { res.send('erreur'); return false }
+								const multi = db.multi()
+								for (let i = 0; i < blocs.length; i++) {
+									multi.del('commentaires:' + blocs[i])
+									multi.del('evaluations:' + blocs[i])
+									multi.del('pad-' + pad + ':' + blocs[i])
+								}
+								multi.del('blocs:' + pad)
+								multi.del('pads:' + pad)
+								multi.del('activite:' + pad)
+								multi.del('dates-pads:' + pad)
+								multi.srem('pads-crees:' + identifiant, pad)
+								multi.smembers('utilisateurs-pads:' + pad, function (err, utilisateurs) {
+									if (err) { res.send('erreur'); return false }
+									for (let j = 0; j < utilisateurs.length; j++) {
+										db.srem('pads-rejoints:' + utilisateurs[j], pad)
+										db.srem('pads-utilisateurs:' + utilisateurs[j], pad)
+										db.srem('pads-admins:' + utilisateurs[j], pad)
+										db.srem('pads-favoris:' + utilisateurs[j], pad)
+										db.hdel('couleurs:' + utilisateurs[j], 'pad' + pad)
+									}
+								})
+								multi.del('utilisateurs-pads:' + pad)
+								multi.exec(function () {
+									const chemin = path.join(__dirname, '..', '/static/' + definirDossierFichiers(pad) + '/' + pad)
+									fs.removeSync(chemin)
+									res.send('contenu_supprime')
+								})
+							})
+						} else {
+							res.send('erreur')
+						}
+					})
+				} else if (resultat !== 1 && fs.existsSync(path.join(__dirname, '..', '/static/pads/pad-' + pad + '.json'))) {
+					const donneesPad = await fs.readJson(path.join(__dirname, '..', '/static/pads/pad-' + pad + '.json'))
+					const multi = db.multi()
+					if (donneesPad.identifiant === identifiant) {
+						multi.srem('pads-crees:' + identifiant, pad)
+						multi.smembers('utilisateurs-pads:' + pad, function (err, utilisateurs) {
+							if (err) { res.send('erreur'); return false }
+							for (let j = 0; j < utilisateurs.length; j++) {
+								db.srem('pads-rejoints:' + utilisateurs[j], pad)
+								db.srem('pads-utilisateurs:' + utilisateurs[j], pad)
+								db.srem('pads-admins:' + utilisateurs[j], pad)
+								db.srem('pads-favoris:' + utilisateurs[j], pad)
+								db.hdel('couleurs:' + utilisateurs[j], 'pad' + pad)
+							}
+						})
+						multi.del('utilisateurs-pads:' + pad)
+						multi.exec(function () {
+							fs.removeSync(path.join(__dirname, '..', '/static/' + definirDossierFichiers(pad) + '/' + pad))
+							fs.removeSync(path.join(__dirname, '..', '/static/pads/' + pad + '.json'))
+							fs.removeSync(path.join(__dirname, '..', '/static/pads/pad-' + pad + '.json'))
+							res.send('contenu_supprime')
+						})
+					} else {
+						res.send('erreur')
+					}
+				} else {
+					res.send('contenu_supprime')
+				}
+			})
+		} else {
+			res.send('erreur')
+		}
+		this.close()
+	})
+	curl.on('error', function () {
+		res.send('erreur')
+		this.close()
+	})
+	curl.perform()
+})
+
 app.use(nuxt.render)
 
 server.listen(port, host)
@@ -3695,6 +3783,48 @@ io.on('connection', function (socket) {
 		socket.emit('verifiermaintenance', false)
 	})
 })
+
+function creerPad (res, id, token, titre, date, identifiant, couleur) {
+	const multi = db.multi()
+	if (id === 1) {
+		multi.set('pad', 1)
+	} else {
+		multi.incr('pad')
+	}
+	multi.hmset('pads:' + id, 'id', id, 'token', token, 'titre', titre, 'identifiant', identifiant, 'fond', '/img/fond1.png', 'acces', 'public', 'contributions', 'ouvertes', 'affichage', 'mur', 'registreActivite', 'active', 'conversation', 'desactivee', 'listeUtilisateurs', 'activee', 'editionNom', 'desactivee', 'fichiers', 'actives', 'enregistrements', 'desactives', 'liens', 'actives', 'documents', 'desactives', 'commentaires', 'desactives', 'evaluations', 'desactivees', 'ordre', 'croissant', 'largeur', 'normale', 'date', date, 'colonnes', JSON.stringify([]), 'affichageColonnes', JSON.stringify([]), 'bloc', 0, 'activite', 0, 'admins', JSON.stringify([]))
+	multi.sadd('pads-crees:' + identifiant, id)
+	multi.sadd('utilisateurs-pads:' + id, identifiant)
+	multi.hset('dates-pads:' + id, 'date', date)
+	multi.hset('couleurs:' + identifiant, 'pad' + id, couleur)
+	multi.exec(function () {
+		const chemin = path.join(__dirname, '..', '/static/' + definirDossierFichiers(id) + '/' + id)
+		fs.mkdirsSync(chemin)
+		res.json({ id: id, token: token, titre: titre, identifiant: identifiant, fond: '/img/fond1.png', acces: 'public', contributions: 'ouvertes', affichage: 'mur', registreActivite: 'active', conversation: 'desactivee', listeUtilisateurs: 'activee', editionNom: 'desactivee', fichiers: 'actives', enregistrements: 'desactives', liens: 'actives', documents: 'desactives', commentaires: 'desactives', evaluations: 'desactivees', ordre: 'croissant', largeur: 'normale', date: date, colonnes: [], affichageColonnes: [], bloc: 0, activite: 0, admins: [] })
+	})
+}
+
+function creerPadSansCompte (req, res, id, token, titre, hash, date, identifiant, nom, langue, type) {
+	const multi = db.multi()
+	if (id === 1) {
+		multi.set('pad', 1)
+	} else {
+		multi.incr('pad')
+	}
+	multi.hmset('pads:' + id, 'id', id, 'token', token, 'titre', titre, 'identifiant', identifiant, 'motdepasse', hash, 'fond', '/img/fond1.png', 'acces', 'public', 'contributions', 'ouvertes', 'affichage', 'mur', 'registreActivite', 'active', 'conversation', 'desactivee', 'listeUtilisateurs', 'activee', 'editionNom', 'desactivee', 'fichiers', 'actives', 'enregistrements', 'desactives', 'liens', 'actives', 'documents', 'desactives', 'commentaires', 'desactives', 'evaluations', 'desactivees', 'ordre', 'croissant', 'largeur', 'normale', 'date', date, 'colonnes', JSON.stringify([]), 'affichageColonnes', JSON.stringify([]), 'bloc', 0, 'activite', 0)
+	multi.hmset('utilisateurs:' + identifiant, 'id', identifiant, 'motdepasse', '', 'date', date, 'nom', nom, 'langue', langue)
+	multi.exec(function () {
+		const chemin = path.join(__dirname, '..', '/static/' + definirDossierFichiers(id) + '/' + id)
+		fs.mkdirsSync(chemin)
+		req.session.langue = langue
+		req.session.statut = 'auteur'
+		req.session.cookie.expires = new Date(Date.now() + dureeSession)
+		if (type === 'api') {
+			res.send(id + '/' + token)
+		} else {
+			res.json({ id: id, token: token, titre: titre, identifiant: identifiant, fond: '/img/fond1.png', acces: 'public', contributions: 'ouvertes', affichage: 'mur', registreActivite: 'active', conversation: 'desactivee', listeUtilisateurs: 'activee', editionNom: 'desactivee', fichiers: 'actives', enregistrements: 'desactives', liens: 'actives', liens: 'actives', documents: 'desactives', commentaires: 'desactives', evaluations: 'desactivees', ordre: 'croissant', largeur: 'normale', date: date, colonnes: [], affichageColonnes: [], bloc: 0, activite: 0 })
+		}
+	})
+}
 
 function recupererDonnees (identifiant) {
 	// Pads créés
