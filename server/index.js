@@ -37,8 +37,6 @@ const nodemailer = require('nodemailer')
 const rp = require('request-promise')
 const { URL } = require('url')
 const cheerio = require('cheerio')
-const querystring = require('querystring')
-const { Curl } = require('node-libcurl')
 const libre = require('libreoffice-convert')
 libre.convertAsync = require('util').promisify(libre.convert)
 let storeOptions, cookie, dureeSession, dateCron, jours
@@ -269,7 +267,7 @@ app.post('/api/mot-de-passe-oublie', function (req, res) {
 					const motdepasse = genererMotDePasse(7)
 					const message = {
 						from: '"La Digitale" <' + process.env.EMAIL_ADDRESS + '>',
-						to: email,
+						to: '"Moi" <' + email.trim() + '>',
 						subject: 'Mot de passe Digipad',
 						html: '<p>Votre nouveau mot de passe : ' + motdepasse + '</p>'
 					}
@@ -1906,6 +1904,34 @@ app.post('/api/verifier-mot-de-passe', function (req, res) {
 	})
 })
 
+app.post('/api/verifier-acces', function (req, res) {
+	const pad = req.body.pad
+	const identifiant = req.body.identifiant
+	db.hgetall('pads:' + pad, function (err, donnees) {
+		if (err) { res.send('erreur'); return false }
+		if (identifiant === donnees.identifiant && bcrypt.compareSync(req.body.motdepasse, donnees.motdepasse)) {
+			let couleur = choisirCouleur()
+			db.hgetall('utilisateurs:' + identifiant, function (err, utilisateur) {
+				if (err) { res.send('erreur'); return false }
+				db.hget('couleurs:' + identifiant, 'pad' + pad, function (err, col) {
+					if (err) { res.send('erreur'); return false }
+					if (!err && col !== null) {
+						couleur = col
+					}
+					req.session.identifiant = identifiant
+					req.session.nom = utilisateur.nom
+					req.session.statut = 'auteur'
+					req.session.langue = utilisateur.langue
+					req.session.cookie.expires = new Date(Date.now() + dureeSession)
+					res.send('pad_debloque')
+				})
+			})
+		} else {
+			res.send('erreur')
+		}
+	})
+})
+
 app.post('/api/verifier-code-acces', function (req, res) {
 	const pad = req.body.pad
 	db.hgetall('pads:' + pad, function (err, donnees) {
@@ -2250,19 +2276,13 @@ app.post('/api/ladigitale', function (req, res) {
 	const tokenApi = req.body.token
 	const domaine = req.headers.host
 	const lien = req.body.lien
-	const curl = new Curl()
-	curl.setOpt(Curl.option.URL, lien)
-	curl.setOpt(Curl.option.POST, true)
-	curl.setOpt(Curl.option.POSTFIELDS,
-		querystring.stringify({
-			token: tokenApi,
-			domaine: domaine
-		})
-	)
-	curl.on('end', function (statusCode, data) {
-		if (data === 'non_autorise' || data === 'erreur') {
+	const params = new URLSearchParams()
+	params.append('token', tokenApi)
+	params.append('domaine', domaine)
+	axios.post(lien, params).then(function (reponse) {
+		if (reponse.data === 'non_autorise' || reponse.data === 'erreur') {
 			res.send('erreur_token')
-		} else if (data === 'token_autorise' && req.body.action && req.body.action === 'creer') {
+		} else if (reponse.data === 'token_autorise' && req.body.action && req.body.action === 'creer') {
 			const identifiant = req.body.identifiant
 			req.session.identifiant = identifiant
 			let nom = req.body.nomUtilisateur
@@ -2291,7 +2311,7 @@ app.post('/api/ladigitale', function (req, res) {
 					creerPadSansCompte(req, res, 1, token, titre, hash, date, identifiant, nom, langue, 'api')
 				}
 			})
-		} else if (data === 'token_autorise' && req.body.action && req.body.action === 'supprimer') {
+		} else if (reponse.data === 'token_autorise' && req.body.action && req.body.action === 'supprimer') {
 			const identifiant = req.body.identifiant
 			const pad = req.body.id
 			db.exists('pads:' + pad, async function (err, resultat) {
@@ -2366,13 +2386,9 @@ app.post('/api/ladigitale', function (req, res) {
 		} else {
 			res.send('erreur')
 		}
-		this.close()
-	})
-	curl.on('error', function () {
+	}).catch(function () {
 		res.send('erreur')
-		this.close()
 	})
-	curl.perform()
 })
 
 app.use(nuxt.render)
