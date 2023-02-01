@@ -341,7 +341,7 @@ export default {
 		}
 	},
 	watchQuery: ['page'],
-	created () {
+	async created () {
 		if (this.redirection) {
 			this.$router.push(this.redirection)
 			return false
@@ -350,6 +350,19 @@ export default {
 			this.definirColonnes(this.blocs)
 		}
 		this.ecouterSocket()
+		const identifiant = this.$route.query.id
+		const motdepasse = this.$route.query.mdp
+		if (identifiant && identifiant !== '' && motdepasse && motdepasse !== '') {
+			const reponse = await axios.post(this.hote + '/api/verifier-acces', {
+				pad: this.pad.id,
+				identifiant: identifiant,
+				motdepasse: motdepasse
+			})
+			if (reponse.data === 'pad_debloque') {
+				this.$store.dispatch('modifierUtilisateur', { identifiant: reponse.data.identifiant, nom: reponse.data.nom, langue: reponse.data.langue, statut: 'auteur' })
+			}
+			window.history.replaceState({}, document.title, window.location.href.split('?')[0])
+		}
 		if (this.pad.acces === 'public' || (this.pad.acces === 'prive' && this.admin)) {
 			this.$nuxt.$loading.start()
 			this.accesAutorise = true
