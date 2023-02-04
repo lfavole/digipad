@@ -358,8 +358,8 @@ export default {
 				identifiant: identifiant,
 				motdepasse: motdepasse
 			})
-			if (reponse.data === 'pad_debloque') {
-				this.$store.dispatch('modifierUtilisateur', { identifiant: reponse.data.identifiant, nom: reponse.data.nom, langue: reponse.data.langue, statut: 'auteur' })
+			if (reponse.data.hasOwnProperty('message') && reponse.data.message === 'pad_debloque') {
+				this.$store.dispatch('modifierUtilisateur', { identifiant: identifiant, nom: reponse.data.nom, langue: reponse.data.langue, statut: 'auteur' })
 			}
 			window.history.replaceState({}, document.title, window.location.href.split('?')[0])
 		}
