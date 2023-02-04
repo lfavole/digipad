@@ -39,7 +39,7 @@ const { URL } = require('url')
 const cheerio = require('cheerio')
 const libre = require('libreoffice-convert')
 libre.convertAsync = require('util').promisify(libre.convert)
-let storeOptions, cookie, dureeSession, dateCron, jours
+let storeOptions, cookie, dureeSession, dateCron, domainesAutorises
 let maintenance = false
 if (process.env.NODE_ENV === 'production') {
 	storeOptions = {
@@ -77,6 +77,11 @@ if (process.env.SESSION_DURATION) {
 	dureeSession = parseInt(process.env.SESSION_DURATION)
 } else {
 	dureeSession = 864000000 //3600 * 24 * 10 * 1000
+}
+if (process.env.AUTORIZED_DOMAINS) {
+	domainesAutorises = process.env.AUTORIZED_DOMAINS.split(',')
+} else {
+	domainesAutorises = '*'
 }
 const expressSession = session(sessionOptions)
 const sharedsession = require('express-socket.io-session')
@@ -118,7 +123,7 @@ app.use(expressSession)
 io.use(sharedsession(expressSession, {
 	autoSave: true
 }))
-app.use(cors())
+app.use(cors({ 'origin': domainesAutorises }))
 
 app.get('/', function (req, res) {
 	const identifiant = req.session.identifiant
@@ -1923,7 +1928,7 @@ app.post('/api/verifier-acces', function (req, res) {
 					req.session.statut = 'auteur'
 					req.session.langue = utilisateur.langue
 					req.session.cookie.expires = new Date(Date.now() + dureeSession)
-					res.send('pad_debloque')
+					res.json({ message: 'pad_debloque', nom: utilisateur.nom, langue: utilisateur.langue })
 				})
 			})
 		} else {
@@ -2314,12 +2319,13 @@ app.post('/api/ladigitale', function (req, res) {
 		} else if (reponse.data === 'token_autorise' && req.body.action && req.body.action === 'supprimer') {
 			const identifiant = req.body.identifiant
 			const pad = req.body.id
+			const motdepasse = req.body.motdepasse
 			db.exists('pads:' + pad, async function (err, resultat) {
 				if (err) { res.send('erreur'); return false }
 				if (resultat === 1) {
 					db.hgetall('pads:' + pad, function (err, donneesPad) {
 						if (err) { res.send('erreur'); return false }
-						if (donneesPad.identifiant === identifiant) {
+						if (donneesPad.identifiant === identifiant && bcrypt.compareSync(motdepasse, donneesPad.motdepasse)) {
 							db.zrange('blocs:' + pad, 0, -1, function (err, blocs) {
 								if (err) { res.send('erreur'); return false }
 								const multi = db.multi()
