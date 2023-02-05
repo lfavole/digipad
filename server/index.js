@@ -78,7 +78,7 @@ if (process.env.SESSION_DURATION) {
 } else {
 	dureeSession = 864000000 //3600 * 24 * 10 * 1000
 }
-if (process.env.AUTORIZED_DOMAINS) {
+if (process.env.NODE_ENV === 'production' && process.env.AUTORIZED_DOMAINS) {
 	domainesAutorises = process.env.AUTORIZED_DOMAINS.split(',')
 } else {
 	domainesAutorises = '*'
