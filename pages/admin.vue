@@ -77,6 +77,15 @@
 					<label>{{ $t('numeroPad') }}</label>
 					<input type="number" :value="padIdS" @input="padIdS = $event.target.value">
 				</div>
+				<div class="conteneur">
+					<div class="conteneur-interrupteur">
+						<span>{{ $t('supprimerFichiersServeur') }}</span>
+						<label class="bouton-interrupteur">
+							<input type="checkbox" :checked="suppressionFichiers" @change="modifierSuppressionFichiers">
+							<span class="barre" />
+						</label>
+					</div>
+				</div>
 				<div class="actions">
 					<span class="bouton" role="button" tabindex="0" @click="modale = 'supprimer-pad'">{{ $t('valider') }}</span>
 				</div>
@@ -131,7 +140,8 @@ export default {
 			identifiantS: '',
 			champ: '',
 			valeur: '',
-			maintenance: false
+			maintenance: false,
+			suppressionFichiers: true
 		}
 	},
 	head () {
@@ -261,6 +271,13 @@ export default {
 				}.bind(this))
 			}
 		},
+		modifierSuppressionFichiers (event) {
+			if (event.target.checked === true) {
+				this.suppressionFichiers = true
+			} else {
+				this.suppressionFichiers = false
+			}
+		},
 		supprimerPad () {
 			if (this.padIdS !== '') {
 				this.modale = ''
@@ -280,7 +297,8 @@ export default {
 							padId: this.padIdS,
 							type: 'pad',
 							identifiant: identifiant,
-							admin: this.admin
+							admin: this.admin,
+							suppressionFichiers: this.suppressionFichiers
 						}).then(function (reponse) {
 							this.chargement = false
 							const donnees = reponse.data
@@ -289,16 +307,19 @@ export default {
 							} else {
 								this.$store.dispatch('modifierMessage', this.$t('padSupprime'))
 								this.padIdS = ''
+								this.suppressionFichiers = true
 							}
 						}.bind(this)).catch(function () {
 							this.chargement = false
 							this.padIdS = ''
+							this.suppressionFichiers = true
 							this.$store.dispatch('modifierAlerte', this.$t('erreurCommunicationServeur'))
 						}.bind(this))
 					}
 				}.bind(this)).catch(function () {
 					this.chargement = false
 					this.padIdS = ''
+					this.suppressionFichiers = true
 					this.$store.dispatch('modifierAlerte', this.$t('erreurCommunicationServeur'))
 				}.bind(this))
 			}
@@ -421,7 +442,7 @@ export default {
     margin-bottom: 10px;
 }
 
-#conteneur .conteneur div:last-child {
+#conteneur .conteneur div:not(.conteneur-interrupteur):last-child {
     margin-bottom: 3rem;
 }
 
@@ -472,6 +493,67 @@ export default {
 
 #conteneur .actions .bouton:last-child {
 	margin-right: 0;
+}
+
+#conteneur .conteneur-interrupteur {
+	display: flex;
+	justify-content: space-between;
+	margin-bottom: 1rem;
+	line-height: 2.2rem;
+}
+
+#conteneur .conteneur-interrupteur > span {
+	font-size: 16px;
+}
+
+#conteneur .bouton-interrupteur {
+	position: relative;
+	display: inline-block!important;
+	width: 3.8rem!important;
+	height: 2.2rem;
+	margin: 0!important;
+}
+
+#conteneur .bouton-interrupteur input {
+	opacity: 0;
+	width: 0;
+	height: 0;
+}
+
+#conteneur .bouton-interrupteur .barre {
+	position: absolute;
+	cursor: pointer;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	background-color: #ccc;
+	transition: 0.2s;
+	border-radius: 3rem;
+}
+
+#conteneur .bouton-interrupteur .barre:before {
+	position: absolute;
+	content: '';
+	height: 1.6rem;
+	width: 1.6rem;
+	left: 0.3rem;
+	bottom: 0.3rem;
+	background-color: #fff;
+	transition: 0.2s;
+	border-radius: 50%;
+}
+
+#conteneur .bouton-interrupteur input:checked + .barre {
+	background-color: #00ced1;
+}
+
+#conteneur .bouton-interrupteur input:focus + .barre {
+	box-shadow: 0 0 1px #00ced1;
+}
+
+#conteneur .bouton-interrupteur input:checked + .barre:before {
+	transform: translateX(1.6rem);
 }
 
 @media screen and (max-width: 359px) {
