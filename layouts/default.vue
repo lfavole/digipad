@@ -4,7 +4,7 @@
 			<nuxt v-if="!chargement" />
 		</transition>
 
-		<div id="alerte" class="conteneur-modale alerte" v-if="alerte !== ''" @click="reinitialiserAlerte">
+		<div id="alerte" class="conteneur-modale alerte" v-if="alerte !== ''">
 			<div id="message" class="modale">
 				<div class="conteneur">
 					<div class="contenu">
