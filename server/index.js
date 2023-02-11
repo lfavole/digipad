@@ -1287,6 +1287,10 @@ app.post('/api/supprimer-pad', function (req, res) {
 	if ((req.session.identifiant && req.session.identifiant === identifiant) || (admin !== '' && admin === motdepasseAdmin)) {
 		const pad = req.body.padId
 		const type = req.body.type
+		let suppressionFichiers = true
+		if (req.body.hasOwnProperty('suppressionFichiers')) {
+			suppressionFichiers = req.body.suppressionFichiers
+		}
 		db.exists('pads:' + pad, async function (err, resultat) {
 			if (err) { res.send('erreur_suppression'); return false }
 			if (resultat === 1) {
@@ -1319,7 +1323,9 @@ app.post('/api/supprimer-pad', function (req, res) {
 							multi.del('utilisateurs-pads:' + pad)
 							multi.exec(function () {
 								const chemin = path.join(__dirname, '..', '/static/' + definirDossierFichiers(pad) + '/' + pad)
-								fs.removeSync(chemin)
+								if (suppressionFichiers === true) {
+									fs.removeSync(chemin)
+								}
 								res.send('pad_supprime')
 							})
 						})
