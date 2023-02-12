@@ -360,5 +360,6 @@ export default {
 	maintenance: '🔧 Manutenzione 🛠️',
 	maintenanceDigipad: 'Digipad è in manutenzione. Torna più tardi.',
 	activerMaintenance: 'Attiva la modalità di manutenzione',
-	desactiverMaintenance: 'Disattiva la modalità di manutenzione'
+	desactiverMaintenance: 'Disattiva la modalità di manutenzione',
+	supprimerFichiersServeur: 'Elimina i file sul server'
 }

@@ -360,5 +360,6 @@ export default {
 	maintenance: '🔧 Održavanje 🛠️',
 	maintenanceDigipad: 'Digipad je pod održavanjem. Molim vas, vratite se kasnije.',
 	activerMaintenance: 'Omogući način održavanja',
-	desactiverMaintenance: 'Onemogući način održavanja'
+	desactiverMaintenance: 'Onemogući način održavanja',
+	supprimerFichiersServeur: 'Brisanje datoteka na poslužitelju'
 }
