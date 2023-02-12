@@ -4236,20 +4236,34 @@ function recupererDonneesPad (id, token, identifiant, statut, res) {
 										resolve({})
 									}
 									db.zcard('commentaires:' + bloc, function (err, commentaires) {
-										if (err) { resolve({}) }
+										if (err) {
+											donnees.commentaires = []
+											resolve(donnees)
+										}
 										donnees.commentaires = commentaires
 										db.zrange('evaluations:' + bloc, 0, -1, function (err, evaluations) {
-											if (err) { resolve({}) }
+											if (err) {
+												donnees.evaluations = []
+												resolve(donnees)
+											}
 											const donneesEvaluations = []
 											evaluations.forEach(function (evaluation) {
 												donneesEvaluations.push(JSON.parse(evaluation))
 											})
 											donnees.evaluations = donneesEvaluations
 											db.exists('utilisateurs:' + donnees.identifiant, function (err, resultat) {
-												if (err) { resolve({}) }
+												if (err) {
+													donnees.nom = ''
+													donnees.couleur = ''
+													resolve(donnees)
+												}
 												if (resultat === 1) {
 													db.hgetall('utilisateurs:' + donnees.identifiant, function (err, utilisateur) {
-														if (err) { resolve({}) }
+														if (err) {
+															donnees.nom = ''
+															donnees.couleur = ''
+															resolve(donnees)
+														}
 														donnees.nom = utilisateur.nom
 														db.hget('couleurs:' + donnees.identifiant, 'pad' + id, function (err, couleur) {
 															if (err || couleur === null) {
@@ -4262,10 +4276,18 @@ function recupererDonneesPad (id, token, identifiant, statut, res) {
 													})
 												} else {
 													db.exists('noms:' + donnees.identifiant, function (err, resultat) {
-														if (err) { resolve({}) }
+														if (err) {
+															donnees.nom = ''
+															donnees.couleur = ''
+															resolve(donnees)
+														}
 														if (resultat === 1) {
 															db.hget('noms:' + donnees.identifiant, 'nom', function (err, nom) {
-																if (err) { resolve({}) }
+																if (err) {
+																	donnees.nom = ''
+																	donnees.couleur = ''
+																	resolve(donnees)
+																}
 																donnees.nom = nom
 																db.hget('couleurs:' + donnees.identifiant, 'pad' + id, function (err, couleur) {
 																	if (err || couleur === null) {
@@ -4294,6 +4316,9 @@ function recupererDonneesPad (id, token, identifiant, statut, res) {
 						donneesBlocs.push(donneesBloc)
 					}
 					Promise.all(donneesBlocs).then(function (resultat) {
+						resultat = resultat.filter(function (element) {
+							return Object.keys(element).length > 0
+						})
 						resolveMain(resultat)
 					})
 				})
@@ -4306,10 +4331,18 @@ function recupererDonneesPad (id, token, identifiant, statut, res) {
 						entree = JSON.parse(entree)
 						const donneesEntree = new Promise(function (resolve) {
 							db.exists('utilisateurs:' + entree.identifiant, function (err, resultat) {
-								if (err) { resolve({}) }
+								if (err) {
+									entree.nom = ''
+									entree.couleur = ''
+									resolve(entree)
+								}
 								if (resultat === 1) {
 									db.hgetall('utilisateurs:' + entree.identifiant, function (err, utilisateur) {
-										if (err) { resolve({}) }
+										if (err) {
+											entree.nom = ''
+											entree.couleur = ''
+											resolve(entree)
+										}
 										entree.nom = utilisateur.nom
 										db.hget('couleurs:' + entree.identifiant, 'pad' + id, function (err, couleur) {
 											if (err || couleur === null) {
@@ -4322,14 +4355,25 @@ function recupererDonneesPad (id, token, identifiant, statut, res) {
 									})
 								} else {
 									db.exists('noms:' + entree.identifiant, function (err, resultat) {
-										if (err) { resolve({}) }
+										if (err) {
+											entree.nom = ''
+											entree.couleur = ''
+											resolve(entree)
+										}
 										if (resultat === 1) {
 											db.hget('noms:' + entree.identifiant, 'nom', function (err, nom) {
-												if (err) { resolve({}) }
+												if (err) {
+													entree.nom = ''
+													entree.couleur = ''
+													resolve(entree)
+												}
 												entree.nom = nom
 												db.hget('couleurs:' + entree.identifiant, 'pad' + id, function (err, couleur) {
-													if (err) { resolve({}) }
-													entree.couleur = couleur
+													if (err || couleur === null) {
+														entree.couleur = ''
+													} else {
+														entree.couleur = couleur
+													}
 													resolve(entree)
 												})
 											})
