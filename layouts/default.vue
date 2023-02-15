@@ -48,9 +48,16 @@ export default {
 				element.classList.add('notification')
 				document.querySelector('#app').appendChild(element)
 				this.$store.dispatch('modifierMessage', '')
-				setTimeout(function () {
-					element.parentNode.removeChild(element)
-				}, 2500)
+				if (message !== this.$t('rechargerPage')) {
+					setTimeout(function () {
+						element.parentNode.removeChild(element)
+					}, 2500)
+				} else {
+					element.style.cursor = 'pointer'
+					element.addEventListener('click', function () {
+						element.parentNode.removeChild(element)
+					})
+				}
 			}
 		}
 	},
