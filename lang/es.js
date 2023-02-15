@@ -361,5 +361,14 @@ export default {
 	maintenanceDigipad: 'Digipad está en mantenimiento. Por favor, vuelva más tarde.',
 	activerMaintenance: 'Activar el modo de mantenimiento',
 	desactiverMaintenance: 'Desactivar el modo de mantenimiento',
-	supprimerFichiersServeur: 'Borrar archivos del servidor'
+	supprimerFichiersServeur: 'Borrar archivos del servidor',
+	copierCapsule: 'Copiar la cápsula en otro pad',
+	copieCapsule: 'Copiar en otro pad',
+	parametreCopieBlocModifie: 'Parámetro de copia de cápsula modificado.',
+	capsuleACopier: 'Cápsula para copiar: ',
+	padDestination: 'Pad de destino',
+	colonneDestination: 'Columna de destino',
+	coadmin: 'coadmin',
+	aucunPadDestination: 'No hay pad de destino.',
+	capsuleCopiee: 'Cápsula copiada en el pad de destino.'
 }

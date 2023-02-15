@@ -361,5 +361,14 @@ export default {
 	maintenanceDigipad: 'Digipad je pod održavanjem. Molim vas, vratite se kasnije.',
 	activerMaintenance: 'Omogući način održavanja',
 	desactiverMaintenance: 'Onemogući način održavanja',
-	supprimerFichiersServeur: 'Brisanje datoteka na poslužitelju'
+	supprimerFichiersServeur: 'Brisanje datoteka na poslužitelju',
+	copierCapsule: 'Kopirajte kapsulu na drugi podloge',
+	copieCapsule: 'Kopiraj na drugi podloge',
+	parametreCopieBlocModifie: 'Promijenjena postavka kopiranja kapsule.',
+	capsuleACopier: 'Kapsula za kopiranje: ',
+	padDestination: 'Odredišna podloga',
+	colonneDestination: 'Odredišni stupac',
+	coadmin: 'coadmin',
+	aucunPadDestination: 'Nema odredišne podloge.',
+	capsuleCopiee: 'Kapsula kopirana na odredišni podloge.'
 }
