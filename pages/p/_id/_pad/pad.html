@@ -345,6 +345,13 @@
 						<span class="barre" />
 					</label>
 				</div>
+				<div class="conteneur-interrupteur">
+					<span>{{ $t('copieCapsule') }}</span>
+					<label class="bouton-interrupteur">
+						<input type="checkbox" :checked="pad.copieBloc === 'activee'" @change="modifierCopieBloc">
+						<span class="barre" />
+					</label>
+				</div>
 			</div>
 			<div class="conteneur conteneur-bouton" v-if="statut === 'auteur'">
 				<span role="button" tabindex="0" class="bouton-bleu" @click="afficherExporterPad">{{ $t('exporterPad') }}</span>
@@ -431,6 +438,7 @@
 							<span role="button" tabindex="0" class="bouton" :title="$t('commenterCapsule')" @click="ouvrirModaleCommentaires(item.bloc, item.titre)" v-if="pad.commentaires === 'actives'"><i class="material-icons">comment</i><span class="badge">{{ item.commentaires }}</span></span>
 							<span role="button" tabindex="0" class="bouton info" :title="$t('informationsCapsule')" :data-description="definirDescription(item)"><i class="material-icons">info</i></span>
 							<span class="media-type" v-if="item.media !== ''"><i class="material-icons">{{ definirIconeMedia(item) }}</i></span>
+							<span role="button" tabindex="0" class="bouton" :title="$t('copierCapsule')" @click="afficherEnvoyerBloc(item.bloc, item.titre)" v-if="admin && pad.copieBloc === 'activee'"><i class="material-icons">send</i></span>
 							<span role="button" tabindex="0" class="bouton supprimer" :title="$t('supprimerCapsule')" @click="afficherSupprimerBloc(item.bloc, item.titre, 0)" v-if="item.identifiant === identifiant || admin"><i class="material-icons">delete</i></span>
 						</div>
 						<div class="moderation" v-if="item.visibilite === 'privee' && admin">
@@ -474,6 +482,7 @@
 							<span role="button" tabindex="0" class="bouton" :title="$t('commenterCapsule')" @click="ouvrirModaleCommentaires(item.bloc, item.titre)" v-if="pad.commentaires === 'actives'"><i class="material-icons">comment</i><span class="badge">{{ item.commentaires }}</span></span>
 							<span role="button" tabindex="0" class="bouton info" :title="$t('informationsCapsule')" :data-description="definirDescription(item)"><i class="material-icons">info</i></span>
 							<span class="media-type" v-if="item.media !== ''"><i class="material-icons">{{ definirIconeMedia(item) }}</i></span>
+							<span role="button" tabindex="0" class="bouton" :title="$t('copierCapsule')" @click="afficherEnvoyerBloc(item.bloc, item.titre)" v-if="admin && pad.copieBloc === 'activee'"><i class="material-icons">send</i></span>
 							<span role="button" tabindex="0" class="bouton supprimer" :title="$t('supprimerCapsule')" @click="afficherSupprimerBloc(item.bloc, item.titre, 0)" v-if="item.identifiant === identifiant || admin"><i class="material-icons">delete</i></span>
 						</div>
 						<div class="moderation" v-if="item.visibilite === 'privee' && admin">
@@ -517,6 +526,7 @@
 							<span role="button" tabindex="0" class="bouton" :title="$t('commenterCapsule')" @click="ouvrirModaleCommentaires(item.bloc, item.titre)" v-if="pad.commentaires === 'actives'"><i class="material-icons">comment</i><span class="badge">{{ item.commentaires }}</span></span>
 							<span role="button" tabindex="0" class="bouton info" :title="$t('informationsCapsule')" :data-description="definirDescription(item)"><i class="material-icons">info</i></span>
 							<span class="media-type" v-if="item.media !== ''"><i class="material-icons">{{ definirIconeMedia(item) }}</i></span>
+							<span role="button" tabindex="0" class="bouton" :title="$t('copierCapsule')" @click="afficherEnvoyerBloc(item.bloc, item.titre)" v-if="admin && pad.copieBloc === 'activee'"><i class="material-icons">send</i></span>
 							<span role="button" tabindex="0" class="bouton supprimer" :title="$t('supprimerCapsule')" @click="afficherSupprimerBloc(item.bloc, item.titre, 0)" v-if="item.identifiant === identifiant || admin"><i class="material-icons">delete</i></span>
 						</div>
 						<div class="moderation" v-if="item.visibilite === 'privee' && admin">
@@ -560,6 +570,7 @@
 							<span role="button" tabindex="0" class="bouton" :title="$t('commenterCapsule')" @click="ouvrirModaleCommentaires(item.bloc, item.titre)" v-if="pad.commentaires === 'actives'"><i class="material-icons">comment</i><span class="badge">{{ item.commentaires }}</span></span>
 							<span role="button" tabindex="0" class="bouton info" :title="$t('informationsCapsule')" :data-description="definirDescription(item)"><i class="material-icons">info</i></span>
 							<span class="media-type" v-if="item.media !== ''"><i class="material-icons">{{ definirIconeMedia(item) }}</i></span>
+							<span role="button" tabindex="0" class="bouton" :title="$t('copierCapsule')" @click="afficherEnvoyerBloc(item.bloc, item.titre)" v-if="admin && pad.copieBloc === 'activee'"><i class="material-icons">send</i></span>
 							<span role="button" tabindex="0" class="bouton supprimer" :title="$t('supprimerCapsule')" @click="afficherSupprimerBloc(item.bloc, item.titre, 0)" v-if="item.identifiant === identifiant || admin"><i class="material-icons">delete</i></span>
 						</div>
 						<div class="moderation" v-if="item.visibilite === 'privee' && admin">
@@ -617,6 +628,7 @@
 										<span role="button" tabindex="0" class="bouton" :title="$t('commenterCapsule')" @click="ouvrirModaleCommentaires(item.bloc, item.titre)" v-if="pad.commentaires === 'actives'"><i class="material-icons">comment</i><span class="badge">{{ item.commentaires }}</span></span>
 										<span role="button" tabindex="0" class="bouton info" :title="$t('informationsCapsule')" :data-description="definirDescription(item)"><i class="material-icons">info</i></span>
 										<span class="media-type" v-if="item.media !== ''"><i class="material-icons">{{ definirIconeMedia(item) }}</i></span>
+										<span role="button" tabindex="0" class="bouton" :title="$t('copierCapsule')" @click="afficherEnvoyerBloc(item.bloc, item.titre)" v-if="admin && pad.copieBloc === 'activee'"><i class="material-icons">send</i></span>
 										<span role="button" tabindex="0" class="bouton supprimer" :title="$t('supprimerCapsule')" @click="afficherSupprimerBloc(item.bloc, item.titre, indexCol)" v-if="item.identifiant === identifiant || admin"><i class="material-icons">delete</i></span>
 									</div>
 									<div class="moderation" v-if="item.visibilite === 'privee' && admin">
@@ -683,6 +695,7 @@
 										<span role="button" tabindex="0" class="bouton" :title="$t('commenterCapsule')" @click="ouvrirModaleCommentaires(item.bloc, item.titre)" v-if="pad.commentaires === 'actives'"><i class="material-icons">comment</i><span class="badge">{{ item.commentaires }}</span></span>
 										<span role="button" tabindex="0" class="bouton info" :title="$t('informationsCapsule')" :data-description="definirDescription(item)"><i class="material-icons">info</i></span>
 										<span class="media-type" v-if="item.media !== ''"><i class="material-icons">{{ definirIconeMedia(item) }}</i></span>
+										<span role="button" tabindex="0" class="bouton" :title="$t('copierCapsule')" @click="afficherEnvoyerBloc(item.bloc, item.titre)" v-if="admin && pad.copieBloc === 'activee'"><i class="material-icons">send</i></span>
 										<span role="button" tabindex="0" class="bouton supprimer" :title="$t('supprimerCapsule')" @click="afficherSupprimerBloc(item.bloc, item.titre, indexCol)" v-if="item.identifiant === identifiant || admin"><i class="material-icons">delete</i></span>
 									</div>
 									<div class="moderation" v-if="item.visibilite === 'privee' && admin">
@@ -820,7 +833,7 @@
 		</div>
 	</div>
 
-	<div class="conteneur-modale" v-if="modaleBloc">
+	<div class="conteneur-modale" v-else-if="modaleBloc">
 		<div id="bloc" class="modale">
 			<div class="en-tete">
 				<span class="titre">{{ titreModale }}</span>
@@ -953,7 +966,7 @@
 		</div>
 	</div>
 
-	<div class="conteneur-modale" v-if="modaleDiaporama">
+	<div class="conteneur-modale" v-else-if="modaleDiaporama">
 		<div id="diapositive" class="modale-diapositive" :class="{'privee': donneesBloc.visibilite === 'privee'}" :style="{'border-color': donneesBloc.couleur}" v-show="!chargement">
 			<div class="en-tete">
 				<span class="titre"><span>{{ donneesBloc.titre }}</span> <span>{{ $t('par') }} {{ definirNom(donneesBloc) }}</span></span>
@@ -1043,7 +1056,7 @@
 		<span role="button" tabindex="0" id="suivant" v-if="blocs.length > 1" @click="afficherBlocSuivant"><i class="material-icons">arrow_forward</i></span>
 	</div>
 
-	<div class="conteneur-modale" v-if="modaleAdmins">
+	<div class="conteneur-modale" v-else-if="modaleAdmins">
 		<div id="admins" class="modale">
 			<div class="en-tete">
 				<span class="titre">{{ $t('adminsPad') }}</span>
@@ -1071,7 +1084,7 @@
 		</div>
 	</div>
 
-	<div class="conteneur-modale" v-if="modaleCommentaires">
+	<div class="conteneur-modale" v-else-if="modaleCommentaires">
 		<div id="discussion" class="modale">
 			<div class="en-tete">
 				<span class="titre">{{ $t('commentairesCapsule') }}</span>
@@ -1104,7 +1117,7 @@
 		</div>
 	</div>
 
-	<div class="conteneur-modale" v-if="modaleEvaluations">
+	<div class="conteneur-modale" v-else-if="modaleEvaluations">
 		<div class="modale">
 			<div class="en-tete">
 				<span class="titre">{{ $t('evaluerCapsule') }}</span>
@@ -1136,7 +1149,7 @@
 		</div>
 	</div>
 
-	<div class="conteneur-modale" v-if="modaleModifierNom">
+	<div class="conteneur-modale" v-else-if="modaleModifierNom">
 		<div class="modale">
 			<div class="en-tete">
 				<span class="titre">{{ $t('modifierNom') }}</span>
@@ -1154,7 +1167,7 @@
 		</div>
 	</div>
 
-	<div class="conteneur-modale" v-if="modaleMotDePasse">
+	<div class="conteneur-modale" v-else-if="modaleMotDePasse">
 		<div class="modale">
 			<div class="en-tete">
 				<span class="titre">{{ $t('motDePassePad') }}</span>
@@ -1172,7 +1185,7 @@
 		</div>
 	</div>
 
-	<div class="conteneur-modale" v-if="modaleModifierMotDePasse">
+	<div class="conteneur-modale" v-else-if="modaleModifierMotDePasse">
 		<div id="motdepasse" class="modale">
 			<div class="en-tete">
 				<span class="titre">{{ $t('modifierMotDePassePad') }}</span>
@@ -1186,6 +1199,35 @@
 					<input id="champ-nouveau-motdepasse" type="text" maxlength="48" :value="nouveauMotDePasse" @input="nouveauMotDePasse = $event.target.value" @keydown.enter="modifierMotDePasse">
 					<div class="actions">
 						<span role="button" tabindex="0" class="bouton" @click="modifierMotDePasse">{{ $t('modifier') }}</span>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<div class="conteneur-modale" v-else-if="modaleCopieBloc">
+		<div class="modale">
+			<div class="en-tete">
+				<span class="titre">{{ $t('copierCapsule') }}</span>
+				<span role="button" tabindex="0" class="fermer" @click="fermerModaleCopieBloc"><i class="material-icons">close</i></span>
+			</div>
+			<div class="conteneur">
+				<div class="contenu">
+					<label>{{ $t('capsuleACopier') }} {{ titre }}</label>
+					<label>{{ $t('padDestination') }}</label>
+					<select @change="padDestination = $event.target.value" v-if="donneesUtilisateur.padsCrees.length > 0 || donneesUtilisateur.padsAdmins.length > 0">
+						<option value="">-</option>
+						<option v-for="(item, indexItem) in donneesUtilisateur.padsCrees" :value="item.id" :key="'pad_cree_' + indexItem">{{ item.titre }}</option>
+						<option v-for="(item, indexItem) in donneesUtilisateur.padsAdmins" :value="item.id" :key="'pad_admin_' + indexItem">{{ item.titre }} ({{ $t('coadmin') }})</option>
+					</select>
+					<div class="vide" v-else>{{ $t('aucunPadDestination') }}</div>
+					<label v-if="verifierColonnesDestination() === true && padDestination !== ''">{{ $t('colonneDestination') }}</label>
+					<select @change="colonneDestination = $event.target.value" v-if="verifierColonnesDestination() === true && padDestination !== ''">
+						<option value="">-</option>
+						<option v-for="(item, indexItem) in definirNombreColonnesDestination()" :value="indexItem" :key="'colonne_' + item">{{ item }}</option>
+					</select>
+					<div class="actions">
+						<span role="button" tabindex="0" class="bouton" @click="envoyerBloc">{{ $t('valider') }}</span>
 					</div>
 				</div>
 			</div>

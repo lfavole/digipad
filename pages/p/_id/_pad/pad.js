@@ -157,7 +157,11 @@ export default {
 			contexte: '',
 			intervalle: '',
 			enregistrement: false,
-			dureeEnregistrement: '00 : 00'
+			dureeEnregistrement: '00 : 00',
+			donneesUtilisateur: {},
+			modaleCopieBloc: false,
+			padDestination: '',
+			colonneDestination: ''
 		}
 	},
 	head () {
@@ -1201,11 +1205,9 @@ export default {
 									this.chargementVignette = true
 									const url = new URL(this.lien)
 									const domaine = url.hostname
-									const chemin = url.pathname
 									const protocole = url.protocol
 									axios.post(this.hote + '/api/recuperer-icone', {
 										domaine: domaine,
-										chemin: chemin,
 										protocole: protocole
 									}).then(async function (reponse) {
 										this.chargementVignette = false
@@ -1213,17 +1215,23 @@ export default {
 											this.vignette = this.definirVignette(donnees)
 											this.vignetteDefaut = this.definirVignette(donnees)
 										} else if (reponse.data === '') {
-											const favicon = await this.recupererIcone(domaine)
-											if (favicon !== false) {
-												this.vignette = favicon
-												this.vignetteDefaut = favicon
+											const favicon = await this.verifierIcone(protocole + '//' + domaine + '/favicon.ico')
+											if (favicon === true) {
+												this.vignette = protocole + '//' + domaine + '/favicon.ico'
+												this.vignetteDefaut = protocole + '//' + domaine + '/favicon.ico'
 											} else {
 												this.vignette = this.definirVignette(donnees)
 												this.vignetteDefaut = this.definirVignette(donnees)
 											}
 										} else {
-											this.vignette = reponse.data
-											this.vignetteDefaut = reponse.data
+											const favicon = await this.verifierIcone(reponse.data)
+											if (favicon === true) {
+												this.vignette = reponse.data
+												this.vignetteDefaut = reponse.data
+											} else {
+												this.vignette = this.definirVignette(donnees)
+												this.vignetteDefaut = this.definirVignette(donnees)
+											}
 										}
 									}.bind(this)).catch(function () {
 										this.vignette = this.definirVignette(donnees)
@@ -1279,16 +1287,13 @@ export default {
 				}
 			}
 		},
-		async recupererIcone (protocole, domaine) {
-			const favicon = protocole + '//' + domaine + '/favicon.ico'
-			const r = await fetch(favicon)
-			if (r.ok) {
-				const t = await r.blob()
-				if (t.type.includes('image')) {
-					return favicon
-				}
-			}
-			return false
+		verifierIcone (lien) {
+			return new Promise(function (resolve) {
+				const img = new Image()
+				img.src = lien
+				img.onload = () => resolve(true)
+				img.onerror = () => resolve(false)
+			})
 		},
 		rechercherImage (page) {
 			if (this.lien !== '') {
@@ -1535,6 +1540,101 @@ export default {
 			this.titre = ''
 			this.messageConfirmation = ''
 			this.typeConfirmation = ''
+		},
+		async afficherEnvoyerBloc (bloc, titre) {
+			this.blocId = bloc
+			this.titre = titre
+			if (Object.keys(this.donneesUtilisateur).length === 0) {
+				this.chargement = true
+				const reponse = await axios.post(this.hote + '/api/recuperer-donnees-utilisateur', {
+					identifiant: this.identifiant
+				}, {
+					headers: { 'Content-Type': 'application/json' }
+				}).catch(function () {
+					this.chargement = false
+					this.$store.dispatch('modifierAlerte', this.$t('erreurCommunicationServeur'))
+				}.bind(this))
+				this.chargement = false
+				const padsCrees = reponse.data.padsCrees.filter(function (element) {
+					return parseInt(element.id) !== parseInt(this.pad.id)
+				}.bind(this))
+				const padsAdmins = reponse.data.padsAdmins.filter(function (element) {
+					return parseInt(element.id) !== parseInt(this.pad.id)
+				}.bind(this))
+				this.donneesUtilisateur.padsCrees = padsCrees
+				this.donneesUtilisateur.padsAdmins = padsAdmins
+			}
+			this.modaleCopieBloc = true
+		},
+		verifierColonnesDestination () {
+			if (this.padDestination !== '') {
+				let colonnes = false
+				this.donneesUtilisateur.padsCrees.forEach(function (pad) {
+					if (parseInt(pad.id) === parseInt(this.padDestination) && pad.affichage === 'colonnes' && JSON.parse(pad.colonnes).length > 0) {
+						colonnes = true
+					}
+				}.bind(this))
+				this.donneesUtilisateur.padsAdmins.forEach(function (pad) {
+					if (parseInt(pad.id) === parseInt(this.padDestination) && pad.affichage === 'colonnes' && JSON.parse(pad.colonnes).length > 0) {
+						colonnes = true
+					}
+				}.bind(this))
+				return colonnes
+			} else {
+				return false
+			}
+		},
+		definirNombreColonnesDestination () {
+			let colonnes = []
+			this.donneesUtilisateur.padsCrees.forEach(function (pad) {
+				if (parseInt(pad.id) === parseInt(this.padDestination)) {
+					colonnes = JSON.parse(pad.colonnes)
+				}
+			}.bind(this))
+			this.donneesUtilisateur.padsAdmins.forEach(function (pad) {
+				if (parseInt(pad.id) === parseInt(this.padDestination)) {
+					colonnes = JSON.parse(pad.colonnes)
+				}
+			}.bind(this))
+			return colonnes
+		},
+		envoyerBloc () {
+			if (this.padDestination !== '' && ((this.verifierColonnesDestination() === true && this.colonneDestination !== '') || (this.verifierColonnesDestination() === false && this.colonneDestination === ''))) {
+				let donneesBloc = {}
+				let token = ''
+				let colonneDestination = this.colonneDestination
+				this.blocs.forEach(function (item) {
+					if (item.bloc === this.blocId) {
+						donneesBloc = item
+					}
+				}.bind(this))
+				this.donneesUtilisateur.padsCrees.forEach(function (pad) {
+					if (parseInt(pad.id) === parseInt(this.padDestination)) {
+						token = pad.token
+					}
+				}.bind(this))
+				this.donneesUtilisateur.padsAdmins.forEach(function (pad) {
+					if (parseInt(pad.id) === parseInt(this.padDestination)) {
+						token = pad.token
+					}
+				}.bind(this))
+				if (colonneDestination === '') {
+					colonneDestination = 0
+				}
+				if (Object.keys(donneesBloc).length > 0 && token !== '') {
+					this.chargement = true
+					const id = 'bloc-id-' + (new Date()).getTime() + Math.random().toString(16).slice(10)
+					this.$socket.emit('copierbloc', id, this.padDestination, token, donneesBloc.titre, donneesBloc.texte, donneesBloc.media, donneesBloc.iframe, donneesBloc.type, donneesBloc.source, donneesBloc.vignette, donneesBloc.couleur, colonneDestination, donneesBloc.visibilite, this.identifiant, this.nom, this.pad.id)
+					this.fermerModaleCopieBloc()
+				}
+			}
+		},
+		fermerModaleCopieBloc () {
+			this.modaleCopieBloc = false
+			this.blocId = ''
+			this.titre = ''
+			this.padDestination = ''
+			this.colonneDestination = ''
 		},
 		afficherVisionneuse (item) {
 			if (this.panneaux.map(function (e) { return e.id }).includes('panneau_' + item.bloc) === false) {
@@ -2613,6 +2713,14 @@ export default {
 			}
 			this.chargement = true
 		},
+		modifierCopieBloc (event) {
+			if (event.target.checked === true) {
+				this.$socket.emit('modifiercopiebloc', this.pad.id, 'activee', this.identifiant)
+			} else {
+				this.$socket.emit('modifiercopiebloc', this.pad.id, 'desactivee', this.identifiant)
+			}
+			this.chargement = true
+		},
 		fermerMenuOptions () {
 			this.menuOptions = false
 			if (document.querySelector('#titre-pad')) {
@@ -3037,6 +3145,11 @@ export default {
 					}
 					this.envoyerNotificationAdmins()
 				}
+			}.bind(this))
+
+			this.$socket.on('copierbloc', function () {
+				this.chargement = false
+				this.$store.dispatch('modifierMessage', this.$t('capsuleCopiee'))
 			}.bind(this))
 
 			this.$socket.on('modifierbloc', function (donnees) {
@@ -3491,6 +3604,14 @@ export default {
 				this.chargement = false
 				if (this.admin) {
 					this.$store.dispatch('modifierMessage', this.$t('parametreEvaluationModifie'))
+				}
+			}.bind(this))
+
+			this.$socket.on('modifiercopiebloc', function (statut) {
+				this.pad.copieBloc = statut
+				this.chargement = false
+				if (this.admin) {
+					this.$store.dispatch('modifierMessage', this.$t('parametreCopieBlocModifie'))
 				}
 			}.bind(this))
 
