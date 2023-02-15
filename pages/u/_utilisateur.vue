@@ -596,6 +596,8 @@ export default {
 		},
 		creerPad () {
 			if (this.titre !== '') {
+				this.chargement = true
+				this.modaleCreerPad = false
 				axios.post(this.hote + '/api/creer-pad', {
 					titre: this.titre,
 					identifiant: this.identifiant
@@ -604,12 +606,13 @@ export default {
 					if (donnees === 'non_connecte') {
 						this.$router.push('/')
 					} else if (donnees === 'erreur_creation') {
+						this.chargement = false
 						this.$store.dispatch('modifierAlerte', this.$t('erreurCreationPad'))
 					} else {
-						this.padsCrees.push(donnees)
-						this.$router.push('/p/' + donnees.id + '/' + donnees.token)
+						window.location.href = '/p/' + donnees.id + '/' + donnees.token
 					}
 				}.bind(this)).catch(function () {
+					this.chargement = false
 					this.$store.dispatch('modifierAlerte', this.$t('erreurCommunicationServeur'))
 				}.bind(this))
 			}
