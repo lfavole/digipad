@@ -108,6 +108,8 @@
 						<label for="champ-identifiant">{{ $t('identifiant') }}</label>
 						<p class="information">{{ $t('infoIdentifiant') }}</p>
 						<input id="champ-identifiant" type="text" maxlength="48" :value="identifiant" @input="identifiant = $event.target.value">
+						<label for="champ-email">{{ $t('email') }}</label>
+						<input id="champ-email" type="text" :value="email" @input="email = $event.target.value">
 						<label for="champ-motdepasse">{{ $t('motDePasse') }}</label>
 						<p class="information">{{ $t('infoMotDePasse') }}</p>
 						<input id="champ-motdepasse" type="password" maxlength="48" :value="motDePasse" @input="motDePasse = $event.target.value">
@@ -281,11 +283,12 @@ export default {
 			})
 		},
 		sInscrire () {
-			if (this.identifiant.trim() !== '' && this.motDePasse.trim() !== '' && this.motDePasse.trim() === this.confirmationMotDePasse.trim()) {
+			if (this.identifiant.trim() !== '' && this.motDePasse.trim() !== '' && this.motDePasse.trim() === this.confirmationMotDePasse.trim() && this.email.trim() !== '' && this.$verifierEmail(this.email.trim()) === true) {
 				this.chargement = true
 				axios.post(this.hote + '/api/inscription', {
 					identifiant: this.identifiant.trim(),
-					motdepasse: this.motDePasse.trim()
+					motdepasse: this.motDePasse.trim(),
+					email: this.email.trim()
 				}).then(function (reponse) {
 					this.chargement = false
 					const donnees = reponse.data
@@ -300,10 +303,12 @@ export default {
 					this.chargement = false
 					this.$store.dispatch('modifierAlerte', this.$t('erreurCommunicationServeur'))
 				}.bind(this))
-			} else if (this.identifiant.trim() === '' || this.motDePasse.trim() === '' || this.confirmationMotDePasse.trim() === '') {
+			} else if (this.identifiant.trim() === '' || this.motDePasse.trim() === '' || this.confirmationMotDePasse.trim() === '' || this.email.trim() === '') {
 				this.$store.dispatch('modifierAlerte', this.$t('remplirChamps'))
 			} else if (this.motDePasse.trim() !== this.confirmationMotDePasse.trim()) {
 				this.$store.dispatch('modifierAlerte', this.$t('motsDePassePasIdentiques'))
+			} else if (this.$verifierEmail(this.email.trim()) === false) {
+				this.$store.dispatch('modifierAlerte', this.$t('erreurEmail'))
 			}
 		},
 		afficherModaleMotDePasseOublie () {
