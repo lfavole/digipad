@@ -261,7 +261,7 @@ app.post('/api/connexion', function (req, res) {
 
 app.post('/api/mot-de-passe-oublie', function (req, res) {
 	const identifiant = req.body.identifiant
-	let email = req.body.email
+	let email = req.body.email.trim()
 	db.exists('utilisateurs:' + identifiant, function (err, reponse) {
 		if (err) { res.send('erreur'); return false }
 		if (reponse === 1) {
@@ -273,7 +273,7 @@ app.post('/api/mot-de-passe-oublie', function (req, res) {
 					const motdepasse = genererMotDePasse(7)
 					const message = {
 						from: '"La Digitale" <' + process.env.EMAIL_ADDRESS + '>',
-						to: '"Moi" <' + email.trim() + '>',
+						to: '"Moi" <' + email + '>',
 						subject: 'Mot de passe Digipad',
 						html: '<p>Votre nouveau mot de passe : ' + motdepasse + '</p>'
 					}
@@ -1404,7 +1404,9 @@ app.post('/api/supprimer-pad', function (req, res) {
 					})
 					multi.del('utilisateurs-pads:' + pad)
 					multi.exec(function () {
-						fs.removeSync(path.join(__dirname, '..', '/static/' + definirDossierFichiers(pad) + '/' + pad))
+						if (suppressionFichiers === true) {
+							fs.removeSync(path.join(__dirname, '..', '/static/' + definirDossierFichiers(pad) + '/' + pad))
+						}
 						fs.removeSync(path.join(__dirname, '..', '/static/pads/' + pad + '.json'))
 						fs.removeSync(path.join(__dirname, '..', '/static/pads/pad-' + pad + '.json'))
 						res.send('pad_supprime')
@@ -1934,21 +1936,14 @@ app.post('/api/verifier-acces', function (req, res) {
 	db.hgetall('pads:' + pad, function (err, donnees) {
 		if (err) { res.send('erreur'); return false }
 		if (identifiant === donnees.identifiant && bcrypt.compareSync(req.body.motdepasse, donnees.motdepasse)) {
-			let couleur = choisirCouleur()
 			db.hgetall('utilisateurs:' + identifiant, function (err, utilisateur) {
 				if (err) { res.send('erreur'); return false }
-				db.hget('couleurs:' + identifiant, 'pad' + pad, function (err, col) {
-					if (err) { res.send('erreur'); return false }
-					if (!err && col !== null) {
-						couleur = col
-					}
-					req.session.identifiant = identifiant
-					req.session.nom = utilisateur.nom
-					req.session.statut = 'auteur'
-					req.session.langue = utilisateur.langue
-					req.session.cookie.expires = new Date(Date.now() + dureeSession)
-					res.json({ message: 'pad_debloque', nom: utilisateur.nom, langue: utilisateur.langue })
-				})
+				req.session.identifiant = identifiant
+				req.session.nom = utilisateur.nom
+				req.session.statut = 'auteur'
+				req.session.langue = utilisateur.langue
+				req.session.cookie.expires = new Date(Date.now() + dureeSession)
+				res.json({ message: 'pad_debloque', nom: utilisateur.nom, langue: utilisateur.langue })
 			})
 		} else {
 			res.send('erreur')
