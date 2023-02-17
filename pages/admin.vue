@@ -127,17 +127,24 @@
 				</div>
 			</div>
 		</div>
+
+		<chargement :chargement="chargement" v-if="chargement" />
 	</main>
 </template>
 
 <script>
 import axios from 'axios'
 import saveAs from 'file-saver'
+import chargement from '../components/chargement.vue'
 
 export default {
 	name: 'Admin',
+	components: {
+		chargement
+	},
 	data () {
 		return {
+			chargement: false,
 			acces: false,
 			admin: '',
 			modale: '',
