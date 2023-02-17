@@ -31,7 +31,7 @@
 		<span id="organisation" role="button" tabindex="0" :title="$t('finModeOrganiser')" class="actif" @click="desactiverModeOrganiser" v-else-if="admin && action === 'organiser'"><i class="material-icons">sort</i></span>
 		<span id="diaporama" role="button" tabindex="0" :title="$t('modeDiaporama')" :class="{'desactive': blocs.length === 0}" @click="afficherModaleDiaporama"><i class="material-icons">slideshow</i></span>
 		<span id="deconnexion" role="button" tabindex="0" :title="$t('deconnexion')" @click="deconnexion" v-if="statut === 'utilisateur'"><i class="material-icons">power_settings_new</i></span>
-		<span id="deconnexion" role="button" tabindex="0" :title="$t('seDeconnecterPad')" @click="afficherSeDeconnecterPad" v-else-if="statut === 'auteur'"><i class="material-icons">power_settings_new</i></span>
+		<span id="deconnexion" role="button" tabindex="0" :title="$t('seDeconnecterPad')" @click="afficherSeDeconnecterPad" v-else-if="admin"><i class="material-icons">power_settings_new</i></span>
 	</nav>
 
 	<div class="menu gauche" :class="{'ouvert': menuActivite}">
