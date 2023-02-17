@@ -856,7 +856,8 @@ export default {
 			this.chargement = true
 			axios.post(this.hote + '/api/exporter-pad', {
 				padId: this.padId,
-				identifiant: this.identifiant
+				identifiant: this.identifiant,
+				admin: ''
 			}).then(function (reponse) {
 				this.chargement = false
 				const donnees = reponse.data

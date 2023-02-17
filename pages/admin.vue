@@ -71,6 +71,16 @@
 					<span class="bouton" role="button" tabindex="0" @click="modifierDonneesPad">{{ $t('valider') }}</span>
 				</div>
 				<h1>
+					<span>{{ $t('exporterPad') }}</span>
+				</h1>
+				<div class="conteneur">
+					<label>{{ $t('numeroPad') }}</label>
+					<input type="number" :value="padIdE" @input="padIdE = $event.target.value">
+				</div>
+				<div class="actions">
+					<span class="bouton" role="button" tabindex="0" @click="exporterPad">{{ $t('valider') }}</span>
+				</div>
+				<h1>
 					<span>{{ $t('supprimerPad') }}</span>
 				</h1>
 				<div class="conteneur">
@@ -122,6 +132,7 @@
 
 <script>
 import axios from 'axios'
+import saveAs from 'file-saver'
 
 export default {
 	name: 'Admin',
@@ -136,6 +147,7 @@ export default {
 			padId: '',
 			padIdS: '',
 			padIdM: '',
+			padIdE: '',
 			donneesPad: '',
 			identifiantS: '',
 			champ: '',
@@ -276,6 +288,30 @@ export default {
 				this.suppressionFichiers = true
 			} else {
 				this.suppressionFichiers = false
+			}
+		},
+		exporterPad () {
+			if (this.padIdE !== '') {
+				this.chargement = true
+				axios.post(this.hote + '/api/exporter-pad', {
+					padId: this.padIdE,
+					identifiant: '',
+					admin: this.admin
+				}).then(function (reponse) {
+					const donnees = reponse.data
+					if (donnees === 'erreur_export') {
+						this.chargement = false
+						this.$store.dispatch('modifierAlerte', this.$t('erreurExportPad'))
+					} else {
+						saveAs('/temp/' + donnees, 'pad-' + this.padIdE + '.zip')
+						this.chargement = false
+						this.padIdE = ''
+					}
+				}.bind(this)).catch(function () {
+					this.chargement = false
+					this.padIdE = ''
+					this.$store.dispatch('modifierAlerte', this.$t('erreurCommunicationServeur'))
+				}.bind(this))
 			}
 		},
 		supprimerPad () {

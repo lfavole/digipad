@@ -924,7 +924,9 @@ app.post('/api/dupliquer-pad', function (req, res) {
 
 app.post('/api/exporter-pad', function (req, res) {
 	const identifiant = req.body.identifiant
-	if (req.session.identifiant && req.session.identifiant === identifiant) {
+	const admin = req.body.admin
+	const motdepasseAdmin = process.env.ADMIN_PASSWORD
+	if ((req.session.identifiant && req.session.identifiant === identifiant) || (admin !== '' && admin === motdepasseAdmin)) {
 		const id = req.body.padId
 		db.exists('pads:' + id, async function (err, resultat) {
 			if (resultat === 1) {
