@@ -980,6 +980,9 @@ app.post('/api/exporter-pad', function (req, res) {
 							donneesBlocs.push(donneesBloc)
 						}
 						Promise.all(donneesBlocs).then(function (resultat) {
+							resultat = resultat.filter(function (element) {
+								return Object.keys(element).length > 0
+							})
 							resolveMain(resultat)
 						})
 					})
@@ -999,12 +1002,15 @@ app.post('/api/exporter-pad', function (req, res) {
 							donneesEntrees.push(donneesEntree)
 						}
 						Promise.all(donneesEntrees).then(function (resultat) {
+							resultat = resultat.filter(function (element) {
+								return Object.keys(element).length > 0
+							})
 							resolveMain(resultat)
 						})
 					})
 				})
 				Promise.all([donneesPad, blocsPad, activitePad]).then(function (donnees) {
-					if (donnees.length > 0 && donnees[0].id) {
+					if (donnees.length > 0 && donnees[0].hasOwnProperty('id')) {
 						const parametres = {}
 						parametres.pad = donnees[0]
 						parametres.blocs = donnees[1]
@@ -1018,7 +1024,7 @@ app.post('/api/exporter-pad', function (req, res) {
 						fs.writeFileSync(path.normalize(chemin + '/' + id + '/index.html'), html, 'utf8')
 						if (!parametres.pad.fond.includes('/img/') && parametres.pad.fond.substring(0, 1) !== '#' && fs.existsSync(path.join(__dirname, '..', '/static' + parametres.pad.fond))) {
 							fs.copySync(path.join(__dirname, '..', '/static' + parametres.pad.fond), path.normalize(chemin + '/' + id + '/fichiers/' + parametres.pad.fond.split('/').pop(), { overwrite: true }))
-						} else if (parametres.pad.fond.includes('/img/')) {
+						} else if (parametres.pad.fond.includes('/img/') && fs.existsSync(path.join(__dirname, '..', '/static' + parametres.pad.fond))) {
 							fs.copySync(path.join(__dirname, '..', '/static' + parametres.pad.fond), path.normalize(chemin + '/' + id + '/static' + parametres.pad.fond, { overwrite: true }))
 						}
 						if (fs.existsSync(path.join(__dirname, '..', '/assets/export/css'))) {
@@ -1038,7 +1044,7 @@ app.post('/api/exporter-pad', function (req, res) {
 							}
 							if (Object.keys(bloc).length > 0 && bloc.vignette !== '' && bloc.vignette.substring(1, definirDossierFichiers(id).length + 1) === definirDossierFichiers(id) && fs.existsSync(path.join(__dirname, '..', '/static' + bloc.vignette))) {
 								fs.copySync(path.join(__dirname, '..', '/static' + bloc.vignette), path.normalize(chemin + '/' + id + '/fichiers/' + bloc.vignette.replace('/' + definirDossierFichiers(id) + '/' + id + '/', ''), { overwrite: true }))
-							} else if (Object.keys(bloc).length > 0 && bloc.vignette !== '' && bloc.vignette.includes('/img/')) {
+							} else if (Object.keys(bloc).length > 0 && bloc.vignette !== '' && bloc.vignette.includes('/img/') && fs.existsSync(path.join(__dirname, '..', '/static' + bloc.vignette))) {
 								fs.copySync(path.join(__dirname, '..', '/static' + bloc.vignette), path.normalize(chemin + '/' + id + '/static' + bloc.vignette, { overwrite: true }))
 							}
 						}
@@ -1069,7 +1075,7 @@ app.post('/api/exporter-pad', function (req, res) {
 				fs.writeFileSync(path.normalize(chemin + '/' + id + '/index.html'), html, 'utf8')
 				if (!donnees.pad.fond.includes('/img/') && donnees.pad.fond.substring(0, 1) !== '#' && fs.existsSync(path.join(__dirname, '..', '/static' + donnees.pad.fond))) {
 					fs.copySync(path.join(__dirname, '..', '/static' + donnees.pad.fond), path.normalize(chemin + '/' + id + '/fichiers/' + donnees.pad.fond.split('/').pop(), { overwrite: true }))
-				} else if (donnees.pad.fond.includes('/img/')) {
+				} else if (donnees.pad.fond.includes('/img/') && fs.existsSync(path.join(__dirname, '..', '/static' + donnees.pad.fond))) {
 					fs.copySync(path.join(__dirname, '..', '/static' + donnees.pad.fond), path.normalize(chemin + '/' + id + '/static' + donnees.pad.fond, { overwrite: true }))
 				}
 				if (fs.existsSync(path.join(__dirname, '..', '/assets/export/css'))) {
@@ -1089,7 +1095,7 @@ app.post('/api/exporter-pad', function (req, res) {
 					}
 					if (Object.keys(bloc).length > 0 && bloc.vignette !== '' && bloc.vignette.substring(1, definirDossierFichiers(id).length + 1) === definirDossierFichiers(id) && fs.existsSync(path.join(__dirname, '..', '/static' + bloc.vignette))) {
 						fs.copySync(path.join(__dirname, '..', '/static' + bloc.vignette), path.normalize(chemin + '/' + id + '/fichiers/' + bloc.vignette.replace('/' + definirDossierFichiers(id) + '/' + id + '/', ''), { overwrite: true }))
-					} else if (Object.keys(bloc).length > 0 && bloc.vignette !== '' && bloc.vignette.includes('/img/')) {
+					} else if (Object.keys(bloc).length > 0 && bloc.vignette !== '' && bloc.vignette.includes('/img/') && fs.existsSync(path.join(__dirname, '..', '/static' + bloc.vignette))) {
 						fs.copySync(path.join(__dirname, '..', '/static' + bloc.vignette), path.normalize(chemin + '/' + id + '/static' + bloc.vignette, { overwrite: true }))
 					}
 				}
