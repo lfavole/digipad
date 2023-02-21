@@ -845,8 +845,8 @@ export default {
 					let html = event.clipboardData.getData('text/html')
 					if (html !== '') {
 						html = stripTags(html, ['b', 'i', 'u', 'a', 'br', 'div', 'font', 'ul', 'ol'])
-						html = html.replace(/style="[^"]*"/, '')
-						html = html.replace(/class="[^"]*"/, '')
+						html = html.replace(/style=".*?"/mg, '')
+						html = html.replace(/class=".*?"/mg, '')
 						pell.exec('insertHTML', html)
 					} else {
 						pell.exec('insertText', event.clipboardData.getData('text/plain'))
@@ -2117,8 +2117,8 @@ export default {
 					let html = event.clipboardData.getData('text/html')
 					if (html !== '') {
 						html = stripTags(html, ['b', 'i', 'u', 'a', 'br', 'div', 'font', 'ul', 'ol'])
-						html = html.replace(/style="[^"]*"/, '')
-						html = html.replace(/class="[^"]*"/, '')
+						html = html.replace(/style=".*?"/mg, '')
+						html = html.replace(/class=".*?"/mg, '')
 						pell.exec('insertHTML', html)
 					} else {
 						pell.exec('insertText', event.clipboardData.getData('text/plain'))
@@ -2183,8 +2183,8 @@ export default {
 					let html = event.clipboardData.getData('text/html')
 					if (html !== '') {
 						html = stripTags(html, ['b', 'i', 'u', 'a', 'br', 'div', 'font', 'ul', 'ol'])
-						html = html.replace(/style="[^"]*"/, '')
-						html = html.replace(/class="[^"]*"/, '')
+						html = html.replace(/style=".*?"/mg, '')
+						html = html.replace(/class=".*?"/mg, '')
 						pell.exec('insertHTML', html)
 					} else {
 						pell.exec('insertText', event.clipboardData.getData('text/plain'))
