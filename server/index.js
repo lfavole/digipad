@@ -184,10 +184,10 @@ app.post('/api/inscription', function (req, res) {
 	const identifiant = req.body.identifiant
 	const motdepasse = req.body.motdepasse
 	const email = req.body.email
-	db.exists('utilisateurs:' + identifiant, function (err, reponse) {
+	db.exists('utilisateurs:' + identifiant, async function (err, reponse) {
 		if (err) { res.send('erreur'); return false  }
 		if (reponse === 0) {
-			const hash = bcrypt.hashSync(motdepasse, 10)
+			const hash = await bcrypt.hash(motdepasse, 10)
 			const date = moment().format()
 			let langue = 'fr'
 			if (req.session.hasOwnProperty('langue') && req.session.langue !== '' && req.session.langue !== undefined) {
@@ -218,11 +218,16 @@ app.post('/api/connexion', function (req, res) {
 	db.exists('utilisateurs:' + identifiant, function (err, reponse) {
 		if (err) { res.send('erreur_connexion'); return false }
 		if (reponse === 1 && req.session.identifiant !== identifiant) {
-			db.hgetall('utilisateurs:' + identifiant, function (err, donnees) {
+			db.hgetall('utilisateurs:' + identifiant, async function (err, donnees) {
 				if (err) { res.send('erreur_connexion'); return false }
-				if (bcrypt.compareSync(motdepasse, donnees.motdepasse) || (donnees.hasOwnProperty('motdepassetemp') && bcrypt.compareSync(motdepasse, donnees.motdepassetemp))) {
-					if (donnees.hasOwnProperty('motdepassetemp') && bcrypt.compareSync(motdepasse, donnees.motdepassetemp)) {
-						const hash = bcrypt.hashSync(motdepasse, 10)
+				const comparaison = await bcrypt.compare(motdepasse, donnees.motdepasse)
+				let comparaisonTemp = false
+				if (donnees.hasOwnProperty('motdepassetemp')) {
+					comparaisonTemp = await bcrypt.compare(motdepasse, donnees.motdepassetemp)
+				}
+				if (comparaison === true || comparaisonTemp === true) {
+					if (comparaisonTemp === true) {
+						const hash = await bcrypt.hash(motdepasse, 10)
 						db.hset('utilisateurs:' + identifiant, 'motdepasse', hash)
 						db.hdel('utilisateurs:' + identifiant, 'motdepassetemp')
 					}
@@ -277,11 +282,11 @@ app.post('/api/mot-de-passe-oublie', function (req, res) {
 						subject: 'Mot de passe Digipad',
 						html: '<p>Votre nouveau mot de passe : ' + motdepasse + '</p>'
 					}
-					transporter.sendMail(message, function (err) {
+					transporter.sendMail(message, async function (err) {
 						if (err) {
 							res.send('erreur')
 						} else {
-							const hash = bcrypt.hashSync(motdepasse, 10)
+							const hash = await bcrypt.hash(motdepasse, 10)
 							db.hset('utilisateurs:' + identifiant, 'motdepassetemp', hash)
 							res.send('message_envoye')
 						}
@@ -575,7 +580,7 @@ app.post('/api/creer-pad', function (req, res) {
 	}
 })
 
-app.post('/api/creer-pad-sans-compte', function (req, res) {
+app.post('/api/creer-pad-sans-compte', async function (req, res) {
 	if (maintenance === true) {
 		res.redirect('/maintenance')
 		return false
@@ -592,7 +597,7 @@ app.post('/api/creer-pad-sans-compte', function (req, res) {
 	}
 	const titre = req.body.titre
 	const motdepasse = req.body.motdepasse
-	const hash = bcrypt.hashSync(motdepasse, 10)
+	const hash = await bcrypt.hash(motdepasse, 10)
 	const token = Math.random().toString(16).slice(2)
 	const date = moment().format()
 	let langue = 'fr'
@@ -632,10 +637,10 @@ app.post('/api/modifier-mot-de-passe-pad', function (req, res) {
 	const identifiant = req.body.identifiant
 	if (req.session.identifiant && req.session.identifiant === identifiant) {
 		const pad = req.body.pad
-		db.hgetall('pads:' + pad, function (err, donnees) {
+		db.hgetall('pads:' + pad, async function (err, donnees) {
 			if (err) { res.send('erreur'); return false }
-			if (bcrypt.compareSync(req.body.motdepasse, donnees.motdepasse)) {
-				const hash = bcrypt.hashSync(req.body.nouveaumotdepasse, 10)
+			if (await bcrypt.compare(req.body.motdepasse, donnees.motdepasse)) {
+				const hash = await bcrypt.hash(req.body.nouveaumotdepasse, 10)
 				db.hset('pads:' + pad, 'motdepasse', hash)
 				res.send('motdepasse_modifie')
 			} else {
@@ -1486,10 +1491,10 @@ app.post('/api/modifier-informations', function (req, res) {
 app.post('/api/modifier-mot-de-passe', function (req, res) {
 	const identifiant = req.body.identifiant
 	if (req.session.identifiant && req.session.identifiant === identifiant) {
-		db.hgetall('utilisateurs:' + identifiant, function (err, donnees) {
+		db.hgetall('utilisateurs:' + identifiant, async function (err, donnees) {
 			if (err) { res.send('erreur'); return false }
-			if (bcrypt.compareSync(req.body.motdepasse, donnees.motdepasse)) {
-				const hash = bcrypt.hashSync(req.body.nouveaumotdepasse, 10)
+			if (await bcrypt.compare(req.body.motdepasse, donnees.motdepasse)) {
+				const hash = await bcrypt.hash(req.body.nouveaumotdepasse, 10)
 				db.hset('utilisateurs:' + identifiant, 'motdepasse', hash)
 				res.send('motdepasse_modifie')
 			} else {
@@ -1507,10 +1512,10 @@ app.post('/api/modifier-mot-de-passe-admin', function (req, res) {
 		const identifiant = req.body.identifiant
 		const email = req.body.email
 		if (identifiant !== '') {
-			db.exists('utilisateurs:' + identifiant, function (err, resultat) {
+			db.exists('utilisateurs:' + identifiant, async function (err, resultat) {
 				if (err) { res.send('erreur'); return false }
 				if (resultat === 1) {
-					const hash = bcrypt.hashSync(req.body.motdepasse, 10)
+					const hash = await bcrypt.hash(req.body.motdepasse, 10)
 					db.hset('utilisateurs:' + identifiant, 'motdepasse', hash)
 					res.send('motdepasse_modifie')
 				} else {
@@ -1534,7 +1539,7 @@ app.post('/api/modifier-mot-de-passe-admin', function (req, res) {
 						})
 						donneesUtilisateurs.push(donneesUtilisateur)
 					})
-					Promise.all(donneesUtilisateurs).then(function (donnees) {
+					Promise.all(donneesUtilisateurs).then(async function (donnees) {
 						let utilisateurId = ''
 						donnees.forEach(function (utilisateur) {
 							if (utilisateur.hasOwnProperty('email') && utilisateur.email.toLowerCase() === email.toLowerCase()) {
@@ -1542,7 +1547,7 @@ app.post('/api/modifier-mot-de-passe-admin', function (req, res) {
 							}
 						})
 						if (utilisateurId !== '') {
-							const hash = bcrypt.hashSync(req.body.motdepasse, 10)
+							const hash = await bcrypt.hash(req.body.motdepasse, 10)
 							db.hset('utilisateurs:' + utilisateurId, 'motdepasse', hash)
 							res.send(utilisateurId)
 						} else {
@@ -1577,11 +1582,11 @@ app.post('/api/modifier-donnees-pad-admin', function (req, res) {
 	const pad = req.body.padId
 	const champ = req.body.champ
 	const valeur = req.body.valeur
-	db.exists('pads:' + pad, function (err, resultat) {
+	db.exists('pads:' + pad, async function (err, resultat) {
 		if (err) { res.send('erreur'); return false }
 		if (resultat === 1) {
 			if (champ === 'motdepasse') {
-				const hash = bcrypt.hashSync(valeur, 10)
+				const hash = await bcrypt.hash(valeur, 10)
 				db.hset('pads:' + pad, champ, hash)
 			} else if (champ === 'code') {
 				db.hset('pads:' + pad, champ, parseInt(valeur))
@@ -1928,9 +1933,9 @@ app.post('/api/verifier-identifiant', function (req, res) {
 
 app.post('/api/verifier-mot-de-passe', function (req, res) {
 	const pad = req.body.pad
-	db.hgetall('pads:' + pad, function (err, donnees) {
+	db.hgetall('pads:' + pad, async function (err, donnees) {
 		if (err) { res.send('erreur'); return false }
-		if (bcrypt.compareSync(req.body.motdepasse, donnees.motdepasse)) {
+		if (await bcrypt.compare(req.body.motdepasse, donnees.motdepasse)) {
 			res.send('motdepasse_correct')
 		} else {
 			res.send('motdepasse_incorrect')
@@ -3771,7 +3776,7 @@ function creerPadSansCompte (req, res, id, token, titre, hash, date, identifiant
 		multi.incr('pad')
 	}
 	multi.hmset('pads:' + id, 'id', id, 'token', token, 'titre', titre, 'identifiant', identifiant, 'motdepasse', hash, 'fond', '/img/fond1.png', 'acces', 'public', 'contributions', 'ouvertes', 'affichage', 'mur', 'registreActivite', 'active', 'conversation', 'desactivee', 'listeUtilisateurs', 'activee', 'editionNom', 'desactivee', 'fichiers', 'actives', 'enregistrements', 'desactives', 'liens', 'actives', 'documents', 'desactives', 'commentaires', 'desactives', 'evaluations', 'desactivees', 'copieBloc', 'desactivee', 'ordre', 'croissant', 'largeur', 'normale', 'date', date, 'colonnes', JSON.stringify([]), 'affichageColonnes', JSON.stringify([]), 'bloc', 0, 'activite', 0)
-	multi.hmset('utilisateurs:' + identifiant, 'id', identifiant, 'motdepasse', '', 'date', date, 'nom', nom, 'langue', langue)
+	multi.hmset('utilisateurs:' + identifiant, 'id', identifiant, 'date', date, 'nom', nom, 'langue', langue)
 	multi.exec(function () {
 		const chemin = path.join(__dirname, '..', '/static/' + definirDossierFichiers(id) + '/' + id)
 		fs.mkdirsSync(chemin)
