@@ -2761,7 +2761,7 @@ io.on('connection', function (socket) {
 				if (err) { socket.emit('erreur'); return false }
 				const dateModification = moment().format()
 				const date = JSON.parse(donnees).date
-				const commentaire = { id: id, identifiant: identifiant, date: date, modifie: dateModification, texte: texte }
+				const commentaire = { id: id, identifiant: JSON.parse(donnees).identifiant, date: date, modifie: dateModification, texte: texte }
 				const multi = db.multi()
 				multi.zremrangebyscore('commentaires:' + bloc, id, id)
 				multi.zadd('commentaires:' + bloc, id, JSON.stringify(commentaire))
