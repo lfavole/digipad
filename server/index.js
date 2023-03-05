@@ -2322,7 +2322,6 @@ app.post('/api/ladigitale', function (req, res) {
 			res.send('erreur_token')
 		} else if (reponse.data === 'token_autorise' && req.body.action && req.body.action === 'creer') {
 			const identifiant = req.body.identifiant
-			req.session.identifiant = identifiant
 			let nom = req.body.nomUtilisateur
 			if (nom === '') {
 				nom = genererPseudo()
