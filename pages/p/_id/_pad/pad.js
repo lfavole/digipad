@@ -37,7 +37,10 @@ export default {
 				redirection = '/u/' + identifiant
 			}
 			return {
-				redirection: redirection
+				redirection: redirection,
+				pad: {},
+				blocs: [],
+				activite: []
 			}
 		})
 		if (!reponse || !reponse.hasOwnProperty('data')) {
@@ -46,15 +49,24 @@ export default {
 				redirection = '/u/' + identifiant
 			}
 			return {
-				redirection: redirection
+				redirection: redirection,
+				pad: {},
+				blocs: [],
+				activite: []
 			}
 		} else if (reponse.data && reponse.data === 'erreur_pad' && statut === 'utilisateur') {
 			return {
-				redirection: '/u/' + identifiant
+				redirection: '/u/' + identifiant,
+				pad: {},
+				blocs: [],
+				activite: []
 			}
 		} else if (reponse.data && reponse.data === 'erreur_pad' && (statut === 'invite' || statut === 'auteur' || statut === '')) {
 			return {
-				redirection: '/'
+				redirection: '/',
+				pad: {},
+				blocs: [],
+				activite: []
 			}
 		} else {
 			return {
@@ -196,13 +208,16 @@ export default {
 			return this.$store.state.langues
 		},
 		admin () {
-			return this.pad.identifiant === this.identifiant || this.pad.admins.includes(this.identifiant)
+			return (this.pad.hasOwnProperty('identifiant') && this.pad.identifiant === this.identifiant) || (this.pad.hasOwnProperty('admins') && this.pad.admins.includes(this.identifiant))
 		},
 		statut () {
 			return this.$store.state.statut
 		},
 		acces () {
 			return this.$store.state.acces
+		},
+		digidrive () {
+			return this.statut === 'auteur' && this.$store.state.digidrive.includes(this.pad.id)
 		},
 		etherpad () {
 			return process.env.etherpad
@@ -354,6 +369,19 @@ export default {
 			this.definirColonnes(this.blocs)
 		}
 		this.ecouterSocket()
+		const identifiant = this.$route.query.id
+		const motdepasse = this.$route.query.mdp
+		if (identifiant && identifiant !== '' && motdepasse && motdepasse !== '') {
+			const reponse = await axios.post(this.hote + '/api/verifier-acces', {
+				pad: this.pad.id,
+				identifiant: identifiant,
+				motdepasse: window.atob(motdepasse)
+			})
+			if (reponse.data.hasOwnProperty('message') && reponse.data.message === 'pad_debloque') {
+				this.$store.dispatch('modifierUtilisateur', { identifiant: identifiant, nom: reponse.data.nom, langue: reponse.data.langue, statut: 'auteur', digidrive: reponse.data.digidrive })
+			}
+			window.history.replaceState({}, document.title, window.location.href.split('?')[0])
+		}
 		if (this.pad.acces === 'public' || (this.pad.acces === 'prive' && this.admin)) {
 			this.$nuxt.$loading.start()
 			this.accesAutorise = true
@@ -393,75 +421,77 @@ export default {
 	},
 	mounted () {
 		imagesLoaded('#pad', { background: true }, function () {
-			document.documentElement.setAttribute('lang', this.langue)
-			document.addEventListener('mousedown', this.surlignerBloc, false)
-			window.addEventListener('beforeunload', this.quitterPage, false)
-			window.addEventListener('resize', this.redimensionner, false)
-			window.addEventListener('message', this.ecouterMessage, false)
+			if (Object.keys(this.pad).length > 0) {
+				document.documentElement.setAttribute('lang', this.langue)
+				document.addEventListener('mousedown', this.surlignerBloc, false)
+				window.addEventListener('beforeunload', this.quitterPage, false)
+				window.addEventListener('resize', this.redimensionner, false)
+				window.addEventListener('message', this.ecouterMessage, false)
 
-			if (this.pad.affichage === 'colonnes') {
-				this.activerDefilementHorizontal()
-			}
-			const lien = this.hote + '/p/' + this.pad.id + '/' + this.pad.token
-			const clipboardLien = new ClipboardJS('#copier-lien .lien', {
-				text: function () {
-					return lien
+				if (this.pad.affichage === 'colonnes') {
+					this.activerDefilementHorizontal()
 				}
-			})
-			clipboardLien.on('success', function () {
-				this.$store.dispatch('modifierMessage', this.$t('lienCopie'))
-			}.bind(this))
-			const iframe = '<iframe src="' + this.hote + '/p/' + this.pad.id + '/' + this.pad.token + '" frameborder="0" width="100%" height="500"></iframe>'
-			const clipboardCode = new ClipboardJS('#copier-code span', {
-				text: function () {
-					return iframe
-				}
-			})
-			clipboardCode.on('success', function () {
-				this.$store.dispatch('modifierMessage', this.$t('codeCopie'))
-			}.bind(this))
-			// eslint-disable-next-line
-			this.codeqr = new QRCode('qr', {
-				text: lien,
-				width: 360,
-				height: 360,
-				colorDark: '#000000',
-				colorLight: '#ffffff',
-				// eslint-disable-next-line
-				correctLevel : QRCode.CorrectLevel.H
-			})
-
-			setTimeout(function () {
-				this.$nuxt.$loading.finish()
-				document.getElementsByTagName('html')[0].setAttribute('lang', this.langue)
-			}.bind(this), 100)
-
-			document.querySelector('#pad').addEventListener('dragover', function (event) {
-				event.preventDefault()
-				event.stopPropagation()
-			}, false)
-
-			document.querySelector('#pad').addEventListener('dragcenter', function (event) {
-				event.preventDefault()
-				event.stopPropagation()
-			}, false)
-
-			document.querySelector('#pad').addEventListener('drop', function (event) {
-				event.preventDefault()
-				event.stopPropagation()
-				if (event.dataTransfer.files && event.dataTransfer.files[0] && this.accesAutorise && !this.recherche && ((this.admin && this.action !== 'organiser') || (!this.admin && this.pad.contributions !== 'fermees'))) {
-					let indexColonne = 0
-					if (this.pad.affichage === 'colonnes') {
-						this.pad.colonnes.forEach(function (colonne, index) {
-							if (document.querySelector('#colonne' + index).contains(event.target) === true) {
-								indexColonne = index
-							}
-						})
+				const lien = this.hote + '/p/' + this.pad.id + '/' + this.pad.token
+				const clipboardLien = new ClipboardJS('#copier-lien .lien', {
+					text: function () {
+						return lien
 					}
-					this.ouvrirModaleBloc('creation', '', indexColonne)
-					this.ajouterFichier(event.dataTransfer)
-				}
-			}.bind(this), false)
+				})
+				clipboardLien.on('success', function () {
+					this.$store.dispatch('modifierMessage', this.$t('lienCopie'))
+				}.bind(this))
+				const iframe = '<iframe src="' + this.hote + '/p/' + this.pad.id + '/' + this.pad.token + '" frameborder="0" width="100%" height="500"></iframe>'
+				const clipboardCode = new ClipboardJS('#copier-code span', {
+					text: function () {
+						return iframe
+					}
+				})
+				clipboardCode.on('success', function () {
+					this.$store.dispatch('modifierMessage', this.$t('codeCopie'))
+				}.bind(this))
+				// eslint-disable-next-line
+				this.codeqr = new QRCode('qr', {
+					text: lien,
+					width: 360,
+					height: 360,
+					colorDark: '#000000',
+					colorLight: '#ffffff',
+					// eslint-disable-next-line
+					correctLevel : QRCode.CorrectLevel.H
+				})
+
+				setTimeout(function () {
+					this.$nuxt.$loading.finish()
+					document.getElementsByTagName('html')[0].setAttribute('lang', this.langue)
+				}.bind(this), 100)
+
+				document.querySelector('#pad').addEventListener('dragover', function (event) {
+					event.preventDefault()
+					event.stopPropagation()
+				}, false)
+
+				document.querySelector('#pad').addEventListener('dragcenter', function (event) {
+					event.preventDefault()
+					event.stopPropagation()
+				}, false)
+
+				document.querySelector('#pad').addEventListener('drop', function (event) {
+					event.preventDefault()
+					event.stopPropagation()
+					if (event.dataTransfer.files && event.dataTransfer.files[0] && this.accesAutorise && !this.recherche && ((this.admin && this.action !== 'organiser') || (!this.admin && this.pad.contributions !== 'fermees'))) {
+						let indexColonne = 0
+						if (this.pad.affichage === 'colonnes') {
+							this.pad.colonnes.forEach(function (colonne, index) {
+								if (document.querySelector('#colonne' + index).contains(event.target) === true) {
+									indexColonne = index
+								}
+							})
+						}
+						this.ouvrirModaleBloc('creation', '', indexColonne)
+						this.ajouterFichier(event.dataTransfer)
+					}
+				}.bind(this), false)
+			}
 		}.bind(this))
 	},
 	beforeDestroy () {

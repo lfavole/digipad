@@ -19,6 +19,9 @@ export default function (context) {
 		if (context.req.session.hasOwnProperty('email')) {
 			donnees.email = context.req.session.email
 		}
+		if (context.req.session.hasOwnProperty('digidrive')) {
+			donnees.digidrive = context.req.session.digidrive
+		}
 		context.store.dispatch('modifierUtilisateur', donnees)
 	}
 }

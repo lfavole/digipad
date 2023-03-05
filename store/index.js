@@ -18,6 +18,7 @@ export const state = () => ({
 	langues: ['fr', 'es', 'it', 'hr', 'en'],
 	statut: '',
 	acces: [],
+	digidrive: [],
 	affichage: 'liste',
 	classement: 'date-asc'
 })
@@ -55,6 +56,9 @@ export const mutations = {
 	},
 	modifierClassement (state, classement) {
 		state.classement = classement
+	},
+	modifierDigidrive (state, digidrive) {
+		state.digidrive = digidrive
 	}
 }
 
@@ -85,6 +89,9 @@ export const actions = {
 		if (donnees.hasOwnProperty('email')) {
 			commit('modifierEmail', donnees.email)
 		}
+		if (donnees.hasOwnProperty('digidrive')) {
+			commit('modifierDigidrive', donnees.digidrive)
+		}
 	},
 	modifierNom ({ commit }, nom) {
 		commit('modifierNom', nom)
@@ -110,5 +117,7 @@ export const actions = {
 		commit('modifierStatut', '')
 		commit('modifierAffichage', 'liste')
 		commit('modifierClassement', 'date-asc')
+		commit('modifierAcces', [])
+		commit('modifierDigidrive', [])
 	}
 }
