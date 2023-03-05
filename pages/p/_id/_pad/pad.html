@@ -125,12 +125,12 @@
 		<div class="contenu ascenseur">
 			<div class="conteneur">
 				<label for="titre-pad">{{ $t('titre') }}</label>
-				<input id="titre-pad"  type="text" :value="pad.titre" @keydown.enter="modifierTitre">
+				<input id="titre-pad"  type="text" :disabled="digidrive"  :value="pad.titre" @keydown.enter="modifierTitre">
 			</div>
-			<div class="conteneur conteneur-bouton">
+			<div class="conteneur conteneur-bouton" v-if="!digidrive">
 				<span role="button" tabindex="0" class="bouton-vert" @click="modifierTitre">{{ $t('enregistrer') }}</span>
 			</div>
-			<div class="conteneur conteneur-bouton" v-if="statut === 'auteur'">
+			<div class="conteneur conteneur-bouton" v-if="pad.identifiant === identifiant && statut === 'auteur' && !digidrive">
 				<span role="button" tabindex="0" class="bouton-bleu" @click="afficherModaleModifierMotDePasse">{{ $t('modifierMotDePasse') }}</span>
 			</div>
 			<div class="conteneur">
@@ -254,7 +254,7 @@
 						<img :src="'/img/vignettes/' + imageFond" :alt="'Fond' + (indexImageFond + 1)">
 					</span>
 					<span class="couleur-personnalisee">
-						<input type="color" :value="pad.fond" @change="modifierCouleurFond" :title="$t('selectionnerCouleur')" v-if="pad.fond.substring(0, 1) === '#'">
+						<input type="color" :value="pad.fond" @change="modifierCouleurFond" :title="$t('selectionnerCouleur')" v-if="pad.hasOwnProperty('fond') && pad.fond.substring(0, 1) === '#'">
 						<input type="color" value="#ffffff" @change="modifierCouleurFond" :title="$t('selectionnerCouleur')" v-else>
 					</span>
 				</div>
@@ -353,10 +353,10 @@
 					</label>
 				</div>
 			</div>
-			<div class="conteneur conteneur-bouton" v-if="statut === 'auteur'">
+			<div class="conteneur conteneur-bouton" v-if="pad.identifiant === identifiant && statut === 'auteur'">
 				<span role="button" tabindex="0" class="bouton-bleu" @click="afficherExporterPad">{{ $t('exporterPad') }}</span>
 			</div>
-			<div class="conteneur conteneur-bouton" v-if="statut === 'auteur'">
+			<div class="conteneur conteneur-bouton" v-if="pad.identifiant === identifiant && statut === 'auteur' && !digidrive">
 				<span role="button" tabindex="0" class="bouton-rouge" @click="afficherSupprimerPad">{{ $t('supprimerPad') }}</span>
 			</div>
 		</div>
@@ -407,7 +407,7 @@
 		</div>
 	</div>
 
-	<div id="pad" :class="{'fond-personnalise': pad.fond.substring(1, definirDossierFichiers(pad.id).length + 1) === definirDossierFichiers(pad.id), 'organiser': action === 'organiser'}" :style="definirFond(pad.fond)" v-if="pad.acces !== 'code' || (pad.acces === 'code' && accesAutorise)">
+	<div id="pad" :class="{'fond-personnalise': pad.hasOwnProperty('fond') && pad.fond.substring(1, definirDossierFichiers(pad.id).length + 1) === definirDossierFichiers(pad.id), 'organiser': action === 'organiser'}" :style="definirFond(pad.fond)" v-if="Object.keys(pad).length > 0 && (pad.acces !== 'code' || (pad.acces === 'code' && accesAutorise))">
 		<!-- Affichage mur // sans recherche -->
 		<transition name="fondu">
 			<masonry id="blocs" class="mur" :cols="definirLargeurCapsules()" :gutter="0" v-if="pad.affichage === 'mur' && action !== 'organiser' && !recherche">
