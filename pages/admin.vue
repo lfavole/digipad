@@ -278,6 +278,8 @@ export default {
 					const donnees = reponse.data
 					if (donnees === 'erreur') {
 						this.$store.dispatch('modifierAlerte', this.$t('erreurActionServeur'))
+					} else if (donnees === 'pad_inexistant') {
+						this.$store.dispatch('modifierAlerte', this.$t('padInexistant'))
 					} else {
 						this.$store.dispatch('modifierMessage', this.$t('donneesModifiees'))
 					}
@@ -640,5 +642,11 @@ export default {
 	#conteneur .actions .bouton {
 		font-size: 0.85em!important;
 	}
+}
+</style>
+
+<style>
+#message .message {
+	user-select: text!important;
 }
 </style>
