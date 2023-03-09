@@ -552,10 +552,10 @@ export default {
 	watchQuery: ['page'],
 	created () {
 		if (this.redirection) {
-			this.$router.push(this.redirection)
+			this.$router.replace(this.redirection)
 			return false
 		} else if (this.identifiant === '' || this.statut === 'invite') {
-			this.$router.push('/')
+			this.$router.replace('/')
 			return false
 		}
 		this.pads = this.padsCrees
@@ -604,7 +604,7 @@ export default {
 				}).then(function (reponse) {
 					const donnees = reponse.data
 					if (donnees === 'non_connecte') {
-						this.$router.push('/')
+						this.$router.replace('/')
 					} else if (donnees === 'erreur_creation') {
 						this.chargement = false
 						this.$store.dispatch('modifierAlerte', this.$t('erreurCreationPad'))
@@ -650,7 +650,7 @@ export default {
 					this.fermerModaleImporterPad()
 					const donnees = reponse.data
 					if (donnees === 'non_connecte') {
-						this.$router.push('/')
+						this.$router.replace('/')
 					} else if (donnees === 'erreur_import') {
 						this.$store.dispatch('modifierAlerte', this.$t('erreurImportPad'))
 					} else if (donnees === 'donnees_corrompues') {
@@ -703,7 +703,7 @@ export default {
 				this.chargement = false
 				const donnees = reponse.data
 				if (donnees === 'non_connecte') {
-					this.$router.push('/')
+					this.$router.replace('/')
 				} else if (donnees === 'erreur_ajout_favori') {
 					this.$store.dispatch('modifierAlerte', this.$t('erreurAjoutFavoris'))
 				} else {
@@ -725,7 +725,7 @@ export default {
 				this.chargement = false
 				const donnees = reponse.data
 				if (donnees === 'non_connecte') {
-					this.$router.push('/')
+					this.$router.replace('/')
 				} else if (donnees === 'erreur_suppression_favori') {
 					this.$store.dispatch('modifierAlerte', this.$t('erreurSuppressionFavoris'))
 				} else {
@@ -791,7 +791,7 @@ export default {
 					this.chargement = false
 					const donnees = reponse.data
 					if (donnees === 'non_connecte') {
-						this.$router.push('/')
+						this.$router.replace('/')
 					} else if (donnees === 'erreur_deplacement') {
 						this.$store.dispatch('modifierAlerte', this.$t('erreurDeplacementPad'))
 					} else {
@@ -836,7 +836,7 @@ export default {
 				this.chargement = false
 				const donnees = reponse.data
 				if (donnees === 'non_connecte') {
-					this.$router.push('/')
+					this.$router.replace('/')
 				} else if (donnees === 'erreur_duplication') {
 					this.$store.dispatch('modifierAlerte', this.$t('erreurDuplicationPad'))
 				} else {
@@ -862,7 +862,7 @@ export default {
 				this.chargement = false
 				const donnees = reponse.data
 				if (donnees === 'non_connecte') {
-					this.$router.push('/')
+					this.$router.replace('/')
 				} else if (donnees === 'erreur_export') {
 					this.$store.dispatch('modifierAlerte', this.$t('erreurExportPad'))
 				} else {
@@ -888,7 +888,7 @@ export default {
 				this.chargement = false
 				const donnees = reponse.data
 				if (donnees === 'non_connecte') {
-					this.$router.push('/')
+					this.$router.replace('/')
 				} else if (donnees === 'erreur_suppression') {
 					this.$store.dispatch('modifierAlerte', this.$t('erreurSuppressionPad'))
 				} else {
@@ -1020,7 +1020,7 @@ export default {
 					this.chargement = false
 					const donnees = reponse.data
 					if (donnees === 'non_connecte') {
-						this.$router.push('/')
+						this.$router.replace('/')
 					} else {
 						this.classer(classement)
 						this.$store.dispatch('modifierClassement', classement)
@@ -1050,7 +1050,7 @@ export default {
 					this.chargement = false
 					const donnees = reponse.data
 					if (donnees === 'non_connecte') {
-						this.$router.push('/')
+						this.$router.replace('/')
 					} else {
 						this.$store.dispatch('modifierInformations', { nom: nom, email: email })
 						this.$store.dispatch('modifierMessage', this.$t('informationsModifiees'))
@@ -1080,7 +1080,7 @@ export default {
 					this.chargement = false
 					const donnees = reponse.data
 					if (donnees === 'non_connecte') {
-						this.$router.push('/')
+						this.$router.replace('/')
 					} else if (donnees === 'motdepasse_incorrect') {
 						this.$store.dispatch('modifierAlerte', this.$t('motDePasseActuelPasCorrect'))
 					} else if (donnees === 'erreur') {
@@ -1112,7 +1112,7 @@ export default {
 				}).then(function (reponse) {
 					const donnees = reponse.data
 					if (donnees === 'non_connecte') {
-						this.$router.push('/')
+						this.$router.replace('/')
 					} else {
 						this.$i18n.setLocale(langue)
 						document.getElementsByTagName('html')[0].setAttribute('lang', langue)
@@ -1134,7 +1134,7 @@ export default {
 					this.chargement = false
 					const donnees = reponse.data
 					if (donnees === 'non_connecte') {
-						this.$router.push('/')
+						this.$router.replace('/')
 					} else {
 						this.$store.dispatch('modifierAffichage', affichage)
 						this.$store.dispatch('modifierMessage', this.$t('affichageModifie'))
@@ -1162,7 +1162,7 @@ export default {
 					this.chargement = false
 					const donnees = reponse.data
 					if (donnees === 'non_connecte') {
-						this.$router.push('/')
+						this.$router.replace('/')
 					} else if (donnees === 'erreur_ajout_dossier') {
 						this.$store.dispatch('modifierAlerte', this.$t('erreurAjoutDossier'))
 					} else {
@@ -1207,7 +1207,7 @@ export default {
 					this.chargement = false
 					const donnees = reponse.data
 					if (donnees === 'non_connecte') {
-						this.$router.push('/')
+						this.$router.replace('/')
 					} else if (donnees === 'erreur_modification_dossier') {
 						this.$store.dispatch('modifierAlerte', this.$t('erreurModificationDossier'))
 					} else {
@@ -1241,7 +1241,7 @@ export default {
 				this.chargement = false
 				const donnees = reponse.data
 				if (donnees === 'non_connecte') {
-					this.$router.push('/')
+					this.$router.replace('/')
 				} else if (donnees === 'erreur_suppression_dossier') {
 					this.$store.dispatch('modifierAlerte', this.$t('erreurSuppressionDossier'))
 				} else {
@@ -1274,7 +1274,7 @@ export default {
 				} else {
 					this.$socket.emit('deconnexion', identifiant)
 					this.$store.dispatch('reinitialiser')
-					this.$router.push('/')
+					this.$router.replace('/')
 				}
 			}.bind(this)).catch(function () {
 				this.chargement = false
@@ -1286,7 +1286,7 @@ export default {
 			axios.post(this.hote + '/api/deconnexion').then(function () {
 				this.$socket.emit('deconnexion', identifiant)
 				this.$store.dispatch('reinitialiser')
-				this.$router.push('/')
+				this.$router.replace('/')
 			}.bind(this)).catch(function () {
 				this.$store.dispatch('modifierAlerte', this.$t('erreurCommunicationServeur'))
 			}.bind(this))
