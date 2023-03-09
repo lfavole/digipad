@@ -266,7 +266,7 @@ export default {
 					} else {
 						this.$store.dispatch('modifierUtilisateur', donnees)
 						this.$socket.emit('connexioncompte', donnees)
-						this.$router.push('/u/' + donnees.identifiant)
+						this.$router.replace('/u/' + donnees.identifiant)
 					}
 				}.bind(this)).catch(function () {
 					this.chargement = false
@@ -297,7 +297,7 @@ export default {
 					} else {
 						this.$store.dispatch('modifierUtilisateur', donnees)
 						this.$socket.emit('connexioncompte', donnees)
-						this.$router.push('/u/' + donnees.identifiant)
+						this.$router.replace('/u/' + donnees.identifiant)
 					}
 				}.bind(this)).catch(function () {
 					this.chargement = false
