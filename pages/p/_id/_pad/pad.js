@@ -362,7 +362,7 @@ export default {
 	watchQuery: ['page'],
 	async created () {
 		if (this.redirection) {
-			this.$router.push(this.redirection)
+			this.$router.replace(this.redirection)
 			return false
 		}
 		if (this.pad.affichage === 'colonnes') {
@@ -406,9 +406,9 @@ export default {
 				this.modaleCodeAcces = true
 			}
 		} else if (this.statut === 'utilisateur') {
-			this.$router.push('/u/' + this.identifiant)
+			this.$router.replace('/u/' + this.identifiant)
 		} else {
-			this.$router.push('/')
+			this.$router.replace('/')
 		}
 		const langue = this.$route.query.lang
 		if (this.langues.includes(langue) === true) {
@@ -508,7 +508,7 @@ export default {
 		allerAccueil () {
 			if (this.statut === 'invite' || this.statut === 'auteur') {
 				this.quitterPage()
-				this.$router.push('/')
+				this.$router.replace('/')
 			}
 		},
 		allerCompte () {
@@ -918,7 +918,7 @@ export default {
 				}).then(function (reponse) {
 					const donnees = reponse.data
 					if (donnees === 'non_connecte') {
-						this.$router.push('/')
+						this.$router.replace('/')
 					} else if (donnees === 'erreur_televersement') {
 						champ.value = ''
 						this.progressionFichier = 0
@@ -1003,9 +1003,7 @@ export default {
 			if (this.verifierURL(this.media) === true && this.media.includes(this.etherpad)) {
 				const etherpadId = this.media.replace(this.etherpad + '/p/', '')
 				const url = this.etherpad + '/api/1/deletePad?apikey=' + this.etherpadApi + '&padID=' + etherpadId
-				axios.get(url).catch(function () {
-					this.$store.dispatch('modifierAlerte', this.$t('erreurCommunicationServeur'))
-				}.bind(this))
+				axios.get(url)
 			}
 			this.media = ''
 			this.lien = ''
@@ -1030,7 +1028,7 @@ export default {
 			}).then(function (reponse) {
 				const donnees = reponse.data
 				if (donnees === 'non_connecte') {
-					this.$router.push('/')
+					this.$router.replace('/')
 				} else if (donnees === 'erreur_televersement') {
 					this.progressionEnregistrement = false
 					this.$store.dispatch('modifierAlerte', this.$t('erreurTeleversementFichier'))
@@ -1375,9 +1373,7 @@ export default {
 			if (this.iframe.includes(this.etherpad)) {
 				const etherpadId = this.iframe.replace(this.etherpad + '/p/', '')
 				const url = this.etherpad + '/api/1/deletePad?apikey=' + this.etherpadApi + '&padID=' + etherpadId
-				axios.get(url).catch(function () {
-					this.$store.dispatch('modifierAlerte', this.$t('erreurCommunicationServeur'))
-				}.bind(this))
+				axios.get(url)
 			}
 			this.media = ''
 			this.lien = ''
@@ -1425,7 +1421,7 @@ export default {
 				}).then(function (reponse) {
 					const donnees = reponse.data
 					if (donnees === 'non_connecte') {
-						this.$router.push('/')
+						this.$router.replace('/')
 					} else if (donnees === 'erreur_televersement') {
 						champ.value = ''
 						this.progressionVignette = 0
@@ -2630,7 +2626,7 @@ export default {
 				}).then(function (reponse) {
 					const donnees = reponse.data
 					if (donnees === 'non_connecte') {
-						this.$router.push('/')
+						this.$router.replace('/')
 					} else if (donnees === 'erreur_televersement') {
 						champ.value = ''
 						this.progressionFond = 0
@@ -2814,7 +2810,7 @@ export default {
 			axios.post(this.hote + '/api/deconnexion').then(function () {
 				this.$socket.emit('deconnexion', identifiant)
 				this.$store.dispatch('reinitialiser')
-				this.$router.push('/')
+				this.$router.replace('/')
 			}.bind(this)).catch(function () {
 				this.$store.dispatch('modifierAlerte', this.$t('erreurCommunicationServeur'))
 			}.bind(this))
@@ -2840,7 +2836,7 @@ export default {
 				}).then(function (reponse) {
 					const donnees = reponse.data
 					if (donnees === 'non_connecte') {
-						this.$router.push('/')
+						this.$router.replace('/')
 					} else if (donnees === 'motdepasse_incorrect') {
 						this.chargement = false
 						this.$store.dispatch('modifierAlerte', this.$t('motDePasseActuelPasCorrect'))
@@ -2965,7 +2961,7 @@ export default {
 					this.chargement = false
 					this.$store.dispatch('modifierAlerte', this.$t('erreurSuppressionPad'))
 				} else {
-					this.$router.push('/')
+					this.$router.replace('/')
 				}
 			}.bind(this)).catch(function () {
 				this.chargement = false
@@ -3464,7 +3460,7 @@ export default {
 				} else {
 					if (donnees.acces === 'prive') {
 						this.$socket.emit('sortie', this.pad.id, this.identifiant)
-						this.$router.push('/')
+						this.$router.replace('/')
 					}
 				}
 			}.bind(this))
