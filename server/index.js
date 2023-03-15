@@ -319,16 +319,16 @@ app.post('/api/deconnexion', function (req, res) {
 app.post('/api/recuperer-donnees-utilisateur', function (req, res) {
 	const identifiant = req.body.identifiant
 	recupererDonnees(identifiant).then(function (pads) {
-		const padsCrees = pads[0].filter(function (element) {
+		let padsCrees = pads[0].filter(function (element) {
 			return element !== '' && Object.keys(element).length > 0
 		})
-		const padsRejoints = pads[1].filter(function (element) {
+		let padsRejoints = pads[1].filter(function (element) {
 			return element !== '' && Object.keys(element).length > 0
 		})
-		const padsAdmins = pads[2].filter(function (element) {
+		let padsAdmins = pads[2].filter(function (element) {
 			return element !== '' && Object.keys(element).length > 0
 		})
-		const padsFavoris = pads[3].filter(function (element) {
+		let padsFavoris = pads[3].filter(function (element) {
 			return element !== '' && Object.keys(element).length > 0
 		})
 		// Vérification des données des pads
@@ -368,6 +368,27 @@ app.post('/api/recuperer-donnees-utilisateur', function (req, res) {
 				}
 			})
 		})
+		// Supprimer doublons
+		padsCrees = padsCrees.filter((valeur, index, self) =>
+			index === self.findIndex((t) => (
+				t.id === valeur.id && t.token === valeur.token
+			))
+		)
+		padsRejoints = padsRejoints.filter((valeur, index, self) =>
+			index === self.findIndex((t) => (
+				t.id === valeur.id && t.token === valeur.token
+			))
+		)
+		padsAdmins = padsAdmins.filter((valeur, index, self) =>
+			index === self.findIndex((t) => (
+				t.id === valeur.id && t.token === valeur.token
+			))
+		)
+		padsFavoris = padsFavoris.filter((valeur, index, self) =>
+			index === self.findIndex((t) => (
+				t.id === valeur.id && t.token === valeur.token
+			))
+		)
 		// Récupération et vérification des dossiers utilisateur
 		db.hgetall('utilisateurs:' + identifiant, function (err, donnees) {
 			let dossiers = []
