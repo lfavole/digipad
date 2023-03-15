@@ -449,16 +449,6 @@ export default {
 				clipboardCode.on('success', function () {
 					this.$store.dispatch('modifierMessage', this.$t('codeCopie'))
 				}.bind(this))
-				// eslint-disable-next-line
-				this.codeqr = new QRCode('qr', {
-					text: lien,
-					width: 360,
-					height: 360,
-					colorDark: '#000000',
-					colorLight: '#ffffff',
-					// eslint-disable-next-line
-					correctLevel : QRCode.CorrectLevel.H
-				})
 
 				setTimeout(function () {
 					this.$nuxt.$loading.finish()
@@ -2509,6 +2499,19 @@ export default {
 		},
 		afficherCodeQR () {
 			this.modaleCodeQR = true
+			this.$nextTick(function () {
+				const lien = this.hote + '/p/' + this.pad.id + '/' + this.pad.token
+				// eslint-disable-next-line
+				this.codeqr = new QRCode('qr', {
+					text: lien,
+					width: 360,
+					height: 360,
+					colorDark: '#000000',
+					colorLight: '#ffffff',
+					// eslint-disable-next-line
+					correctLevel : QRCode.CorrectLevel.H
+				})
+			}.bind(this))
 		},
 		fermerModaleCodeQR () {
 			this.modaleCodeQR = false

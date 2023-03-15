@@ -1234,20 +1234,7 @@
 		</div>
 	</div>
 
-	<div class="conteneur-modale" v-if="transcodage || progressionEnregistrement">
-		<div id="transcodage" class="modale">
-			<div class="conteneur">
-				<div class="contenu">
-					<div class="conteneur-chargement">
-						<div class="chargement" />
-					</div>
-					<span class="patienter">{{ $t('transcodage') }}</span>
-				</div>
-			</div>
-		</div>
-	</div>
-
-	<div class="conteneur-modale" v-show="modaleCodeQR">
+	<div class="conteneur-modale" v-else-if="modaleCodeQR">
 		<div id="codeqr" class="modale">
 			<div class="en-tete">
 				<span class="titre">{{ $t('codeQR') }}</span>
@@ -1256,6 +1243,19 @@
 			<div class="conteneur">
 				<div class="contenu">
 					<div id="qr" />
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<div class="conteneur-modale" v-if="transcodage || progressionEnregistrement">
+		<div id="transcodage" class="modale">
+			<div class="conteneur">
+				<div class="contenu">
+					<div class="conteneur-chargement">
+						<div class="chargement" />
+					</div>
+					<span class="patienter">{{ $t('transcodage') }}</span>
 				</div>
 			</div>
 		</div>
