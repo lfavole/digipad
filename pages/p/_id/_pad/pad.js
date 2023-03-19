@@ -3006,7 +3006,9 @@ export default {
 			}
 		},
 		definirDossierFichiers (id) {
-			if (process.env.nfsPadNumber && process.env.nfsPadNumber !== '' && process.env.nfsFolder && process.env.nfsFolder !== '' && parseInt(id) > parseInt(process.env.nfsPadNumber)) {
+			if (process.env.nfs2PadNumber && process.env.nfs2PadNumber !== '' && process.env.nfs2Folder && process.env.nfs2Folder !== '' && parseInt(id) > parseInt(process.env.nfs2PadNumber)) {
+				return process.env.nfs2Folder
+			} else if (process.env.nfsPadNumber && process.env.nfsPadNumber !== '' && process.env.nfsFolder && process.env.nfsFolder !== '' && parseInt(id) > parseInt(process.env.nfsPadNumber)) {
 				return process.env.nfsFolder
 			} else {
 				return 'fichiers'

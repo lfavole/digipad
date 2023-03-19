@@ -52,7 +52,9 @@ EMAIL_SECURE (true ou false)
 MATOMO (lien vers un serveur Matomo)
 MATOMO_SITE_ID (id de site sur le serveur Matomo / 1 par défaut)
 NFS_PAD_NUMBER (id de pad à partir de laquelle les fichiers seront enregistrés dans un dossier monté NFS - environ 200 000 pour 1 To de capacité disque)
-NFS_FOLDER (nom du dossier monté NFS, obligatoirement situé dans le dossier /static/)
+NFS_FOLDER (nom du dossier monté NFS, obligatoirement situé dans le dossier /static/. ex : /static/nfs)
+NFS2_PAD_NUMBER (id de pad à partir de laquelle les fichiers seront enregistrés dans un 2e dossier monté NFS - environ 200 000 pour 1 To de capacité disque)
+NFS2_FOLDER (nom du dossier monté NFS, obligatoirement situé dans le dossier /static/. ex : /static/nfs2)
 AUTORIZED_DOMAINS (domaines autorisés pour api serveur. ex : ladigitale.dev,example.com / par défaut *)
 ```
 

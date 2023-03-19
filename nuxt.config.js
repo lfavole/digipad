@@ -118,7 +118,9 @@ module.exports = {
 		matomo: process.env.MATOMO,
 		matomoSiteId: process.env.MATOMO_SITE_ID,
 		nfsPadNumber: process.env.NFS_PAD_NUMBER,
-		nfsFolder: process.env.NFS_FOLDER
+		nfsFolder: process.env.NFS_FOLDER,
+		nfs2PadNumber: process.env.NFS2_PAD_NUMBER,
+		nfs2Folder: process.env.NFS2_FOLDER
 	},
 	buildModules: [
 		'@nuxtjs/eslint-module'
