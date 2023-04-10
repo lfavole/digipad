@@ -392,7 +392,7 @@ app.post('/api/recuperer-donnees-utilisateur', function (req, res) {
 		// Récupération et vérification des dossiers utilisateur
 		db.hgetall('utilisateurs:' + identifiant, function (err, donnees) {
 			let dossiers = []
-			if (err || donnees === null || !donnees.hasOwnProperty('dossiers')) {
+			if (err || !donnees || !donnees.hasOwnProperty('dossiers')) {
 				res.json({ padsCrees: padsCrees, padsRejoints: padsRejoints, padsAdmins: padsAdmins, padsFavoris: padsFavoris, dossiers: [] })
 			} else {
 				dossiers = JSON.parse(donnees.dossiers)
@@ -1071,7 +1071,7 @@ app.post('/api/exporter-pad', function (req, res) {
 							}
 							if (Object.keys(bloc).length > 0 && bloc.vignette !== '' && bloc.vignette.substring(1, definirDossierFichiers(id).length + 1) === definirDossierFichiers(id) && fs.existsSync(path.join(__dirname, '..', '/static' + bloc.vignette))) {
 								fs.copySync(path.join(__dirname, '..', '/static' + bloc.vignette), path.normalize(chemin + '/' + id + '/fichiers/' + bloc.vignette.replace('/' + definirDossierFichiers(id) + '/' + id + '/', ''), { overwrite: true }))
-							} else if (Object.keys(bloc).length > 0 && bloc.vignette !== '' && bloc.vignette.includes('/img/') && fs.existsSync(path.join(__dirname, '..', '/static' + bloc.vignette))) {
+							} else if (Object.keys(bloc).length > 0 && bloc.vignette !== '' && bloc.vignette.includes('/img/') && !verifierURL(bloc.vignette, ['https', 'http']) && fs.existsSync(path.join(__dirname, '..', '/static' + bloc.vignette))) {
 								fs.copySync(path.join(__dirname, '..', '/static' + bloc.vignette), path.normalize(chemin + '/' + id + '/static' + bloc.vignette, { overwrite: true }))
 							}
 						}
@@ -1122,7 +1122,7 @@ app.post('/api/exporter-pad', function (req, res) {
 					}
 					if (Object.keys(bloc).length > 0 && bloc.vignette !== '' && bloc.vignette.substring(1, definirDossierFichiers(id).length + 1) === definirDossierFichiers(id) && fs.existsSync(path.join(__dirname, '..', '/static' + bloc.vignette))) {
 						fs.copySync(path.join(__dirname, '..', '/static' + bloc.vignette), path.normalize(chemin + '/' + id + '/fichiers/' + bloc.vignette.replace('/' + definirDossierFichiers(id) + '/' + id + '/', ''), { overwrite: true }))
-					} else if (Object.keys(bloc).length > 0 && bloc.vignette !== '' && bloc.vignette.includes('/img/') && fs.existsSync(path.join(__dirname, '..', '/static' + bloc.vignette))) {
+					} else if (Object.keys(bloc).length > 0 && bloc.vignette !== '' && bloc.vignette.includes('/img/') && !verifierURL(bloc.vignette, ['https', 'http']) && fs.existsSync(path.join(__dirname, '..', '/static' + bloc.vignette))) {
 						fs.copySync(path.join(__dirname, '..', '/static' + bloc.vignette), path.normalize(chemin + '/' + id + '/static' + bloc.vignette, { overwrite: true }))
 					}
 				}
@@ -1954,7 +1954,7 @@ app.post('/api/verifier-identifiant', function (req, res) {
 app.post('/api/verifier-mot-de-passe', function (req, res) {
 	const pad = req.body.pad
 	db.hgetall('pads:' + pad, async function (err, donnees) {
-		if (err) { res.send('erreur'); return false }
+		if (err || !donnees || !donnees.hasOwnProperty('motdepasse')) { res.send('erreur'); return false }
 		if (await bcrypt.compare(req.body.motdepasse, donnees.motdepasse)) {
 			res.send('motdepasse_correct')
 		} else {
@@ -1966,7 +1966,7 @@ app.post('/api/verifier-mot-de-passe', function (req, res) {
 app.post('/api/verifier-code-acces', function (req, res) {
 	const pad = req.body.pad
 	db.hgetall('pads:' + pad, function (err, donnees) {
-		if (err) { res.send('erreur'); return false }
+		if (err || !donnees || !donnees.hasOwnProperty('code')) { res.send('erreur'); return false }
 		if (req.body.code === donnees.code) {
 			if (!req.session.acces) {
 				req.session.acces = []
@@ -2756,7 +2756,7 @@ io.on('connection', function (socket) {
 							fs.copyFileSync(path.join(__dirname, '..', '/static/temp/' + media), path.join(__dirname, '..', '/static/' + definirDossierFichiers(pad) + '/' + pad + '/' + media))
 							fs.removeSync(path.join(__dirname, '..', '/static/temp/' + media))
 						}
-						if (vignette !== '' && !vignette.includes('/img/') && fs.existsSync(path.join(__dirname, '..', '/static/temp/' + path.basename(vignette)))) {
+						if (vignette !== '' && !vignette.includes('/img/') && !verifierURL(vignette, ['https', 'http']) && fs.existsSync(path.join(__dirname, '..', '/static/temp/' + path.basename(vignette)))) {
 							fs.copyFileSync(path.join(__dirname, '..', '/static/temp/' + path.basename(vignette)), path.join(__dirname, '..', '/static' + vignette))
 							fs.removeSync(path.join(__dirname, '..', '/static/temp/' + path.basename(vignette)))
 						}
@@ -2818,7 +2818,7 @@ io.on('connection', function (socket) {
 											if (objet.media !== media && objet.media !== '' && objet.type !== 'embed') {
 												supprimerFichier(pad, objet.media)
 											}
-											if (objet.vignette !== vignette && vignette !== '' && !vignette.includes('/img/') && fs.existsSync(path.join(__dirname, '..', '/static/temp/' + path.basename(vignette)))) {
+											if (objet.vignette !== vignette && vignette !== '' && !vignette.includes('/img/') && !verifierURL(vignette, ['https', 'http']) && fs.existsSync(path.join(__dirname, '..', '/static/temp/' + path.basename(vignette)))) {
 												fs.copyFileSync(path.join(__dirname, '..', '/static/temp/' + path.basename(vignette)), path.join(__dirname, '..', '/static' + vignette))
 												fs.removeSync(path.join(__dirname, '..', '/static/temp/' + path.basename(vignette)))
 											}
@@ -2841,7 +2841,7 @@ io.on('connection', function (socket) {
 											if (objet.media !== media && objet.media !== '' && objet.type !== 'embed') {
 												supprimerFichier(pad, objet.media)
 											}
-											if (objet.vignette !== vignette && vignette !== '' && !vignette.includes('/img/') && fs.existsSync(path.join(__dirname, '..', '/static/temp/' + path.basename(vignette)))) {
+											if (objet.vignette !== vignette && vignette !== '' && !vignette.includes('/img/') && !verifierURL(vignette, ['https', 'http']) && fs.existsSync(path.join(__dirname, '..', '/static/temp/' + path.basename(vignette)))) {
 												fs.copyFileSync(path.join(__dirname, '..', '/static/temp/' + path.basename(vignette)), path.join(__dirname, '..', '/static' + vignette))
 												fs.removeSync(path.join(__dirname, '..', '/static/temp/' + path.basename(vignette)))
 											}
@@ -2860,7 +2860,7 @@ io.on('connection', function (socket) {
 										if (objet.media !== media && objet.media !== '' && objet.type !== 'embed') {
 											supprimerFichier(pad, objet.media)
 										}
-										if (objet.vignette !== vignette && vignette !== '' && !vignette.includes('/img/') && fs.existsSync(path.join(__dirname, '..', '/static/temp/' + path.basename(vignette)))) {
+										if (objet.vignette !== vignette && vignette !== '' && !vignette.includes('/img/') && !verifierURL(vignette, ['https', 'http']) && fs.existsSync(path.join(__dirname, '..', '/static/temp/' + path.basename(vignette)))) {
 											fs.copyFileSync(path.join(__dirname, '..', '/static/temp/' + path.basename(vignette)), path.join(__dirname, '..', '/static' + vignette))
 											fs.removeSync(path.join(__dirname, '..', '/static/temp/' + path.basename(vignette)))
 										}
@@ -2913,7 +2913,7 @@ io.on('connection', function (socket) {
 						if (media !== '' && type !== 'embed' && fs.existsSync(path.join(__dirname, '..', '/static/' + definirDossierFichiers(padOrigine) + '/' + padOrigine + '/' + media))) {
 							fs.copyFileSync(path.join(__dirname, '..', '/static/' + definirDossierFichiers(padOrigine) + '/' + padOrigine + '/' + media), path.join(__dirname, '..', '/static/' + definirDossierFichiers(pad) + '/' + pad + '/' + media))
 						}
-						if (vignette !== '' && !vignette.includes('/img/') && fs.existsSync(path.join(__dirname, '..', '/static' + vignetteOrigine))) {
+						if (vignette !== '' && !vignette.includes('/img/') && !verifierURL(vignette, ['https', 'http']) && fs.existsSync(path.join(__dirname, '..', '/static' + vignetteOrigine))) {
 							fs.copyFileSync(path.join(__dirname, '..', '/static' + vignetteOrigine), path.join(__dirname, '..', '/static' + vignette))
 						}
 						io.in('pad-' + pad).emit('ajouterbloc', { bloc: bloc, titre: titre, texte: texte, media: media, iframe: iframe, type: type, source: source, vignette: vignette, identifiant: identifiant, nom: nom, date: date, couleur: couleur, commentaires: 0, evaluations: [], colonne: colonne, visibilite: visibilite, activiteId: activiteId })
@@ -3025,7 +3025,7 @@ io.on('connection', function (socket) {
 		}
 		if (identifiant !== '' && identifiant !== undefined && socket.handshake.session.identifiant === identifiant) {
 			db.hgetall('pads:' + pad, function (err, donnees) {
-				if (err) { socket.emit('erreur'); return false }
+				if (err || !donnees || !donnees.hasOwnProperty('id') || !donnees.hasOwnProperty('token')) { socket.emit('erreur'); return false }
 				if (donnees.id === pad && donnees.token === token) {
 					const proprietaire = donnees.identifiant
 					let admins = []
@@ -3089,11 +3089,11 @@ io.on('connection', function (socket) {
 		}
 		if (identifiant !== '' && identifiant !== undefined && socket.handshake.session.identifiant === identifiant) {
 			db.hgetall('pads:' + pad, function (err, resultat) {
-				if (err) { socket.emit('erreur'); return false }
+				if (err || !resultat || !resultat.hasOwnProperty('activite')) { socket.emit('erreur'); return false }
 				db.hgetall('pad-' + pad + ':' + bloc, function (err, donnees) {
-					if (err) { socket.emit('erreur'); return false }
+					if (err || !donnees || !donnees.hasOwnProperty('commentaires')) { socket.emit('erreur'); return false }
 					db.zcard('commentaires:' + bloc, function (err, commentaires) {
-						if (err) { socket.emit('erreur'); return false }
+						if (err || !commentaires) { socket.emit('erreur'); return false }
 						const date = moment().format()
 						const activiteId = parseInt(resultat.activite) + 1
 						const commentaireId = parseInt(donnees.commentaires) + 1
@@ -3746,7 +3746,7 @@ io.on('connection', function (socket) {
 		}
 		if (identifiant !== '' && identifiant !== undefined && socket.handshake.session.identifiant === identifiant) {
 			db.hgetall('pads:' + pad, function (err, resultat) {
-				if (err) { socket.emit('erreur'); return false }
+				if (err || !resultat || !resultat.hasOwnProperty('activite')) { socket.emit('erreur'); return false }
 				const date = moment().format()
 				const activiteId = parseInt(resultat.activite) + 1
 				colonnes.push(titre)
@@ -3774,7 +3774,7 @@ io.on('connection', function (socket) {
 		}
 		if (identifiant !== '' && identifiant !== undefined && socket.handshake.session.identifiant === identifiant) {
 			db.hgetall('pads:' + pad, function (err, donnees) {
-				if (err) { socket.emit('erreur'); return false }
+				if (err || !donnees || !donnees.hasOwnProperty('colonnes')) { socket.emit('erreur'); return false }
 				const colonnes = JSON.parse(donnees.colonnes)
 				colonnes[index] = titre
 				db.hset('pads:' + pad, 'colonnes', JSON.stringify(colonnes), function () {
