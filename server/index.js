@@ -2722,7 +2722,7 @@ io.on('connection', function (socket) {
 		}
 		if (identifiant !== '' && identifiant !== undefined && socket.handshake.session.identifiant === identifiant) {
 			db.hgetall('pads:' + pad, function (err, donnees) {
-				if (err || !donnees.hasOwnProperty('id') || !donnees.hasOwnProperty('token') || !donnees.hasOwnProperty('identifiant')) { socket.emit('erreur'); return false }
+				if (err || !donnees || !donnees.hasOwnProperty('id') || !donnees.hasOwnProperty('token') || !donnees.hasOwnProperty('identifiant')) { socket.emit('erreur'); return false }
 				const proprietaire = donnees.identifiant
 				let admins = []
 				if (donnees.hasOwnProperty('admins')) {
@@ -2778,7 +2778,7 @@ io.on('connection', function (socket) {
 		}
 		if (identifiant !== '' && identifiant !== undefined && socket.handshake.session.identifiant === identifiant) {
 			db.hgetall('pads:' + pad, function (err, donnees) {
-				if (err || !donnees.hasOwnProperty('id') || !donnees.hasOwnProperty('token')) { socket.emit('erreur'); return false }
+				if (err || !donnees || !donnees.hasOwnProperty('id') || !donnees.hasOwnProperty('token')) { socket.emit('erreur'); return false }
 				if (donnees.id === pad && donnees.token === token) {
 					const proprietaire = donnees.identifiant
 					let admins = []
@@ -2889,7 +2889,7 @@ io.on('connection', function (socket) {
 		}
 		if (identifiant !== '' && identifiant !== undefined && socket.handshake.session.identifiant === identifiant) {
 			db.hgetall('pads:' + pad, function (err, donnees) {
-				if (err || !donnees.hasOwnProperty('id') || !donnees.hasOwnProperty('token')) { socket.emit('erreur'); return false }
+				if (err || !donnees || !donnees.hasOwnProperty('id') || !donnees.hasOwnProperty('token')) { socket.emit('erreur'); return false }
 				const id = parseInt(donnees.bloc) + 1
 				db.hincrby('pads:' + pad, 'bloc', 1)
 				if (donnees.id === pad && donnees.token === token) {
@@ -2935,7 +2935,7 @@ io.on('connection', function (socket) {
 		}
 		if (identifiant !== '' && identifiant !== undefined && socket.handshake.session.identifiant === identifiant) {
 			db.hgetall('pads:' + pad, function (err, donnees) {
-				if (err || !donnees.hasOwnProperty('id') || !donnees.hasOwnProperty('token')) { socket.emit('erreur'); return false }
+				if (err || !donnees || !donnees.hasOwnProperty('id') || !donnees.hasOwnProperty('token')) { socket.emit('erreur'); return false }
 				if (donnees.id === pad && donnees.token === token) {
 					db.exists('pad-' + pad + ':' + item.bloc, function (err, resultat) {
 						if (err) { socket.emit('erreur'); return false }
