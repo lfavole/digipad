@@ -1,6 +1,6 @@
 {
   "name": "digipad",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "homepage": "https://digipad.app",
   "repository": {
     "type": "git",
@@ -70,5 +70,9 @@
     "eslint": "^7.32.0",
     "eslint-plugin-nuxt": "^2.0.0",
     "nodemon": "^2.0.15"
+  },
+  "optionalDependencies": {
+    "bufferutil": "^4.0.7",
+    "utf-8-validate": "^5.0.10"
   }
 }
