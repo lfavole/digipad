@@ -3178,10 +3178,8 @@ io.on('connection', function (socket) {
 		if (identifiant !== '' && identifiant !== undefined && socket.handshake.session.identifiant === identifiant) {
 			db.hgetall('pads:' + pad, function (err, resultat) {
 				if (err || !resultat || !resultat.hasOwnProperty('activite')) { socket.emit('erreur'); return false }
-				console.log('ok1')
 				db.hgetall('pad-' + pad + ':' + bloc, function (err, donnees) {
 					if (err || !donnees || !donnees.hasOwnProperty('commentaires')) { socket.emit('erreur'); return false }
-					console.log('ok2')
 					db.zcard('commentaires:' + bloc, function (err, commentaires) {
 						if (err) { socket.emit('erreur'); return false }
 						const date = moment().format()
