@@ -119,6 +119,9 @@ cron.schedule(dateCron, () => {
 const etherpad = process.env.ETHERPAD
 const etherpadApi = process.env.ETHERPAD_API_KEY
 
+// Augmenter nombre de tâches asynchrones par défaut
+require('events').EventEmitter.defaultMaxListeners = 50
+
 app.set('trust proxy', true)
 app.use(helmet({ frameguard: false }))
 app.use(bodyParser.json({ limit: '200mb' }))
