@@ -465,110 +465,114 @@ app.post('/api/recuperer-donnees-pad', function (req, res) {
 				recupererDonneesPad(id, token, identifiant, statut, res)
 			} else if ((resultat !== 1 || pad === null) && fs.existsSync(path.join(__dirname, '..', '/static/pads/' + id + '.json'))) {
 				const donnees = await fs.readJson(path.join(__dirname, '..', '/static/pads/' + id + '.json'))
-				const donneesBlocs = []
-				for (const [indexBloc, bloc] of donnees.blocs.entries()) {
-					const donneesBloc = new Promise(function (resolve) {
-						if (bloc.hasOwnProperty('id') && bloc.hasOwnProperty('bloc') && bloc.hasOwnProperty('titre') && bloc.hasOwnProperty('texte') && bloc.hasOwnProperty('media') && bloc.hasOwnProperty('iframe') && bloc.hasOwnProperty('type') && bloc.hasOwnProperty('source') && bloc.hasOwnProperty('vignette') && bloc.hasOwnProperty('identifiant') && bloc.hasOwnProperty('commentaires') && bloc.hasOwnProperty('evaluations') && bloc.hasOwnProperty('colonne') && bloc.hasOwnProperty('listeCommentaires') && bloc.hasOwnProperty('listeEvaluations')) {
-							let visibilite = 'visible'
-							if (bloc.hasOwnProperty('visibilite')) {
-								visibilite = bloc.visibilite
-							}
-							const multi = db.multi()
-							multi.hmset('pad-' + id + ':' + bloc.bloc, 'id', bloc.id, 'bloc', bloc.bloc, 'titre', bloc.titre, 'texte', bloc.texte, 'media', bloc.media, 'iframe', bloc.iframe, 'type', bloc.type, 'source', bloc.source, 'vignette', bloc.vignette, 'date', bloc.date, 'identifiant', bloc.identifiant, 'commentaires', bloc.commentaires, 'evaluations', bloc.evaluations, 'colonne', bloc.colonne, 'visibilite', visibilite)
-							multi.zadd('blocs:' + id, indexBloc, bloc.bloc)
-							for (const commentaire of bloc.listeCommentaires) {
-								if (commentaire.hasOwnProperty('id') && commentaire.hasOwnProperty('identifiant') && commentaire.hasOwnProperty('date') && commentaire.hasOwnProperty('texte')) {
-									multi.zadd('commentaires:' + bloc.bloc, commentaire.id, JSON.stringify(commentaire))
+				if (typeof donnees === 'object' && donnees !== null && donnees.hasOwnProperty('pad') && donnees.hasOwnProperty('blocs') && donnees.hasOwnProperty('activite')) {
+					const donneesBlocs = []
+					for (const [indexBloc, bloc] of donnees.blocs.entries()) {
+						const donneesBloc = new Promise(function (resolve) {
+							if (bloc.hasOwnProperty('id') && bloc.hasOwnProperty('bloc') && bloc.hasOwnProperty('titre') && bloc.hasOwnProperty('texte') && bloc.hasOwnProperty('media') && bloc.hasOwnProperty('iframe') && bloc.hasOwnProperty('type') && bloc.hasOwnProperty('source') && bloc.hasOwnProperty('vignette') && bloc.hasOwnProperty('identifiant') && bloc.hasOwnProperty('commentaires') && bloc.hasOwnProperty('evaluations') && bloc.hasOwnProperty('colonne') && bloc.hasOwnProperty('listeCommentaires') && bloc.hasOwnProperty('listeEvaluations')) {
+								let visibilite = 'visible'
+								if (bloc.hasOwnProperty('visibilite')) {
+									visibilite = bloc.visibilite
 								}
-							}
-							for (const evaluation of bloc.listeEvaluations) {
-								if (evaluation.hasOwnProperty('id') && evaluation.hasOwnProperty('identifiant') && evaluation.hasOwnProperty('date') && evaluation.hasOwnProperty('etoiles')) {
-									multi.zadd('evaluations:' + bloc.bloc, evaluation.id, JSON.stringify(evaluation))
+								const multi = db.multi()
+								multi.hmset('pad-' + id + ':' + bloc.bloc, 'id', bloc.id, 'bloc', bloc.bloc, 'titre', bloc.titre, 'texte', bloc.texte, 'media', bloc.media, 'iframe', bloc.iframe, 'type', bloc.type, 'source', bloc.source, 'vignette', bloc.vignette, 'date', bloc.date, 'identifiant', bloc.identifiant, 'commentaires', bloc.commentaires, 'evaluations', bloc.evaluations, 'colonne', bloc.colonne, 'visibilite', visibilite)
+								multi.zadd('blocs:' + id, indexBloc, bloc.bloc)
+								for (const commentaire of bloc.listeCommentaires) {
+									if (commentaire.hasOwnProperty('id') && commentaire.hasOwnProperty('identifiant') && commentaire.hasOwnProperty('date') && commentaire.hasOwnProperty('texte')) {
+										multi.zadd('commentaires:' + bloc.bloc, commentaire.id, JSON.stringify(commentaire))
+									}
 								}
-							}
-							multi.exec(function () {
+								for (const evaluation of bloc.listeEvaluations) {
+									if (evaluation.hasOwnProperty('id') && evaluation.hasOwnProperty('identifiant') && evaluation.hasOwnProperty('date') && evaluation.hasOwnProperty('etoiles')) {
+										multi.zadd('evaluations:' + bloc.bloc, evaluation.id, JSON.stringify(evaluation))
+									}
+								}
+								multi.exec(function () {
+									resolve()
+								})
+							} else {
 								resolve()
-							})
-						} else {
-							resolve()
-						}
-					})
-					donneesBlocs.push(donneesBloc)
-				}
-				Promise.all(donneesBlocs).then(function () {
-					let registreActivite = 'active'
-					let conversation = 'desactivee'
-					let listeUtilisateurs = 'activee'
-					let editionNom = 'desactivee'
-					let ordre = 'croissant'
-					let largeur = 'normale'
-					let enregistrements = 'desactives'
-					let copieBloc = 'desactivee'
-					let admins = JSON.stringify([])
-					let vues = 0
-					let affichageColonnes = []
-					if (donnees.pad.hasOwnProperty('registreActivite')) {
-						registreActivite = donnees.pad.registreActivite
-					}
-					if (donnees.pad.hasOwnProperty('conversation')) {
-						conversation = donnees.pad.conversation
-					}
-					if (donnees.pad.hasOwnProperty('listeUtilisateurs')) {
-						listeUtilisateurs = donnees.pad.listeUtilisateurs
-					}
-					if (donnees.pad.hasOwnProperty('editionNom')) {
-						editionNom = donnees.pad.editionNom
-					}
-					if (donnees.pad.hasOwnProperty('ordre')) {
-						ordre = donnees.pad.ordre
-					}
-					if (donnees.pad.hasOwnProperty('largeur')) {
-						largeur = donnees.pad.largeur
-					}
-					if (donnees.pad.hasOwnProperty('enregistrements')) {
-						enregistrements = donnees.pad.enregistrements
-					}
-					if (donnees.pad.hasOwnProperty('copieBloc')) {
-						copieBloc = donnees.pad.copieBloc
-					}
-					if (donnees.pad.hasOwnProperty('admins') && donnees.pad.admins.substring(0, 2) !== '"\\') { // fix bug update 0.9.0
-						admins = donnees.pad.admins
-					}
-					if (donnees.pad.hasOwnProperty('vues')) {
-						vues = donnees.pad.vues
-					}
-					if (donnees.pad.hasOwnProperty('affichageColonnes')) {
-						affichageColonnes = donnees.pad.affichageColonnes
-					} else if (donnees.pad.colonnes.length > 0) {
-						const colonnes = JSON.parse(donnees.pad.colonnes)
-						colonnes.forEach(function () {
-							affichageColonnes.push(true)
+							}
 						})
-						affichageColonnes = JSON.stringify(affichageColonnes)
-					} else {
-						affichageColonnes = JSON.stringify(affichageColonnes)
+						donneesBlocs.push(donneesBloc)
 					}
-					const multi = db.multi()
-					if (donnees.pad.hasOwnProperty('motdepasse') && donnees.pad.hasOwnProperty('code')) {
-						multi.hmset('pads:' + id, 'id', id, 'token', donnees.pad.token, 'titre', donnees.pad.titre, 'identifiant', donnees.pad.identifiant, 'fond', donnees.pad.fond, 'acces', donnees.pad.acces, 'motdepasse', donnees.pad.motdepasse, 'code', donnees.pad.code, 'contributions', donnees.pad.contributions, 'affichage', donnees.pad.affichage, 'registreActivite', registreActivite, 'conversation', conversation, 'listeUtilisateurs', listeUtilisateurs, 'editionNom', editionNom, 'fichiers', donnees.pad.fichiers, 'enregistrements', enregistrements, 'liens', donnees.pad.liens, 'documents', donnees.pad.documents, 'commentaires', donnees.pad.commentaires, 'evaluations', donnees.pad.evaluations, 'copieBloc', copieBloc, 'ordre', ordre, 'largeur', largeur, 'date', donnees.pad.date, 'colonnes', donnees.pad.colonnes, 'affichageColonnes', affichageColonnes, 'bloc', donnees.pad.bloc, 'activite', donnees.pad.activite, 'admins', admins, 'vues', vues)
-					} else if (donnees.pad.hasOwnProperty('motdepasse') && !donnees.pad.hasOwnProperty('code')) {
-						multi.hmset('pads:' + id, 'id', id, 'token', donnees.pad.token, 'titre', donnees.pad.titre, 'identifiant', donnees.pad.identifiant, 'fond', donnees.pad.fond, 'acces', donnees.pad.acces, 'motdepasse', donnees.pad.motdepasse, 'contributions', donnees.pad.contributions, 'affichage', donnees.pad.affichage, 'registreActivite', registreActivite, 'conversation', conversation, 'listeUtilisateurs', listeUtilisateurs, 'editionNom', editionNom, 'fichiers', donnees.pad.fichiers, 'enregistrements', enregistrements, 'liens', donnees.pad.liens, 'documents', donnees.pad.documents, 'commentaires', donnees.pad.commentaires, 'evaluations', donnees.pad.evaluations, 'copieBloc', copieBloc, 'ordre', ordre, 'largeur', largeur, 'date', donnees.pad.date, 'colonnes', donnees.pad.colonnes, 'affichageColonnes', affichageColonnes, 'bloc', donnees.pad.bloc, 'activite', donnees.pad.activite, 'admins', admins, 'vues', vues)
-					} else if (donnees.pad.hasOwnProperty('code')) {
-						multi.hmset('pads:' + id, 'id', id, 'token', donnees.pad.token, 'titre', donnees.pad.titre, 'identifiant', donnees.pad.identifiant, 'fond', donnees.pad.fond, 'acces', donnees.pad.acces, 'code', donnees.pad.code, 'contributions', donnees.pad.contributions, 'affichage', donnees.pad.affichage, 'registreActivite', registreActivite, 'conversation', conversation, 'listeUtilisateurs', listeUtilisateurs, 'editionNom', editionNom, 'fichiers', donnees.pad.fichiers, 'enregistrements', enregistrements, 'liens', donnees.pad.liens, 'documents', donnees.pad.documents, 'commentaires', donnees.pad.commentaires, 'evaluations', donnees.pad.evaluations, 'copieBloc', copieBloc, 'ordre', ordre, 'largeur', largeur, 'date', donnees.pad.date, 'colonnes', donnees.pad.colonnes, 'affichageColonnes', affichageColonnes, 'bloc', donnees.pad.bloc, 'activite', donnees.pad.activite, 'admins', admins, 'vues', vues)
-					} else {
-						multi.hmset('pads:' + id, 'id', id, 'token', donnees.pad.token, 'titre', donnees.pad.titre, 'identifiant', donnees.pad.identifiant, 'fond', donnees.pad.fond, 'acces', donnees.pad.acces, 'contributions', donnees.pad.contributions, 'affichage', donnees.pad.affichage, 'registreActivite', registreActivite, 'conversation', conversation, 'listeUtilisateurs', listeUtilisateurs, 'editionNom', editionNom, 'fichiers', donnees.pad.fichiers, 'enregistrements', enregistrements, 'liens', donnees.pad.liens, 'documents', donnees.pad.documents, 'commentaires', donnees.pad.commentaires, 'evaluations', donnees.pad.evaluations, 'copieBloc', copieBloc, 'ordre', ordre, 'largeur', largeur, 'date', donnees.pad.date, 'colonnes', donnees.pad.colonnes, 'affichageColonnes', affichageColonnes, 'bloc', donnees.pad.bloc, 'activite', donnees.pad.activite, 'admins', admins, 'vues', vues)
-					}
-					for (const activite of donnees.activite) {
-						if (activite.hasOwnProperty('bloc') && activite.hasOwnProperty('identifiant') && activite.hasOwnProperty('titre') && activite.hasOwnProperty('date') && activite.hasOwnProperty('couleur') && activite.hasOwnProperty('type') && activite.hasOwnProperty('id')) {
-							multi.zadd('activite:' + id, activite.id, JSON.stringify(activite))
+					Promise.all(donneesBlocs).then(function () {
+						let registreActivite = 'active'
+						let conversation = 'desactivee'
+						let listeUtilisateurs = 'activee'
+						let editionNom = 'desactivee'
+						let ordre = 'croissant'
+						let largeur = 'normale'
+						let enregistrements = 'desactives'
+						let copieBloc = 'desactivee'
+						let admins = JSON.stringify([])
+						let vues = 0
+						let affichageColonnes = []
+						if (donnees.pad.hasOwnProperty('registreActivite')) {
+							registreActivite = donnees.pad.registreActivite
 						}
-					}
-					multi.exec(function () {
-						fs.removeSync(path.join(__dirname, '..', '/static/pads/' + id + '.json'))
-						fs.removeSync(path.join(__dirname, '..', '/static/pads/pad-' + id + '.json'))
-						recupererDonneesPad(id, token, identifiant, statut, res)
+						if (donnees.pad.hasOwnProperty('conversation')) {
+							conversation = donnees.pad.conversation
+						}
+						if (donnees.pad.hasOwnProperty('listeUtilisateurs')) {
+							listeUtilisateurs = donnees.pad.listeUtilisateurs
+						}
+						if (donnees.pad.hasOwnProperty('editionNom')) {
+							editionNom = donnees.pad.editionNom
+						}
+						if (donnees.pad.hasOwnProperty('ordre')) {
+							ordre = donnees.pad.ordre
+						}
+						if (donnees.pad.hasOwnProperty('largeur')) {
+							largeur = donnees.pad.largeur
+						}
+						if (donnees.pad.hasOwnProperty('enregistrements')) {
+							enregistrements = donnees.pad.enregistrements
+						}
+						if (donnees.pad.hasOwnProperty('copieBloc')) {
+							copieBloc = donnees.pad.copieBloc
+						}
+						if (donnees.pad.hasOwnProperty('admins') && donnees.pad.admins.substring(0, 2) !== '"\\') { // fix bug update 0.9.0
+							admins = donnees.pad.admins
+						}
+						if (donnees.pad.hasOwnProperty('vues')) {
+							vues = donnees.pad.vues
+						}
+						if (donnees.pad.hasOwnProperty('affichageColonnes')) {
+							affichageColonnes = donnees.pad.affichageColonnes
+						} else if (donnees.pad.colonnes.length > 0) {
+							const colonnes = JSON.parse(donnees.pad.colonnes)
+							colonnes.forEach(function () {
+								affichageColonnes.push(true)
+							})
+							affichageColonnes = JSON.stringify(affichageColonnes)
+						} else {
+							affichageColonnes = JSON.stringify(affichageColonnes)
+						}
+						const multi = db.multi()
+						if (donnees.pad.hasOwnProperty('motdepasse') && donnees.pad.hasOwnProperty('code')) {
+							multi.hmset('pads:' + id, 'id', id, 'token', donnees.pad.token, 'titre', donnees.pad.titre, 'identifiant', donnees.pad.identifiant, 'fond', donnees.pad.fond, 'acces', donnees.pad.acces, 'motdepasse', donnees.pad.motdepasse, 'code', donnees.pad.code, 'contributions', donnees.pad.contributions, 'affichage', donnees.pad.affichage, 'registreActivite', registreActivite, 'conversation', conversation, 'listeUtilisateurs', listeUtilisateurs, 'editionNom', editionNom, 'fichiers', donnees.pad.fichiers, 'enregistrements', enregistrements, 'liens', donnees.pad.liens, 'documents', donnees.pad.documents, 'commentaires', donnees.pad.commentaires, 'evaluations', donnees.pad.evaluations, 'copieBloc', copieBloc, 'ordre', ordre, 'largeur', largeur, 'date', donnees.pad.date, 'colonnes', donnees.pad.colonnes, 'affichageColonnes', affichageColonnes, 'bloc', donnees.pad.bloc, 'activite', donnees.pad.activite, 'admins', admins, 'vues', vues)
+						} else if (donnees.pad.hasOwnProperty('motdepasse') && !donnees.pad.hasOwnProperty('code')) {
+							multi.hmset('pads:' + id, 'id', id, 'token', donnees.pad.token, 'titre', donnees.pad.titre, 'identifiant', donnees.pad.identifiant, 'fond', donnees.pad.fond, 'acces', donnees.pad.acces, 'motdepasse', donnees.pad.motdepasse, 'contributions', donnees.pad.contributions, 'affichage', donnees.pad.affichage, 'registreActivite', registreActivite, 'conversation', conversation, 'listeUtilisateurs', listeUtilisateurs, 'editionNom', editionNom, 'fichiers', donnees.pad.fichiers, 'enregistrements', enregistrements, 'liens', donnees.pad.liens, 'documents', donnees.pad.documents, 'commentaires', donnees.pad.commentaires, 'evaluations', donnees.pad.evaluations, 'copieBloc', copieBloc, 'ordre', ordre, 'largeur', largeur, 'date', donnees.pad.date, 'colonnes', donnees.pad.colonnes, 'affichageColonnes', affichageColonnes, 'bloc', donnees.pad.bloc, 'activite', donnees.pad.activite, 'admins', admins, 'vues', vues)
+						} else if (donnees.pad.hasOwnProperty('code')) {
+							multi.hmset('pads:' + id, 'id', id, 'token', donnees.pad.token, 'titre', donnees.pad.titre, 'identifiant', donnees.pad.identifiant, 'fond', donnees.pad.fond, 'acces', donnees.pad.acces, 'code', donnees.pad.code, 'contributions', donnees.pad.contributions, 'affichage', donnees.pad.affichage, 'registreActivite', registreActivite, 'conversation', conversation, 'listeUtilisateurs', listeUtilisateurs, 'editionNom', editionNom, 'fichiers', donnees.pad.fichiers, 'enregistrements', enregistrements, 'liens', donnees.pad.liens, 'documents', donnees.pad.documents, 'commentaires', donnees.pad.commentaires, 'evaluations', donnees.pad.evaluations, 'copieBloc', copieBloc, 'ordre', ordre, 'largeur', largeur, 'date', donnees.pad.date, 'colonnes', donnees.pad.colonnes, 'affichageColonnes', affichageColonnes, 'bloc', donnees.pad.bloc, 'activite', donnees.pad.activite, 'admins', admins, 'vues', vues)
+						} else {
+							multi.hmset('pads:' + id, 'id', id, 'token', donnees.pad.token, 'titre', donnees.pad.titre, 'identifiant', donnees.pad.identifiant, 'fond', donnees.pad.fond, 'acces', donnees.pad.acces, 'contributions', donnees.pad.contributions, 'affichage', donnees.pad.affichage, 'registreActivite', registreActivite, 'conversation', conversation, 'listeUtilisateurs', listeUtilisateurs, 'editionNom', editionNom, 'fichiers', donnees.pad.fichiers, 'enregistrements', enregistrements, 'liens', donnees.pad.liens, 'documents', donnees.pad.documents, 'commentaires', donnees.pad.commentaires, 'evaluations', donnees.pad.evaluations, 'copieBloc', copieBloc, 'ordre', ordre, 'largeur', largeur, 'date', donnees.pad.date, 'colonnes', donnees.pad.colonnes, 'affichageColonnes', affichageColonnes, 'bloc', donnees.pad.bloc, 'activite', donnees.pad.activite, 'admins', admins, 'vues', vues)
+						}
+						for (const activite of donnees.activite) {
+							if (activite.hasOwnProperty('bloc') && activite.hasOwnProperty('identifiant') && activite.hasOwnProperty('titre') && activite.hasOwnProperty('date') && activite.hasOwnProperty('couleur') && activite.hasOwnProperty('type') && activite.hasOwnProperty('id')) {
+								multi.zadd('activite:' + id, activite.id, JSON.stringify(activite))
+							}
+						}
+						multi.exec(function () {
+							fs.removeSync(path.join(__dirname, '..', '/static/pads/' + id + '.json'))
+							fs.removeSync(path.join(__dirname, '..', '/static/pads/pad-' + id + '.json'))
+							recupererDonneesPad(id, token, identifiant, statut, res)
+						})
 					})
-				})
+				} else {
+					res.send('erreur_pad')
+				}
 			} else {
 				res.send('erreur_pad')
 			}
@@ -587,16 +591,30 @@ app.post('/api/creer-pad', function (req, res) {
 		const token = Math.random().toString(16).slice(2)
 		const date = moment().format()
 		const couleur = choisirCouleur()
-		db.exists('pad', function (err, resultat) {
+		db.exists('pad', async function (err, resultat) {
 			if (err) { res.send('erreur_creation'); return false }
 			if (resultat === 1) {
-				db.get('pad', function (err, resultat) {
+				db.get('pad', async function (err, resultat) {
 					if (err) { res.send('erreur_creation'); return false }
 					const id = parseInt(resultat) + 1
-					creerPad(res, id, token, titre, date, identifiant, couleur)
+					const creation = await creerPad(id, token, titre, date, identifiant, couleur)
+					if (creation === true) {
+						const chemin = path.join(__dirname, '..', '/static/' + definirDossierFichiers(id) + '/' + id)
+						fs.mkdirsSync(chemin)
+						res.json({ id: id, token: token, titre: titre, identifiant: identifiant, fond: '/img/fond1.png', acces: 'public', contributions: 'ouvertes', affichage: 'mur', registreActivite: 'active', conversation: 'desactivee', listeUtilisateurs: 'activee', editionNom: 'desactivee', fichiers: 'actives', enregistrements: 'desactives', liens: 'actives', documents: 'desactives', commentaires: 'desactives', evaluations: 'desactivees', copieBloc: 'desactivee', ordre: 'croissant', largeur: 'normale', date: date, colonnes: [], affichageColonnes: [], bloc: 0, activite: 0, admins: [] })
+					} else {
+						res.send('erreur_creation')
+					}
 				})
 			} else {
-				creerPad(res, 1, token, titre, date, identifiant, couleur)
+				const creation = await creerPad(1, token, titre, date, identifiant, couleur)
+				if (creation === true) {
+					const chemin = path.join(__dirname, '..', '/static/' + definirDossierFichiers(1) + '/1')
+					fs.mkdirsSync(chemin)
+					res.json({ id: id, token: token, titre: titre, identifiant: identifiant, fond: '/img/fond1.png', acces: 'public', contributions: 'ouvertes', affichage: 'mur', registreActivite: 'active', conversation: 'desactivee', listeUtilisateurs: 'activee', editionNom: 'desactivee', fichiers: 'actives', enregistrements: 'desactives', liens: 'actives', documents: 'desactives', commentaires: 'desactives', evaluations: 'desactivees', copieBloc: 'desactivee', ordre: 'croissant', largeur: 'normale', date: date, colonnes: [], affichageColonnes: [], bloc: 0, activite: 0, admins: [] })
+				} else {
+					res.send('erreur_creation')
+				}
 			}
 		})
 	} else {
@@ -628,16 +646,36 @@ app.post('/api/creer-pad-sans-compte', async function (req, res) {
 	if (req.session.hasOwnProperty('langue') && req.session.langue !== '' && req.session.langue !== undefined) {
 		langue = req.session.langue
 	}
-	db.exists('pad', function (err, resultat) {
+	db.exists('pad', async function (err, resultat) {
 		if (err) { res.send('erreur_creation'); return false }
 		if (resultat === 1) {
-			db.get('pad', function (err, resultat) {
+			db.get('pad', async function (err, resultat) {
 				if (err) { res.send('erreur_creation'); return false }
 				const id = parseInt(resultat) + 1
-				creerPadSansCompte(req, res, id, token, titre, hash, date, identifiant, nom, langue, '')
+				const creation = await creerPadSansCompte(id, token, titre, hash, date, identifiant, nom, langue)
+				if (creation === true) {
+					const chemin = path.join(__dirname, '..', '/static/' + definirDossierFichiers(id) + '/' + id)
+					fs.mkdirsSync(chemin)
+					req.session.langue = langue
+					req.session.statut = 'auteur'
+					req.session.cookie.expires = new Date(Date.now() + dureeSession)
+					res.json({ id: id, token: token, titre: titre, identifiant: identifiant, fond: '/img/fond1.png', acces: 'public', contributions: 'ouvertes', affichage: 'mur', registreActivite: 'active', conversation: 'desactivee', listeUtilisateurs: 'activee', editionNom: 'desactivee', fichiers: 'actives', enregistrements: 'desactives', liens: 'actives', liens: 'actives', documents: 'desactives', commentaires: 'desactives', evaluations: 'desactivees', copieBloc: 'desactivee', ordre: 'croissant', largeur: 'normale', date: date, colonnes: [], affichageColonnes: [], bloc: 0, activite: 0 })
+				} else {
+					res.send('erreur_creation')
+				}
 			})
 		} else {
-			creerPadSansCompte(req, res, 1, token, titre, hash, date, identifiant, nom, langue, '')
+			const creation = await creerPadSansCompte(1, token, titre, hash, date, identifiant, nom, langue)
+			if (creation === true) {
+				const chemin = path.join(__dirname, '..', '/static/' + definirDossierFichiers(1) + '/1')
+				fs.mkdirsSync(chemin)
+				req.session.langue = langue
+				req.session.statut = 'auteur'
+				req.session.cookie.expires = new Date(Date.now() + dureeSession)
+				res.json({ id: 1, token: token, titre: titre, identifiant: identifiant, fond: '/img/fond1.png', acces: 'public', contributions: 'ouvertes', affichage: 'mur', registreActivite: 'active', conversation: 'desactivee', listeUtilisateurs: 'activee', editionNom: 'desactivee', fichiers: 'actives', enregistrements: 'desactives', liens: 'actives', liens: 'actives', documents: 'desactives', commentaires: 'desactives', evaluations: 'desactivees', copieBloc: 'desactivee', ordre: 'croissant', largeur: 'normale', date: date, colonnes: [], affichageColonnes: [], bloc: 0, activite: 0 })
+			} else {
+				res.send('erreur_creation')
+			}
 		}
 	})
 })
@@ -845,100 +883,104 @@ app.post('/api/dupliquer-pad', function (req, res) {
 					})
 				} else if (resultat !== 1 && fs.existsSync(path.join(__dirname, '..', '/static/pads/' + pad + '.json'))) {
 					const donnees = await fs.readJson(path.join(__dirname, '..', '/static/pads/' + pad + '.json'))
-					const date = moment().format()
-					const donneesBlocs = []
-					for (const [indexBloc, bloc] of donnees.blocs.entries()) {
-						const donneesBloc = new Promise(function (resolve) {
-							if (Object.keys(bloc).length > 0) {
-								if (bloc.vignette !== '') {
-									bloc.vignette = bloc.vignette.replace('/' + definirDossierFichiers(pad) + '/' + pad, '/' + definirDossierFichiers(id) + '/' + id)
+					if (typeof donnees === 'object' && donnees !== null && donnees.hasOwnProperty('pad') && donnees.hasOwnProperty('blocs') && donnees.hasOwnProperty('activite')) {
+						const date = moment().format()
+						const donneesBlocs = []
+						for (const [indexBloc, bloc] of donnees.blocs.entries()) {
+							const donneesBloc = new Promise(function (resolve) {
+								if (Object.keys(bloc).length > 0) {
+									if (bloc.vignette !== '') {
+										bloc.vignette = bloc.vignette.replace('/' + definirDossierFichiers(pad) + '/' + pad, '/' + definirDossierFichiers(id) + '/' + id)
+									}
+									let visibilite = 'visible'
+									if (bloc.hasOwnProperty('visibilite')) {
+										visibilite = bloc.visibilite
+									}
+									if (bloc.iframe !== '' && bloc.iframe.includes(etherpad)) {
+										const etherpadId = bloc.iframe.replace(etherpad + '/p/', '')
+										const destinationId = 'pad-' + id + '-' + Math.random().toString(16).slice(2)
+										const url = etherpad + '/api/1.2.14/copyPad?apikey=' + etherpadApi + '&sourceID=' + etherpadId + '&destinationID=' + destinationId
+										axios.get(url)
+										bloc.iframe = etherpad + '/p/' + destinationId
+										bloc.media = etherpad + '/p/' + destinationId
+									}
+									const multi = db.multi()
+									const blocId = 'bloc-id-' + (new Date()).getTime() + Math.random().toString(16).slice(10)
+									multi.hmset('pad-' + id + ':' + blocId, 'id', bloc.id, 'bloc', blocId, 'titre', bloc.titre, 'texte', bloc.texte, 'media', bloc.media, 'iframe', bloc.iframe, 'type', bloc.type, 'source', bloc.source, 'vignette', bloc.vignette, 'date', date, 'identifiant', bloc.identifiant, 'commentaires', 0, 'evaluations', 0, 'colonne', bloc.colonne, 'visibilite', visibilite)
+									multi.zadd('blocs:' + id, indexBloc, blocId)
+									multi.exec(function () {
+										resolve(blocId)
+									})
+								} else {
+									resolve({})
 								}
-								let visibilite = 'visible'
-								if (bloc.hasOwnProperty('visibilite')) {
-									visibilite = bloc.visibilite
-								}
-								if (bloc.iframe !== '' && bloc.iframe.includes(etherpad)) {
-									const etherpadId = bloc.iframe.replace(etherpad + '/p/', '')
-									const destinationId = 'pad-' + id + '-' + Math.random().toString(16).slice(2)
-									const url = etherpad + '/api/1.2.14/copyPad?apikey=' + etherpadApi + '&sourceID=' + etherpadId + '&destinationID=' + destinationId
-									axios.get(url)
-									bloc.iframe = etherpad + '/p/' + destinationId
-									bloc.media = etherpad + '/p/' + destinationId
-								}
-								const multi = db.multi()
-								const blocId = 'bloc-id-' + (new Date()).getTime() + Math.random().toString(16).slice(10)
-								multi.hmset('pad-' + id + ':' + blocId, 'id', bloc.id, 'bloc', blocId, 'titre', bloc.titre, 'texte', bloc.texte, 'media', bloc.media, 'iframe', bloc.iframe, 'type', bloc.type, 'source', bloc.source, 'vignette', bloc.vignette, 'date', date, 'identifiant', bloc.identifiant, 'commentaires', 0, 'evaluations', 0, 'colonne', bloc.colonne, 'visibilite', visibilite)
-								multi.zadd('blocs:' + id, indexBloc, blocId)
-								multi.exec(function () {
-									resolve(blocId)
-								})
-							} else {
-								resolve({})
-							}
-						})
-						donneesBlocs.push(donneesBloc)
-					}
-					Promise.all(donneesBlocs).then(function () {
-						const token = Math.random().toString(16).slice(2)
-						const couleur = choisirCouleur()
-						const code = Math.floor(1000 + Math.random() * 9000)
-						let registreActivite = 'active'
-						let conversation = 'desactivee'
-						let listeUtilisateurs = 'activee'
-						let editionNom = 'desactivee'
-						let ordre = 'croissant'
-						let largeur = 'normale'
-						let enregistrements = 'desactives'
-						let copieBloc = 'desactivee'
-						let affichageColonnes = []
-						if (donnees.pad.hasOwnProperty('registreActivite')) {
-							registreActivite = donnees.pad.registreActivite
-						}
-						if (donnees.pad.hasOwnProperty('conversation')) {
-							conversation = donnees.pad.conversation
-						}
-						if (donnees.pad.hasOwnProperty('listeUtilisateurs')) {
-							listeUtilisateurs = donnees.pad.listeUtilisateurs
-						}
-						if (donnees.pad.hasOwnProperty('editionNom')) {
-							editionNom = donnees.pad.editionNom
-						}
-						if (donnees.pad.hasOwnProperty('ordre')) {
-							ordre = donnees.pad.ordre
-						}
-						if (donnees.pad.hasOwnProperty('largeur')) {
-							largeur = donnees.pad.largeur
-						}
-						if (donnees.pad.hasOwnProperty('enregistrements')) {
-							enregistrements = donnees.pad.enregistrements
-						}
-						if (donnees.pad.hasOwnProperty('copieBloc')) {
-							copieBloc = donnees.pad.copieBloc
-						}
-						if (donnees.pad.hasOwnProperty('affichageColonnes')) {
-							affichageColonnes = JSON.parse(donnees.pad.affichageColonnes)
-						} else {
-							JSON.parse(donnees.pad.colonnes).forEach(function () {
-								affichageColonnes.push(true)
 							})
+							donneesBlocs.push(donneesBloc)
 						}
-						const multi = db.multi()
-						multi.incr('pad')
-						if (donnees.pad.hasOwnProperty('code')) {
-							multi.hmset('pads:' + id, 'id', id, 'token', token, 'titre', 'Copie de ' + donnees.pad.titre, 'identifiant', identifiant, 'fond', donnees.pad.fond, 'acces', donnees.pad.acces, 'code', code, 'contributions', donnees.pad.contributions, 'affichage', donnees.pad.affichage, 'registreActivite', registreActivite, 'conversation', conversation, 'listeUtilisateurs', listeUtilisateurs, 'editionNom', editionNom, 'fichiers', donnees.pad.fichiers, 'enregistrements', enregistrements, 'liens', donnees.pad.liens, 'documents', donnees.pad.documents, 'commentaires', donnees.pad.commentaires, 'evaluations', donnees.pad.evaluations, 'copieBloc', copieBloc, 'ordre', ordre, 'largeur', largeur, 'date', date, 'colonnes', donnees.pad.colonnes, 'affichageColonnes', JSON.stringify(affichageColonnes), 'bloc', donnees.pad.bloc, 'activite', 0)
-						} else {
-							multi.hmset('pads:' + id, 'id', id, 'token', token, 'titre', 'Copie de ' + donnees.pad.titre, 'identifiant', identifiant, 'fond', donnees.pad.fond, 'acces', donnees.pad.acces, 'contributions', donnees.pad.contributions, 'affichage', donnees.pad.affichage, 'registreActivite', registreActivite, 'conversation', conversation, 'listeUtilisateurs', listeUtilisateurs, 'editionNom', editionNom, 'fichiers', donnees.pad.fichiers, 'enregistrements', enregistrements, 'liens', donnees.pad.liens, 'documents', donnees.pad.documents, 'commentaires', donnees.pad.commentaires, 'evaluations', donnees.pad.evaluations, 'copieBloc', copieBloc, 'ordre', ordre, 'largeur', largeur, 'date', date, 'colonnes', donnees.pad.colonnes, 'affichageColonnes', JSON.stringify(affichageColonnes), 'bloc', donnees.pad.bloc, 'activite', 0)
-						}
-						multi.sadd('pads-crees:' + identifiant, id)
-						multi.sadd('utilisateurs-pads:' + id, identifiant)
-						multi.hset('couleurs:' + identifiant, 'pad' + id, couleur)
-						multi.exec(function () {
-							if (fs.existsSync(path.join(__dirname, '..', '/static/' + definirDossierFichiers(pad) + '/' + pad))) {
-								fs.copySync(path.join(__dirname, '..', '/static/' + definirDossierFichiers(pad) + '/' + pad), path.join(__dirname, '..', '/static/' + definirDossierFichiers(id) + '/' + id))
+						Promise.all(donneesBlocs).then(function () {
+							const token = Math.random().toString(16).slice(2)
+							const couleur = choisirCouleur()
+							const code = Math.floor(1000 + Math.random() * 9000)
+							let registreActivite = 'active'
+							let conversation = 'desactivee'
+							let listeUtilisateurs = 'activee'
+							let editionNom = 'desactivee'
+							let ordre = 'croissant'
+							let largeur = 'normale'
+							let enregistrements = 'desactives'
+							let copieBloc = 'desactivee'
+							let affichageColonnes = []
+							if (donnees.pad.hasOwnProperty('registreActivite')) {
+								registreActivite = donnees.pad.registreActivite
 							}
-							res.json({ id: id, token: token, titre: 'Copie de ' + donnees.pad.titre, identifiant: identifiant, fond: donnees.pad.fond, acces: donnees.pad.acces, code: code, contributions: donnees.pad.contributions, affichage: donnees.pad.affichage, registreActivite: registreActivite, conversation: conversation, listeUtilisateurs: listeUtilisateurs, editionNom: editionNom, fichiers: donnees.pad.fichiers, enregistrements: enregistrements, liens: donnees.pad.liens, documents: donnees.pad.documents, commentaires: donnees.pad.commentaires, evaluations: donnees.pad.evaluations, copieBloc: copieBloc, ordre: ordre, largeur: largeur, date: date, colonnes: donnees.pad.colonnes, affichageColonnes: affichageColonnes, bloc: donnees.pad.bloc, activite: 0 })
+							if (donnees.pad.hasOwnProperty('conversation')) {
+								conversation = donnees.pad.conversation
+							}
+							if (donnees.pad.hasOwnProperty('listeUtilisateurs')) {
+								listeUtilisateurs = donnees.pad.listeUtilisateurs
+							}
+							if (donnees.pad.hasOwnProperty('editionNom')) {
+								editionNom = donnees.pad.editionNom
+							}
+							if (donnees.pad.hasOwnProperty('ordre')) {
+								ordre = donnees.pad.ordre
+							}
+							if (donnees.pad.hasOwnProperty('largeur')) {
+								largeur = donnees.pad.largeur
+							}
+							if (donnees.pad.hasOwnProperty('enregistrements')) {
+								enregistrements = donnees.pad.enregistrements
+							}
+							if (donnees.pad.hasOwnProperty('copieBloc')) {
+								copieBloc = donnees.pad.copieBloc
+							}
+							if (donnees.pad.hasOwnProperty('affichageColonnes')) {
+								affichageColonnes = JSON.parse(donnees.pad.affichageColonnes)
+							} else {
+								JSON.parse(donnees.pad.colonnes).forEach(function () {
+									affichageColonnes.push(true)
+								})
+							}
+							const multi = db.multi()
+							multi.incr('pad')
+							if (donnees.pad.hasOwnProperty('code')) {
+								multi.hmset('pads:' + id, 'id', id, 'token', token, 'titre', 'Copie de ' + donnees.pad.titre, 'identifiant', identifiant, 'fond', donnees.pad.fond, 'acces', donnees.pad.acces, 'code', code, 'contributions', donnees.pad.contributions, 'affichage', donnees.pad.affichage, 'registreActivite', registreActivite, 'conversation', conversation, 'listeUtilisateurs', listeUtilisateurs, 'editionNom', editionNom, 'fichiers', donnees.pad.fichiers, 'enregistrements', enregistrements, 'liens', donnees.pad.liens, 'documents', donnees.pad.documents, 'commentaires', donnees.pad.commentaires, 'evaluations', donnees.pad.evaluations, 'copieBloc', copieBloc, 'ordre', ordre, 'largeur', largeur, 'date', date, 'colonnes', donnees.pad.colonnes, 'affichageColonnes', JSON.stringify(affichageColonnes), 'bloc', donnees.pad.bloc, 'activite', 0)
+							} else {
+								multi.hmset('pads:' + id, 'id', id, 'token', token, 'titre', 'Copie de ' + donnees.pad.titre, 'identifiant', identifiant, 'fond', donnees.pad.fond, 'acces', donnees.pad.acces, 'contributions', donnees.pad.contributions, 'affichage', donnees.pad.affichage, 'registreActivite', registreActivite, 'conversation', conversation, 'listeUtilisateurs', listeUtilisateurs, 'editionNom', editionNom, 'fichiers', donnees.pad.fichiers, 'enregistrements', enregistrements, 'liens', donnees.pad.liens, 'documents', donnees.pad.documents, 'commentaires', donnees.pad.commentaires, 'evaluations', donnees.pad.evaluations, 'copieBloc', copieBloc, 'ordre', ordre, 'largeur', largeur, 'date', date, 'colonnes', donnees.pad.colonnes, 'affichageColonnes', JSON.stringify(affichageColonnes), 'bloc', donnees.pad.bloc, 'activite', 0)
+							}
+							multi.sadd('pads-crees:' + identifiant, id)
+							multi.sadd('utilisateurs-pads:' + id, identifiant)
+							multi.hset('couleurs:' + identifiant, 'pad' + id, couleur)
+							multi.exec(function () {
+								if (fs.existsSync(path.join(__dirname, '..', '/static/' + definirDossierFichiers(pad) + '/' + pad))) {
+									fs.copySync(path.join(__dirname, '..', '/static/' + definirDossierFichiers(pad) + '/' + pad), path.join(__dirname, '..', '/static/' + definirDossierFichiers(id) + '/' + id))
+								}
+								res.json({ id: id, token: token, titre: 'Copie de ' + donnees.pad.titre, identifiant: identifiant, fond: donnees.pad.fond, acces: donnees.pad.acces, code: code, contributions: donnees.pad.contributions, affichage: donnees.pad.affichage, registreActivite: registreActivite, conversation: conversation, listeUtilisateurs: listeUtilisateurs, editionNom: editionNom, fichiers: donnees.pad.fichiers, enregistrements: enregistrements, liens: donnees.pad.liens, documents: donnees.pad.documents, commentaires: donnees.pad.commentaires, evaluations: donnees.pad.evaluations, copieBloc: copieBloc, ordre: ordre, largeur: largeur, date: date, colonnes: donnees.pad.colonnes, affichageColonnes: affichageColonnes, bloc: donnees.pad.bloc, activite: 0 })
+							})
 						})
-					})
+					} else {
+						res.send('erreur_duplication')
+					}
 				}
 			})
 		})
@@ -1069,9 +1111,9 @@ app.post('/api/exporter-pad', function (req, res) {
 							if (Object.keys(bloc).length > 0 && bloc.media !== '' && bloc.type !== 'embed' && fs.existsSync(path.join(__dirname, '..', '/static/' + definirDossierFichiers(id) + '/' + id + '/' + bloc.media))) {
 								fs.copySync(path.join(__dirname, '..', '/static/' + definirDossierFichiers(id) + '/' + id + '/' + bloc.media), path.normalize(chemin + '/' + id + '/fichiers/' + bloc.media, { overwrite: true }))
 							}
-							if (Object.keys(bloc).length > 0 && bloc.vignette !== '' && bloc.vignette.substring(1, definirDossierFichiers(id).length + 1) === definirDossierFichiers(id) && fs.existsSync(path.join(__dirname, '..', '/static' + bloc.vignette))) {
+							if (Object.keys(bloc).length > 0 && bloc.vignette && bloc.vignette !== '' && bloc.vignette.substring(1, definirDossierFichiers(id).length + 1) === definirDossierFichiers(id) && fs.existsSync(path.join(__dirname, '..', '/static' + bloc.vignette))) {
 								fs.copySync(path.join(__dirname, '..', '/static' + bloc.vignette), path.normalize(chemin + '/' + id + '/fichiers/' + bloc.vignette.replace('/' + definirDossierFichiers(id) + '/' + id + '/', ''), { overwrite: true }))
-							} else if (Object.keys(bloc).length > 0 && bloc.vignette !== '' && bloc.vignette.includes('/img/') && !verifierURL(bloc.vignette, ['https', 'http']) && fs.existsSync(path.join(__dirname, '..', '/static' + bloc.vignette))) {
+							} else if (Object.keys(bloc).length > 0 && bloc.vignette && bloc.vignette !== '' && bloc.vignette.includes('/img/') && !verifierURL(bloc.vignette, ['https', 'http']) && fs.existsSync(path.join(__dirname, '..', '/static' + bloc.vignette))) {
 								fs.copySync(path.join(__dirname, '..', '/static' + bloc.vignette), path.normalize(chemin + '/' + id + '/static' + bloc.vignette, { overwrite: true }))
 							}
 						}
@@ -1093,51 +1135,55 @@ app.post('/api/exporter-pad', function (req, res) {
 				})
 			} else if (resultat !== 1 && fs.existsSync(path.join(__dirname, '..', '/static/pads/' + id + '.json'))) {
 				const donnees = await fs.readJson(path.join(__dirname, '..', '/static/pads/' + id + '.json'))
-				const html = genererHTML(donnees.pad, donnees.blocs)
-				const chemin = path.join(__dirname, '..', '/static/temp')
-				fs.mkdirpSync(path.normalize(chemin + '/' + id))
-				fs.mkdirpSync(path.normalize(chemin + '/' + id + '/fichiers'))
-				fs.mkdirpSync(path.normalize(chemin + '/' + id + '/static'))
-				fs.writeFileSync(path.normalize(chemin + '/' + id + '/donnees.json'), JSON.stringify(donnees, '', 4), 'utf8')
-				fs.writeFileSync(path.normalize(chemin + '/' + id + '/index.html'), html, 'utf8')
-				if (!donnees.pad.fond.includes('/img/') && donnees.pad.fond.substring(0, 1) !== '#' && fs.existsSync(path.join(__dirname, '..', '/static' + donnees.pad.fond))) {
-					fs.copySync(path.join(__dirname, '..', '/static' + donnees.pad.fond), path.normalize(chemin + '/' + id + '/fichiers/' + donnees.pad.fond.split('/').pop(), { overwrite: true }))
-				} else if (donnees.pad.fond.includes('/img/') && fs.existsSync(path.join(__dirname, '..', '/static' + donnees.pad.fond))) {
-					fs.copySync(path.join(__dirname, '..', '/static' + donnees.pad.fond), path.normalize(chemin + '/' + id + '/static' + donnees.pad.fond, { overwrite: true }))
-				}
-				if (fs.existsSync(path.join(__dirname, '..', '/assets/export/css'))) {
-					fs.copySync(path.join(__dirname, '..', '/assets/export/css'), path.normalize(chemin + '/' + id + '/static/css'))
-				}
-				if (fs.existsSync(path.join(__dirname, '..', '/assets/export/js'))) {
-					fs.copySync(path.join(__dirname, '..', '/assets/export/js'), path.normalize(chemin + '/' + id + '/static/js'))
-				}
-				fs.copySync(path.join(__dirname, '..', '/assets/fonts/MaterialIcons-Regular.woff'), path.normalize(chemin + '/' + id + '/static/fonts/MaterialIcons-Regular.woff'))
-				fs.copySync(path.join(__dirname, '..', '/assets/fonts/MaterialIcons-Regular.woff2'), path.normalize(chemin + '/' + id + '/static/fonts/MaterialIcons-Regular.woff2'))
-				fs.copySync(path.join(__dirname, '..', '/assets/fonts/Roboto-Slab-Medium.woff'), path.normalize(chemin + '/' + id + '/static/fonts/Roboto-Slab-Medium.woff'))
-				fs.copySync(path.join(__dirname, '..', '/assets/fonts/Roboto-Slab-Medium.woff2'), path.normalize(chemin + '/' + id + '/static/fonts/Roboto-Slab-Medium.woff2'))
-				fs.copySync(path.join(__dirname, '..', '/static/favicon.png'), path.normalize(chemin + '/' + id + '/static/img/favicon.png'))
-				for (const bloc of donnees.blocs) {
-					if (Object.keys(bloc).length > 0 && bloc.media !== '' && bloc.type !== 'embed' && fs.existsSync(path.join(__dirname, '..', '/static/' + definirDossierFichiers(id) + '/' + id + '/' + bloc.media))) {
-						fs.copySync(path.join(__dirname, '..', '/static/' + definirDossierFichiers(id) + '/' + id + '/' + bloc.media), path.normalize(chemin + '/' + id + '/fichiers/' + bloc.media, { overwrite: true }))
+				if (typeof donnees === 'object' && donnees !== null && donnees.hasOwnProperty('pad') && donnees.hasOwnProperty('blocs') && donnees.hasOwnProperty('activite')) {
+					const html = genererHTML(donnees.pad, donnees.blocs)
+					const chemin = path.join(__dirname, '..', '/static/temp')
+					fs.mkdirpSync(path.normalize(chemin + '/' + id))
+					fs.mkdirpSync(path.normalize(chemin + '/' + id + '/fichiers'))
+					fs.mkdirpSync(path.normalize(chemin + '/' + id + '/static'))
+					fs.writeFileSync(path.normalize(chemin + '/' + id + '/donnees.json'), JSON.stringify(donnees, '', 4), 'utf8')
+					fs.writeFileSync(path.normalize(chemin + '/' + id + '/index.html'), html, 'utf8')
+					if (!donnees.pad.fond.includes('/img/') && donnees.pad.fond.substring(0, 1) !== '#' && fs.existsSync(path.join(__dirname, '..', '/static' + donnees.pad.fond))) {
+						fs.copySync(path.join(__dirname, '..', '/static' + donnees.pad.fond), path.normalize(chemin + '/' + id + '/fichiers/' + donnees.pad.fond.split('/').pop(), { overwrite: true }))
+					} else if (donnees.pad.fond.includes('/img/') && fs.existsSync(path.join(__dirname, '..', '/static' + donnees.pad.fond))) {
+						fs.copySync(path.join(__dirname, '..', '/static' + donnees.pad.fond), path.normalize(chemin + '/' + id + '/static' + donnees.pad.fond, { overwrite: true }))
 					}
-					if (Object.keys(bloc).length > 0 && bloc.vignette !== '' && bloc.vignette.substring(1, definirDossierFichiers(id).length + 1) === definirDossierFichiers(id) && fs.existsSync(path.join(__dirname, '..', '/static' + bloc.vignette))) {
-						fs.copySync(path.join(__dirname, '..', '/static' + bloc.vignette), path.normalize(chemin + '/' + id + '/fichiers/' + bloc.vignette.replace('/' + definirDossierFichiers(id) + '/' + id + '/', ''), { overwrite: true }))
-					} else if (Object.keys(bloc).length > 0 && bloc.vignette !== '' && bloc.vignette.includes('/img/') && !verifierURL(bloc.vignette, ['https', 'http']) && fs.existsSync(path.join(__dirname, '..', '/static' + bloc.vignette))) {
-						fs.copySync(path.join(__dirname, '..', '/static' + bloc.vignette), path.normalize(chemin + '/' + id + '/static' + bloc.vignette, { overwrite: true }))
+					if (fs.existsSync(path.join(__dirname, '..', '/assets/export/css'))) {
+						fs.copySync(path.join(__dirname, '..', '/assets/export/css'), path.normalize(chemin + '/' + id + '/static/css'))
 					}
+					if (fs.existsSync(path.join(__dirname, '..', '/assets/export/js'))) {
+						fs.copySync(path.join(__dirname, '..', '/assets/export/js'), path.normalize(chemin + '/' + id + '/static/js'))
+					}
+					fs.copySync(path.join(__dirname, '..', '/assets/fonts/MaterialIcons-Regular.woff'), path.normalize(chemin + '/' + id + '/static/fonts/MaterialIcons-Regular.woff'))
+					fs.copySync(path.join(__dirname, '..', '/assets/fonts/MaterialIcons-Regular.woff2'), path.normalize(chemin + '/' + id + '/static/fonts/MaterialIcons-Regular.woff2'))
+					fs.copySync(path.join(__dirname, '..', '/assets/fonts/Roboto-Slab-Medium.woff'), path.normalize(chemin + '/' + id + '/static/fonts/Roboto-Slab-Medium.woff'))
+					fs.copySync(path.join(__dirname, '..', '/assets/fonts/Roboto-Slab-Medium.woff2'), path.normalize(chemin + '/' + id + '/static/fonts/Roboto-Slab-Medium.woff2'))
+					fs.copySync(path.join(__dirname, '..', '/static/favicon.png'), path.normalize(chemin + '/' + id + '/static/img/favicon.png'))
+					for (const bloc of donnees.blocs) {
+						if (Object.keys(bloc).length > 0 && bloc.media !== '' && bloc.type !== 'embed' && fs.existsSync(path.join(__dirname, '..', '/static/' + definirDossierFichiers(id) + '/' + id + '/' + bloc.media))) {
+							fs.copySync(path.join(__dirname, '..', '/static/' + definirDossierFichiers(id) + '/' + id + '/' + bloc.media), path.normalize(chemin + '/' + id + '/fichiers/' + bloc.media, { overwrite: true }))
+						}
+						if (Object.keys(bloc).length > 0 && bloc.vignette && bloc.vignette !== '' && bloc.vignette.substring(1, definirDossierFichiers(id).length + 1) === definirDossierFichiers(id) && fs.existsSync(path.join(__dirname, '..', '/static' + bloc.vignette))) {
+							fs.copySync(path.join(__dirname, '..', '/static' + bloc.vignette), path.normalize(chemin + '/' + id + '/fichiers/' + bloc.vignette.replace('/' + definirDossierFichiers(id) + '/' + id + '/', ''), { overwrite: true }))
+						} else if (Object.keys(bloc).length > 0 && bloc.vignette && bloc.vignette !== '' && bloc.vignette.includes('/img/') && !verifierURL(bloc.vignette, ['https', 'http']) && fs.existsSync(path.join(__dirname, '..', '/static' + bloc.vignette))) {
+							fs.copySync(path.join(__dirname, '..', '/static' + bloc.vignette), path.normalize(chemin + '/' + id + '/static' + bloc.vignette, { overwrite: true }))
+						}
+					}
+					const archiveId = Math.floor((Math.random() * 100000) + 1)
+					const sortie = fs.createWriteStream(path.normalize(chemin + '/pad-' + id + '_' + archiveId + '.zip'))
+					const archive = archiver('zip', {
+						zlib: { level: 9 }
+					})
+					sortie.on('finish', function () {
+						fs.removeSync(path.normalize(chemin + '/' + id))
+						res.send('pad-' + id + '_' + archiveId + '.zip')
+					})
+					archive.pipe(sortie)
+					archive.directory(path.normalize(chemin + '/' + id), false)
+					archive.finalize()
+				} else {
+					res.send('erreur_export')
 				}
-				const archiveId = Math.floor((Math.random() * 100000) + 1)
-				const sortie = fs.createWriteStream(path.normalize(chemin + '/pad-' + id + '_' + archiveId + '.zip'))
-				const archive = archiver('zip', {
-					zlib: { level: 9 }
-				})
-				sortie.on('finish', function () {
-					fs.removeSync(path.normalize(chemin + '/' + id))
-					res.send('pad-' + id + '_' + archiveId + '.zip')
-				})
-				archive.pipe(sortie)
-				archive.directory(path.normalize(chemin + '/' + id), false)
-				archive.finalize()
 			}
 		})
 	} else {
@@ -1422,70 +1468,74 @@ app.post('/api/supprimer-pad', function (req, res) {
 				})
 			} else if (resultat !== 1 && fs.existsSync(path.join(__dirname, '..', '/static/pads/pad-' + pad + '.json'))) {
 				const donneesPad = await fs.readJson(path.join(__dirname, '..', '/static/pads/pad-' + pad + '.json'))
-				const multi = db.multi()
-				if (donneesPad.identifiant === identifiant) {
-					multi.srem('pads-crees:' + identifiant, pad)
-					multi.smembers('utilisateurs-pads:' + pad, function (err, utilisateurs) {
-						if (err) { res.send('erreur_suppression'); return false }
-						for (let j = 0; j < utilisateurs.length; j++) {
-							db.srem('pads-rejoints:' + utilisateurs[j], pad)
-							db.srem('pads-utilisateurs:' + utilisateurs[j], pad)
-							db.srem('pads-admins:' + utilisateurs[j], pad)
-							db.srem('pads-favoris:' + utilisateurs[j], pad)
-							db.hdel('couleurs:' + utilisateurs[j], 'pad' + pad)
-						}
-					})
-					multi.del('utilisateurs-pads:' + pad)
-					multi.exec(function () {
-						if (suppressionFichiers === true) {
-							fs.removeSync(path.join(__dirname, '..', '/static/' + definirDossierFichiers(pad) + '/' + pad))
-						}
-						fs.removeSync(path.join(__dirname, '..', '/static/pads/' + pad + '.json'))
-						fs.removeSync(path.join(__dirname, '..', '/static/pads/pad-' + pad + '.json'))
-						res.send('pad_supprime')
-					})
-				} else {
-					db.hgetall('utilisateurs:' + identifiant, function (err, donnees) {
-						if (err) { res.send('erreur_suppression'); return false }
-						if (donnees.hasOwnProperty('dossiers')) {
-							const dossiers = JSON.parse(donnees.dossiers)
-							dossiers.forEach(function (dossier, indexDossier) {
-								if (dossier.pads.includes(pad)) {
-									const indexPad = dossier.pads.indexOf(pad)
-									dossiers[indexDossier].pads.splice(indexPad, 1)
-								}
-							})
-							multi.hset('utilisateurs:' + identifiant, 'dossiers', JSON.stringify(dossiers))
-						}
-						if (type === 'pad-rejoint') {
-							multi.srem('pads-rejoints:' + identifiant, pad)
-						}
-						if (type === 'pad-admin') {
-							multi.srem('pads-rejoints:' + identifiant, pad)
-							multi.srem('pads-admins:' + identifiant, pad)
-						}
-						multi.srem('pads-favoris:' + identifiant, pad)
-						multi.exec(function () {
-							// Suppression de l'utilisateur dans la liste des admins du pad
-							if (type === 'pad-admin') {
-								db.hgetall('pads:' + pad, function (err, donnees) {
-									let listeAdmins = []
-									if (donnees.hasOwnProperty('admins')) {
-										listeAdmins = JSON.parse(donnees.admins)
-									}
-									if (listeAdmins.includes(identifiant)) {
-										const index = listeAdmins.indexOf(identifiant)
-										listeAdmins.splice(index, 1)
-									}
-									db.hset('pads:' + pad, 'admins', JSON.stringify(listeAdmins), function () {
-										res.send('pad_supprime')
-									})
-								})
-							} else {
-								res.send('pad_supprime')
+				if (typeof donneesPad === 'object' && donneesPad !== null) {
+					const multi = db.multi()
+					if (donneesPad.identifiant === identifiant) {
+						multi.srem('pads-crees:' + identifiant, pad)
+						multi.smembers('utilisateurs-pads:' + pad, function (err, utilisateurs) {
+							if (err) { res.send('erreur_suppression'); return false }
+							for (let j = 0; j < utilisateurs.length; j++) {
+								db.srem('pads-rejoints:' + utilisateurs[j], pad)
+								db.srem('pads-utilisateurs:' + utilisateurs[j], pad)
+								db.srem('pads-admins:' + utilisateurs[j], pad)
+								db.srem('pads-favoris:' + utilisateurs[j], pad)
+								db.hdel('couleurs:' + utilisateurs[j], 'pad' + pad)
 							}
 						})
-					})
+						multi.del('utilisateurs-pads:' + pad)
+						multi.exec(function () {
+							if (suppressionFichiers === true) {
+								fs.removeSync(path.join(__dirname, '..', '/static/' + definirDossierFichiers(pad) + '/' + pad))
+							}
+							fs.removeSync(path.join(__dirname, '..', '/static/pads/' + pad + '.json'))
+							fs.removeSync(path.join(__dirname, '..', '/static/pads/pad-' + pad + '.json'))
+							res.send('pad_supprime')
+						})
+					} else {
+						db.hgetall('utilisateurs:' + identifiant, function (err, donnees) {
+							if (err) { res.send('erreur_suppression'); return false }
+							if (donnees.hasOwnProperty('dossiers')) {
+								const dossiers = JSON.parse(donnees.dossiers)
+								dossiers.forEach(function (dossier, indexDossier) {
+									if (dossier.pads.includes(pad)) {
+										const indexPad = dossier.pads.indexOf(pad)
+										dossiers[indexDossier].pads.splice(indexPad, 1)
+									}
+								})
+								multi.hset('utilisateurs:' + identifiant, 'dossiers', JSON.stringify(dossiers))
+							}
+							if (type === 'pad-rejoint') {
+								multi.srem('pads-rejoints:' + identifiant, pad)
+							}
+							if (type === 'pad-admin') {
+								multi.srem('pads-rejoints:' + identifiant, pad)
+								multi.srem('pads-admins:' + identifiant, pad)
+							}
+							multi.srem('pads-favoris:' + identifiant, pad)
+							multi.exec(function () {
+								// Suppression de l'utilisateur dans la liste des admins du pad
+								if (type === 'pad-admin') {
+									db.hgetall('pads:' + pad, function (err, donnees) {
+										let listeAdmins = []
+										if (donnees.hasOwnProperty('admins')) {
+											listeAdmins = JSON.parse(donnees.admins)
+										}
+										if (listeAdmins.includes(identifiant)) {
+											const index = listeAdmins.indexOf(identifiant)
+											listeAdmins.splice(index, 1)
+										}
+										db.hset('pads:' + pad, 'admins', JSON.stringify(listeAdmins), function () {
+											res.send('pad_supprime')
+										})
+									})
+								} else {
+									res.send('pad_supprime')
+								}
+							})
+						})
+					}
+				} else {
+					res.send('erreur_suppression')
 				}
 			}
 		})
@@ -1591,7 +1641,11 @@ app.post('/api/recuperer-donnees-pad-admin', function (req, res) {
 			})
 		} else if (resultat !== 1 && fs.existsSync(path.join(__dirname, '..', '/static/pads/pad-' + pad + '.json'))) {
 			const donnees = await fs.readJson(path.join(__dirname, '..', '/static/pads/pad-' + pad + '.json'))
-			res.json(donnees)
+			if (typeof donnees === 'object' && donnees !== null) {
+				res.json(donnees)
+			} else {
+				res.send('erreur')
+			}
 		} else {
 			res.send('pad_inexistant')
 		}
@@ -1795,79 +1849,81 @@ app.post('/api/supprimer-compte', function (req, res) {
 								donneesEvaluations.push(donneesEvaluation)
 							} else if (resultat !== 1 && fs.existsSync(path.join(__dirname, '..', '/static/pads/' + pad + '.json'))) {
 								const donnees = await fs.readJson(path.join(__dirname, '..', '/static/pads/' + pad + '.json'))
-								const blocs = donnees.blocs
-								const entrees = donnees.activite
-								const donneesBloc = new Promise(function (resolve) {
-									for (let i = 0; i < blocs.length; i++) {
-										if (blocs[i].identifiant === identifiant) {
-											if (blocs[i].media !== '' && blocs[i].type !== 'embed') {
-												supprimerFichier(pad, blocs[i].media)
-											}
-											if (blocs[i].vignette !== '' && blocs[i].vignette.substring(1, definirDossierFichiers(pad).length + 1) === definirDossierFichiers(pad)) {
-												supprimerVignette(blocs[i].vignette)
-											}
-											const multi = db.multi()
-											multi.del('pad-' + pad + ':' + blocs[i].bloc)
-											multi.zrem('blocs:' + pad, blocs[i].bloc)
-											multi.del('commentaires:' + blocs[i].bloc)
-											multi.del('evaluations:' + blocs[i].bloc)
-											multi.exec(function () {
+								if (typeof donnees === 'object' && donnees !== null && donnees.hasOwnProperty('pad') && donnees.hasOwnProperty('blocs') && donnees.hasOwnProperty('activite')) {
+									const blocs = donnees.blocs
+									const entrees = donnees.activite
+									const donneesBloc = new Promise(function (resolve) {
+										for (let i = 0; i < blocs.length; i++) {
+											if (blocs[i].identifiant === identifiant) {
+												if (blocs[i].media !== '' && blocs[i].type !== 'embed') {
+													supprimerFichier(pad, blocs[i].media)
+												}
+												if (blocs[i].vignette !== '' && blocs[i].vignette.substring(1, definirDossierFichiers(pad).length + 1) === definirDossierFichiers(pad)) {
+													supprimerVignette(blocs[i].vignette)
+												}
+												const multi = db.multi()
+												multi.del('pad-' + pad + ':' + blocs[i].bloc)
+												multi.zrem('blocs:' + pad, blocs[i].bloc)
+												multi.del('commentaires:' + blocs[i].bloc)
+												multi.del('evaluations:' + blocs[i].bloc)
+												multi.exec(function () {
+													resolve(blocs[i].bloc)
+												})
+											} else {
 												resolve(blocs[i].bloc)
-											})
-										} else {
-											resolve(blocs[i].bloc)
+											}
 										}
-									}
-								})
-								donneesBlocs.push(donneesBloc)
-								const donneesActivite = new Promise(function (resolve) {
-									for (let i = 0; i < entrees.length; i++) {
-										if (entrees[i].identifiant === identifiant) {
-											db.zremrangebyscore('activite:' + pad, entrees[i].id, entrees[i].id, function () {
+									})
+									donneesBlocs.push(donneesBloc)
+									const donneesActivite = new Promise(function (resolve) {
+										for (let i = 0; i < entrees.length; i++) {
+											if (entrees[i].identifiant === identifiant) {
+												db.zremrangebyscore('activite:' + pad, entrees[i].id, entrees[i].id, function () {
+													resolve(entrees[i].id)
+												})
+											} else {
 												resolve(entrees[i].id)
-											})
-										} else {
-											resolve(entrees[i].id)
+											}
 										}
-									}
-								})
-								donneesActivites.push(donneesActivite)
-								const donneesCommentaire = new Promise(function (resolve) {
-									for (let i = 0; i < blocs.length; i++) {
-										db.zrange('commentaires:' + blocs[i].bloc, 0, -1, function (err, commentaires) {
-											if (err) { resolve() }
-											for (let j = 0; j < commentaires.length; j++) {
-												const commentaire = JSON.parse(commentaires[j])
-												if (commentaire.identifiant === identifiant) {
-													db.zremrangebyscore('commentaires:' + blocs[i].bloc, commentaire.id, commentaire.id, function () {
+									})
+									donneesActivites.push(donneesActivite)
+									const donneesCommentaire = new Promise(function (resolve) {
+										for (let i = 0; i < blocs.length; i++) {
+											db.zrange('commentaires:' + blocs[i].bloc, 0, -1, function (err, commentaires) {
+												if (err) { resolve() }
+												for (let j = 0; j < commentaires.length; j++) {
+													const commentaire = JSON.parse(commentaires[j])
+													if (commentaire.identifiant === identifiant) {
+														db.zremrangebyscore('commentaires:' + blocs[i].bloc, commentaire.id, commentaire.id, function () {
+															resolve(commentaire.id)
+														})
+													} else {
 														resolve(commentaire.id)
-													})
-												} else {
-													resolve(commentaire.id)
+													}
 												}
-											}
-										})
-									}
-								})
-								donneesCommentaires.push(donneesCommentaire)
-								const donneesEvaluation = new Promise(function (resolve) {
-									for (let i = 0; i < blocs.length; i++) {
-										db.zrange('evaluations:' + blocs[i].bloc, 0, -1, function (err, evaluations) {
-											if (err) { resolve() }
-											for (let j = 0; j < evaluations.length; j++) {
-												const evaluation = JSON.parse(evaluations[j])
-												if (evaluation.identifiant === identifiant) {
-													db.zremrangebyscore('evaluations:' + blocs[i].bloc, evaluation.id, evaluation.id, function () {
+											})
+										}
+									})
+									donneesCommentaires.push(donneesCommentaire)
+									const donneesEvaluation = new Promise(function (resolve) {
+										for (let i = 0; i < blocs.length; i++) {
+											db.zrange('evaluations:' + blocs[i].bloc, 0, -1, function (err, evaluations) {
+												if (err) { resolve() }
+												for (let j = 0; j < evaluations.length; j++) {
+													const evaluation = JSON.parse(evaluations[j])
+													if (evaluation.identifiant === identifiant) {
+														db.zremrangebyscore('evaluations:' + blocs[i].bloc, evaluation.id, evaluation.id, function () {
+															resolve(evaluation.id)
+														})
+													} else {
 														resolve(evaluation.id)
-													})
-												} else {
-													resolve(evaluation.id)
+													}
 												}
-											}
-										})
-									}
-								})
-								donneesEvaluations.push(donneesEvaluation)
+											})
+										}
+									})
+									donneesEvaluations.push(donneesEvaluation)
+								}
 							}
 						})
 					}
@@ -2381,16 +2437,36 @@ app.post('/api/ladigitale', function (req, res) {
 			if (req.session.hasOwnProperty('langue') && req.session.langue !== '' && req.session.langue !== undefined) {
 				langue = req.session.langue
 			}
-			db.exists('pad', function (err, resultat) {
+			db.exists('pad', async function (err, resultat) {
 				if (err) { res.send('erreur'); return false }
 				if (resultat === 1) {
-					db.get('pad', function (err, resultat) {
+					db.get('pad', async function (err, resultat) {
 						if (err) { res.send('erreur'); return false }
 						const id = parseInt(resultat) + 1
-						creerPadSansCompte(req, res, id, token, titre, hash, date, identifiant, nom, langue, 'api')
+						const creation = await creerPadSansCompte(id, token, titre, hash, date, identifiant, nom, langue)
+						if (creation === true) {
+							const chemin = path.join(__dirname, '..', '/static/' + definirDossierFichiers(id) + '/' + id)
+							fs.mkdirsSync(chemin)
+							req.session.langue = langue
+							req.session.statut = 'auteur'
+							req.session.cookie.expires = new Date(Date.now() + dureeSession)
+							res.send(id + '/' + token)
+						} else {
+							res.send('erreur_creation')
+						}
 					})
 				} else {
-					creerPadSansCompte(req, res, 1, token, titre, hash, date, identifiant, nom, langue, 'api')
+					const creation = await creerPadSansCompte(1, token, titre, hash, date, identifiant, nom, langue)
+					if (creation === true) {
+						const chemin = path.join(__dirname, '..', '/static/' + definirDossierFichiers(1) + '/1')
+						fs.mkdirsSync(chemin)
+						req.session.langue = langue
+						req.session.statut = 'auteur'
+						req.session.cookie.expires = new Date(Date.now() + dureeSession)
+						res.send('1/' + token)
+					} else {
+						res.send('erreur_creation')
+					}
 				}
 			})
 		} else if (reponse.data === 'token_autorise' && req.body.action && req.body.action === 'modifier-titre') {
@@ -2446,44 +2522,52 @@ app.post('/api/ladigitale', function (req, res) {
 					})
 				} else if (resultat !== 1 && fs.existsSync(path.join(__dirname, '..', '/static/pads/pad-' + pad + '.json'))) {
 					const donneesPad = await fs.readJson(path.join(__dirname, '..', '/static/pads/pad-' + pad + '.json'))
-					if (donneesPad.hasOwnProperty('motdepasse') && await bcrypt.compare(motdepasse, donneesPad.motdepasse) && token === donneesPad.token) {
-						const date = moment().format()
-						let langue = 'fr'
-						if (req.session.hasOwnProperty('langue') && req.session.langue !== '' && req.session.langue !== undefined) {
-							langue = req.session.langue
-						}
-						db.hmset('utilisateurs:' + identifiant, 'id', identifiant, 'date', date, 'nom', nom, 'langue', langue, async function (err) {
-							if (err) { res.send('erreur'); return false }
-							const chemin = path.join(__dirname, '..', '/static/pads')
-							const donneesPadJSON = await fs.readJson(path.join(__dirname, '..', '/static/pads/' + pad + '.json'))
-							donneesPadJSON.pad.identifiant = identifiant
-							fs.writeFile(path.normalize(chemin + '/' + pad + '.json'), JSON.stringify(donneesPadJSON, '', 4), 'utf8', function (err) {
-								if (err) { res.send('erreur'); return false }
-								donneesPad.identifiant = identifiant
-								fs.writeFile(path.normalize(chemin + '/pad-' + pad + '.json'), JSON.stringify(donneesPad, '', 4), 'utf8', function (err) {
-									if (err) { res.send('erreur'); return false }
-									res.json({ titre: donneesPad.titre, identifiant: identifiant })
-								})
-							})
-						})
-					} else if (!donneesPad.hasOwnProperty('motdepasse') && token === donneesPad.token) {
-						db.exists('utilisateurs:' + donneesPad.identifiant, function (err, resultat) {
-							if (err) { res.send('erreur'); return false }
-							if (resultat === 1) {
-								db.hgetall('utilisateurs:' + donneesPad.identifiant, async function (err, utilisateur) {
-									if (err) { res.send('erreur'); return false }
-									if (await bcrypt.compare(motdepasse, utilisateur.motdepasse)) {
-										res.json({ titre: donneesPad.titre, identifiant: donneesPad.identifiant })
-									} else {
-										res.send('non_autorise')
-									}
-								})
-							} else {
-								res.send('erreur')
+					if (typeof donneesPad === 'object' && donneesPad !== null) {
+						if (donneesPad.hasOwnProperty('motdepasse') && await bcrypt.compare(motdepasse, donneesPad.motdepasse) && token === donneesPad.token) {
+							const date = moment().format()
+							let langue = 'fr'
+							if (req.session.hasOwnProperty('langue') && req.session.langue !== '' && req.session.langue !== undefined) {
+								langue = req.session.langue
 							}
-						})
+							db.hmset('utilisateurs:' + identifiant, 'id', identifiant, 'date', date, 'nom', nom, 'langue', langue, async function (err) {
+								if (err) { res.send('erreur'); return false }
+								const chemin = path.join(__dirname, '..', '/static/pads')
+								const donneesPadJSON = await fs.readJson(path.join(__dirname, '..', '/static/pads/' + pad + '.json'))
+								if (typeof donneesPadJSON === 'object' && donneesPadJSON !== null && donneesPadJSON.hasOwnProperty('pad') && donneesPadJSON.hasOwnProperty('blocs') && donneesPadJSON.hasOwnProperty('activite')) {
+									donneesPadJSON.pad.identifiant = identifiant
+									fs.writeFile(path.normalize(chemin + '/' + pad + '.json'), JSON.stringify(donneesPadJSON, '', 4), 'utf8', function (err) {
+										if (err) { res.send('erreur'); return false }
+										donneesPad.identifiant = identifiant
+										fs.writeFile(path.normalize(chemin + '/pad-' + pad + '.json'), JSON.stringify(donneesPad, '', 4), 'utf8', function (err) {
+											if (err) { res.send('erreur'); return false }
+											res.json({ titre: donneesPad.titre, identifiant: identifiant })
+										})
+									})
+								} else {
+									res.send('erreur')
+								}
+							})
+						} else if (!donneesPad.hasOwnProperty('motdepasse') && token === donneesPad.token) {
+							db.exists('utilisateurs:' + donneesPad.identifiant, function (err, resultat) {
+								if (err) { res.send('erreur'); return false }
+								if (resultat === 1) {
+									db.hgetall('utilisateurs:' + donneesPad.identifiant, async function (err, utilisateur) {
+										if (err) { res.send('erreur'); return false }
+										if (await bcrypt.compare(motdepasse, utilisateur.motdepasse)) {
+											res.json({ titre: donneesPad.titre, identifiant: donneesPad.identifiant })
+										} else {
+											res.send('non_autorise')
+										}
+									})
+								} else {
+									res.send('erreur')
+								}
+							})
+						} else {
+							res.send('non_autorise')
+						}
 					} else {
-						res.send('non_autorise')
+						res.send('erreur')
 					}
 				} else {
 					res.send('contenu_inexistant')
@@ -2580,62 +2664,66 @@ app.post('/api/ladigitale', function (req, res) {
 					})
 				} else if (resultat !== 1 && fs.existsSync(path.join(__dirname, '..', '/static/pads/pad-' + pad + '.json'))) {
 					const donneesPad = await fs.readJson(path.join(__dirname, '..', '/static/pads/pad-' + pad + '.json'))
-					if (donneesPad.hasOwnProperty('motdepasse') && donneesPad.identifiant === identifiant && await bcrypt.compare(motdepasse, donneesPad.motdepasse)) {
-						const multi = db.multi()
-						multi.srem('pads-crees:' + identifiant, pad)
-						multi.smembers('utilisateurs-pads:' + pad, function (err, utilisateurs) {
-							if (err) { res.send('erreur'); return false }
-							for (let j = 0; j < utilisateurs.length; j++) {
-								db.srem('pads-rejoints:' + utilisateurs[j], pad)
-								db.srem('pads-utilisateurs:' + utilisateurs[j], pad)
-								db.srem('pads-admins:' + utilisateurs[j], pad)
-								db.srem('pads-favoris:' + utilisateurs[j], pad)
-								db.hdel('couleurs:' + utilisateurs[j], 'pad' + pad)
-							}
-						})
-						multi.del('utilisateurs-pads:' + pad)
-						multi.exec(function () {
-							fs.removeSync(path.join(__dirname, '..', '/static/' + definirDossierFichiers(pad) + '/' + pad))
-							fs.removeSync(path.join(__dirname, '..', '/static/pads/' + pad + '.json'))
-							fs.removeSync(path.join(__dirname, '..', '/static/pads/pad-' + pad + '.json'))
-							res.send('contenu_supprime')
-						})
-					} else if (!donneesPad.hasOwnProperty('motdepasse') && donneesPad.identifiant === identifiant) {
-						db.exists('utilisateurs:' + identifiant, function (err, resultat) {
-							if (err) { res.send('erreur'); return false }
-							if (resultat === 1) {
-								db.hgetall('utilisateurs:' + identifiant, async function (err, utilisateur) {
-									if (err) { res.send('erreur'); return false }
-									if (await bcrypt.compare(motdepasse, utilisateur.motdepasse)) {
-										const multi = db.multi()
-										multi.srem('pads-crees:' + identifiant, pad)
-										multi.smembers('utilisateurs-pads:' + pad, function (err, utilisateurs) {
-											if (err) { res.send('erreur'); return false }
-											for (let j = 0; j < utilisateurs.length; j++) {
-												db.srem('pads-rejoints:' + utilisateurs[j], pad)
-												db.srem('pads-utilisateurs:' + utilisateurs[j], pad)
-												db.srem('pads-admins:' + utilisateurs[j], pad)
-												db.srem('pads-favoris:' + utilisateurs[j], pad)
-												db.hdel('couleurs:' + utilisateurs[j], 'pad' + pad)
-											}
-										})
-										multi.del('utilisateurs-pads:' + pad)
-										multi.exec(function () {
-											fs.removeSync(path.join(__dirname, '..', '/static/' + definirDossierFichiers(pad) + '/' + pad))
-											fs.removeSync(path.join(__dirname, '..', '/static/pads/' + pad + '.json'))
-											fs.removeSync(path.join(__dirname, '..', '/static/pads/pad-' + pad + '.json'))
-											res.send('contenu_supprime')
-										})
-									} else {
-										res.send('non_autorise')
-									}
-								})
-							} else {
-								res.send('erreur')
-							}
-						})
+					if (typeof donneesPad === 'object' && donneesPad !== null) {
+						if (donneesPad.hasOwnProperty('motdepasse') && donneesPad.identifiant === identifiant && await bcrypt.compare(motdepasse, donneesPad.motdepasse)) {
+							const multi = db.multi()
+							multi.srem('pads-crees:' + identifiant, pad)
+							multi.smembers('utilisateurs-pads:' + pad, function (err, utilisateurs) {
+								if (err) { res.send('erreur'); return false }
+								for (let j = 0; j < utilisateurs.length; j++) {
+									db.srem('pads-rejoints:' + utilisateurs[j], pad)
+									db.srem('pads-utilisateurs:' + utilisateurs[j], pad)
+									db.srem('pads-admins:' + utilisateurs[j], pad)
+									db.srem('pads-favoris:' + utilisateurs[j], pad)
+									db.hdel('couleurs:' + utilisateurs[j], 'pad' + pad)
+								}
+							})
+							multi.del('utilisateurs-pads:' + pad)
+							multi.exec(function () {
+								fs.removeSync(path.join(__dirname, '..', '/static/' + definirDossierFichiers(pad) + '/' + pad))
+								fs.removeSync(path.join(__dirname, '..', '/static/pads/' + pad + '.json'))
+								fs.removeSync(path.join(__dirname, '..', '/static/pads/pad-' + pad + '.json'))
+								res.send('contenu_supprime')
+							})
+						} else if (!donneesPad.hasOwnProperty('motdepasse') && donneesPad.identifiant === identifiant) {
+							db.exists('utilisateurs:' + identifiant, function (err, resultat) {
+								if (err) { res.send('erreur'); return false }
+								if (resultat === 1) {
+									db.hgetall('utilisateurs:' + identifiant, async function (err, utilisateur) {
+										if (err) { res.send('erreur'); return false }
+										if (await bcrypt.compare(motdepasse, utilisateur.motdepasse)) {
+											const multi = db.multi()
+											multi.srem('pads-crees:' + identifiant, pad)
+											multi.smembers('utilisateurs-pads:' + pad, function (err, utilisateurs) {
+												if (err) { res.send('erreur'); return false }
+												for (let j = 0; j < utilisateurs.length; j++) {
+													db.srem('pads-rejoints:' + utilisateurs[j], pad)
+													db.srem('pads-utilisateurs:' + utilisateurs[j], pad)
+													db.srem('pads-admins:' + utilisateurs[j], pad)
+													db.srem('pads-favoris:' + utilisateurs[j], pad)
+													db.hdel('couleurs:' + utilisateurs[j], 'pad' + pad)
+												}
+											})
+											multi.del('utilisateurs-pads:' + pad)
+											multi.exec(function () {
+												fs.removeSync(path.join(__dirname, '..', '/static/' + definirDossierFichiers(pad) + '/' + pad))
+												fs.removeSync(path.join(__dirname, '..', '/static/pads/' + pad + '.json'))
+												fs.removeSync(path.join(__dirname, '..', '/static/pads/pad-' + pad + '.json'))
+												res.send('contenu_supprime')
+											})
+										} else {
+											res.send('non_autorise')
+										}
+									})
+								} else {
+									res.send('erreur')
+								}
+							})
+						} else {
+							res.send('non_autorise')
+						}
 					} else {
-						res.send('non_autorise')
+						res.send('erreur')
 					}
 				} else {
 					res.send('contenu_supprime')
@@ -2740,7 +2828,7 @@ io.on('connection', function (socket) {
 					} else if (!admins.includes(identifiant) && proprietaire !== identifiant && donnees.contributions === 'moderees') {
 						visibilite = 'masquee'
 					}
-					if (vignette !== '' && !vignette.includes('/img/') && !verifierURL(vignette, ['https', 'http'])) {
+					if (vignette && vignette !== '' && !vignette.includes('/img/') && !verifierURL(vignette, ['https', 'http'])) {
 						vignette = '/' + definirDossierFichiers(pad) + '/' + pad + '/' + path.basename(vignette)
 					}
 					multi.hmset('pad-' + pad + ':' + bloc, 'id', id, 'bloc', bloc, 'titre', titre, 'texte', texte, 'media', media, 'iframe', iframe, 'type', type, 'source', source, 'vignette', vignette, 'date', date, 'identifiant', identifiant, 'commentaires', 0, 'evaluations', 0, 'colonne', colonne, 'visibilite', visibilite)
@@ -2756,7 +2844,7 @@ io.on('connection', function (socket) {
 							fs.copyFileSync(path.join(__dirname, '..', '/static/temp/' + media), path.join(__dirname, '..', '/static/' + definirDossierFichiers(pad) + '/' + pad + '/' + media))
 							fs.removeSync(path.join(__dirname, '..', '/static/temp/' + media))
 						}
-						if (vignette !== '' && !vignette.includes('/img/') && !verifierURL(vignette, ['https', 'http']) && fs.existsSync(path.join(__dirname, '..', '/static/temp/' + path.basename(vignette)))) {
+						if (vignette && vignette !== '' && !vignette.includes('/img/') && !verifierURL(vignette, ['https', 'http']) && fs.existsSync(path.join(__dirname, '..', '/static/temp/' + path.basename(vignette)))) {
 							fs.copyFileSync(path.join(__dirname, '..', '/static/temp/' + path.basename(vignette)), path.join(__dirname, '..', '/static' + vignette))
 							fs.removeSync(path.join(__dirname, '..', '/static/temp/' + path.basename(vignette)))
 						}
@@ -2799,7 +2887,7 @@ io.on('connection', function (socket) {
 										visibilite = 'privee'
 									}
 									const date = moment().format()
-									if (objet.vignette !== vignette && vignette !== '' && !vignette.includes('/img/') && !verifierURL(vignette, ['https', 'http'])) {
+									if (objet.vignette && objet.vignette !== vignette && vignette !== '' && !vignette.includes('/img/') && !verifierURL(vignette, ['https', 'http'])) {
 										vignette = '/' + definirDossierFichiers(pad) + '/' + pad + '/' + path.basename(vignette)
 									}
 									if (visibilite === 'visible') {
@@ -2811,18 +2899,18 @@ io.on('connection', function (socket) {
 										multi.hincrby('pads:' + pad, 'activite', 1)
 										multi.zadd('activite:' + pad, activiteId, JSON.stringify({ id: activiteId, bloc: bloc, identifiant: identifiant, titre: titre, date: date, couleur: couleur, type: 'bloc-modifie' }))
 										multi.exec(function () {
-											if (objet.media !== media && media !== '' && type !== 'embed' && fs.existsSync(path.join(__dirname, '..', '/static/temp/' + media))) {
+											if (objet.media && objet.media !== media && media !== '' && type !== 'embed' && fs.existsSync(path.join(__dirname, '..', '/static/temp/' + media))) {
 												fs.copyFileSync(path.join(__dirname, '..', '/static/temp/' + media), path.join(__dirname, '..', '/static/' + definirDossierFichiers(pad) + '/' + pad + '/' + media))
 												fs.removeSync(path.join(__dirname, '..', '/static/temp/' + media))
 											}
-											if (objet.media !== media && objet.media !== '' && objet.type !== 'embed') {
+											if (objet.media && objet.media !== media && objet.media !== '' && objet.type !== 'embed') {
 												supprimerFichier(pad, objet.media)
 											}
-											if (objet.vignette !== vignette && vignette !== '' && !vignette.includes('/img/') && !verifierURL(vignette, ['https', 'http']) && fs.existsSync(path.join(__dirname, '..', '/static/temp/' + path.basename(vignette)))) {
+											if (objet.vignette && objet.vignette !== vignette && vignette !== '' && !vignette.includes('/img/') && !verifierURL(vignette, ['https', 'http']) && fs.existsSync(path.join(__dirname, '..', '/static/temp/' + path.basename(vignette)))) {
 												fs.copyFileSync(path.join(__dirname, '..', '/static/temp/' + path.basename(vignette)), path.join(__dirname, '..', '/static' + vignette))
 												fs.removeSync(path.join(__dirname, '..', '/static/temp/' + path.basename(vignette)))
 											}
-											if (objet.vignette !== vignette && objet.vignette.substring(1, definirDossierFichiers(pad).length + 1) === definirDossierFichiers(pad)) {
+											if (objet.vignette && objet.vignette !== vignette && objet.vignette.substring(1, definirDossierFichiers(pad).length + 1) === definirDossierFichiers(pad)) {
 												supprimerVignette(objet.vignette)
 											}
 											io.in('pad-' + pad).emit('modifierbloc', { bloc: bloc, titre: titre, texte: texte, media: media, iframe: iframe, type: type, source: source, vignette: vignette, identifiant: identifiant, nom: nom, modifie: date, couleur: couleur, colonne: colonne, visibilite: visibilite, activiteId: activiteId })
@@ -2834,18 +2922,18 @@ io.on('connection', function (socket) {
 										multi.hmset('pad-' + pad + ':' + bloc, 'titre', titre, 'texte', texte, 'media', media, 'iframe', iframe, 'type', type, 'source', source, 'vignette', vignette, 'visibilite', visibilite, 'modifie', date)
 										multi.hset('dates-pads:' + pad, 'date', date)
 										multi.exec(function () {
-											if (objet.media !== media && media !== '' && type !== 'embed' && fs.existsSync(path.join(__dirname, '..', '/static/temp/' + media))) {
+											if (objet.media && objet.media !== media && media !== '' && type !== 'embed' && fs.existsSync(path.join(__dirname, '..', '/static/temp/' + media))) {
 												fs.copyFileSync(path.join(__dirname, '..', '/static/temp/' + media), path.join(__dirname, '..', '/static/' + definirDossierFichiers(pad) + '/' + pad + '/' + media))
 												fs.removeSync(path.join(__dirname, '..', '/static/temp/' + media))
 											}
-											if (objet.media !== media && objet.media !== '' && objet.type !== 'embed') {
+											if (objet.media && objet.media !== media && objet.media !== '' && objet.type !== 'embed') {
 												supprimerFichier(pad, objet.media)
 											}
-											if (objet.vignette !== vignette && vignette !== '' && !vignette.includes('/img/') && !verifierURL(vignette, ['https', 'http']) && fs.existsSync(path.join(__dirname, '..', '/static/temp/' + path.basename(vignette)))) {
+											if (objet.vignette && objet.vignette !== vignette && vignette !== '' && !vignette.includes('/img/') && !verifierURL(vignette, ['https', 'http']) && fs.existsSync(path.join(__dirname, '..', '/static/temp/' + path.basename(vignette)))) {
 												fs.copyFileSync(path.join(__dirname, '..', '/static/temp/' + path.basename(vignette)), path.join(__dirname, '..', '/static' + vignette))
 												fs.removeSync(path.join(__dirname, '..', '/static/temp/' + path.basename(vignette)))
 											}
-											if (objet.vignette !== vignette && objet.vignette.substring(1, definirDossierFichiers(pad).length + 1) === definirDossierFichiers(pad)) {
+											if (objet.vignette && objet.vignette !== vignette && objet.vignette.substring(1, definirDossierFichiers(pad).length + 1) === definirDossierFichiers(pad)) {
 												supprimerVignette(objet.vignette)
 											}
 											io.in('pad-' + pad).emit('modifierbloc', { bloc: bloc, titre: titre, texte: texte, media: media, iframe: iframe, type: type, source: source, vignette: vignette, identifiant: identifiant, nom: nom, modifie: date, couleur: couleur, colonne: colonne, visibilite: visibilite })
@@ -2853,18 +2941,18 @@ io.on('connection', function (socket) {
 											socket.handshake.session.save()
 										})
 									} else {
-										if (objet.media !== media && media !== '' && type !== 'embed' && fs.existsSync(path.join(__dirname, '..', '/static/temp/' + media))) {
+										if (objet.media && objet.media !== media && media !== '' && type !== 'embed' && fs.existsSync(path.join(__dirname, '..', '/static/temp/' + media))) {
 											fs.copyFileSync(path.join(__dirname, '..', '/static/temp/' + media), path.join(__dirname, '..', '/static/' + definirDossierFichiers(pad) + '/' + pad + '/' + media))
 											fs.removeSync(path.join(__dirname, '..', '/static/temp/' + media))
 										}
-										if (objet.media !== media && objet.media !== '' && objet.type !== 'embed') {
+										if (objet.media && objet.media !== media && objet.media !== '' && objet.type !== 'embed') {
 											supprimerFichier(pad, objet.media)
 										}
-										if (objet.vignette !== vignette && vignette !== '' && !vignette.includes('/img/') && !verifierURL(vignette, ['https', 'http']) && fs.existsSync(path.join(__dirname, '..', '/static/temp/' + path.basename(vignette)))) {
+										if (objet.vignette && objet.vignette !== vignette && vignette !== '' && !vignette.includes('/img/') && !verifierURL(vignette, ['https', 'http']) && fs.existsSync(path.join(__dirname, '..', '/static/temp/' + path.basename(vignette)))) {
 											fs.copyFileSync(path.join(__dirname, '..', '/static/temp/' + path.basename(vignette)), path.join(__dirname, '..', '/static' + vignette))
 											fs.removeSync(path.join(__dirname, '..', '/static/temp/' + path.basename(vignette)))
 										}
-										if (objet.vignette !== vignette && objet.vignette.substring(1, definirDossierFichiers(pad).length + 1) === definirDossierFichiers(pad)) {
+										if (objet.vignette && objet.vignette !== vignette && objet.vignette.substring(1, definirDossierFichiers(pad).length + 1) === definirDossierFichiers(pad)) {
 											supprimerVignette(objet.vignette)
 										}
 										io.in('pad-' + pad).emit('modifierbloc', { bloc: bloc, titre: titre, texte: texte, media: media, iframe: iframe, type: type, source: source, vignette: vignette, identifiant: identifiant, nom: nom, modifie: date, couleur: couleur, colonne: colonne, visibilite: visibilite })
@@ -2897,7 +2985,7 @@ io.on('connection', function (socket) {
 					const activiteId = parseInt(donnees.activite) + 1
 					const multi = db.multi()
 					let vignetteOrigine = ''
-					if (vignette !== '' && !vignette.includes('/img/') && !verifierURL(vignette, ['https', 'http'])) {
+					if (vignette && vignette !== '' && !vignette.includes('/img/') && !verifierURL(vignette, ['https', 'http'])) {
 						vignette = '/' + definirDossierFichiers(pad) + '/' + pad + '/' + path.basename(vignette)
 						vignetteOrigine = '/' + definirDossierFichiers(padOrigine) + '/' + padOrigine + '/' + path.basename(vignette)
 					}
@@ -2913,7 +3001,7 @@ io.on('connection', function (socket) {
 						if (media !== '' && type !== 'embed' && fs.existsSync(path.join(__dirname, '..', '/static/' + definirDossierFichiers(padOrigine) + '/' + padOrigine + '/' + media))) {
 							fs.copyFileSync(path.join(__dirname, '..', '/static/' + definirDossierFichiers(padOrigine) + '/' + padOrigine + '/' + media), path.join(__dirname, '..', '/static/' + definirDossierFichiers(pad) + '/' + pad + '/' + media))
 						}
-						if (vignette !== '' && !vignette.includes('/img/') && !verifierURL(vignette, ['https', 'http']) && fs.existsSync(path.join(__dirname, '..', '/static' + vignetteOrigine))) {
+						if (vignette && vignette !== '' && !vignette.includes('/img/') && !verifierURL(vignette, ['https', 'http']) && fs.existsSync(path.join(__dirname, '..', '/static' + vignetteOrigine))) {
 							fs.copyFileSync(path.join(__dirname, '..', '/static' + vignetteOrigine), path.join(__dirname, '..', '/static' + vignette))
 						}
 						io.in('pad-' + pad).emit('ajouterbloc', { bloc: bloc, titre: titre, texte: texte, media: media, iframe: iframe, type: type, source: source, vignette: vignette, identifiant: identifiant, nom: nom, date: date, couleur: couleur, commentaires: 0, evaluations: [], colonne: colonne, visibilite: visibilite, activiteId: activiteId })
@@ -4116,45 +4204,46 @@ io.on('connection', function (socket) {
 	})
 })
 
-function creerPad (res, id, token, titre, date, identifiant, couleur) {
-	const multi = db.multi()
-	if (id === 1) {
-		multi.set('pad', 1)
-	} else {
-		multi.incr('pad')
-	}
-	multi.hmset('pads:' + id, 'id', id, 'token', token, 'titre', titre, 'identifiant', identifiant, 'fond', '/img/fond1.png', 'acces', 'public', 'contributions', 'ouvertes', 'affichage', 'mur', 'registreActivite', 'active', 'conversation', 'desactivee', 'listeUtilisateurs', 'activee', 'editionNom', 'desactivee', 'fichiers', 'actives', 'enregistrements', 'desactives', 'liens', 'actives', 'documents', 'desactives', 'commentaires', 'desactives', 'evaluations', 'desactivees', 'copieBloc', 'desactivee', 'ordre', 'croissant', 'largeur', 'normale', 'date', date, 'colonnes', JSON.stringify([]), 'affichageColonnes', JSON.stringify([]), 'bloc', 0, 'activite', 0, 'admins', JSON.stringify([]))
-	multi.sadd('pads-crees:' + identifiant, id)
-	multi.sadd('utilisateurs-pads:' + id, identifiant)
-	multi.hset('dates-pads:' + id, 'date', date)
-	multi.hset('couleurs:' + identifiant, 'pad' + id, couleur)
-	multi.exec(function () {
-		const chemin = path.join(__dirname, '..', '/static/' + definirDossierFichiers(id) + '/' + id)
-		fs.mkdirsSync(chemin)
-		res.json({ id: id, token: token, titre: titre, identifiant: identifiant, fond: '/img/fond1.png', acces: 'public', contributions: 'ouvertes', affichage: 'mur', registreActivite: 'active', conversation: 'desactivee', listeUtilisateurs: 'activee', editionNom: 'desactivee', fichiers: 'actives', enregistrements: 'desactives', liens: 'actives', documents: 'desactives', commentaires: 'desactives', evaluations: 'desactivees', copieBloc: 'desactivee', ordre: 'croissant', largeur: 'normale', date: date, colonnes: [], affichageColonnes: [], bloc: 0, activite: 0, admins: [] })
+function creerPad (id, token, titre, date, identifiant, couleur) {
+	return new Promise(function (resolve) {
+		const multi = db.multi()
+		if (id === 1) {
+			multi.set('pad', 1)
+		} else {
+			multi.incr('pad')
+		}
+		multi.hmset('pads:' + id, 'id', id, 'token', token, 'titre', titre, 'identifiant', identifiant, 'fond', '/img/fond1.png', 'acces', 'public', 'contributions', 'ouvertes', 'affichage', 'mur', 'registreActivite', 'active', 'conversation', 'desactivee', 'listeUtilisateurs', 'activee', 'editionNom', 'desactivee', 'fichiers', 'actives', 'enregistrements', 'desactives', 'liens', 'actives', 'documents', 'desactives', 'commentaires', 'desactives', 'evaluations', 'desactivees', 'copieBloc', 'desactivee', 'ordre', 'croissant', 'largeur', 'normale', 'date', date, 'colonnes', JSON.stringify([]), 'affichageColonnes', JSON.stringify([]), 'bloc', 0, 'activite', 0, 'admins', JSON.stringify([]))
+		multi.sadd('pads-crees:' + identifiant, id)
+		multi.sadd('utilisateurs-pads:' + id, identifiant)
+		multi.hset('dates-pads:' + id, 'date', date)
+		multi.hset('couleurs:' + identifiant, 'pad' + id, couleur)
+		multi.exec(function (err) {
+			if (err) {
+				resolve(false)
+			} else {
+				resolve(true)
+			}
+		})
 	})
 }
 
-function creerPadSansCompte (req, res, id, token, titre, hash, date, identifiant, nom, langue, type) {
-	const multi = db.multi()
-	if (id === 1) {
-		multi.set('pad', 1)
-	} else {
-		multi.incr('pad')
-	}
-	multi.hmset('pads:' + id, 'id', id, 'token', token, 'titre', titre, 'identifiant', identifiant, 'motdepasse', hash, 'fond', '/img/fond1.png', 'acces', 'public', 'contributions', 'ouvertes', 'affichage', 'mur', 'registreActivite', 'active', 'conversation', 'desactivee', 'listeUtilisateurs', 'activee', 'editionNom', 'desactivee', 'fichiers', 'actives', 'enregistrements', 'desactives', 'liens', 'actives', 'documents', 'desactives', 'commentaires', 'desactives', 'evaluations', 'desactivees', 'copieBloc', 'desactivee', 'ordre', 'croissant', 'largeur', 'normale', 'date', date, 'colonnes', JSON.stringify([]), 'affichageColonnes', JSON.stringify([]), 'bloc', 0, 'activite', 0)
-	multi.hmset('utilisateurs:' + identifiant, 'id', identifiant, 'date', date, 'nom', nom, 'langue', langue)
-	multi.exec(function () {
-		const chemin = path.join(__dirname, '..', '/static/' + definirDossierFichiers(id) + '/' + id)
-		fs.mkdirsSync(chemin)
-		req.session.langue = langue
-		req.session.statut = 'auteur'
-		req.session.cookie.expires = new Date(Date.now() + dureeSession)
-		if (type === 'api') {
-			res.send(id + '/' + token)
+function creerPadSansCompte (id, token, titre, hash, date, identifiant, nom, langue) {
+	return new Promise(function (resolve) {
+		const multi = db.multi()
+		if (id === 1) {
+			multi.set('pad', 1)
 		} else {
-			res.json({ id: id, token: token, titre: titre, identifiant: identifiant, fond: '/img/fond1.png', acces: 'public', contributions: 'ouvertes', affichage: 'mur', registreActivite: 'active', conversation: 'desactivee', listeUtilisateurs: 'activee', editionNom: 'desactivee', fichiers: 'actives', enregistrements: 'desactives', liens: 'actives', liens: 'actives', documents: 'desactives', commentaires: 'desactives', evaluations: 'desactivees', copieBloc: 'desactivee', ordre: 'croissant', largeur: 'normale', date: date, colonnes: [], affichageColonnes: [], bloc: 0, activite: 0 })
+			multi.incr('pad')
 		}
+		multi.hmset('pads:' + id, 'id', id, 'token', token, 'titre', titre, 'identifiant', identifiant, 'motdepasse', hash, 'fond', '/img/fond1.png', 'acces', 'public', 'contributions', 'ouvertes', 'affichage', 'mur', 'registreActivite', 'active', 'conversation', 'desactivee', 'listeUtilisateurs', 'activee', 'editionNom', 'desactivee', 'fichiers', 'actives', 'enregistrements', 'desactives', 'liens', 'actives', 'documents', 'desactives', 'commentaires', 'desactives', 'evaluations', 'desactivees', 'copieBloc', 'desactivee', 'ordre', 'croissant', 'largeur', 'normale', 'date', date, 'colonnes', JSON.stringify([]), 'affichageColonnes', JSON.stringify([]), 'bloc', 0, 'activite', 0)
+		multi.hmset('utilisateurs:' + identifiant, 'id', identifiant, 'date', date, 'nom', nom, 'langue', langue)
+		multi.exec(function (err) {
+			if (err) {
+				resolve(false)
+			} else {
+				resolve(true)
+			}
+		})
 	})
 }
 
@@ -4197,29 +4286,33 @@ function recupererDonnees (identifiant) {
 							})
 						} else if (resultat !== 1 && fs.existsSync(path.join(__dirname, '..', '/static/pads/pad-' + pad + '.json'))) {
 							const donnees = await fs.readJson(path.join(__dirname, '..', '/static/pads/pad-' + pad + '.json'))
-							db.exists('utilisateurs:' + donnees.identifiant, function (err, resultat) {
-								if (err) {
-									donnees.nom = donnees.identifiant
-									resolve(donnees)
-								}
-								if (resultat === 1) {
-									db.hgetall('utilisateurs:' + donnees.identifiant, function (err, utilisateur) {
-										if (err) {
-											donnees.nom = donnees.identifiant
-											resolve(donnees)
-										}
-										if (utilisateur.nom === '') {
-											donnees.nom = donnees.identifiant
-										} else {
-											donnees.nom = utilisateur.nom
-										}
+							if (typeof donnees === 'object' && donnees !== null && donnees.hasOwnProperty('identifiant')) {
+								db.exists('utilisateurs:' + donnees.identifiant, function (err, resultat) {
+									if (err) {
+										donnees.nom = donnees.identifiant
 										resolve(donnees)
-									})
-								} else {
-									donnees.nom = donnees.identifiant
-									resolve(donnees)
-								}
-							})
+									}
+									if (resultat === 1) {
+										db.hgetall('utilisateurs:' + donnees.identifiant, function (err, utilisateur) {
+											if (err) {
+												donnees.nom = donnees.identifiant
+												resolve(donnees)
+											}
+											if (utilisateur.nom === '') {
+												donnees.nom = donnees.identifiant
+											} else {
+												donnees.nom = utilisateur.nom
+											}
+											resolve(donnees)
+										})
+									} else {
+										donnees.nom = donnees.identifiant
+										resolve(donnees)
+									}
+								})
+							} else {
+								resolve({})
+							}
 						} else {
 							resolve({})
 						}
@@ -4270,29 +4363,33 @@ function recupererDonnees (identifiant) {
 							})
 						} else if (resultat !== 1 && fs.existsSync(path.join(__dirname, '..', '/static/pads/pad-' + pad + '.json'))) {
 							const donnees = await fs.readJson(path.join(__dirname, '..', '/static/pads/pad-' + pad + '.json'))
-							db.exists('utilisateurs:' + donnees.identifiant, function (err, resultat) {
-								if (err) {
-									donnees.nom = donnees.identifiant
-									resolve(donnees)
-								}
-								if (resultat === 1) {
-									db.hgetall('utilisateurs:' + donnees.identifiant, function (err, utilisateur) {
-										if (err) {
-											donnees.nom = donnees.identifiant
-											resolve(donnees)
-										}
-										if (utilisateur.nom === '') {
-											donnees.nom = donnees.identifiant
-										} else {
-											donnees.nom = utilisateur.nom
-										}
+							if (typeof donnees === 'object' && donnees !== null && donnees.hasOwnProperty('identifiant')) {
+								db.exists('utilisateurs:' + donnees.identifiant, function (err, resultat) {
+									if (err) {
+										donnees.nom = donnees.identifiant
 										resolve(donnees)
-									})
-								} else {
-									donnees.nom = donnees.identifiant
-									resolve(donnees)
-								}
-							})
+									}
+									if (resultat === 1) {
+										db.hgetall('utilisateurs:' + donnees.identifiant, function (err, utilisateur) {
+											if (err) {
+												donnees.nom = donnees.identifiant
+												resolve(donnees)
+											}
+											if (utilisateur.nom === '') {
+												donnees.nom = donnees.identifiant
+											} else {
+												donnees.nom = utilisateur.nom
+											}
+											resolve(donnees)
+										})
+									} else {
+										donnees.nom = donnees.identifiant
+										resolve(donnees)
+									}
+								})
+							} else {
+								resolve({})
+							}
 						} else {
 							resolve({})
 						}
@@ -4343,29 +4440,33 @@ function recupererDonnees (identifiant) {
 							})
 						} else if (resultat !== 1 && fs.existsSync(path.join(__dirname, '..', '/static/pads/pad-' + pad + '.json'))) {
 							const donnees = await fs.readJson(path.join(__dirname, '..', '/static/pads/pad-' + pad + '.json'))
-							db.exists('utilisateurs:' + donnees.identifiant, function (err, resultat) {
-								if (err) {
-									donnees.nom = donnees.identifiant
-									resolve(donnees)
-								}
-								if (resultat === 1) {
-									db.hgetall('utilisateurs:' + donnees.identifiant, function (err, utilisateur) {
-										if (err) {
-											donnees.nom = donnees.identifiant
-											resolve(donnees)
-										}
-										if (utilisateur.nom === '') {
-											donnees.nom = donnees.identifiant
-										} else {
-											donnees.nom = utilisateur.nom
-										}
+							if (typeof donnees === 'object' && donnees !== null && donnees.hasOwnProperty('identifiant')) {
+								db.exists('utilisateurs:' + donnees.identifiant, function (err, resultat) {
+									if (err) {
+										donnees.nom = donnees.identifiant
 										resolve(donnees)
-									})
-								} else {
-									donnees.nom = donnees.identifiant
-									resolve(donnees)
-								}
-							})
+									}
+									if (resultat === 1) {
+										db.hgetall('utilisateurs:' + donnees.identifiant, function (err, utilisateur) {
+											if (err) {
+												donnees.nom = donnees.identifiant
+												resolve(donnees)
+											}
+											if (utilisateur.nom === '') {
+												donnees.nom = donnees.identifiant
+											} else {
+												donnees.nom = utilisateur.nom
+											}
+											resolve(donnees)
+										})
+									} else {
+										donnees.nom = donnees.identifiant
+										resolve(donnees)
+									}
+								})
+							} else {
+								resolve({})
+							}
 						} else {
 							resolve({})
 						}
@@ -4416,29 +4517,33 @@ function recupererDonnees (identifiant) {
 							})
 						} else if (resultat !== 1 && fs.existsSync(path.join(__dirname, '..', '/static/pads/pad-' + pad + '.json'))) {
 							const donnees = await fs.readJson(path.join(__dirname, '..', '/static/pads/pad-' + pad + '.json'))
-							db.exists('utilisateurs:' + donnees.identifiant, function (err, resultat) {
-								if (err) {
-									donnees.nom = donnees.identifiant
-									resolve(donnees)
-								}
-								if (resultat === 1) {
-									db.hgetall('utilisateurs:' + donnees.identifiant, function (err, utilisateur) {
-										if (err) {
-											donnees.nom = donnees.identifiant
-											resolve(donnees)
-										}
-										if (utilisateur.nom === '') {
-											donnees.nom = donnees.identifiant
-										} else {
-											donnees.nom = utilisateur.nom
-										}
+							if (typeof donnees === 'object' && donnees !== null && donnees.hasOwnProperty('identifiant')) {
+								db.exists('utilisateurs:' + donnees.identifiant, function (err, resultat) {
+									if (err) {
+										donnees.nom = donnees.identifiant
 										resolve(donnees)
-									})
-								} else {
-									donnees.nom = donnees.identifiant
-									resolve(donnees)
-								}
-							})
+									}
+									if (resultat === 1) {
+										db.hgetall('utilisateurs:' + donnees.identifiant, function (err, utilisateur) {
+											if (err) {
+												donnees.nom = donnees.identifiant
+												resolve(donnees)
+											}
+											if (utilisateur.nom === '') {
+												donnees.nom = donnees.identifiant
+											} else {
+												donnees.nom = utilisateur.nom
+											}
+											resolve(donnees)
+										})
+									} else {
+										donnees.nom = donnees.identifiant
+										resolve(donnees)
+									}
+								})
+							} else {
+								resolve({})
+							}
 						} else {
 							resolve({})
 						}
