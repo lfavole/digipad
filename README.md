@@ -2,7 +2,7 @@
 
 Digipad est une application en ligne pour créer des murs collaboratifs. 
 
-Elle est publiée sous licence GNU GPLv3.
+Elle est publiée sous licence GNU AGPLv3.
 Sauf les fontes Roboto Slab et Material Icons (Apache License Version 2.0) et la fonte HKGrotesk (Sil Open Font Licence 1.1), jsPanel4 - https://github.com/Flyer53/jsPanel4 (MIT), pdf.js - https://github.com/mozilla/pdf.js - (Apache License Version 2.0) et viewer.js - https://github.com/webodf/ViewerJS (Apache License Version 2.0)
 
 ### Préparation et installation des dépendances
@@ -60,10 +60,8 @@ AUTORIZED_DOMAINS (domaines autorisés pour api serveur. ex : ladigitale.dev,exa
 
 ### Projet Nuxt.js avec serveur Node.js (Express) et base de données Redis
 
-
 ### Démo
 https://digipad.app
-
 
 ### Remerciements et crédits
 Traduction en italien par Paolo Mauri (https://gitlab.com/maupao) et @nilocram (Roberto Marcolin)
@@ -71,7 +69,6 @@ Traduction en italien par Paolo Mauri (https://gitlab.com/maupao) et @nilocram (
 Traduction en espagnol par Fernando S. Delgado Trujillo (https://gitlab.com/fersdt)
 
 Traduction en croate par Ksenija Lekić (https://gitlab.com/Ksenija66L)
-
 
 ### Soutien
 https://opencollective.com/ladigitale
