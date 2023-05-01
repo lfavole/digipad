@@ -614,7 +614,7 @@ app.post('/api/creer-pad', function (req, res) {
 				if (creation === true) {
 					const chemin = path.join(__dirname, '..', '/static/' + definirDossierFichiers(1) + '/1')
 					fs.mkdirsSync(chemin)
-					res.json({ id: id, token: token, titre: titre, identifiant: identifiant, fond: '/img/fond1.png', acces: 'public', contributions: 'ouvertes', affichage: 'mur', registreActivite: 'active', conversation: 'desactivee', listeUtilisateurs: 'activee', editionNom: 'desactivee', fichiers: 'actives', enregistrements: 'desactives', liens: 'actives', documents: 'desactives', commentaires: 'desactives', evaluations: 'desactivees', copieBloc: 'desactivee', ordre: 'croissant', largeur: 'normale', date: date, colonnes: [], affichageColonnes: [], bloc: 0, activite: 0, admins: [] })
+					res.json({ id: 1, token: token, titre: titre, identifiant: identifiant, fond: '/img/fond1.png', acces: 'public', contributions: 'ouvertes', affichage: 'mur', registreActivite: 'active', conversation: 'desactivee', listeUtilisateurs: 'activee', editionNom: 'desactivee', fichiers: 'actives', enregistrements: 'desactives', liens: 'actives', documents: 'desactives', commentaires: 'desactives', evaluations: 'desactivees', copieBloc: 'desactivee', ordre: 'croissant', largeur: 'normale', date: date, colonnes: [], affichageColonnes: [], bloc: 0, activite: 0, admins: [] })
 				} else {
 					res.send('erreur_creation')
 				}
@@ -794,14 +794,14 @@ app.post('/api/dupliquer-pad', function (req, res) {
 									db.hgetall('pad-' + pad + ':' + bloc, function (err, infos) {
 										if (err) { resolve({}) }
 										const date = moment().format()
-										if (infos.vignette !== '') {
+										if (infos.hasOwnProperty('vignette') && infos.vignette !== '') {
 											infos.vignette = infos.vignette.replace('/' + definirDossierFichiers(pad) + '/' + pad, '/' + definirDossierFichiers(id) + '/' + id)
 										}
 										let visibilite = 'visible'
 										if (infos.hasOwnProperty('visibilite')) {
 											visibilite = infos.visibilite
 										}
-										if (infos.iframe !== '' && infos.iframe.includes(etherpad)) {
+										if (infos.hasOwnProperty('iframe') && infos.iframe !== '' && infos.iframe.includes(etherpad)) {
 											const etherpadId = infos.iframe.replace(etherpad + '/p/', '')
 											const destinationId = 'pad-' + id + '-' + Math.random().toString(16).slice(2)
 											const url = etherpad + '/api/1.2.14/copyPad?apikey=' + etherpadApi + '&sourceID=' + etherpadId + '&destinationID=' + destinationId
@@ -892,14 +892,14 @@ app.post('/api/dupliquer-pad', function (req, res) {
 						for (const [indexBloc, bloc] of donnees.blocs.entries()) {
 							const donneesBloc = new Promise(function (resolve) {
 								if (Object.keys(bloc).length > 0) {
-									if (bloc.vignette !== '') {
+									if (bloc.hasOwnProperty('vignette') && bloc.vignette !== '') {
 										bloc.vignette = bloc.vignette.replace('/' + definirDossierFichiers(pad) + '/' + pad, '/' + definirDossierFichiers(id) + '/' + id)
 									}
 									let visibilite = 'visible'
 									if (bloc.hasOwnProperty('visibilite')) {
 										visibilite = bloc.visibilite
 									}
-									if (bloc.iframe !== '' && bloc.iframe.includes(etherpad)) {
+									if (bloc.hasOwnProperty('iframe') && bloc.iframe !== '' && bloc.iframe.includes(etherpad)) {
 										const etherpadId = bloc.iframe.replace(etherpad + '/p/', '')
 										const destinationId = 'pad-' + id + '-' + Math.random().toString(16).slice(2)
 										const url = etherpad + '/api/1.2.14/copyPad?apikey=' + etherpadApi + '&sourceID=' + etherpadId + '&destinationID=' + destinationId
@@ -1257,10 +1257,10 @@ app.post('/api/importer-pad', function (req, res) {
 										}
 									}
 									multi.exec(function () {
-										if (bloc.media !== '' && bloc.type !== 'embed' && fs.existsSync(path.normalize(cible + '/fichiers/' + bloc.media))) {
+										if (bloc.hasOwnProperty('media') && bloc.media !== '' && bloc.type !== 'embed' && fs.existsSync(path.normalize(cible + '/fichiers/' + bloc.media))) {
 											fs.copySync(path.normalize(cible + '/fichiers/' + bloc.media), path.normalize(chemin + '/' + bloc.media, { overwrite: true }))
 										}
-										if (bloc.vignette !== '' && bloc.vignette.substring(1, definirDossierFichiers(id).length + 1) === definirDossierFichiers(id) && fs.existsSync(path.normalize(cible + '/fichiers/' + bloc.vignette.replace('/' + definirDossierFichiers(id) + '/' + id + '/', '')))) {
+										if (bloc.hasOwnProperty('vignette') && bloc.vignette !== '' && bloc.vignette.substring(1, definirDossierFichiers(id).length + 1) === definirDossierFichiers(id) && fs.existsSync(path.normalize(cible + '/fichiers/' + bloc.vignette.replace('/' + definirDossierFichiers(id) + '/' + id + '/', '')))) {
 											fs.copySync(path.normalize(cible + '/fichiers/' + bloc.vignette.replace('/' + definirDossierFichiers(id) + '/' + id + '/', '')), path.normalize(chemin + '/' + bloc.vignette.replace('/' + definirDossierFichiers(id) + '/' + id + '/', ''), { overwrite: true }))
 										}
 										resolve({ bloc: bloc.bloc, blocId: blocId })
@@ -1769,11 +1769,11 @@ app.post('/api/supprimer-compte', function (req, res) {
 										for (let i = 0; i < blocs.length; i++) {
 											db.hgetall('pad-' + pad + ':' + blocs[i], function (err, donnees) {
 												if (err) { resolve() }
-												if (donnees.identifiant === identifiant) {
-													if (donnees.media !== '' && donnees.type !== 'embed') {
+												if (donnees.hasOwnProperty('identifiant') && donnees.identifiant === identifiant) {
+													if (donnees.hasOwnProperty('media') && donnees.media !== '' && donnees.type !== 'embed') {
 														supprimerFichier(pad, donnees.media)
 													}
-													if (donnees.vignette !== '' && donnees.vignette.substring(1, definirDossierFichiers(pad).length + 1) === definirDossierFichiers(pad)) {
+													if (donnees.hasOwnProperty('vignette') && donnees.vignette !== '' && donnees.vignette.substring(1, definirDossierFichiers(pad).length + 1) === definirDossierFichiers(pad)) {
 														supprimerVignette(donnees.vignette)
 													}
 													const multi = db.multi()
@@ -1858,10 +1858,10 @@ app.post('/api/supprimer-compte', function (req, res) {
 									const donneesBloc = new Promise(function (resolve) {
 										for (let i = 0; i < blocs.length; i++) {
 											if (blocs[i].identifiant === identifiant) {
-												if (blocs[i].media !== '' && blocs[i].type !== 'embed') {
+												if (blocs[i].hasOwnProperty('media') && blocs[i].media !== '' && blocs[i].type !== 'embed') {
 													supprimerFichier(pad, blocs[i].media)
 												}
-												if (blocs[i].vignette !== '' && blocs[i].vignette.substring(1, definirDossierFichiers(pad).length + 1) === definirDossierFichiers(pad)) {
+												if (blocs[i].hasOwnProperty('vignette') && blocs[i].vignette !== '' && blocs[i].vignette.substring(1, definirDossierFichiers(pad).length + 1) === definirDossierFichiers(pad)) {
 													supprimerVignette(blocs[i].vignette)
 												}
 												const multi = db.multi()
@@ -2890,7 +2890,7 @@ io.on('connection', function (socket) {
 										visibilite = 'privee'
 									}
 									const date = moment().format()
-									if (objet.vignette && objet.vignette !== vignette && vignette !== '' && !vignette.includes('/img/') && !verifierURL(vignette, ['https', 'http'])) {
+									if (objet.hasOwnProperty('vignette') && objet.vignette !== vignette && vignette !== '' && !vignette.includes('/img/') && !verifierURL(vignette, ['https', 'http'])) {
 										vignette = '/' + definirDossierFichiers(pad) + '/' + pad + '/' + path.basename(vignette)
 									}
 									if (visibilite === 'visible') {
@@ -2902,18 +2902,18 @@ io.on('connection', function (socket) {
 										multi.hincrby('pads:' + pad, 'activite', 1)
 										multi.zadd('activite:' + pad, activiteId, JSON.stringify({ id: activiteId, bloc: bloc, identifiant: identifiant, titre: titre, date: date, couleur: couleur, type: 'bloc-modifie' }))
 										multi.exec(function () {
-											if (objet.media && objet.media !== media && media !== '' && type !== 'embed' && fs.existsSync(path.join(__dirname, '..', '/static/temp/' + media))) {
+											if (objet.hasOwnProperty('media') && objet.media !== media && media !== '' && type !== 'embed' && fs.existsSync(path.join(__dirname, '..', '/static/temp/' + media))) {
 												fs.copyFileSync(path.join(__dirname, '..', '/static/temp/' + media), path.join(__dirname, '..', '/static/' + definirDossierFichiers(pad) + '/' + pad + '/' + media))
 												fs.removeSync(path.join(__dirname, '..', '/static/temp/' + media))
 											}
-											if (objet.media && objet.media !== media && objet.media !== '' && objet.type !== 'embed') {
+											if (objet.hasOwnProperty('media') && objet.media !== media && objet.media !== '' && objet.type !== 'embed') {
 												supprimerFichier(pad, objet.media)
 											}
-											if (objet.vignette && objet.vignette !== vignette && vignette !== '' && !vignette.includes('/img/') && !verifierURL(vignette, ['https', 'http']) && fs.existsSync(path.join(__dirname, '..', '/static/temp/' + path.basename(vignette)))) {
+											if (objet.hasOwnProperty('vignette') && objet.vignette !== vignette && vignette !== '' && !vignette.includes('/img/') && !verifierURL(vignette, ['https', 'http']) && fs.existsSync(path.join(__dirname, '..', '/static/temp/' + path.basename(vignette)))) {
 												fs.copyFileSync(path.join(__dirname, '..', '/static/temp/' + path.basename(vignette)), path.join(__dirname, '..', '/static' + vignette))
 												fs.removeSync(path.join(__dirname, '..', '/static/temp/' + path.basename(vignette)))
 											}
-											if (objet.vignette && objet.vignette !== vignette && objet.vignette.substring(1, definirDossierFichiers(pad).length + 1) === definirDossierFichiers(pad)) {
+											if (objet.hasOwnProperty('vignette') && objet.vignette !== vignette && objet.vignette.substring(1, definirDossierFichiers(pad).length + 1) === definirDossierFichiers(pad)) {
 												supprimerVignette(objet.vignette)
 											}
 											io.in('pad-' + pad).emit('modifierbloc', { bloc: bloc, titre: titre, texte: texte, media: media, iframe: iframe, type: type, source: source, vignette: vignette, identifiant: identifiant, nom: nom, modifie: date, couleur: couleur, colonne: colonne, visibilite: visibilite, activiteId: activiteId })
@@ -2925,18 +2925,18 @@ io.on('connection', function (socket) {
 										multi.hmset('pad-' + pad + ':' + bloc, 'titre', titre, 'texte', texte, 'media', media, 'iframe', iframe, 'type', type, 'source', source, 'vignette', vignette, 'visibilite', visibilite, 'modifie', date)
 										multi.hset('dates-pads:' + pad, 'date', date)
 										multi.exec(function () {
-											if (objet.media && objet.media !== media && media !== '' && type !== 'embed' && fs.existsSync(path.join(__dirname, '..', '/static/temp/' + media))) {
+											if (objet.hasOwnProperty('media') && objet.media !== media && media !== '' && type !== 'embed' && fs.existsSync(path.join(__dirname, '..', '/static/temp/' + media))) {
 												fs.copyFileSync(path.join(__dirname, '..', '/static/temp/' + media), path.join(__dirname, '..', '/static/' + definirDossierFichiers(pad) + '/' + pad + '/' + media))
 												fs.removeSync(path.join(__dirname, '..', '/static/temp/' + media))
 											}
-											if (objet.media && objet.media !== media && objet.media !== '' && objet.type !== 'embed') {
+											if (objet.hasOwnProperty('media') && objet.media !== media && objet.media !== '' && objet.type !== 'embed') {
 												supprimerFichier(pad, objet.media)
 											}
-											if (objet.vignette && objet.vignette !== vignette && vignette !== '' && !vignette.includes('/img/') && !verifierURL(vignette, ['https', 'http']) && fs.existsSync(path.join(__dirname, '..', '/static/temp/' + path.basename(vignette)))) {
+											if (objet.hasOwnProperty('vignette') && objet.vignette !== vignette && vignette !== '' && !vignette.includes('/img/') && !verifierURL(vignette, ['https', 'http']) && fs.existsSync(path.join(__dirname, '..', '/static/temp/' + path.basename(vignette)))) {
 												fs.copyFileSync(path.join(__dirname, '..', '/static/temp/' + path.basename(vignette)), path.join(__dirname, '..', '/static' + vignette))
 												fs.removeSync(path.join(__dirname, '..', '/static/temp/' + path.basename(vignette)))
 											}
-											if (objet.vignette && objet.vignette !== vignette && objet.vignette.substring(1, definirDossierFichiers(pad).length + 1) === definirDossierFichiers(pad)) {
+											if (objet.hasOwnProperty('vignette') && objet.vignette !== vignette && objet.vignette.substring(1, definirDossierFichiers(pad).length + 1) === definirDossierFichiers(pad)) {
 												supprimerVignette(objet.vignette)
 											}
 											io.in('pad-' + pad).emit('modifierbloc', { bloc: bloc, titre: titre, texte: texte, media: media, iframe: iframe, type: type, source: source, vignette: vignette, identifiant: identifiant, nom: nom, modifie: date, couleur: couleur, colonne: colonne, visibilite: visibilite })
@@ -2944,18 +2944,18 @@ io.on('connection', function (socket) {
 											socket.handshake.session.save()
 										})
 									} else {
-										if (objet.media && objet.media !== media && media !== '' && type !== 'embed' && fs.existsSync(path.join(__dirname, '..', '/static/temp/' + media))) {
+										if (objet.hasOwnProperty('media') && objet.media !== media && media !== '' && type !== 'embed' && fs.existsSync(path.join(__dirname, '..', '/static/temp/' + media))) {
 											fs.copyFileSync(path.join(__dirname, '..', '/static/temp/' + media), path.join(__dirname, '..', '/static/' + definirDossierFichiers(pad) + '/' + pad + '/' + media))
 											fs.removeSync(path.join(__dirname, '..', '/static/temp/' + media))
 										}
-										if (objet.media && objet.media !== media && objet.media !== '' && objet.type !== 'embed') {
+										if (objet.hasOwnProperty('media') && objet.media !== media && objet.media !== '' && objet.type !== 'embed') {
 											supprimerFichier(pad, objet.media)
 										}
-										if (objet.vignette && objet.vignette !== vignette && vignette !== '' && !vignette.includes('/img/') && !verifierURL(vignette, ['https', 'http']) && fs.existsSync(path.join(__dirname, '..', '/static/temp/' + path.basename(vignette)))) {
+										if (objet.hasOwnProperty('vignette') && objet.vignette !== vignette && vignette !== '' && !vignette.includes('/img/') && !verifierURL(vignette, ['https', 'http']) && fs.existsSync(path.join(__dirname, '..', '/static/temp/' + path.basename(vignette)))) {
 											fs.copyFileSync(path.join(__dirname, '..', '/static/temp/' + path.basename(vignette)), path.join(__dirname, '..', '/static' + vignette))
 											fs.removeSync(path.join(__dirname, '..', '/static/temp/' + path.basename(vignette)))
 										}
-										if (objet.vignette && objet.vignette !== vignette && objet.vignette.substring(1, definirDossierFichiers(pad).length + 1) === definirDossierFichiers(pad)) {
+										if (objet.hasOwnProperty('vignette') && objet.vignette !== vignette && objet.vignette.substring(1, definirDossierFichiers(pad).length + 1) === definirDossierFichiers(pad)) {
 											supprimerVignette(objet.vignette)
 										}
 										io.in('pad-' + pad).emit('modifierbloc', { bloc: bloc, titre: titre, texte: texte, media: media, iframe: iframe, type: type, source: source, vignette: vignette, identifiant: identifiant, nom: nom, modifie: date, couleur: couleur, colonne: colonne, visibilite: visibilite })
@@ -3128,24 +3128,24 @@ io.on('connection', function (socket) {
 						if (resultat === 1) {
 							db.hgetall('pad-' + pad + ':' + bloc, function (err, objet) {
 								if (err) { socket.emit('erreur'); return false }
-								if (objet.media !== '' && objet.type !== 'embed') {
+								if (objet.hasOwnProperty('media') && objet.media !== '' && objet.type !== 'embed') {
 									supprimerFichier(pad, objet.media)
 								}
-								if (objet.vignette !== '' && objet.vignette.substring(1, definirDossierFichiers(pad).length + 1) === definirDossierFichiers(pad)) {
+								if (objet.hasOwnProperty('vignette') && objet.vignette !== '' && objet.vignette.substring(1, definirDossierFichiers(pad).length + 1) === definirDossierFichiers(pad)) {
 									supprimerVignette(objet.vignette)
 								}
 								let etherpadId, url
-								if (objet.iframe !== '' && objet.iframe.includes(etherpad)) {
+								if (objet.hasOwnProperty('iframe') && objet.iframe !== '' && objet.iframe.includes(etherpad)) {
 									etherpadId = objet.iframe.replace(etherpad + '/p/', '')
 									url = etherpad + '/api/1/deletePad?apikey=' + etherpadApi + '&padID=' + etherpadId
 									axios.get(url)
 								}
-								if (objet.media !== '' && objet.media.includes(etherpad)) {
+								if (objet.hasOwnProperty('media') && objet.media !== '' && objet.media.includes(etherpad)) {
 									etherpadId = objet.media.replace(etherpad + '/p/', '')
 									url = etherpad + '/api/1/deletePad?apikey=' + etherpadApi + '&padID=' + etherpadId
 									axios.get(url)
 								}
-								if (objet.bloc === bloc && (objet.identifiant === identifiant || proprietaire === identifiant || admins.includes(identifiant))) {
+								if (objet.hasOwnProperty('bloc') && objet.bloc === bloc && (objet.identifiant === identifiant || proprietaire === identifiant || admins.includes(identifiant))) {
 									const date = moment().format()
 									const activiteId = parseInt(donnees.activite) + 1
 									const multi = db.multi()
@@ -3215,11 +3215,12 @@ io.on('connection', function (socket) {
 			return false
 		}
 		if (identifiant !== '' && identifiant !== undefined && socket.handshake.session.identifiant === identifiant) {
-			db.zrangebyscore('commentaires:' + bloc, id, id, function (err, donnees) {
+			db.zrangebyscore('commentaires:' + bloc, id, id, function (err, resultats) {
 				if (err) { socket.emit('erreur'); return false }
 				const dateModification = moment().format()
-				const date = JSON.parse(donnees).date
-				const commentaire = { id: id, identifiant: JSON.parse(donnees).identifiant, date: date, modifie: dateModification, texte: texte }
+				const donnees = JSON.parse(resultats)
+				const date = donnees.date
+				const commentaire = { id: id, identifiant: donnees.identifiant, date: date, modifie: dateModification, texte: texte }
 				const multi = db.multi()
 				multi.zremrangebyscore('commentaires:' + bloc, id, id)
 				multi.zadd('commentaires:' + bloc, id, JSON.stringify(commentaire))
@@ -3957,13 +3958,13 @@ io.on('connection', function (socket) {
 									if (resultat === 1) {
 										db.hgetall('pad-' + pad + ':' + blocSupprime, function (err, objet) {
 											if (err) { resolve() }
-											if (objet.media !== '' && objet.type !== 'embed') {
+											if (objet.hasOwnProperty('media') && objet.media !== '' && objet.type !== 'embed') {
 												supprimerFichier(pad, objet.media)
 											}
-											if (objet.vignette !== '' && objet.vignette.substring(1, definirDossierFichiers(pad).length + 1) === definirDossierFichiers(pad)) {
+											if (objet.hasOwnProperty('vignette') && objet.vignette !== '' && objet.vignette.substring(1, definirDossierFichiers(pad).length + 1) === definirDossierFichiers(pad)) {
 												supprimerVignette(objet.vignette)
 											}
-											if (objet.bloc === blocSupprime) {
+											if (objet.hasOwnProperty('bloc') && objet.bloc === blocSupprime) {
 												const multi = db.multi()
 												multi.del('pad-' + pad + ':' + blocSupprime)
 												multi.zrem('blocs:' + pad, blocSupprime)
