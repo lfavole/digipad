@@ -1561,9 +1561,19 @@ export default {
 				const padsCrees = reponse.data.padsCrees.filter(function (element) {
 					return parseInt(element.id) !== parseInt(this.pad.id)
 				}.bind(this))
+				padsCrees.sort(function (a, b) {
+					const a1 = a.titre.toLowerCase()
+					const b1 = b.titre.toLowerCase()
+					return a1 < b1 ? -1 : a1 > b1 ? 1 : 0
+				})
 				const padsAdmins = reponse.data.padsAdmins.filter(function (element) {
 					return parseInt(element.id) !== parseInt(this.pad.id)
 				}.bind(this))
+				padsAdmins.sort(function (a, b) {
+					const a1 = a.titre.toLowerCase()
+					const b1 = b.titre.toLowerCase()
+					return a1 < b1 ? -1 : a1 > b1 ? 1 : 0
+				})
 				this.donneesUtilisateur.padsCrees = padsCrees
 				this.donneesUtilisateur.padsAdmins = padsAdmins
 			}
