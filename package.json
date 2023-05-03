@@ -11,7 +11,7 @@
     "email": "ez@ladigitale.dev",
     "url": "https://ladigitale.dev"
   },
-  "license": "GNU GPLv3",
+  "license": "GNU AGPLv3",
   "scripts": {
     "dev": "cross-env NODE_ENV=development nodemon server/index.js --watch server",
     "build": "nuxt build",
