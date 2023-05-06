@@ -1519,17 +1519,21 @@ app.post('/api/supprimer-pad', function (req, res) {
 								// Suppression de l'utilisateur dans la liste des admins du pad
 								if (type === 'pad-admin') {
 									db.hgetall('pads:' + pad, function (err, donnees) {
-										let listeAdmins = []
-										if (donnees.hasOwnProperty('admins')) {
-											listeAdmins = JSON.parse(donnees.admins)
-										}
-										if (listeAdmins.includes(identifiant)) {
-											const index = listeAdmins.indexOf(identifiant)
-											listeAdmins.splice(index, 1)
-										}
-										db.hset('pads:' + pad, 'admins', JSON.stringify(listeAdmins), function () {
+										if (!err && donnees) {
+											let listeAdmins = []
+											if (donnees.hasOwnProperty('admins')) {
+												listeAdmins = JSON.parse(donnees.admins)
+											}
+											if (listeAdmins.includes(identifiant)) {
+												const index = listeAdmins.indexOf(identifiant)
+												listeAdmins.splice(index, 1)
+											}
+											db.hset('pads:' + pad, 'admins', JSON.stringify(listeAdmins), function () {
+												res.send('pad_supprime')
+											})
+										} else {
 											res.send('pad_supprime')
-										})
+										}
 									})
 								} else {
 									res.send('pad_supprime')
@@ -3216,7 +3220,7 @@ io.on('connection', function (socket) {
 		}
 		if (identifiant !== '' && identifiant !== undefined && socket.handshake.session.identifiant === identifiant) {
 			db.zrangebyscore('commentaires:' + bloc, id, id, function (err, resultats) {
-				if (err) { socket.emit('erreur'); return false }
+				if (err || !resultats) { socket.emit('erreur'); return false }
 				const dateModification = moment().format()
 				const donnees = JSON.parse(resultats)
 				const date = donnees.date
@@ -3307,9 +3311,9 @@ io.on('connection', function (socket) {
 		}
 		if (identifiant !== '' && identifiant !== undefined && socket.handshake.session.identifiant === identifiant) {
 			db.hgetall('pads:' + pad, function (err, resultat) {
-				if (err || !resultat.hasOwnProperty('activite')) { socket.emit('erreur'); return false }
+				if (err || !resultat || !resultat.hasOwnProperty('activite')) { socket.emit('erreur'); return false }
 				db.hgetall('pad-' + pad + ':' + bloc, function (err, donnees) {
-					if (err || !donnees.hasOwnProperty('evaluations')) { socket.emit('erreur'); return false }
+					if (err || !donnees || !donnees.hasOwnProperty('evaluations')) { socket.emit('erreur'); return false }
 					const date = moment().format()
 					const activiteId = parseInt(resultat.activite) + 1
 					const evaluationId = parseInt(donnees.evaluations) + 1
@@ -3887,7 +3891,7 @@ io.on('connection', function (socket) {
 		}
 		if (identifiant !== '' && identifiant !== undefined && socket.handshake.session.identifiant === identifiant) {
 			db.hgetall('pads:' + pad, function (err, donnees) {
-				if (err) { socket.emit('erreur'); return false }
+				if (err || !donnees) { socket.emit('erreur'); return false }
 				let affichageColonnes = []
 				if (donnees.hasOwnProperty('affichageColonnes')) {
 					affichageColonnes = JSON.parse(donnees.affichageColonnes)
@@ -3944,9 +3948,9 @@ io.on('connection', function (socket) {
 						const blocsSupprimes = []
 						const blocsRestants = []
 						blocs.forEach(function (item) {
-							if (parseInt(item.colonne) === parseInt(colonne)) {
+							if (item && item.hasOwnProperty('colonne') && parseInt(item.colonne) === parseInt(colonne)) {
 								blocsSupprimes.push(item.bloc)
-							} else {
+							} else if (item) {
 								blocsRestants.push(item)
 							}
 						})
@@ -4069,32 +4073,36 @@ io.on('connection', function (socket) {
 						const donneesBlocsDeplaces = []
 						for (const item of blocs) {
 							const donneesBlocDeplace = new Promise(function (resolve) {
-								db.exists('pad-' + pad + ':' + item.bloc, function (err, resultat) {
-									if (err) { resolve() }
-									if (resultat === 1 && parseInt(item.colonne) === parseInt(colonne) && direction === 'gauche') {
-										db.hset('pad-' + pad + ':' + item.bloc, 'colonne', (parseInt(colonne) - 1), function (err) {
-											if (err) { resolve() }
-											resolve('deplace')
-										})
-									} else if (resultat === 1 && parseInt(item.colonne) === parseInt(colonne) && direction === 'droite') {
-										db.hset('pad-' + pad + ':' + item.bloc, 'colonne', (parseInt(colonne) + 1), function (err) {
-											if (err) { resolve() }
-											resolve('deplace')
-										})
-									} else if (resultat === 1 && parseInt(item.colonne) === (parseInt(colonne) - 1) && direction === 'gauche') {
-										db.hset('pad-' + pad + ':' + item.bloc, 'colonne', parseInt(colonne), function (err) {
-											if (err) { resolve() }
-											resolve('deplace')
-										})
-									} else if (resultat === 1 && parseInt(item.colonne) === (parseInt(colonne) + 1) && direction === 'droite') {
-										db.hset('pad-' + pad + ':' + item.bloc, 'colonne', parseInt(colonne), function (err) {
-											if (err) { resolve() }
-											resolve('deplace')
-										})
-									} else {
-										resolve()
-									}
-								})
+								if (item.hasOwnProperty('bloc')) {
+									db.exists('pad-' + pad + ':' + item.bloc, function (err, resultat) {
+										if (err) { resolve() }
+										if (resultat === 1 && parseInt(item.colonne) === parseInt(colonne) && direction === 'gauche') {
+											db.hset('pad-' + pad + ':' + item.bloc, 'colonne', (parseInt(colonne) - 1), function (err) {
+												if (err) { resolve() }
+												resolve('deplace')
+											})
+										} else if (resultat === 1 && parseInt(item.colonne) === parseInt(colonne) && direction === 'droite') {
+											db.hset('pad-' + pad + ':' + item.bloc, 'colonne', (parseInt(colonne) + 1), function (err) {
+												if (err) { resolve() }
+												resolve('deplace')
+											})
+										} else if (resultat === 1 && parseInt(item.colonne) === (parseInt(colonne) - 1) && direction === 'gauche') {
+											db.hset('pad-' + pad + ':' + item.bloc, 'colonne', parseInt(colonne), function (err) {
+												if (err) { resolve() }
+												resolve('deplace')
+											})
+										} else if (resultat === 1 && parseInt(item.colonne) === (parseInt(colonne) + 1) && direction === 'droite') {
+											db.hset('pad-' + pad + ':' + item.bloc, 'colonne', parseInt(colonne), function (err) {
+												if (err) { resolve() }
+												resolve('deplace')
+											})
+										} else {
+											resolve()
+										}
+									})
+								} else {
+									resolve()
+								}
 							})
 							donneesBlocsDeplaces.push(donneesBlocDeplace)
 						}
