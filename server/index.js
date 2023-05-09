@@ -2222,71 +2222,83 @@ app.post('/api/televerser-fichier', function (req, res) {
 		televerserTemp(req, res, async function (err) {
 			if (err) { res.send('erreur_televersement'); return false }
 			const fichier = req.file
-			let mimetype = fichier.mimetype
-			const chemin = path.join(__dirname, '..', '/static/temp/' + fichier.filename)
-			const destination = path.join(__dirname, '..', '/static/temp/' + path.parse(fichier.filename).name + '.jpg')
-			const destinationPDF = path.join(__dirname, '..', '/static/temp/' + path.parse(fichier.filename).name + '.pdf')
-			if (mimetype.split('/')[0] === 'image') {
-				const extension = path.parse(fichier.filename).ext
-				if (extension.toLowerCase() === '.jpg' || extension.toLowerCase() === '.jpeg') {
-					sharp(chemin).withMetadata().rotate().jpeg().resize(1200, 1200, {
-						fit: sharp.fit.inside,
-						withoutEnlargement: true
-					}).toBuffer((err, buffer) => {
-						if (err) { res.send('erreur_televersement'); return false }
-						fs.writeFile(chemin, buffer, function() {
-							res.json({ fichier: fichier.filename, mimetype: mimetype })
+			if (fichier.hasOwnProperty('mimetype') && fichier.hasOwnProperty('filename')) {
+				let mimetype = fichier.mimetype
+				const chemin = path.join(__dirname, '..', '/static/temp/' + fichier.filename)
+				const destination = path.join(__dirname, '..', '/static/temp/' + path.parse(fichier.filename).name + '.jpg')
+				const destinationPDF = path.join(__dirname, '..', '/static/temp/' + path.parse(fichier.filename).name + '.pdf')
+				if (mimetype.split('/')[0] === 'image') {
+					const extension = path.parse(fichier.filename).ext
+					if (extension.toLowerCase() === '.jpg' || extension.toLowerCase() === '.jpeg') {
+						sharp(chemin).withMetadata().rotate().jpeg().resize(1200, 1200, {
+							fit: sharp.fit.inside,
+							withoutEnlargement: true
+						}).toBuffer((err, buffer) => {
+							if (err) { res.send('erreur_televersement'); return false }
+							fs.writeFile(chemin, buffer, function() {
+								res.json({ fichier: fichier.filename, mimetype: mimetype })
+							})
 						})
-					})
-				} else if (extension.toLowerCase() !== '.gif') {
-					sharp(chemin).withMetadata().resize(1200, 1200, {
-						fit: sharp.fit.inside,
-						withoutEnlargement: true
-					}).toBuffer((err, buffer) => {
-						if (err) { res.send('erreur_televersement'); return false }
-						fs.writeFile(chemin, buffer, function() {
-							res.json({ fichier: fichier.filename, mimetype: mimetype })
+					} else if (extension.toLowerCase() !== '.gif') {
+						sharp(chemin).withMetadata().resize(1200, 1200, {
+							fit: sharp.fit.inside,
+							withoutEnlargement: true
+						}).toBuffer((err, buffer) => {
+							if (err) { res.send('erreur_televersement'); return false }
+							fs.writeFile(chemin, buffer, function() {
+								res.json({ fichier: fichier.filename, mimetype: mimetype })
+							})
 						})
+					} else {
+						res.json({ fichier: fichier.filename, mimetype: mimetype })
+					}
+				} else if (mimetype === 'application/pdf') {
+					gm(chemin + '[0]').setFormat('jpg').resize(450).quality(80).write(destination, function (erreur) {
+						if (erreur) {
+							res.json({ fichier: fichier.filename, mimetype: 'pdf', vignetteGeneree: false })
+						} else {
+							res.json({ fichier: fichier.filename, mimetype: 'pdf', vignetteGeneree: true })
+						}
 					})
+				} else if (mimetype === 'application/vnd.oasis.opendocument.presentation' || mimetype === 'application/vnd.oasis.opendocument.text' || mimetype === 'application/vnd.oasis.opendocument.spreadsheet') {
+					mimetype = 'document'
+					const docBuffer = await fs.readFile(chemin)
+					const pdfBuffer = await libre.convertAsync(docBuffer, '.pdf', undefined)
+					await fs.writeFile(destinationPDF, pdfBuffer)
+					if (fs.existsSync(destinationPDF)) {
+						gm(destinationPDF + '[0]').setFormat('jpg').resize(450).quality(80).write(destination, function (erreur) {
+							fs.removeSync(destinationPDF)
+							if (erreur) {
+								res.json({ fichier: fichier.filename, mimetype: mimetype, vignetteGeneree: false })
+							} else {
+								res.json({ fichier: fichier.filename, mimetype: mimetype, vignetteGeneree: true })
+							}
+						})
+					} else {
+						res.json({ fichier: fichier.filename, mimetype: mimetype, vignetteGeneree: false })
+					}
+				} else if (mimetype === 'application/msword' || mimetype === 'application/vnd.ms-powerpoint' || mimetype === 'application/vnd.ms-excel' || mimetype.includes('officedocument') === true) {
+					mimetype = 'office'
+					const docBuffer = await fs.readFile(chemin)
+					const pdfBuffer = await libre.convertAsync(docBuffer, '.pdf', undefined)
+					await fs.writeFile(destinationPDF, pdfBuffer)
+					if (fs.existsSync(destinationPDF)) {
+						gm(destinationPDF + '[0]').setFormat('jpg').resize(450).quality(80).write(destination, function (erreur) {
+							fs.removeSync(destinationPDF)
+							if (erreur) {
+								res.json({ fichier: fichier.filename, mimetype: mimetype, vignetteGeneree: false })
+							} else {
+								res.json({ fichier: fichier.filename, mimetype: mimetype, vignetteGeneree: true })
+							}
+						})
+					} else {
+						res.json({ fichier: fichier.filename, mimetype: mimetype, vignetteGeneree: false })
+					}
 				} else {
 					res.json({ fichier: fichier.filename, mimetype: mimetype })
 				}
-			} else if (mimetype === 'application/pdf') {
-				gm(chemin + '[0]').setFormat('jpg').resize(450).quality(80).write(destination, function (erreur) {
-					if (erreur) {
-						res.json({ fichier: fichier.filename, mimetype: 'pdf', vignetteGeneree: false })
-					} else {
-						res.json({ fichier: fichier.filename, mimetype: 'pdf', vignetteGeneree: true })
-					}
-				})
-			} else if (mimetype === 'application/vnd.oasis.opendocument.presentation' || mimetype === 'application/vnd.oasis.opendocument.text' || mimetype === 'application/vnd.oasis.opendocument.spreadsheet') {
-				mimetype = 'document'
-				const docBuffer = await fs.readFile(chemin)
-				const pdfBuffer = await libre.convertAsync(docBuffer, '.pdf', undefined)
-				await fs.writeFile(destinationPDF, pdfBuffer)
-				gm(destinationPDF + '[0]').setFormat('jpg').resize(450).quality(80).write(destination, function (erreur) {
-					fs.removeSync(destinationPDF)
-					if (erreur) {
-						res.json({ fichier: fichier.filename, mimetype: mimetype, vignetteGeneree: false })
-					} else {
-						res.json({ fichier: fichier.filename, mimetype: mimetype, vignetteGeneree: true })
-					}
-				})
-			} else if (mimetype === 'application/msword' || mimetype === 'application/vnd.ms-powerpoint' || mimetype === 'application/vnd.ms-excel' || mimetype.includes('officedocument') === true) {
-				mimetype = 'office'
-				const docBuffer = await fs.readFile(chemin)
-				const pdfBuffer = await libre.convertAsync(docBuffer, '.pdf', undefined)
-				await fs.writeFile(destinationPDF, pdfBuffer)
-				gm(destinationPDF + '[0]').setFormat('jpg').resize(450).quality(80).write(destination, function (erreur) {
-					fs.removeSync(destinationPDF)
-					if (erreur) {
-						res.json({ fichier: fichier.filename, mimetype: mimetype, vignetteGeneree: false })
-					} else {
-						res.json({ fichier: fichier.filename, mimetype: mimetype, vignetteGeneree: true })
-					}
-				})
 			} else {
-				res.json({ fichier: fichier.filename, mimetype: mimetype })
+				res.send('erreur_televersement')
 			}
 		})
 	}
@@ -3920,7 +3932,7 @@ io.on('connection', function (socket) {
 		}
 		if (identifiant !== '' && identifiant !== undefined && socket.handshake.session.identifiant === identifiant) {
 			db.hgetall('pads:' + pad, function (err, donnees) {
-				if (err) { socket.emit('erreur'); return false }
+				if (err || !donnees || !donnees.hasOwnProperty('colonnes')) { socket.emit('erreur'); return false }
 				const colonnes = JSON.parse(donnees.colonnes)
 				colonnes.splice(colonne, 1)
 				let affichageColonnes = []
@@ -4032,7 +4044,7 @@ io.on('connection', function (socket) {
 		}
 		if (identifiant !== '' && identifiant !== undefined && socket.handshake.session.identifiant === identifiant) {
 			db.hgetall('pads:' + pad, function (err, donnees) {
-				if (err) { socket.emit('erreur'); return false }
+				if (err || !donnees || !donnees.hasOwnProperty('colonnes')) { socket.emit('erreur'); return false }
 				const colonnes = JSON.parse(donnees.colonnes)
 				let affichageColonnes = []
 				if (donnees.hasOwnProperty('affichageColonnes')) {
