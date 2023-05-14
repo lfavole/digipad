@@ -792,7 +792,7 @@ app.post('/api/dupliquer-pad', function (req, res) {
 							for (const [indexBloc, bloc] of blocs.entries()) {
 								const donneesBloc = new Promise(function (resolve) {
 									db.hgetall('pad-' + pad + ':' + bloc, function (err, infos) {
-										if (err) { resolve({}) }
+										if (err || !infos) { resolve({}) }
 										const date = moment().format()
 										if (infos.hasOwnProperty('vignette') && infos.vignette !== '') {
 											infos.vignette = infos.vignette.replace('/' + definirDossierFichiers(pad) + '/' + pad, '/' + definirDossierFichiers(id) + '/' + id)
@@ -1013,17 +1013,17 @@ app.post('/api/exporter-pad', function (req, res) {
 						for (const bloc of blocs) {
 							const donneesBloc = new Promise(function (resolve) {
 								db.hgetall('pad-' + id + ':' + bloc, function (err, donnees) {
-									if (err) { resolve({}) }
+									if (err || !donnees) { resolve({}) }
 									const donneesCommentaires = []
 									db.zrange('commentaires:' + bloc, 0, -1, function (err, commentaires) {
-										if (err) { resolve(donnees) }
+										if (err || !commentaires) { resolve(donnees) }
 										for (let commentaire of commentaires) {
 											donneesCommentaires.push(JSON.parse(commentaire))
 										}
 										donnees.commentaires = donneesCommentaires.length
 										donnees.listeCommentaires = donneesCommentaires
 										db.zrange('evaluations:' + bloc, 0, -1, function (err, evaluations) {
-											if (err) { resolve(donnees) }
+											if (err || !evaluations) { resolve(donnees) }
 											const donneesEvaluations = []
 											evaluations.forEach(function (evaluation) {
 												donneesEvaluations.push(JSON.parse(evaluation))
@@ -1062,7 +1062,7 @@ app.post('/api/exporter-pad', function (req, res) {
 				const activitePad = new Promise(function (resolveMain) {
 					const donneesEntrees = []
 					db.zrange('activite:' + id, 0, -1, function (err, entrees) {
-						if (err) { resolveMain(donneesEntrees) }
+						if (err || !entrees) { resolveMain(donneesEntrees) }
 						for (let entree of entrees) {
 							entree = JSON.parse(entree)
 							const donneesEntree = new Promise(function (resolve) {
@@ -3511,7 +3511,7 @@ io.on('connection', function (socket) {
 			db.hgetall('pads:' + pad, function (err, donnees) {
 				if (err) { socket.emit('erreur'); return false }
 				let code = ''
-				if (donnees.code && donnees.code !== '') {
+				if (donnees && donnees.hasOwnProperty('code') && donnees.code !== '') {
 					code = donnees.code
 				} else {
 					code = Math.floor(1000 + Math.random() * 9000)
