@@ -1549,7 +1549,7 @@ export default {
 			this.titre = titre
 			if (Object.keys(this.donneesUtilisateur).length === 0) {
 				this.chargement = true
-				const reponse = await axios.post(this.hote + '/api/recuperer-donnees-utilisateur', {
+				const reponse = await axios.post(this.hote + '/api/recuperer-donnees-auteur', {
 					identifiant: this.identifiant
 				}, {
 					headers: { 'Content-Type': 'application/json' }
@@ -3205,7 +3205,7 @@ export default {
 					}
 				}.bind(this))
 				if (donnees.visibilite === 'visible') {
-					this.activite.unshift({ id: donnees.activiteId, bloc: donnees.bloc, identifiant: donnees.identifiant, nom: donnees.nom, titre: donnees.titre, date: donnees.date, couleur: donnees.couleur, type: 'bloc-modifie' })
+					this.activite.unshift({ id: donnees.activiteId, bloc: donnees.bloc, identifiant: donnees.identifiant, nom: donnees.nom, titre: donnees.titre, date: donnees.modifie, couleur: donnees.couleur, type: 'bloc-modifie' })
 				}
 				this.envoyerNotificationAdmins()
 			}.bind(this))
