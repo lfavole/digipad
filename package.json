@@ -1,6 +1,6 @@
 {
   "name": "digipad",
-  "version": "1.0.10",
+  "version": "1.0.11",
   "homepage": "https://digipad.app",
   "repository": {
     "type": "git",
@@ -23,8 +23,8 @@
   "dependencies": {
     "@panzoom/panzoom": "^4.5.0",
     "archiver": "^5.3.1",
-    "axios": "^0.27.2",
-    "bcrypt": "^5.0.0",
+    "axios": "^1.4.0",
+    "bcrypt": "^5.1.0",
     "body-parser": "^1.20.1",
     "cheerio": "^1.0.0-rc.12",
     "clipboard": "^2.0.11",
@@ -54,8 +54,6 @@
     "nuxt-i18n": "^6.28.1",
     "pell": "^1.0.6",
     "redis": "^3.1.2",
-    "request": "^2.88.2",
-    "request-promise": "^4.2.6",
     "sharp": "^0.31.3",
     "socket.io": "^4.5.4",
     "socket.io-client": "^4.5.4",
