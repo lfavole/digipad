@@ -1117,38 +1117,6 @@
 		</div>
 	</div>
 
-	<div class="conteneur-modale" v-else-if="modaleEvaluations">
-		<div class="modale">
-			<div class="en-tete">
-				<span class="titre">{{ $t('evaluerCapsule') }}</span>
-				<span role="button" tabindex="0" class="fermer" @click="fermerModaleEvaluations"><i class="material-icons">close</i></span>
-			</div>
-			<div class="conteneur">
-				<div class="contenu">
-					<label>{{ $t('monEvaluation') }}</label>
-					<div class="section-etoiles">
-						<span class="etoiles" v-if="evaluation === 0">
-							<i class="material-icons" @click="evaluation = 1">star_outline</i>
-							<i class="material-icons" @click="evaluation = 2">star_outline</i>
-							<i class="material-icons" @click="evaluation = 3">star_outline</i>
-							<i class="material-icons" @click="evaluation = 4">star_outline</i>
-							<i class="material-icons" @click="evaluation = 5">star_outline</i>
-						</span>
-						<span class="etoiles" v-else>
-							<i class="material-icons selectionne" v-for="etoile in evaluation" @click="evaluation = etoile" :key="'etoilepleine_' + etoile">star</i>
-							<i class="material-icons" v-for="etoile in (5 - evaluation)" @click="evaluation = (evaluation + etoile)" :key="'etoilevide_' + etoile">star_outline</i>
-						</span>
-						<i class="material-icons annuler" @click="evaluation = 0" v-if="evaluation > 0">delete_forever</i>
-					</div>
-					<div class="actions">
-						<span role="button" tabindex="0" class="bouton" @click="envoyerEvaluation" v-if="evaluations.map(function (e) { return e.identifiant }).indexOf(identifiant) === -1">{{ $t('valider') }}</span>
-						<span role="button" tabindex="0" class="bouton" @click="modifierEvaluation" v-else>{{ $t('modifier') }}</span>
-					</div>
-				</div>
-			</div>
-		</div>
-	</div>
-
 	<div class="conteneur-modale" v-else-if="modaleModifierNom">
 		<div class="modale">
 			<div class="en-tete">
@@ -1243,6 +1211,38 @@
 			<div class="conteneur">
 				<div class="contenu">
 					<div id="qr" />
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<div class="conteneur-modale" v-if="modaleEvaluations">
+		<div class="modale">
+			<div class="en-tete">
+				<span class="titre">{{ $t('evaluerCapsule') }}</span>
+				<span role="button" tabindex="0" class="fermer" @click="fermerModaleEvaluations"><i class="material-icons">close</i></span>
+			</div>
+			<div class="conteneur">
+				<div class="contenu">
+					<label>{{ $t('monEvaluation') }}</label>
+					<div class="section-etoiles">
+						<span class="etoiles" v-if="evaluation === 0">
+							<i class="material-icons" @click="evaluation = 1">star_outline</i>
+							<i class="material-icons" @click="evaluation = 2">star_outline</i>
+							<i class="material-icons" @click="evaluation = 3">star_outline</i>
+							<i class="material-icons" @click="evaluation = 4">star_outline</i>
+							<i class="material-icons" @click="evaluation = 5">star_outline</i>
+						</span>
+						<span class="etoiles" v-else>
+							<i class="material-icons selectionne" v-for="etoile in evaluation" @click="evaluation = etoile" :key="'etoilepleine_' + etoile">star</i>
+							<i class="material-icons" v-for="etoile in (5 - evaluation)" @click="evaluation = (evaluation + etoile)" :key="'etoilevide_' + etoile">star_outline</i>
+						</span>
+						<i class="material-icons annuler" @click="evaluation = 0" v-if="evaluation > 0">delete_forever</i>
+					</div>
+					<div class="actions">
+						<span role="button" tabindex="0" class="bouton" @click="envoyerEvaluation" v-if="evaluations.map(function (e) { return e.identifiant }).indexOf(identifiant) === -1">{{ $t('valider') }}</span>
+						<span role="button" tabindex="0" class="bouton" @click="modifierEvaluation" v-else>{{ $t('modifier') }}</span>
+					</div>
 				</div>
 			</div>
 		</div>
