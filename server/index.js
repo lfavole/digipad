@@ -34,7 +34,6 @@ const moment = require('moment')
 const bcrypt = require('bcrypt')
 const cron = require('node-cron')
 const nodemailer = require('nodemailer')
-const rp = require('request-promise')
 const { URL } = require('url')
 const cheerio = require('cheerio')
 const libre = require('libreoffice-convert')
@@ -321,7 +320,7 @@ app.post('/api/deconnexion', function (req, res) {
 
 app.post('/api/recuperer-donnees-utilisateur', function (req, res) {
 	const identifiant = req.body.identifiant
-	recupererDonnees(identifiant).then(function (pads) {
+	recupererDonneesUtilisateur(identifiant).then(function (pads) {
 		let padsCrees = pads[0].filter(function (element) {
 			return element !== '' && Object.keys(element).length > 0
 		})
@@ -452,6 +451,45 @@ app.post('/api/recuperer-donnees-utilisateur', function (req, res) {
 				})
 			}
 		})
+	})
+})
+
+app.post('/api/recuperer-donnees-auteur', function (req, res) {
+	const identifiant = req.body.identifiant
+	recupererDonneesUtilisateur(identifiant).then(function (pads) {
+		let padsCrees = pads[0].filter(function (element) {
+			return element !== '' && Object.keys(element).length > 0
+		})
+		let padsAdmins = pads[1].filter(function (element) {
+			return element !== '' && Object.keys(element).length > 0
+		})
+		// Vérification des données des pads
+		padsCrees.forEach(function (pad, indexPad) {
+			if (!pad.hasOwnProperty('id') || !pad.hasOwnProperty('token') || !pad.hasOwnProperty('identifiant') || !pad.hasOwnProperty('titre') || !pad.hasOwnProperty('fond') || !pad.hasOwnProperty('date')) {
+				padsCrees.splice(indexPad, 1)
+			} else {
+				padsCrees[indexPad].id = parseInt(pad.id)
+			}
+		})
+		padsAdmins.forEach(function (pad, indexPad) {
+			if (!pad.hasOwnProperty('id') || !pad.hasOwnProperty('token') || !pad.hasOwnProperty('identifiant') || !pad.hasOwnProperty('titre') || !pad.hasOwnProperty('fond') || !pad.hasOwnProperty('date')) {
+				padsAdmins.splice(indexPad, 1)
+			} else {
+				padsAdmins[indexPad].id = parseInt(pad.id)
+			}
+		})
+		// Supprimer doublons
+		padsCrees = padsCrees.filter((valeur, index, self) =>
+			index === self.findIndex((t) => (
+				t.id === valeur.id && t.token === valeur.token
+			))
+		)
+		padsAdmins = padsAdmins.filter((valeur, index, self) =>
+			index === self.findIndex((t) => (
+				t.id === valeur.id && t.token === valeur.token
+			))
+		)
+		res.json({ padsCrees: padsCrees, padsAdmins: padsAdmins })
 	})
 })
 
@@ -655,7 +693,7 @@ app.post('/api/creer-pad-sans-compte', async function (req, res) {
 			db.get('pad', async function (err, resultat) {
 				if (err) { res.send('erreur_creation'); return false }
 				const id = parseInt(resultat) + 1
-				const creation = await creerPadSansCompte(id, token, titre, hash, date, identifiant, nom, langue)
+				const creation = await creerPadSansCompte(id, token, titre, hash, date, identifiant, nom, langue, '')
 				if (creation === true) {
 					const chemin = path.join(__dirname, '..', '/static/' + definirDossierFichiers(id) + '/' + id)
 					fs.mkdirsSync(chemin)
@@ -668,7 +706,7 @@ app.post('/api/creer-pad-sans-compte', async function (req, res) {
 				}
 			})
 		} else {
-			const creation = await creerPadSansCompte(1, token, titre, hash, date, identifiant, nom, langue)
+			const creation = await creerPadSansCompte(1, token, titre, hash, date, identifiant, nom, langue, '')
 			if (creation === true) {
 				const chemin = path.join(__dirname, '..', '/static/' + definirDossierFichiers(1) + '/1')
 				fs.mkdirsSync(chemin)
@@ -2388,46 +2426,45 @@ app.post('/api/televerser-fond', function (req, res) {
 	}
 })
 
-app.post('/api/recuperer-icone', function (req, res) {
+app.post('/api/recuperer-icone', async function (req, res) {
 	const identifiant = req.session.identifiant
 	if (!identifiant) {
 		res.send('erreur')
 	} else {
 		const domaine = req.body.domaine
 		const protocole = req.body.protocole
-		rp(protocole + '//' + domaine).then(function (html) {
-			const $ = cheerio.load(html)
-			let favicon = ''
-			const recupererTaille = function (el) {
-				return (el.attribs.sizes && parseInt(el.attribs.sizes, 10)) || 0
-			}
-			let favicons = [
-				...$('meta[property="og:image"]')
-			]
-			if (favicons.length > 0) {
-				favicon = favicons[0].attribs.content
-			} else {
-				favicons = [
-					...$('link[rel="shortcut icon"], link[rel="icon"], link[rel="apple-touch-icon"]')
-				].sort((a, b) => {
-					return recupererTaille(b) - recupererTaille(a)
-				})
-				favicon = favicons[0].attribs.href
-			}
-			if (favicon !== '' && verifierURL(favicon, ['https', 'http']) === true) {
-				res.send(favicon)
-			} else if (favicon !== '' && favicon.substring(0, 2) === './') {
-				res.send(protocole + '//' + domaine + favicon.substring(1))
-			} else if (favicon !== '' && favicon.substring(0, 1) === '/') {
-				res.send(protocole + '//' + domaine + favicon)
-			} else if (favicon !== '') {
-				res.send(protocole + '//' + domaine + '/' + favicon)
-			} else {
-				res.send(favicon)
-			}
-		}).catch(function () {
+		const reponse = await axios.get(protocole + '//' + domaine, { responseType: 'document' }).catch(function () {
 			res.send('erreur')
 		})
+		const $ = cheerio.load(reponse.data)
+		let favicon = ''
+		const recupererTaille = function (el) {
+			return (el.attribs.sizes && parseInt(el.attribs.sizes, 10)) || 0
+		}
+		let favicons = [
+			...$('meta[property="og:image"]')
+		]
+		if (favicons.length > 0) {
+			favicon = favicons[0].attribs.content
+		} else {
+			favicons = [
+				...$('link[rel="shortcut icon"], link[rel="icon"], link[rel="apple-touch-icon"]')
+			].sort((a, b) => {
+				return recupererTaille(b) - recupererTaille(a)
+			})
+			favicon = favicons[0].attribs.href
+		}
+		if (favicon !== '' && verifierURL(favicon, ['https', 'http']) === true) {
+			res.send(favicon)
+		} else if (favicon !== '' && favicon.substring(0, 2) === './') {
+			res.send(protocole + '//' + domaine + favicon.substring(1))
+		} else if (favicon !== '' && favicon.substring(0, 1) === '/') {
+			res.send(protocole + '//' + domaine + favicon)
+		} else if (favicon !== '') {
+			res.send(protocole + '//' + domaine + '/' + favicon)
+		} else {
+			res.send(favicon)
+		}
 	}
 })
 
@@ -2462,7 +2499,7 @@ app.post('/api/ladigitale', function (req, res) {
 					db.get('pad', async function (err, resultat) {
 						if (err) { res.send('erreur'); return false }
 						const id = parseInt(resultat) + 1
-						const creation = await creerPadSansCompte(id, token, titre, hash, date, identifiant, nom, langue)
+						const creation = await creerPadSansCompte(id, token, titre, hash, date, identifiant, nom, langue, 'api')
 						if (creation === true) {
 							const chemin = path.join(__dirname, '..', '/static/' + definirDossierFichiers(id) + '/' + id)
 							fs.mkdirsSync(chemin)
@@ -2475,7 +2512,7 @@ app.post('/api/ladigitale', function (req, res) {
 						}
 					})
 				} else {
-					const creation = await creerPadSansCompte(1, token, titre, hash, date, identifiant, nom, langue)
+					const creation = await creerPadSansCompte(1, token, titre, hash, date, identifiant, nom, langue, 'api')
 					if (creation === true) {
 						const chemin = path.join(__dirname, '..', '/static/' + definirDossierFichiers(1) + '/1')
 						fs.mkdirsSync(chemin)
@@ -4085,7 +4122,7 @@ io.on('connection', function (socket) {
 						const donneesBlocsDeplaces = []
 						for (const item of blocs) {
 							const donneesBlocDeplace = new Promise(function (resolve) {
-								if (item.hasOwnProperty('bloc')) {
+								if (item && item.hasOwnProperty('bloc')) {
 									db.exists('pad-' + pad + ':' + item.bloc, function (err, resultat) {
 										if (err) { resolve() }
 										if (resultat === 1 && parseInt(item.colonne) === parseInt(colonne) && direction === 'gauche') {
@@ -4251,7 +4288,7 @@ function creerPad (id, token, titre, date, identifiant, couleur) {
 	})
 }
 
-function creerPadSansCompte (id, token, titre, hash, date, identifiant, nom, langue) {
+function creerPadSansCompte (id, token, titre, hash, date, identifiant, nom, langue, type) {
 	return new Promise(function (resolve) {
 		const multi = db.multi()
 		if (id === 1) {
@@ -4260,6 +4297,9 @@ function creerPadSansCompte (id, token, titre, hash, date, identifiant, nom, lan
 			multi.incr('pad')
 		}
 		multi.hmset('pads:' + id, 'id', id, 'token', token, 'titre', titre, 'identifiant', identifiant, 'motdepasse', hash, 'fond', '/img/fond1.png', 'acces', 'public', 'contributions', 'ouvertes', 'affichage', 'mur', 'registreActivite', 'active', 'conversation', 'desactivee', 'listeUtilisateurs', 'activee', 'editionNom', 'desactivee', 'fichiers', 'actives', 'enregistrements', 'desactives', 'liens', 'actives', 'documents', 'desactives', 'commentaires', 'desactives', 'evaluations', 'desactivees', 'copieBloc', 'desactivee', 'ordre', 'croissant', 'largeur', 'normale', 'date', date, 'colonnes', JSON.stringify([]), 'affichageColonnes', JSON.stringify([]), 'bloc', 0, 'activite', 0)
+		if (type === 'api') {
+			multi.sadd('pads-crees:' + identifiant, id)
+		}
 		multi.hmset('utilisateurs:' + identifiant, 'id', identifiant, 'date', date, 'nom', nom, 'langue', langue)
 		multi.exec(function (err) {
 			if (err) {
@@ -4271,7 +4311,7 @@ function creerPadSansCompte (id, token, titre, hash, date, identifiant, nom, lan
 	})
 }
 
-function recupererDonnees (identifiant) {
+function recupererDonneesUtilisateur (identifiant) {
 	// Pads créés
 	const donneesPadsCrees = new Promise(function (resolveMain) {
 		db.smembers('pads-crees:' + identifiant, function (err, pads) {
@@ -4565,6 +4605,76 @@ function recupererDonnees (identifiant) {
 										resolve(donnees)
 									}
 								})
+							} else {
+								resolve({})
+							}
+						} else {
+							resolve({})
+						}
+					})
+				})
+				donneesPads.push(donneePad)
+			}
+			Promise.all(donneesPads).then(function (resultat) {
+				resolveMain(resultat)
+			})
+		})
+	})
+	return Promise.all([donneesPadsCrees, donneesPadsRejoints, donneesPadsAdmins, donneesPadsFavoris])
+}
+
+function recupererDonneesAuteur (identifiant) {
+	// Pads créés
+	const donneesPadsCrees = new Promise(function (resolveMain) {
+		db.smembers('pads-crees:' + identifiant, function (err, pads) {
+			const donneesPads = []
+			if (err) { resolveMain(donneesPads) }
+			for (const pad of pads) {
+				const donneePad = new Promise(function (resolve) {
+					db.exists('pads:' + pad, async function (err, resultat) {
+						if (err) { resolve({}) }
+						if (resultat === 1) {
+							db.hgetall('pads:' + pad, function (err, donnees) {
+								if (err) { resolve({}) }
+								resolve(donnees)
+							})
+						} else if (resultat !== 1 && fs.existsSync(path.join(__dirname, '..', '/static/pads/pad-' + pad + '.json'))) {
+							const donnees = await fs.readJson(path.join(__dirname, '..', '/static/pads/pad-' + pad + '.json'))
+							if (typeof donnees === 'object' && donnees !== null && donnees.hasOwnProperty('identifiant')) {
+								resolve(donnees)
+							} else {
+								resolve({})
+							}
+						} else {
+							resolve({})
+						}
+					})
+				})
+				donneesPads.push(donneePad)
+			}
+			Promise.all(donneesPads).then(function (resultat) {
+				resolveMain(resultat)
+			})
+		})
+	})
+	// Pads administrés
+	const donneesPadsAdmins = new Promise(function (resolveMain) {
+		db.smembers('pads-admins:' + identifiant, function (err, pads) {
+			const donneesPads = []
+			if (err) { resolveMain(donneesPads) }
+			for (const pad of pads) {
+				const donneePad = new Promise(function (resolve) {
+					db.exists('pads:' + pad, async function (err, resultat) {
+						if (err) { resolve({}) }
+						if (resultat === 1) {
+							db.hgetall('pads:' + pad, function (err, donnees) {
+								if (err) { resolve({}) }
+								resolve(donnees)
+							})
+						} else if (resultat !== 1 && fs.existsSync(path.join(__dirname, '..', '/static/pads/pad-' + pad + '.json'))) {
+							const donnees = await fs.readJson(path.join(__dirname, '..', '/static/pads/pad-' + pad + '.json'))
+							if (typeof donnees === 'object' && donnees !== null && donnees.hasOwnProperty('identifiant')) {
+								resolve(donnees)
 							} else {
 								resolve({})
 							}
