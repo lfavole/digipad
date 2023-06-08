@@ -345,7 +345,7 @@
 						<span class="barre" />
 					</label>
 				</div>
-				<div class="conteneur-interrupteur">
+				<div class="conteneur-interrupteur" v-if="statut === 'utilisateur' || digidrive">
 					<span>{{ $t('copieCapsule') }}</span>
 					<label class="bouton-interrupteur">
 						<input type="checkbox" :checked="pad.copieBloc === 'activee'" @change="modifierCopieBloc">
@@ -438,7 +438,7 @@
 							<span role="button" tabindex="0" class="bouton" :title="$t('commenterCapsule')" @click="ouvrirModaleCommentaires(item.bloc, item.titre)" v-if="pad.commentaires === 'actives'"><i class="material-icons">comment</i><span class="badge">{{ item.commentaires }}</span></span>
 							<span role="button" tabindex="0" class="bouton info" :title="$t('informationsCapsule')" :data-description="definirDescription(item)"><i class="material-icons">info</i></span>
 							<span class="media-type" v-if="item.media !== ''"><i class="material-icons">{{ definirIconeMedia(item) }}</i></span>
-							<span role="button" tabindex="0" class="bouton" :title="$t('copierCapsule')" @click="afficherEnvoyerBloc(item.bloc, item.titre)" v-if="admin && pad.copieBloc === 'activee'"><i class="material-icons">send</i></span>
+							<span role="button" tabindex="0" class="bouton" :title="$t('copierCapsule')" @click="afficherEnvoyerBloc(item.bloc, item.titre)" v-if="admin && pad.copieBloc === 'activee' && (statut === 'utilisateur' || digidrive)"><i class="material-icons">send</i></span>
 							<span role="button" tabindex="0" class="bouton supprimer" :title="$t('supprimerCapsule')" @click="afficherSupprimerBloc(item.bloc, item.titre, 0)" v-if="item.identifiant === identifiant || admin"><i class="material-icons">delete</i></span>
 						</div>
 						<div class="moderation" v-if="item.visibilite === 'privee' && admin">
@@ -482,7 +482,7 @@
 							<span role="button" tabindex="0" class="bouton" :title="$t('commenterCapsule')" @click="ouvrirModaleCommentaires(item.bloc, item.titre)" v-if="pad.commentaires === 'actives'"><i class="material-icons">comment</i><span class="badge">{{ item.commentaires }}</span></span>
 							<span role="button" tabindex="0" class="bouton info" :title="$t('informationsCapsule')" :data-description="definirDescription(item)"><i class="material-icons">info</i></span>
 							<span class="media-type" v-if="item.media !== ''"><i class="material-icons">{{ definirIconeMedia(item) }}</i></span>
-							<span role="button" tabindex="0" class="bouton" :title="$t('copierCapsule')" @click="afficherEnvoyerBloc(item.bloc, item.titre)" v-if="admin && pad.copieBloc === 'activee'"><i class="material-icons">send</i></span>
+							<span role="button" tabindex="0" class="bouton" :title="$t('copierCapsule')" @click="afficherEnvoyerBloc(item.bloc, item.titre)" v-if="admin && pad.copieBloc === 'activee' && (statut === 'utilisateur' || digidrive)"><i class="material-icons">send</i></span>
 							<span role="button" tabindex="0" class="bouton supprimer" :title="$t('supprimerCapsule')" @click="afficherSupprimerBloc(item.bloc, item.titre, 0)" v-if="item.identifiant === identifiant || admin"><i class="material-icons">delete</i></span>
 						</div>
 						<div class="moderation" v-if="item.visibilite === 'privee' && admin">
@@ -526,7 +526,7 @@
 							<span role="button" tabindex="0" class="bouton" :title="$t('commenterCapsule')" @click="ouvrirModaleCommentaires(item.bloc, item.titre)" v-if="pad.commentaires === 'actives'"><i class="material-icons">comment</i><span class="badge">{{ item.commentaires }}</span></span>
 							<span role="button" tabindex="0" class="bouton info" :title="$t('informationsCapsule')" :data-description="definirDescription(item)"><i class="material-icons">info</i></span>
 							<span class="media-type" v-if="item.media !== ''"><i class="material-icons">{{ definirIconeMedia(item) }}</i></span>
-							<span role="button" tabindex="0" class="bouton" :title="$t('copierCapsule')" @click="afficherEnvoyerBloc(item.bloc, item.titre)" v-if="admin && pad.copieBloc === 'activee'"><i class="material-icons">send</i></span>
+							<span role="button" tabindex="0" class="bouton" :title="$t('copierCapsule')" @click="afficherEnvoyerBloc(item.bloc, item.titre)" v-if="admin && pad.copieBloc === 'activee' && (statut === 'utilisateur' || digidrive)"><i class="material-icons">send</i></span>
 							<span role="button" tabindex="0" class="bouton supprimer" :title="$t('supprimerCapsule')" @click="afficherSupprimerBloc(item.bloc, item.titre, 0)" v-if="item.identifiant === identifiant || admin"><i class="material-icons">delete</i></span>
 						</div>
 						<div class="moderation" v-if="item.visibilite === 'privee' && admin">
@@ -570,7 +570,7 @@
 							<span role="button" tabindex="0" class="bouton" :title="$t('commenterCapsule')" @click="ouvrirModaleCommentaires(item.bloc, item.titre)" v-if="pad.commentaires === 'actives'"><i class="material-icons">comment</i><span class="badge">{{ item.commentaires }}</span></span>
 							<span role="button" tabindex="0" class="bouton info" :title="$t('informationsCapsule')" :data-description="definirDescription(item)"><i class="material-icons">info</i></span>
 							<span class="media-type" v-if="item.media !== ''"><i class="material-icons">{{ definirIconeMedia(item) }}</i></span>
-							<span role="button" tabindex="0" class="bouton" :title="$t('copierCapsule')" @click="afficherEnvoyerBloc(item.bloc, item.titre)" v-if="admin && pad.copieBloc === 'activee'"><i class="material-icons">send</i></span>
+							<span role="button" tabindex="0" class="bouton" :title="$t('copierCapsule')" @click="afficherEnvoyerBloc(item.bloc, item.titre)" v-if="admin && pad.copieBloc === 'activee' && (statut === 'utilisateur' || digidrive)"><i class="material-icons">send</i></span>
 							<span role="button" tabindex="0" class="bouton supprimer" :title="$t('supprimerCapsule')" @click="afficherSupprimerBloc(item.bloc, item.titre, 0)" v-if="item.identifiant === identifiant || admin"><i class="material-icons">delete</i></span>
 						</div>
 						<div class="moderation" v-if="item.visibilite === 'privee' && admin">
@@ -628,7 +628,7 @@
 										<span role="button" tabindex="0" class="bouton" :title="$t('commenterCapsule')" @click="ouvrirModaleCommentaires(item.bloc, item.titre)" v-if="pad.commentaires === 'actives'"><i class="material-icons">comment</i><span class="badge">{{ item.commentaires }}</span></span>
 										<span role="button" tabindex="0" class="bouton info" :title="$t('informationsCapsule')" :data-description="definirDescription(item)"><i class="material-icons">info</i></span>
 										<span class="media-type" v-if="item.media !== ''"><i class="material-icons">{{ definirIconeMedia(item) }}</i></span>
-										<span role="button" tabindex="0" class="bouton" :title="$t('copierCapsule')" @click="afficherEnvoyerBloc(item.bloc, item.titre)" v-if="admin && pad.copieBloc === 'activee'"><i class="material-icons">send</i></span>
+										<span role="button" tabindex="0" class="bouton" :title="$t('copierCapsule')" @click="afficherEnvoyerBloc(item.bloc, item.titre)" v-if="admin && pad.copieBloc === 'activee' && (statut === 'utilisateur' || digidrive)"><i class="material-icons">send</i></span>
 										<span role="button" tabindex="0" class="bouton supprimer" :title="$t('supprimerCapsule')" @click="afficherSupprimerBloc(item.bloc, item.titre, indexCol)" v-if="item.identifiant === identifiant || admin"><i class="material-icons">delete</i></span>
 									</div>
 									<div class="moderation" v-if="item.visibilite === 'privee' && admin">
@@ -695,7 +695,7 @@
 										<span role="button" tabindex="0" class="bouton" :title="$t('commenterCapsule')" @click="ouvrirModaleCommentaires(item.bloc, item.titre)" v-if="pad.commentaires === 'actives'"><i class="material-icons">comment</i><span class="badge">{{ item.commentaires }}</span></span>
 										<span role="button" tabindex="0" class="bouton info" :title="$t('informationsCapsule')" :data-description="definirDescription(item)"><i class="material-icons">info</i></span>
 										<span class="media-type" v-if="item.media !== ''"><i class="material-icons">{{ definirIconeMedia(item) }}</i></span>
-										<span role="button" tabindex="0" class="bouton" :title="$t('copierCapsule')" @click="afficherEnvoyerBloc(item.bloc, item.titre)" v-if="admin && pad.copieBloc === 'activee'"><i class="material-icons">send</i></span>
+										<span role="button" tabindex="0" class="bouton" :title="$t('copierCapsule')" @click="afficherEnvoyerBloc(item.bloc, item.titre)" v-if="admin && pad.copieBloc === 'activee' && (statut === 'utilisateur' || digidrive)"><i class="material-icons">send</i></span>
 										<span role="button" tabindex="0" class="bouton supprimer" :title="$t('supprimerCapsule')" @click="afficherSupprimerBloc(item.bloc, item.titre, indexCol)" v-if="item.identifiant === identifiant || admin"><i class="material-icons">delete</i></span>
 									</div>
 									<div class="moderation" v-if="item.visibilite === 'privee' && admin">
