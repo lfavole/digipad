@@ -2431,28 +2431,30 @@ app.post('/api/recuperer-icone', async function (req, res) {
 	if (!identifiant) {
 		res.send('erreur')
 	} else {
+		let favicon = ''
 		const domaine = req.body.domaine
 		const protocole = req.body.protocole
 		const reponse = await axios.get(protocole + '//' + domaine, { responseType: 'document' }).catch(function () {
 			res.send('erreur')
 		})
-		const $ = cheerio.load(reponse.data)
-		let favicon = ''
-		const recupererTaille = function (el) {
-			return (el.attribs.sizes && parseInt(el.attribs.sizes, 10)) || 0
-		}
-		let favicons = [
-			...$('meta[property="og:image"]')
-		]
-		if (favicons.length > 0) {
-			favicon = favicons[0].attribs.content
-		} else {
-			favicons = [
-				...$('link[rel="shortcut icon"], link[rel="icon"], link[rel="apple-touch-icon"]')
-			].sort((a, b) => {
-				return recupererTaille(b) - recupererTaille(a)
-			})
-			favicon = favicons[0].attribs.href
+		if (reponse.hasOwnProperty('data')) {
+			const $ = cheerio.load(reponse.data)
+			const recupererTaille = function (el) {
+				return (el.attribs.sizes && parseInt(el.attribs.sizes, 10)) || 0
+			}
+			let favicons = [
+				...$('meta[property="og:image"]')
+			]
+			if (favicons.length > 0) {
+				favicon = favicons[0].attribs.content
+			} else {
+				favicons = [
+					...$('link[rel="shortcut icon"], link[rel="icon"], link[rel="apple-touch-icon"]')
+				].sort((a, b) => {
+					return recupererTaille(b) - recupererTaille(a)
+				})
+				favicon = favicons[0].attribs.href
+			}
 		}
 		if (favicon !== '' && verifierURL(favicon, ['https', 'http']) === true) {
 			res.send(favicon)
