@@ -2982,7 +2982,11 @@ export default {
 			}
 		},
 		definirDossierFichiers (id) {
-			if (import.meta.env.VITE_NFS2_PAD_NUMBER && import.meta.env.VITE_NFS2_PAD_NUMBER !== '' && import.meta.env.VITE_NFS2_FOLDER && import.meta.env.VITE_NFS2_FOLDER !== '' && parseInt(id) > parseInt(import.meta.env.VITE_NFS2_PAD_NUMBER)) {
+			if (import.meta.env.VITE_NFS4_PAD_NUMBER && import.meta.env.VITE_NFS4_PAD_NUMBER !== '' && import.meta.env.VITE_NFS4_FOLDER && import.meta.env.VITE_NFS4_FOLDER !== '' && parseInt(id) > parseInt(import.meta.env.VITE_NFS4_PAD_NUMBER)) {
+				return import.meta.env.VITE_NFS4_FOLDER
+			} else if (import.meta.env.VITE_NFS3_PAD_NUMBER && import.meta.env.VITE_NFS3_PAD_NUMBER !== '' && import.meta.env.VITE_NFS3_FOLDER && import.meta.env.VITE_NFS3_FOLDER !== '' && parseInt(id) > parseInt(import.meta.env.VITE_NFS3_PAD_NUMBER)) {
+				return import.meta.env.VITE_NFS3_FOLDER
+			} else if (import.meta.env.VITE_NFS2_PAD_NUMBER && import.meta.env.VITE_NFS2_PAD_NUMBER !== '' && import.meta.env.VITE_NFS2_FOLDER && import.meta.env.VITE_NFS2_FOLDER !== '' && parseInt(id) > parseInt(import.meta.env.VITE_NFS2_PAD_NUMBER)) {
 				return import.meta.env.VITE_NFS2_FOLDER
 			} else if (import.meta.env.VITE_NFS_PAD_NUMBER && import.meta.env.VITE_NFS_PAD_NUMBER !== '' && import.meta.env.VITE_NFS_FOLDER && import.meta.env.VITE_NFS_FOLDER !== '' && parseInt(id) > parseInt(import.meta.env.VITE_NFS_PAD_NUMBER)) {
 				return import.meta.env.VITE_NFS_FOLDER
