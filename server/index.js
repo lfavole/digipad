@@ -127,8 +127,8 @@ async function demarrerServeur () {
 	// Charger plugin dayjs
 	dayjs.extend(localizedFormat)
 
-	const etherpad = process.env.ETHERPAD
-	const etherpadApi = process.env.ETHERPAD_API_KEY
+	const etherpad = process.env.VITE_ETHERPAD
+	const etherpadApi = process.env.VITE_ETHERPAD_API_KEY
 
 	// Augmenter nombre de tâches asynchrones par défaut
 	require('events').EventEmitter.defaultMaxListeners = 50
@@ -1167,7 +1167,7 @@ async function demarrerServeur () {
 	app.post('/api/exporter-pad', function (req, res) {
 		const identifiant = req.body.identifiant
 		const admin = req.body.admin
-		const motdepasseAdmin = process.env.ADMIN_PASSWORD
+		const motdepasseAdmin = process.env.VITE_ADMIN_PASSWORD
 		if ((req.session.identifiant && req.session.identifiant === identifiant) || (admin !== '' && admin === motdepasseAdmin)) {
 			const id = req.body.padId
 			db.exists('pads:' + id, async function (err, resultat) {
@@ -1550,7 +1550,7 @@ async function demarrerServeur () {
 		}
 		const identifiant = req.body.identifiant
 		const admin = req.body.admin
-		const motdepasseAdmin = process.env.ADMIN_PASSWORD
+		const motdepasseAdmin = process.env.VITE_ADMIN_PASSWORD
 		if ((req.session.identifiant && req.session.identifiant === identifiant) || (admin !== '' && admin === motdepasseAdmin)) {
 			const pad = req.body.padId
 			const type = req.body.type
@@ -1757,7 +1757,7 @@ async function demarrerServeur () {
 
 	app.post('/api/modifier-mot-de-passe-admin', function (req, res) {
 		const admin = req.body.admin
-		if (admin !== '' && admin === process.env.ADMIN_PASSWORD) {
+		if (admin !== '' && admin === process.env.VITE_ADMIN_PASSWORD) {
 			const identifiant = req.body.identifiant
 			const email = req.body.email
 			if (identifiant !== '') {
@@ -1860,7 +1860,7 @@ async function demarrerServeur () {
 		}
 		const identifiant = req.body.identifiant
 		const admin = req.body.admin
-		const motdepasseAdmin = process.env.ADMIN_PASSWORD
+		const motdepasseAdmin = process.env.VITE_ADMIN_PASSWORD
 		let type = 'utilisateur'
 		if ((req.session.identifiant && req.session.identifiant === identifiant) || (admin !== '' && admin === motdepasseAdmin)) {
 			if (admin === motdepasseAdmin) {
@@ -4930,11 +4930,11 @@ async function demarrerServeur () {
 										}
 										// Pour résoudre le problème lié au changement de domaine de digidoc
 										if (donnees.hasOwnProperty('iframe') && donnees.iframe.includes('env-7747481.jcloud-ver-jpe.ik-server.com') === true) {
-											donnees.iframe = donnees.iframe.replace('https://env-7747481.jcloud-ver-jpe.ik-server.com', process.env.ETHERPAD)
+											donnees.iframe = donnees.iframe.replace('https://env-7747481.jcloud-ver-jpe.ik-server.com', process.env.VITE_ETHERPAD)
 										}
 										// Pour résoudre le problème lié au changement de domaine de digidoc
 										if (donnees.hasOwnProperty('media') && donnees.media.includes('env-7747481.jcloud-ver-jpe.ik-server.com') === true) {
-											donnees.media = donnees.media.replace('https://env-7747481.jcloud-ver-jpe.ik-server.com', process.env.ETHERPAD)
+											donnees.media = donnees.media.replace('https://env-7747481.jcloud-ver-jpe.ik-server.com', process.env.VITE_ETHERPAD)
 										}
 										// Ne pas ajouter les capsules en attente de modération ou privées
 										if (((pad.contributions === 'moderees' && donnees.visibilite === 'masquee') || donnees.visibilite === 'privee') && donnees.identifiant !== identifiant && pad.identifiant !== identifiant && !pad.admins.includes(identifiant)) {
@@ -5292,10 +5292,10 @@ async function demarrerServeur () {
 	}
 
 	function definirDossierFichiers (id) {
-		if (process.env.NFS2_PAD_NUMBER && process.env.NFS2_PAD_NUMBER !== '' && process.env.NFS2_FOLDER && process.env.NFS2_FOLDER !== '' && parseInt(id) > parseInt(process.env.NFS2_PAD_NUMBER)) {
-			return process.env.NFS2_FOLDER
-		} else if (process.env.NFS_PAD_NUMBER && process.env.NFS_PAD_NUMBER !== '' && process.env.NFS_FOLDER && process.env.NFS_FOLDER !== '' && parseInt(id) > parseInt(process.env.NFS_PAD_NUMBER)) {
-			return process.env.NFS_FOLDER
+		if (process.env.VITE_NFS2_PAD_NUMBER && process.env.VITE_NFS2_PAD_NUMBER !== '' && process.env.VITE_NFS2_FOLDER && process.env.VITE_NFS2_FOLDER !== '' && parseInt(id) > parseInt(process.env.VITE_NFS2_PAD_NUMBER)) {
+			return process.env.VITE_NFS2_FOLDER
+		} else if (process.env.VITE_NFS_PAD_NUMBER && process.env.VITE_NFS_PAD_NUMBER !== '' && process.env.VITE_NFS_FOLDER && process.env.VITE_NFS_FOLDER !== '' && parseInt(id) > parseInt(process.env.VITE_NFS_PAD_NUMBER)) {
+			return process.env.VITE_NFS_FOLDER
 		} else {
 			return 'fichiers'
 		}
