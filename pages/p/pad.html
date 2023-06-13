@@ -1,4 +1,4 @@
-<main id="page" :class="pad.affichage">
+<div id="page" :class="pad.affichage">
 	<header :class="{'pleine-largeur': pad.listeUtilisateurs && pad.listeUtilisateurs === 'desactivee'}">
 		<span id="conteneur-logo">
 			<span id="logo" />
@@ -22,7 +22,7 @@
 		<span id="activite" role="button" tabindex="0" :title="$t('activitePad')" @click="afficherActivite" v-if="accesAutorise && (!pad.registreActivite || (pad.registreActivite && pad.registreActivite === 'active'))"><i class="material-icons">schedule</i></span>
 		<span id="chat" :title="$t('conversation')" @click="afficherChat" v-if="accesAutorise && (!pad.conversation || (pad.conversation && pad.conversation === 'activee'))">
 			<i class="material-icons">chat</i>
-			<span class="badge" v-if="nouveauxMessages > 0">{{ nouveauxMessages }}</span>
+			<span class="badge" v-if="nouveauxMessagesChat > 0">{{ nouveauxMessagesChat }}</span>
 		</span>
 		<span id="motdepasse" role="button" tabindex="0" :title="$t('motDePassePad')" @click="afficherModaleMotDePasse" v-if="pad.motdepasse && !admin && statut !== 'utilisateur'"><i class="material-icons">vpn_key</i></span>
 		<span id="options" role="button" tabindex="0" :title="$t('parametresPad')" @click="afficherOptions" v-if="admin"><i class="material-icons">settings</i></span>
@@ -34,7 +34,7 @@
 		<span id="deconnexion" role="button" tabindex="0" :title="$t('seDeconnecterPad')" @click="afficherSeDeconnecterPad" v-else-if="admin"><i class="material-icons">power_settings_new</i></span>
 	</nav>
 
-	<div class="menu gauche" :class="{'ouvert': menuActivite}">
+	<div class="menu gauche" :class="{'ouvert': menuActivite}" v-if="pad.registreActivite === 'active'">
 		<div class="en-tete">
 			<span class="titre">{{ $t('activitePad') }}</span>
 			<span class="action">
@@ -45,49 +45,49 @@
 		<div class="contenu ascenseur">
 			<ul id="entrees">
 				<template v-for="(entree, indexEntree) in activite">
-					<li v-if="entree.type === 'bloc-ajoute'" :data-bloc="entree.bloc" :key="indexEntree">
+					<li v-if="entree.type === 'bloc-ajoute'" :data-bloc="entree.bloc" :key="'bloc-ajoute_' + indexEntree">
 						<div class="conteneur-entree"><span :style="{'color': entree.couleur}"> {{ definirNom(entree) }}</span> <span v-if="entree.titre !== ''" v-html="$t('aCreeCapsule', { titre: entree.titre })" /><span v-else v-html="$t('aCreeUneCapsule')" /> {{ $formaterDateRelative(entree.date, langue) }}.</div>
 						<div class="menu-entree" v-if="admin">
 							<span role="button" tabindex="0" class="bouton supprimer" :title="$t('supprimerEntree')" @click="supprimerActivite(entree.id)"><i class="material-icons">delete</i></span>
 						</div>
 					</li>
-					<li v-else-if="entree.type === 'bloc-supprime'" :data-bloc="entree.bloc" :key="indexEntree">
+					<li v-else-if="entree.type === 'bloc-supprime'" :data-bloc="entree.bloc" :key="'bloc-supprime_' + indexEntree">
 						<div class="conteneur-entree"><span :style="{'color': entree.couleur}"> {{ definirNom(entree) }}</span> <span v-if="entree.titre !== ''" v-html="$t('aSupprimeCapsule', { titre: entree.titre })" /><span v-else v-html="$t('aSupprimeUneCapsule')" /> {{ $formaterDateRelative(entree.date, langue) }}.</div>
 						<div class="menu-entree" v-if="admin">
 							<span role="button" tabindex="0" class="bouton supprimer" :title="$t('supprimerEntree')" @click="supprimerActivite(entree.id)"><i class="material-icons">delete</i></span>
 						</div>
 					</li>
-					<li v-else-if="entree.type === 'bloc-modifie'" :data-bloc="entree.bloc" :key="indexEntree">
+					<li v-else-if="entree.type === 'bloc-modifie'" :data-bloc="entree.bloc" :key="'bloc-modifie_' + indexEntree">
 						<div class="conteneur-entree"><span :style="{'color': entree.couleur}"> {{ definirNom(entree) }}</span> <span v-if="entree.titre !== ''" v-html="$t('aModifieCapsule', { titre: entree.titre })" /><span v-else v-html="$t('aModifieUneCapsule')" /> {{ $formaterDateRelative(entree.date, langue) }}.</div>
 						<div class="menu-entree" v-if="admin">
 							<span role="button" tabindex="0" class="bouton supprimer" :title="$t('supprimerEntree')" @click="supprimerActivite(entree.id)"><i class="material-icons">delete</i></span>
 						</div>
 					</li>
-					<li v-else-if="entree.type === 'bloc-commente'" :data-bloc="entree.bloc" :key="indexEntree">
+					<li v-else-if="entree.type === 'bloc-commente'" :data-bloc="entree.bloc" :key="'bloc-commente_' + indexEntree">
 						<div class="conteneur-entree"><span :style="{'color': entree.couleur}"> {{ definirNom(entree) }}</span> <span v-if="entree.titre !== ''" v-html="$t('aCommenteCapsule', { titre: entree.titre })" /><span v-else v-html="$t('aCommenteUneCapsule')" /> {{ $formaterDateRelative(entree.date, langue) }}.</div>
 						<div class="menu-entree" v-if="admin">
 							<span role="button" tabindex="0" class="bouton supprimer" :title="$t('supprimerEntree')" @click="supprimerActivite(entree.id)"><i class="material-icons">delete</i></span>
 						</div>
 					</li>
-					<li v-else-if="entree.type === 'bloc-evalue'" :data-bloc="entree.bloc" :key="indexEntree">
+					<li v-else-if="entree.type === 'bloc-evalue'" :data-bloc="entree.bloc" :key="'bloc-evalue_' + indexEntree">
 						<div class="conteneur-entree"><span :style="{'color': entree.couleur}"> {{ definirNom(entree) }}</span> <span v-if="entree.titre !== ''" v-html="$t('aEvalueCapsule', { titre: entree.titre })" /><span v-else v-html="$t('aEvalueUneCapsule')" /> {{ $formaterDateRelative(entree.date, langue) }}.</div>
 						<div class="menu-entree" v-if="admin">
 							<span role="button" tabindex="0" class="bouton supprimer" :title="$t('supprimerEntree')" @click="supprimerActivite(entree.id)"><i class="material-icons">delete</i></span>
 						</div>
 					</li>
-					<li v-else-if="entree.type === 'colonne-ajoutee' && pad.affichage === 'colonnes'" :key="indexEntree">
+					<li v-else-if="entree.type === 'colonne-ajoutee' && pad.affichage === 'colonnes'" :key="'colonne-ajoutee_' + indexEntree">
 						<div class="conteneur-entree"><span :style="{'color': entree.couleur}"> {{ definirNom(entree) }}</span> <span v-html="$t('aAjouteColonne', { titre: entree.titre })" /> {{ $formaterDateRelative(entree.date, langue) }}.</div>
 						<div class="menu-entree" v-if="admin">
 							<span role="button" tabindex="0" class="bouton supprimer" :title="$t('supprimerEntree')" @click="supprimerActivite(entree.id)"><i class="material-icons">delete</i></span>
 						</div>
 					</li>
-					<li v-else-if="entree.type === 'colonne-supprimee' && pad.affichage === 'colonnes'" :key="indexEntree">
+					<li v-else-if="entree.type === 'colonne-supprimee' && pad.affichage === 'colonnes'" :key="'colonne-supprimee_' + indexEntree">
 						<div class="conteneur-entree"><span :style="{'color': entree.couleur}"> {{ definirNom(entree) }}</span> <span v-html="$t('aSupprimeColonne', { titre: entree.titre })" /> {{ $formaterDateRelative(entree.date, langue) }}.</div>
 						<div class="menu-entree" v-if="admin">
 							<span role="button" tabindex="0" class="bouton supprimer" :title="$t('supprimerEntree')" @click="supprimerActivite(entree.id)"><i class="material-icons">delete</i></span>
 						</div>
 					</li>
-					<li v-else-if="entree.type === 'colonne-deplacee' && pad.affichage === 'colonnes'" :key="indexEntree">
+					<li v-else-if="entree.type === 'colonne-deplacee' && pad.affichage === 'colonnes'" :key="'colonne-deplacee_' + indexEntree">
 						<div class="conteneur-entree"><span :style="{'color': entree.couleur}"> {{ definirNom(entree) }}</span> <span v-html="$t('aDeplaceColonne', { titre: entree.titre })" /> {{ $formaterDateRelative(entree.date, langue) }}.</div>
 						<div class="menu-entree" v-if="admin">
 							<span role="button" tabindex="0" class="bouton supprimer" :title="$t('supprimerEntree')" @click="supprimerActivite(entree.id)"><i class="material-icons">delete</i></span>
@@ -98,20 +98,20 @@
 		</div>
 	</div>
 
-	<div id="conversation" class="menu gauche" :class="{'ouvert': menuChat}">
+	<div id="conversation" class="menu gauche" :class="{'ouvert': menuChat}" v-if="pad.conversation === 'activee'">
 		<div class="en-tete">
 			<span class="titre">{{ $t('conversation') }}</span>
 			<span class="action">
-				<span class="reinitialiser" @click="afficherReinitialiserMessages" v-if="admin && messages.length > 0"><i class="material-icons">autorenew</i></span>
+				<span class="reinitialiser" @click="afficherReinitialiserMessages" v-if="admin && messagesChat.length > 0"><i class="material-icons">autorenew</i></span>
 				<span role="button" tabindex="0" class="fermer" @click="menuChat = false"><i class="material-icons">close</i></span>
 			</span>
 		</div>
 		<div class="contenu ascenseur">
 			<ul id="messages">
-				<li v-for="(messageConversation, indexMessageConversation) in messages" :key="indexMessageConversation"><span>{{ definirNom(messageConversation) }}</span>{{ messageConversation.texte }}</li>
+				<li v-for="(messageConversation, indexMessageConversation) in messagesChat" :key="'conversation_' + indexMessageConversation"><span>{{ definirNom(messageConversation) }}</span>{{ messageConversation.texte }}</li>
 			</ul>
 			<div id="ecrire-message">
-				<input type="text" :value="message" @input="message = $event.target.value" autocomplete="off" @keydown.enter="envoyerMessage">
+				<input type="text" :value="messageChat" @input="messageChat = $event.target.value" autocomplete="off" @keydown.enter="envoyerMessage">
 				<button @click="envoyerMessage"><i class="material-icons">send</i></button>
 			</div>
 		</div>
@@ -250,7 +250,7 @@
 			<div class="conteneur fond">
 				<label>{{ $t('arrierePlan') }}</label>
 				<div class="fonds">
-					<span v-for="(imageFond, indexImageFond) in fonds" @click="modifierFond(imageFond)" :key="indexImageFond">
+					<span v-for="(imageFond, indexImageFond) in fonds" @click="modifierFond(imageFond)" :key="'fond_' + indexImageFond">
 						<img :src="'/img/vignettes/' + imageFond" :alt="'Fond' + (indexImageFond + 1)">
 					</span>
 					<span class="couleur-personnalisee">
@@ -379,7 +379,7 @@
 		</div>
 	</div>
 
-	<div class="menu droite" :class="{'ouvert': menuUtilisateurs}">
+	<div class="menu droite" :class="{'ouvert': menuUtilisateurs}" v-if="pad.listeUtilisateurs === 'activee'">
 		<div class="en-tete">
 			<span class="titre">{{ $t('utilisateursConnectes') }}</span>
 			<span role="button" tabindex="0" class="fermer" @click="menuUtilisateurs = false"><i class="material-icons">close</i></span>
@@ -387,18 +387,18 @@
 		<div class="contenu ascenseur">
 			<ul id="utilisateurs">
 				<template v-for="(utilisateurConnecte, indexUtilisateurConnecte) in utilisateurs">
-					<li class="moi" v-if="utilisateurConnecte.identifiant === identifiant" :key="indexUtilisateurConnecte">
+					<li class="moi" v-if="utilisateurConnecte.identifiant === identifiant" :key="'utilisateur_moi_' + indexUtilisateurConnecte">
 						<span class="utilisateur" v-if="statut === 'utilisateur'">{{ definirNom(utilisateurConnecte) }} ({{ $t('moi') }})</span>
-						<span class="utilisateur invite edition" @click="afficherModifierNom" v-else-if="statut !== 'utilisateur' && pad.editionNom && pad.editionNom === 'activee'">{{ definirNom(utilisateurConnecte) }} ({{ $t('moi') }})</span>
+						<span class="utilisateur invite edition" @click="afficherModifierNom" v-else-if="statut !== 'utilisateur' && pad.editionNom && pad.editionNom === 'activee'"><span>{{ definirNom(utilisateurConnecte) }} ({{ $t('moi') }})</span><span class="icone"><i class="material-icons">edit</i></span></span>
 						<span class="utilisateur invite" v-else-if="statut !== 'utilisateur' && (!pad.editionNom || (pad.editionNom && pad.editionNom === 'desactivee'))">{{ definirNom(utilisateurConnecte) }} ({{ $t('moi') }})</span>
 						<span role="button" tabindex="0" class="couleur" :style="{'background': utilisateurConnecte.couleur}" @click="listeCouleurs = !listeCouleurs" />
 						<div class="couleurs" v-if="listeCouleurs">
-							<span :class="{'actif': couleur === couleurUtilisateur}" v-for="(couleurUtilisateur, indexCouleurUtilisateur) in couleurs" :style="{'background': couleurUtilisateur }" @click="modifierCouleur(couleurUtilisateur)" :key="indexCouleurUtilisateur" />
+							<span :class="{'actif': couleur === couleurUtilisateur}" v-for="(couleurUtilisateur, indexCouleurUtilisateur) in couleurs" :style="{'background': couleurUtilisateur }" @click="modifierCouleur(couleurUtilisateur)" :key="'couleur_' + indexCouleurUtilisateur" />
 							<span class="couleur-personnalisee actif" :title="$t('selectionnerCouleur')" v-if="!couleurs.includes(couleur)"><input type="color" :value="couleur" @change="modifierCouleur($event.target.value)"></span>
 							<span class="couleur-personnalisee" :title="$t('selectionnerCouleur')" v-else><input type="color" value="#ffffff" @change="modifierCouleur($event.target.value)"></span>
 						</div>
 					</li>
-					<li v-else :key="indexUtilisateurConnecte">
+					<li v-else :key="'utilisateur_' + indexUtilisateurConnecte">
 						<span class="utilisateur">{{ definirNom(utilisateurConnecte) }}</span>
 						<span class="couleur" :style="{'background': utilisateurConnecte.couleur}" />
 					</li>
@@ -409,375 +409,201 @@
 
 	<div id="pad" :class="{'fond-personnalise': pad.hasOwnProperty('fond') && pad.fond.substring(1, definirDossierFichiers(pad.id).length + 1) === definirDossierFichiers(pad.id), 'organiser': action === 'organiser'}" :style="definirFond(pad.fond)" v-if="Object.keys(pad).length > 0 && (pad.acces !== 'code' || (pad.acces === 'code' && accesAutorise))">
 		<!-- Affichage mur // sans recherche -->
-		<transition name="fondu">
-			<masonry id="blocs" class="mur" :cols="definirLargeurCapsules()" :gutter="0" v-if="pad.affichage === 'mur' && action !== 'organiser' && !recherche">
-				<div :id="item.bloc" class="bloc" :class="{'privee': item.visibilite === 'privee'}" v-for="(item, indexItem) in blocs" :style="{'border-color': item.couleur}" :data-bloc="item.bloc" :key="'bloc' + indexItem">
-					<div class="contenu">
-						<div class="titre" v-if="item.titre !== ''" :style="{'background': eclaircirCouleur(item.couleur)}">
-							<span>{{ item.titre }}</span>
-						</div>
-						<div class="texte" v-if="item.texte !== ''" v-html="item.texte" />
-						<div class="media" v-if="item.media !== ''">
-							<img v-if="item.type === 'image'" :src="'/' + definirDossierFichiers(pad.id) + '/' + pad.id + '/' + item.media" loading="lazy" @click="afficherVisionneuse(item)">
-							<img v-else-if="item.type === 'lien-image'" :src="item.media" loading="lazy" @click="afficherVisionneuse(item)">
-							<span v-else-if="item.type === 'audio' || item.type === 'video' || item.type === 'document' || item.type === 'pdf' || item.type === 'office' || item.type === 'embed'" @click="afficherVisionneuse(item)"><img :class="{'vignette': definirVignette(item).substring(0, 5) !== '/img/'}" :src="definirVignette(item)" loading="lazy"></span>
-							<span v-else-if="item.type === 'lien'"><a :href="item.media" target="_blank"><img :class="{'vignette': definirVignette(item).substring(0, 5) !== '/img/'}" :src="definirVignette(item)" loading="lazy"></a></span>
-							<span v-else><a :href="'/' + definirDossierFichiers(pad.id) + '/' + pad.id + '/' + item.media" download><img :class="{'vignette': definirVignette(item).substring(0, 5) !== '/img/'}" :src="definirVignette(item)" loading="lazy"></a></span>
-						</div>
-						<div class="evaluation" v-if="pad.evaluations === 'activees'">
-							<span class="etoiles">
-								<i class="material-icons" :class="{'evalue': verifierUtilisateurEvaluation(item.evaluations) === true}" v-for="etoile in definirEvaluationCapsule(item.evaluations)" :key="'etoilepleine_' + etoile">star</i>
-								<i class="material-icons" :class="{'evalue': verifierUtilisateurEvaluation(item.evaluations) === true}" v-for="etoile in (5 - definirEvaluationCapsule(item.evaluations))" :key="'etoilevide_' + etoile">star_outline</i>
-								<span>({{ item.evaluations.length }})</span>
-							</span>
-							<span role="button" tabindex="0" class="bouton" :title="$t('evaluerCapsule')" :style="{'color': couleur}" @click="ouvrirModaleEvaluations(item.bloc, item.titre, '')" v-if="verifierUtilisateurEvaluation(item.evaluations) === false"><i class="material-icons">add_comment</i></span>
-							<span role="button" tabindex="0" class="bouton" :title="$t('evaluerCapsule')" :style="{'color': couleur}" @click="ouvrirModaleEvaluations(item.bloc, item.titre, item.evaluations)" v-else><i class="material-icons">rate_review</i></span>
-						</div>
-						<div class="action" :style="{'color': item.couleur}">
-							<span role="button" tabindex="0" class="bouton" :title="$t('modifierCapsule')" @click="ouvrirModaleBloc('edition', item, 0)" v-if="item.identifiant === identifiant || admin || pad.contributions === 'modifiables'"><i class="material-icons">edit</i></span>
-							<span role="button" tabindex="0" class="bouton" :title="$t('commenterCapsule')" @click="ouvrirModaleCommentaires(item.bloc, item.titre)" v-if="pad.commentaires === 'actives'"><i class="material-icons">comment</i><span class="badge">{{ item.commentaires }}</span></span>
-							<span role="button" tabindex="0" class="bouton info" :title="$t('informationsCapsule')" :data-description="definirDescription(item)"><i class="material-icons">info</i></span>
-							<span class="media-type" v-if="item.media !== ''"><i class="material-icons">{{ definirIconeMedia(item) }}</i></span>
-							<span role="button" tabindex="0" class="bouton" :title="$t('copierCapsule')" @click="afficherEnvoyerBloc(item.bloc, item.titre)" v-if="admin && pad.copieBloc === 'activee' && (statut === 'utilisateur' || digidrive)"><i class="material-icons">send</i></span>
-							<span role="button" tabindex="0" class="bouton supprimer" :title="$t('supprimerCapsule')" @click="afficherSupprimerBloc(item.bloc, item.titre, 0)" v-if="item.identifiant === identifiant || admin"><i class="material-icons">delete</i></span>
-						</div>
-						<div class="moderation" v-if="item.visibilite === 'privee' && admin">
-							<span role="button" tabindex="0" class="bouton" @click="autoriserBloc(item, 'privee')">{{ $t('afficherCapsule') }}</span>
-						</div>
-						<div class="moderation" v-else-if="pad.contributions === 'moderees' && item.visibilite === 'masquee'">
-							<span role="button" tabindex="0" class="bouton" @click="autoriserBloc(item, 'moderee')" v-if="admin">{{ $t('validerCapsule') }}</span>
-							<span class="bouton" v-else-if="item.identifiant === identifiant">{{ $t('enAttenteModeration') }}</span>
-						</div>
+		<masonry id="blocs" class="mur" :cols="definirLargeurCapsules()" :gutter="0" v-if="pad.affichage === 'mur' && action !== 'organiser' && !recherche">
+			<div :id="item.bloc" class="bloc" :class="{'privee': item.visibilite === 'privee'}" v-for="(item, indexItem) in blocs" :style="{'border-color': item.couleur}" :data-bloc="item.bloc" :key="'bloc_' + indexItem">
+				<div class="contenu">
+					<div class="titre" v-if="item.titre !== ''" :style="{'background': eclaircirCouleur(item.couleur)}">
+						<span>{{ item.titre }}</span>
+					</div>
+					<div class="texte" v-if="item.texte !== ''" v-html="item.texte" />
+					<div class="media" v-if="item.media !== ''">
+						<img v-if="item.type === 'image'" :src="'/' + definirDossierFichiers(pad.id) + '/' + pad.id + '/' + item.media" loading="lazy" @click="afficherVisionneuse(item)">
+						<img v-else-if="item.type === 'lien-image'" :src="item.media" loading="lazy" @click="afficherVisionneuse(item)">
+						<span v-else-if="item.type === 'audio' || item.type === 'video' || item.type === 'document' || item.type === 'pdf' || item.type === 'office' || item.type === 'embed'" @click="afficherVisionneuse(item)"><img :class="{'vignette': definirVignette(item).substring(0, 5) !== '/img/'}" :src="definirVignette(item)" loading="lazy"></span>
+						<span v-else-if="item.type === 'lien'"><a :href="item.media" target="_blank"><img :class="{'vignette': definirVignette(item).substring(0, 5) !== '/img/'}" :src="definirVignette(item)" loading="lazy"></a></span>
+						<span v-else><a :href="'/' + definirDossierFichiers(pad.id) + '/' + pad.id + '/' + item.media" download><img :class="{'vignette': definirVignette(item).substring(0, 5) !== '/img/'}" :src="definirVignette(item)" loading="lazy"></a></span>
+					</div>
+					<div class="evaluation" v-if="pad.evaluations === 'activees'">
+						<span class="etoiles">
+							<i class="material-icons" :class="{'evalue': verifierUtilisateurEvaluation(item.evaluations) === true}" v-for="etoile in definirEvaluationCapsule(item.evaluations)" :key="'etoilepleine_' + etoile">star</i>
+							<i class="material-icons" :class="{'evalue': verifierUtilisateurEvaluation(item.evaluations) === true}" v-for="etoile in (5 - definirEvaluationCapsule(item.evaluations))" :key="'etoilevide_' + etoile">star_outline</i>
+							<span>({{ item.evaluations.length }})</span>
+						</span>
+						<span role="button" tabindex="0" class="bouton" :title="$t('evaluerCapsule')" :style="{'color': couleur}" @click="ouvrirModaleEvaluations(item.bloc, item.titre, '')" v-if="verifierUtilisateurEvaluation(item.evaluations) === false"><i class="material-icons">add_comment</i></span>
+						<span role="button" tabindex="0" class="bouton" :title="$t('evaluerCapsule')" :style="{'color': couleur}" @click="ouvrirModaleEvaluations(item.bloc, item.titre, item.evaluations)" v-else><i class="material-icons">rate_review</i></span>
+					</div>
+					<div class="action" :style="{'color': item.couleur}">
+						<span role="button" tabindex="0" class="bouton" :title="$t('modifierCapsule')" @click="ouvrirModaleBloc('edition', item, 0)" v-if="item.identifiant === identifiant || admin || pad.contributions === 'modifiables'"><i class="material-icons">edit</i></span>
+						<span role="button" tabindex="0" class="bouton" :title="$t('commenterCapsule')" @click="ouvrirModaleCommentaires(item.bloc, item.titre)" v-if="pad.commentaires === 'actives'"><i class="material-icons">comment</i><span class="badge">{{ item.commentaires }}</span></span>
+						<span role="button" tabindex="0" class="bouton info" :title="$t('informationsCapsule')" :data-description="definirDescription(item)"><i class="material-icons">info</i></span>
+						<span class="media-type" v-if="item.media !== ''"><i class="material-icons">{{ definirIconeMedia(item) }}</i></span>
+						<span role="button" tabindex="0" class="bouton" :title="$t('copierCapsule')" @click="afficherEnvoyerBloc(item.bloc, item.titre)" v-if="admin && pad.copieBloc === 'activee' && (statut === 'utilisateur' || digidrive)"><i class="material-icons">send</i></span>
+						<span role="button" tabindex="0" class="bouton supprimer" :title="$t('supprimerCapsule')" @click="afficherSupprimerBloc(item.bloc, item.titre, 0)" v-if="item.identifiant === identifiant || admin"><i class="material-icons">delete</i></span>
+					</div>
+					<div class="moderation" v-if="item.visibilite === 'privee' && admin">
+						<span role="button" tabindex="0" class="bouton" @click="autoriserBloc(item, 'privee')">{{ $t('afficherCapsule') }}</span>
+					</div>
+					<div class="moderation" v-else-if="pad.contributions === 'moderees' && item.visibilite === 'masquee'">
+						<span role="button" tabindex="0" class="bouton" @click="autoriserBloc(item, 'moderee')" v-if="admin">{{ $t('validerCapsule') }}</span>
+						<span class="bouton" v-else-if="item.identifiant === identifiant">{{ $t('enAttenteModeration') }}</span>
 					</div>
 				</div>
-			</masonry>
-		</transition>
+			</div>
+		</masonry>
 		<!-- Affichage mur // avec recherche -->
-		<transition name="fondu">
-			<masonry id="blocs" class="mur" :cols="definirLargeurCapsules()" :gutter="0" v-if="pad.affichage === 'mur' && action !== 'organiser' && recherche">
-				<div :id="item.bloc" class="bloc" :class="{'privee': item.visibilite === 'privee'}" v-for="(item, indexItem) in blocsRecherche" :style="{'border-color': item.couleur}" :data-bloc="item.bloc" :key="'bloc' + indexItem">
-					<div class="contenu">
-						<div class="titre" v-if="item.titre !== ''" :style="{'background': eclaircirCouleur(item.couleur)}">
-							<span>{{ item.titre }}</span>
-						</div>
-						<div class="texte" v-if="item.texte !== ''" v-html="item.texte" />
-						<div class="media" v-if="item.media !== ''">
-							<img v-if="item.type === 'image'" :src="'/' + definirDossierFichiers(pad.id) + '/' + pad.id + '/' + item.media" loading="lazy" @click="afficherVisionneuse(item)">
-							<img v-else-if="item.type === 'lien-image'" :src="item.media" loading="lazy" @click="afficherVisionneuse(item)">
-							<span v-else-if="item.type === 'audio' || item.type === 'video' || item.type === 'document' || item.type === 'pdf' || item.type === 'office' || item.type === 'embed'" @click="afficherVisionneuse(item)"><img :class="{'vignette': definirVignette(item).substring(0, 5) !== '/img/'}" :src="definirVignette(item)" loading="lazy"></span>
-							<span v-else-if="item.type === 'lien'"><a :href="item.media" target="_blank"><img :class="{'vignette': definirVignette(item).substring(0, 5) !== '/img/'}" :src="definirVignette(item)" loading="lazy"></a></span>
-							<span v-else><a :href="'/' + definirDossierFichiers(pad.id) + '/' + pad.id + '/' + item.media" download><img :class="{'vignette': definirVignette(item).substring(0, 5) !== '/img/'}" :src="definirVignette(item)" loading="lazy"></a></span>
-						</div>
-						<div class="evaluation" v-if="pad.evaluations === 'activees'">
-							<span class="etoiles">
-								<i class="material-icons" :class="{'evalue': verifierUtilisateurEvaluation(item.evaluations) === true}" v-for="etoile in definirEvaluationCapsule(item.evaluations)" :key="'etoilepleine_' + etoile">star</i>
-								<i class="material-icons" :class="{'evalue': verifierUtilisateurEvaluation(item.evaluations) === true}" v-for="etoile in (5 - definirEvaluationCapsule(item.evaluations))" :key="'etoilevide_' + etoile">star_outline</i>
-								<span>({{ item.evaluations.length }})</span>
-							</span>
-							<span role="button" tabindex="0" class="bouton" :title="$t('evaluerCapsule')" :style="{'color': couleur}" @click="ouvrirModaleEvaluations(item.bloc, item.titre, '')" v-if="verifierUtilisateurEvaluation(item.evaluations) === false"><i class="material-icons">add_comment</i></span>
-							<span role="button" tabindex="0" class="bouton" :title="$t('evaluerCapsule')" :style="{'color': couleur}" @click="ouvrirModaleEvaluations(item.bloc, item.titre, item.evaluations)" v-else><i class="material-icons">rate_review</i></span>
-						</div>
-						<div class="action" :style="{'color': item.couleur}">
-							<span role="button" tabindex="0" class="bouton" :title="$t('modifierCapsule')" @click="ouvrirModaleBloc('edition', item, 0)" v-if="item.identifiant === identifiant || admin || pad.contributions === 'modifiables'"><i class="material-icons">edit</i></span>
-							<span role="button" tabindex="0" class="bouton" :title="$t('commenterCapsule')" @click="ouvrirModaleCommentaires(item.bloc, item.titre)" v-if="pad.commentaires === 'actives'"><i class="material-icons">comment</i><span class="badge">{{ item.commentaires }}</span></span>
-							<span role="button" tabindex="0" class="bouton info" :title="$t('informationsCapsule')" :data-description="definirDescription(item)"><i class="material-icons">info</i></span>
-							<span class="media-type" v-if="item.media !== ''"><i class="material-icons">{{ definirIconeMedia(item) }}</i></span>
-							<span role="button" tabindex="0" class="bouton" :title="$t('copierCapsule')" @click="afficherEnvoyerBloc(item.bloc, item.titre)" v-if="admin && pad.copieBloc === 'activee' && (statut === 'utilisateur' || digidrive)"><i class="material-icons">send</i></span>
-							<span role="button" tabindex="0" class="bouton supprimer" :title="$t('supprimerCapsule')" @click="afficherSupprimerBloc(item.bloc, item.titre, 0)" v-if="item.identifiant === identifiant || admin"><i class="material-icons">delete</i></span>
-						</div>
-						<div class="moderation" v-if="item.visibilite === 'privee' && admin">
-							<span role="button" tabindex="0" class="bouton" @click="autoriserBloc(item, 'privee')">{{ $t('afficherCapsule') }}</span>
-						</div>
-						<div class="moderation" v-else-if="pad.contributions === 'moderees' && item.visibilite === 'masquee'">
-							<span role="button" tabindex="0" class="bouton" @click="autoriserBloc(item, 'moderee')" v-if="admin">{{ $t('validerCapsule') }}</span>
-							<span class="bouton" v-else-if="item.identifiant === identifiant">{{ $t('enAttenteModeration') }}</span>
-						</div>
+		<masonry id="blocs" class="mur" :cols="definirLargeurCapsules()" :gutter="0" v-else-if="pad.affichage === 'mur' && action !== 'organiser' && recherche">
+			<div :id="item.bloc" class="bloc" :class="{'privee': item.visibilite === 'privee'}" v-for="(item, indexItem) in blocsRecherche" :style="{'border-color': item.couleur}" :data-bloc="item.bloc" :key="'bloc_' + indexItem">
+				<div class="contenu">
+					<div class="titre" v-if="item.titre !== ''" :style="{'background': eclaircirCouleur(item.couleur)}">
+						<span>{{ item.titre }}</span>
+					</div>
+					<div class="texte" v-if="item.texte !== ''" v-html="item.texte" />
+					<div class="media" v-if="item.media !== ''">
+						<img v-if="item.type === 'image'" :src="'/' + definirDossierFichiers(pad.id) + '/' + pad.id + '/' + item.media" loading="lazy" @click="afficherVisionneuse(item)">
+						<img v-else-if="item.type === 'lien-image'" :src="item.media" loading="lazy" @click="afficherVisionneuse(item)">
+						<span v-else-if="item.type === 'audio' || item.type === 'video' || item.type === 'document' || item.type === 'pdf' || item.type === 'office' || item.type === 'embed'" @click="afficherVisionneuse(item)"><img :class="{'vignette': definirVignette(item).substring(0, 5) !== '/img/'}" :src="definirVignette(item)" loading="lazy"></span>
+						<span v-else-if="item.type === 'lien'"><a :href="item.media" target="_blank"><img :class="{'vignette': definirVignette(item).substring(0, 5) !== '/img/'}" :src="definirVignette(item)" loading="lazy"></a></span>
+						<span v-else><a :href="'/' + definirDossierFichiers(pad.id) + '/' + pad.id + '/' + item.media" download><img :class="{'vignette': definirVignette(item).substring(0, 5) !== '/img/'}" :src="definirVignette(item)" loading="lazy"></a></span>
+					</div>
+					<div class="evaluation" v-if="pad.evaluations === 'activees'">
+						<span class="etoiles">
+							<i class="material-icons" :class="{'evalue': verifierUtilisateurEvaluation(item.evaluations) === true}" v-for="etoile in definirEvaluationCapsule(item.evaluations)" :key="'etoilepleine_' + etoile">star</i>
+							<i class="material-icons" :class="{'evalue': verifierUtilisateurEvaluation(item.evaluations) === true}" v-for="etoile in (5 - definirEvaluationCapsule(item.evaluations))" :key="'etoilevide_' + etoile">star_outline</i>
+							<span>({{ item.evaluations.length }})</span>
+						</span>
+						<span role="button" tabindex="0" class="bouton" :title="$t('evaluerCapsule')" :style="{'color': couleur}" @click="ouvrirModaleEvaluations(item.bloc, item.titre, '')" v-if="verifierUtilisateurEvaluation(item.evaluations) === false"><i class="material-icons">add_comment</i></span>
+						<span role="button" tabindex="0" class="bouton" :title="$t('evaluerCapsule')" :style="{'color': couleur}" @click="ouvrirModaleEvaluations(item.bloc, item.titre, item.evaluations)" v-else><i class="material-icons">rate_review</i></span>
+					</div>
+					<div class="action" :style="{'color': item.couleur}">
+						<span role="button" tabindex="0" class="bouton" :title="$t('modifierCapsule')" @click="ouvrirModaleBloc('edition', item, 0)" v-if="item.identifiant === identifiant || admin || pad.contributions === 'modifiables'"><i class="material-icons">edit</i></span>
+						<span role="button" tabindex="0" class="bouton" :title="$t('commenterCapsule')" @click="ouvrirModaleCommentaires(item.bloc, item.titre)" v-if="pad.commentaires === 'actives'"><i class="material-icons">comment</i><span class="badge">{{ item.commentaires }}</span></span>
+						<span role="button" tabindex="0" class="bouton info" :title="$t('informationsCapsule')" :data-description="definirDescription(item)"><i class="material-icons">info</i></span>
+						<span class="media-type" v-if="item.media !== ''"><i class="material-icons">{{ definirIconeMedia(item) }}</i></span>
+						<span role="button" tabindex="0" class="bouton" :title="$t('copierCapsule')" @click="afficherEnvoyerBloc(item.bloc, item.titre)" v-if="admin && pad.copieBloc === 'activee' && (statut === 'utilisateur' || digidrive)"><i class="material-icons">send</i></span>
+						<span role="button" tabindex="0" class="bouton supprimer" :title="$t('supprimerCapsule')" @click="afficherSupprimerBloc(item.bloc, item.titre, 0)" v-if="item.identifiant === identifiant || admin"><i class="material-icons">delete</i></span>
+					</div>
+					<div class="moderation" v-if="item.visibilite === 'privee' && admin">
+						<span role="button" tabindex="0" class="bouton" @click="autoriserBloc(item, 'privee')">{{ $t('afficherCapsule') }}</span>
+					</div>
+					<div class="moderation" v-else-if="pad.contributions === 'moderees' && item.visibilite === 'masquee'">
+						<span role="button" tabindex="0" class="bouton" @click="autoriserBloc(item, 'moderee')" v-if="admin">{{ $t('validerCapsule') }}</span>
+						<span class="bouton" v-else-if="item.identifiant === identifiant">{{ $t('enAttenteModeration') }}</span>
 					</div>
 				</div>
-			</masonry>
-		</transition>
+			</div>
+		</masonry>
 		<!-- Affichage flux vertical // sans recherche -->
-		<transition name="fondu">
-			<div id="blocs" class="flux-vertical" :class="{'large': pad.hasOwnProperty('largeur') && pad.largeur === 'large'}" v-if="pad.affichage === 'flux-vertical' && action !== 'organiser' && !recherche">
-				<div :id="item.bloc" class="bloc" :class="{'privee': item.visibilite === 'privee'}" v-for="(item, indexItem) in blocs" :style="{'border-color': item.couleur}" :data-bloc="item.bloc" :key="'bloc' + indexItem">
-					<div class="contenu">
-						<div class="titre" v-if="item.titre !== ''" :style="{'background': eclaircirCouleur(item.couleur)}">
-							<span>{{ item.titre }}</span>
-						</div>
-						<div class="texte" v-if="item.texte !== ''" v-html="item.texte" />
-						<div class="media" v-if="item.media !== ''">
-							<img v-if="item.type === 'image'" :src="'/' + definirDossierFichiers(pad.id) + '/' + pad.id + '/' + item.media" loading="lazy" @click="afficherVisionneuse(item)">
-							<img v-else-if="item.type === 'lien-image'" :src="item.media" loading="lazy" @click="afficherVisionneuse(item)">
-							<span v-else-if="item.type === 'audio' || item.type === 'video' || item.type === 'document' || item.type === 'pdf' || item.type === 'office' || item.type === 'embed'" @click="afficherVisionneuse(item)"><img :class="{'vignette': definirVignette(item).substring(0, 5) !== '/img/'}" :src="definirVignette(item)" loading="lazy"></span>
-							<span v-else-if="item.type === 'lien'"><a :href="item.media" target="_blank"><img :class="{'vignette': definirVignette(item).substring(0, 5) !== '/img/'}" :src="definirVignette(item)" loading="lazy"></a></span>
-							<span v-else><a :href="'/' + definirDossierFichiers(pad.id) + '/' + pad.id + '/' + item.media" download><img :class="{'vignette': definirVignette(item).substring(0, 5) !== '/img/'}" :src="definirVignette(item)" loading="lazy"></a></span>
-						</div>
-						<div class="evaluation" v-if="pad.evaluations === 'activees'">
-							<span class="etoiles">
-								<i class="material-icons" :class="{'evalue': verifierUtilisateurEvaluation(item.evaluations) === true}" v-for="etoile in definirEvaluationCapsule(item.evaluations)" :key="'etoilepleine_' + etoile">star</i>
-								<i class="material-icons" :class="{'evalue': verifierUtilisateurEvaluation(item.evaluations) === true}" v-for="etoile in (5 - definirEvaluationCapsule(item.evaluations))" :key="'etoilevide_' + etoile">star_outline</i>
-								<span>({{ item.evaluations.length }})</span>
-							</span>
-							<span role="button" tabindex="0" class="bouton" :title="$t('evaluerCapsule')" :style="{'color': couleur}" @click="ouvrirModaleEvaluations(item.bloc, item.titre, '')" v-if="verifierUtilisateurEvaluation(item.evaluations) === false"><i class="material-icons">add_comment</i></span>
-							<span role="button" tabindex="0" class="bouton" :title="$t('evaluerCapsule')" :style="{'color': couleur}" @click="ouvrirModaleEvaluations(item.bloc, item.titre, item.evaluations)" v-else><i class="material-icons">rate_review</i></span>
-						</div>
-						<div class="action" :style="{'color': item.couleur}">
-							<span role="button" tabindex="0" class="bouton" :title="$t('modifierCapsule')" @click="ouvrirModaleBloc('edition', item, 0)" v-if="item.identifiant === identifiant || admin || pad.contributions === 'modifiables'"><i class="material-icons">edit</i></span>
-							<span role="button" tabindex="0" class="bouton" :title="$t('commenterCapsule')" @click="ouvrirModaleCommentaires(item.bloc, item.titre)" v-if="pad.commentaires === 'actives'"><i class="material-icons">comment</i><span class="badge">{{ item.commentaires }}</span></span>
-							<span role="button" tabindex="0" class="bouton info" :title="$t('informationsCapsule')" :data-description="definirDescription(item)"><i class="material-icons">info</i></span>
-							<span class="media-type" v-if="item.media !== ''"><i class="material-icons">{{ definirIconeMedia(item) }}</i></span>
-							<span role="button" tabindex="0" class="bouton" :title="$t('copierCapsule')" @click="afficherEnvoyerBloc(item.bloc, item.titre)" v-if="admin && pad.copieBloc === 'activee' && (statut === 'utilisateur' || digidrive)"><i class="material-icons">send</i></span>
-							<span role="button" tabindex="0" class="bouton supprimer" :title="$t('supprimerCapsule')" @click="afficherSupprimerBloc(item.bloc, item.titre, 0)" v-if="item.identifiant === identifiant || admin"><i class="material-icons">delete</i></span>
-						</div>
-						<div class="moderation" v-if="item.visibilite === 'privee' && admin">
-							<span role="button" tabindex="0" class="bouton" @click="autoriserBloc(item, 'privee')">{{ $t('afficherCapsule') }}</span>
-						</div>
-						<div class="moderation" v-else-if="pad.contributions === 'moderees' && item.visibilite === 'masquee'">
-							<span role="button" tabindex="0" class="bouton" @click="autoriserBloc(item, 'moderee')" v-if="admin">{{ $t('validerCapsule') }}</span>
-							<span class="bouton" v-else-if="item.identifiant === identifiant">{{ $t('enAttenteModeration') }}</span>
-						</div>
+		<div id="blocs" class="flux-vertical" :class="{'large': pad.hasOwnProperty('largeur') && pad.largeur === 'large'}" v-else-if="pad.affichage === 'flux-vertical' && action !== 'organiser' && !recherche">
+			<div :id="item.bloc" class="bloc" :class="{'privee': item.visibilite === 'privee'}" v-for="(item, indexItem) in blocs" :style="{'border-color': item.couleur}" :data-bloc="item.bloc" :key="'bloc_' + indexItem">
+				<div class="contenu">
+					<div class="titre" v-if="item.titre !== ''" :style="{'background': eclaircirCouleur(item.couleur)}">
+						<span>{{ item.titre }}</span>
+					</div>
+					<div class="texte" v-if="item.texte !== ''" v-html="item.texte" />
+					<div class="media" v-if="item.media !== ''">
+						<img v-if="item.type === 'image'" :src="'/' + definirDossierFichiers(pad.id) + '/' + pad.id + '/' + item.media" loading="lazy" @click="afficherVisionneuse(item)">
+						<img v-else-if="item.type === 'lien-image'" :src="item.media" loading="lazy" @click="afficherVisionneuse(item)">
+						<span v-else-if="item.type === 'audio' || item.type === 'video' || item.type === 'document' || item.type === 'pdf' || item.type === 'office' || item.type === 'embed'" @click="afficherVisionneuse(item)"><img :class="{'vignette': definirVignette(item).substring(0, 5) !== '/img/'}" :src="definirVignette(item)" loading="lazy"></span>
+						<span v-else-if="item.type === 'lien'"><a :href="item.media" target="_blank"><img :class="{'vignette': definirVignette(item).substring(0, 5) !== '/img/'}" :src="definirVignette(item)" loading="lazy"></a></span>
+						<span v-else><a :href="'/' + definirDossierFichiers(pad.id) + '/' + pad.id + '/' + item.media" download><img :class="{'vignette': definirVignette(item).substring(0, 5) !== '/img/'}" :src="definirVignette(item)" loading="lazy"></a></span>
+					</div>
+					<div class="evaluation" v-if="pad.evaluations === 'activees'">
+						<span class="etoiles">
+							<i class="material-icons" :class="{'evalue': verifierUtilisateurEvaluation(item.evaluations) === true}" v-for="etoile in definirEvaluationCapsule(item.evaluations)" :key="'etoilepleine_' + etoile">star</i>
+							<i class="material-icons" :class="{'evalue': verifierUtilisateurEvaluation(item.evaluations) === true}" v-for="etoile in (5 - definirEvaluationCapsule(item.evaluations))" :key="'etoilevide_' + etoile">star_outline</i>
+							<span>({{ item.evaluations.length }})</span>
+						</span>
+						<span role="button" tabindex="0" class="bouton" :title="$t('evaluerCapsule')" :style="{'color': couleur}" @click="ouvrirModaleEvaluations(item.bloc, item.titre, '')" v-if="verifierUtilisateurEvaluation(item.evaluations) === false"><i class="material-icons">add_comment</i></span>
+						<span role="button" tabindex="0" class="bouton" :title="$t('evaluerCapsule')" :style="{'color': couleur}" @click="ouvrirModaleEvaluations(item.bloc, item.titre, item.evaluations)" v-else><i class="material-icons">rate_review</i></span>
+					</div>
+					<div class="action" :style="{'color': item.couleur}">
+						<span role="button" tabindex="0" class="bouton" :title="$t('modifierCapsule')" @click="ouvrirModaleBloc('edition', item, 0)" v-if="item.identifiant === identifiant || admin || pad.contributions === 'modifiables'"><i class="material-icons">edit</i></span>
+						<span role="button" tabindex="0" class="bouton" :title="$t('commenterCapsule')" @click="ouvrirModaleCommentaires(item.bloc, item.titre)" v-if="pad.commentaires === 'actives'"><i class="material-icons">comment</i><span class="badge">{{ item.commentaires }}</span></span>
+						<span role="button" tabindex="0" class="bouton info" :title="$t('informationsCapsule')" :data-description="definirDescription(item)"><i class="material-icons">info</i></span>
+						<span class="media-type" v-if="item.media !== ''"><i class="material-icons">{{ definirIconeMedia(item) }}</i></span>
+						<span role="button" tabindex="0" class="bouton" :title="$t('copierCapsule')" @click="afficherEnvoyerBloc(item.bloc, item.titre)" v-if="admin && pad.copieBloc === 'activee' && (statut === 'utilisateur' || digidrive)"><i class="material-icons">send</i></span>
+						<span role="button" tabindex="0" class="bouton supprimer" :title="$t('supprimerCapsule')" @click="afficherSupprimerBloc(item.bloc, item.titre, 0)" v-if="item.identifiant === identifiant || admin"><i class="material-icons">delete</i></span>
+					</div>
+					<div class="moderation" v-if="item.visibilite === 'privee' && admin">
+						<span role="button" tabindex="0" class="bouton" @click="autoriserBloc(item, 'privee')">{{ $t('afficherCapsule') }}</span>
+					</div>
+					<div class="moderation" v-else-if="pad.contributions === 'moderees' && item.visibilite === 'masquee'">
+						<span role="button" tabindex="0" class="bouton" @click="autoriserBloc(item, 'moderee')" v-if="admin">{{ $t('validerCapsule') }}</span>
+						<span class="bouton" v-else-if="item.identifiant === identifiant">{{ $t('enAttenteModeration') }}</span>
 					</div>
 				</div>
 			</div>
-		</transition>
+		</div>
 		<!-- Affichage flux vertical // avec recherche -->
-		<transition name="fondu">
-			<div id="blocs" class="flux-vertical" :class="{'large': pad.hasOwnProperty('largeur') && pad.largeur === 'large'}" v-if="pad.affichage === 'flux-vertical' && action !== 'organiser' && recherche">
-				<div :id="item.bloc" class="bloc" :class="{'privee': item.visibilite === 'privee'}" v-for="(item, indexItem) in blocsRecherche" :style="{'border-color': item.couleur}" :data-bloc="item.bloc" :key="'bloc' + indexItem">
-					<div class="contenu">
-						<div class="titre" v-if="item.titre !== ''" :style="{'background': eclaircirCouleur(item.couleur)}">
-							<span>{{ item.titre }}</span>
-						</div>
-						<div class="texte" v-if="item.texte !== ''" v-html="item.texte" />
-						<div class="media" v-if="item.media !== ''">
-							<img v-if="item.type === 'image'" :src="'/' + definirDossierFichiers(pad.id) + '/' + pad.id + '/' + item.media" loading="lazy" @click="afficherVisionneuse(item)">
-							<img v-else-if="item.type === 'lien-image'" :src="item.media" loading="lazy" @click="afficherVisionneuse(item)">
-							<span v-else-if="item.type === 'audio' || item.type === 'video' || item.type === 'document' || item.type === 'pdf' || item.type === 'office' || item.type === 'embed'" @click="afficherVisionneuse(item)"><img :class="{'vignette': definirVignette(item).substring(0, 5) !== '/img/'}" :src="definirVignette(item)" loading="lazy"></span>
-							<span v-else-if="item.type === 'lien'"><a :href="item.media" target="_blank"><img :class="{'vignette': definirVignette(item).substring(0, 5) !== '/img/'}" :src="definirVignette(item)" loading="lazy"></a></span>
-							<span v-else><a :href="'/' + definirDossierFichiers(pad.id) + '/' + pad.id + '/' + item.media" download><img :class="{'vignette': definirVignette(item).substring(0, 5) !== '/img/'}" :src="definirVignette(item)" loading="lazy"></a></span>
-						</div>
-						<div class="evaluation" v-if="pad.evaluations === 'activees'">
-							<span class="etoiles">
-								<i class="material-icons" :class="{'evalue': verifierUtilisateurEvaluation(item.evaluations) === true}" v-for="etoile in definirEvaluationCapsule(item.evaluations)" :key="'etoilepleine_' + etoile">star</i>
-								<i class="material-icons" :class="{'evalue': verifierUtilisateurEvaluation(item.evaluations) === true}" v-for="etoile in (5 - definirEvaluationCapsule(item.evaluations))" :key="'etoilevide_' + etoile">star_outline</i>
-								<span>({{ item.evaluations.length }})</span>
-							</span>
-							<span role="button" tabindex="0" class="bouton" :title="$t('evaluerCapsule')" :style="{'color': couleur}" @click="ouvrirModaleEvaluations(item.bloc, item.titre, '')" v-if="verifierUtilisateurEvaluation(item.evaluations) === false"><i class="material-icons">add_comment</i></span>
-							<span role="button" tabindex="0" class="bouton" :title="$t('evaluerCapsule')" :style="{'color': couleur}" @click="ouvrirModaleEvaluations(item.bloc, item.titre, item.evaluations)" v-else><i class="material-icons">rate_review</i></span>
-						</div>
-						<div class="action" :style="{'color': item.couleur}">
-							<span role="button" tabindex="0" class="bouton" :title="$t('modifierCapsule')" @click="ouvrirModaleBloc('edition', item, 0)" v-if="item.identifiant === identifiant || admin || pad.contributions === 'modifiables'"><i class="material-icons">edit</i></span>
-							<span role="button" tabindex="0" class="bouton" :title="$t('commenterCapsule')" @click="ouvrirModaleCommentaires(item.bloc, item.titre)" v-if="pad.commentaires === 'actives'"><i class="material-icons">comment</i><span class="badge">{{ item.commentaires }}</span></span>
-							<span role="button" tabindex="0" class="bouton info" :title="$t('informationsCapsule')" :data-description="definirDescription(item)"><i class="material-icons">info</i></span>
-							<span class="media-type" v-if="item.media !== ''"><i class="material-icons">{{ definirIconeMedia(item) }}</i></span>
-							<span role="button" tabindex="0" class="bouton" :title="$t('copierCapsule')" @click="afficherEnvoyerBloc(item.bloc, item.titre)" v-if="admin && pad.copieBloc === 'activee' && (statut === 'utilisateur' || digidrive)"><i class="material-icons">send</i></span>
-							<span role="button" tabindex="0" class="bouton supprimer" :title="$t('supprimerCapsule')" @click="afficherSupprimerBloc(item.bloc, item.titre, 0)" v-if="item.identifiant === identifiant || admin"><i class="material-icons">delete</i></span>
-						</div>
-						<div class="moderation" v-if="item.visibilite === 'privee' && admin">
-							<span role="button" tabindex="0" class="bouton" @click="autoriserBloc(item, 'privee')">{{ $t('afficherCapsule') }}</span>
-						</div>
-						<div class="moderation" v-else-if="pad.contributions === 'moderees' && item.visibilite === 'masquee'">
-							<span role="button" tabindex="0" class="bouton" @click="autoriserBloc(item, 'moderee')" v-if="admin">{{ $t('validerCapsule') }}</span>
-							<span class="bouton" v-else-if="item.identifiant === identifiant">{{ $t('enAttenteModeration') }}</span>
-						</div>
+		<div id="blocs" class="flux-vertical" :class="{'large': pad.hasOwnProperty('largeur') && pad.largeur === 'large'}" v-else-if="pad.affichage === 'flux-vertical' && action !== 'organiser' && recherche">
+			<div :id="item.bloc" class="bloc" :class="{'privee': item.visibilite === 'privee'}" v-for="(item, indexItem) in blocsRecherche" :style="{'border-color': item.couleur}" :data-bloc="item.bloc" :key="'bloc_' + indexItem">
+				<div class="contenu">
+					<div class="titre" v-if="item.titre !== ''" :style="{'background': eclaircirCouleur(item.couleur)}">
+						<span>{{ item.titre }}</span>
+					</div>
+					<div class="texte" v-if="item.texte !== ''" v-html="item.texte" />
+					<div class="media" v-if="item.media !== ''">
+						<img v-if="item.type === 'image'" :src="'/' + definirDossierFichiers(pad.id) + '/' + pad.id + '/' + item.media" loading="lazy" @click="afficherVisionneuse(item)">
+						<img v-else-if="item.type === 'lien-image'" :src="item.media" loading="lazy" @click="afficherVisionneuse(item)">
+						<span v-else-if="item.type === 'audio' || item.type === 'video' || item.type === 'document' || item.type === 'pdf' || item.type === 'office' || item.type === 'embed'" @click="afficherVisionneuse(item)"><img :class="{'vignette': definirVignette(item).substring(0, 5) !== '/img/'}" :src="definirVignette(item)" loading="lazy"></span>
+						<span v-else-if="item.type === 'lien'"><a :href="item.media" target="_blank"><img :class="{'vignette': definirVignette(item).substring(0, 5) !== '/img/'}" :src="definirVignette(item)" loading="lazy"></a></span>
+						<span v-else><a :href="'/' + definirDossierFichiers(pad.id) + '/' + pad.id + '/' + item.media" download><img :class="{'vignette': definirVignette(item).substring(0, 5) !== '/img/'}" :src="definirVignette(item)" loading="lazy"></a></span>
+					</div>
+					<div class="evaluation" v-if="pad.evaluations === 'activees'">
+						<span class="etoiles">
+							<i class="material-icons" :class="{'evalue': verifierUtilisateurEvaluation(item.evaluations) === true}" v-for="etoile in definirEvaluationCapsule(item.evaluations)" :key="'etoilepleine_' + etoile">star</i>
+							<i class="material-icons" :class="{'evalue': verifierUtilisateurEvaluation(item.evaluations) === true}" v-for="etoile in (5 - definirEvaluationCapsule(item.evaluations))" :key="'etoilevide_' + etoile">star_outline</i>
+							<span>({{ item.evaluations.length }})</span>
+						</span>
+						<span role="button" tabindex="0" class="bouton" :title="$t('evaluerCapsule')" :style="{'color': couleur}" @click="ouvrirModaleEvaluations(item.bloc, item.titre, '')" v-if="verifierUtilisateurEvaluation(item.evaluations) === false"><i class="material-icons">add_comment</i></span>
+						<span role="button" tabindex="0" class="bouton" :title="$t('evaluerCapsule')" :style="{'color': couleur}" @click="ouvrirModaleEvaluations(item.bloc, item.titre, item.evaluations)" v-else><i class="material-icons">rate_review</i></span>
+					</div>
+					<div class="action" :style="{'color': item.couleur}">
+						<span role="button" tabindex="0" class="bouton" :title="$t('modifierCapsule')" @click="ouvrirModaleBloc('edition', item, 0)" v-if="item.identifiant === identifiant || admin || pad.contributions === 'modifiables'"><i class="material-icons">edit</i></span>
+						<span role="button" tabindex="0" class="bouton" :title="$t('commenterCapsule')" @click="ouvrirModaleCommentaires(item.bloc, item.titre)" v-if="pad.commentaires === 'actives'"><i class="material-icons">comment</i><span class="badge">{{ item.commentaires }}</span></span>
+						<span role="button" tabindex="0" class="bouton info" :title="$t('informationsCapsule')" :data-description="definirDescription(item)"><i class="material-icons">info</i></span>
+						<span class="media-type" v-if="item.media !== ''"><i class="material-icons">{{ definirIconeMedia(item) }}</i></span>
+						<span role="button" tabindex="0" class="bouton" :title="$t('copierCapsule')" @click="afficherEnvoyerBloc(item.bloc, item.titre)" v-if="admin && pad.copieBloc === 'activee' && (statut === 'utilisateur' || digidrive)"><i class="material-icons">send</i></span>
+						<span role="button" tabindex="0" class="bouton supprimer" :title="$t('supprimerCapsule')" @click="afficherSupprimerBloc(item.bloc, item.titre, 0)" v-if="item.identifiant === identifiant || admin"><i class="material-icons">delete</i></span>
+					</div>
+					<div class="moderation" v-if="item.visibilite === 'privee' && admin">
+						<span role="button" tabindex="0" class="bouton" @click="autoriserBloc(item, 'privee')">{{ $t('afficherCapsule') }}</span>
+					</div>
+					<div class="moderation" v-else-if="pad.contributions === 'moderees' && item.visibilite === 'masquee'">
+						<span role="button" tabindex="0" class="bouton" @click="autoriserBloc(item, 'moderee')" v-if="admin">{{ $t('validerCapsule') }}</span>
+						<span class="bouton" v-else-if="item.identifiant === identifiant">{{ $t('enAttenteModeration') }}</span>
 					</div>
 				</div>
 			</div>
-		</transition>
+		</div>
 		<!-- Affichage colonne // sans recherche -->
-		<transition name="fondu">
-			<div id="blocs" class="colonnes" v-if="pad.affichage === 'colonnes' && action !== 'organiser' && !recherche">
-				<template v-for="(col, indexCol) in pad.colonnes">
-					<section :id="'colonne' + indexCol" class="colonne" :class="{'masquee': admin && pad.hasOwnProperty('affichageColonnes') && !pad.affichageColonnes[indexCol], 'large': pad.hasOwnProperty('largeur') && pad.largeur === 'large'}" v-if="!pad.hasOwnProperty('affichageColonnes') || admin || (pad.hasOwnProperty('affichageColonnes') && pad.affichageColonnes[indexCol])" :key="'colonne' + indexCol">
-						<div class="bloc haut">
-							<div class="titre-colonne">
-								<span>{{ col }}</span>
-							</div>
-							<div class="menu-colonne" v-if="admin">
-								<span role="button" tabindex="0" class="bouton" :title="$t('masquerColonne')" @click="masquerColonne(indexCol)" v-if="!pad.hasOwnProperty('affichageColonnes') || pad.affichageColonnes[indexCol]"><i class="material-icons">visibility_off</i></span>
-								<span role="button" tabindex="0" class="bouton" :title="$t('afficherColonne')" @click="afficherColonne(indexCol)" v-else-if="pad.hasOwnProperty('affichageColonnes') && !pad.affichageColonnes[indexCol]"><i class="material-icons">visibility</i></span>
-								<span role="button" tabindex="0" class="bouton" :title="$t('modifierColonne')" @click="ouvrirModaleColonne('edition', indexCol)"><i class="material-icons">edit</i></span>
-								<span role="button" tabindex="0" class="bouton supprimer" :title="$t('supprimerColonne')" @click="afficherSupprimerColonne(indexCol)" v-if="pad.colonnes.length > 1"><i class="material-icons">delete</i></span>
-							</div>
-						</div>
-						<div class="conteneur-colonne ascenseur" v-if="colonnes[indexCol].length > 0">
-							<div :id="item.bloc" class="bloc" :class="{'privee': item.visibilite === 'privee'}" v-for="(item, indexItem) in colonnes[indexCol]" :style="{'border-color': item.couleur}" :data-bloc="item.bloc" :key="'bloc' + indexItem">
-								<div class="contenu">
-									<div class="titre" v-if="item.titre !== ''" :style="{'background': eclaircirCouleur(item.couleur)}">
-										<span>{{ item.titre }}</span>
-									</div>
-									<div class="texte" v-if="item.texte !== ''" v-html="item.texte" />
-									<div class="media" v-if="item.media !== ''">
-										<img v-if="item.type === 'image'" :src="'/' + definirDossierFichiers(pad.id) + '/' + pad.id + '/' + item.media" loading="lazy" @click="afficherVisionneuse(item)">
-										<img v-else-if="item.type === 'lien-image'" :src="item.media" loading="lazy" @click="afficherVisionneuse(item)">
-										<span v-else-if="item.type === 'audio' || item.type === 'video' || item.type === 'document' || item.type === 'pdf' || item.type === 'office' || item.type === 'embed'" @click="afficherVisionneuse(item)"><img :class="{'vignette': definirVignette(item).substring(0, 5) !== '/img/'}" :src="definirVignette(item)" loading="lazy"></span>
-										<span v-else-if="item.type === 'lien'"><a :href="item.media" target="_blank"><img :class="{'vignette': definirVignette(item).substring(0, 5) !== '/img/'}" :src="definirVignette(item)" loading="lazy"></a></span>
-										<span v-else><a :href="'/' + definirDossierFichiers(pad.id) + '/' + pad.id + '/' + item.media" download><img :class="{'vignette': definirVignette(item).substring(0, 5) !== '/img/'}" :src="definirVignette(item)" loading="lazy"></a></span>
-									</div>
-									<div class="evaluation" v-if="pad.evaluations === 'activees'">
-										<span class="etoiles">
-											<i class="material-icons" :class="{'evalue': verifierUtilisateurEvaluation(item.evaluations) === true}" v-for="etoile in definirEvaluationCapsule(item.evaluations)" :key="'etoilepleine_' + etoile">star</i>
-											<i class="material-icons" :class="{'evalue': verifierUtilisateurEvaluation(item.evaluations) === true}" v-for="etoile in (5 - definirEvaluationCapsule(item.evaluations))" :key="'etoilevide_' + etoile">star_outline</i>
-											<span>({{ item.evaluations.length }})</span>
-										</span>
-										<span role="button" tabindex="0" class="bouton" :title="$t('evaluerCapsule')" :style="{'color': couleur}" @click="ouvrirModaleEvaluations(item.bloc, item.titre, '')" v-if="verifierUtilisateurEvaluation(item.evaluations) === false"><i class="material-icons">add_comment</i></span>
-										<span role="button" tabindex="0" class="bouton" :title="$t('evaluerCapsule')" :style="{'color': couleur}" @click="ouvrirModaleEvaluations(item.bloc, item.titre, item.evaluations)" v-else><i class="material-icons">rate_review</i></span>
-									</div>
-									<div class="action" :style="{'color': item.couleur}">
-										<span role="button" tabindex="0" class="bouton" :title="$t('modifierCapsule')" @click="ouvrirModaleBloc('edition', item, indexCol)" v-if="item.identifiant === identifiant || admin || pad.contributions === 'modifiables'"><i class="material-icons">edit</i></span>
-										<span role="button" tabindex="0" class="bouton" :title="$t('commenterCapsule')" @click="ouvrirModaleCommentaires(item.bloc, item.titre)" v-if="pad.commentaires === 'actives'"><i class="material-icons">comment</i><span class="badge">{{ item.commentaires }}</span></span>
-										<span role="button" tabindex="0" class="bouton info" :title="$t('informationsCapsule')" :data-description="definirDescription(item)"><i class="material-icons">info</i></span>
-										<span class="media-type" v-if="item.media !== ''"><i class="material-icons">{{ definirIconeMedia(item) }}</i></span>
-										<span role="button" tabindex="0" class="bouton" :title="$t('copierCapsule')" @click="afficherEnvoyerBloc(item.bloc, item.titre)" v-if="admin && pad.copieBloc === 'activee' && (statut === 'utilisateur' || digidrive)"><i class="material-icons">send</i></span>
-										<span role="button" tabindex="0" class="bouton supprimer" :title="$t('supprimerCapsule')" @click="afficherSupprimerBloc(item.bloc, item.titre, indexCol)" v-if="item.identifiant === identifiant || admin"><i class="material-icons">delete</i></span>
-									</div>
-									<div class="moderation" v-if="item.visibilite === 'privee' && admin">
-										<span role="button" tabindex="0" class="bouton" @click="autoriserBloc(item, 'privee')">{{ $t('afficherCapsule') }}</span>
-									</div>
-									<div class="moderation" v-else-if="pad.contributions === 'moderees' && item.visibilite === 'masquee'">
-										<span role="button" tabindex="0" class="bouton" @click="autoriserBloc(item, 'moderee')" v-if="admin">{{ $t('validerCapsule') }}</span>
-										<span class="bouton" v-else-if="item.identifiant === identifiant">{{ $t('enAttenteModeration') }}</span>
-									</div>
-								</div>
-							</div>
-						</div>
-						<div class="ajouter" v-if="accesAutorise && (admin || pad.contributions !== 'fermees')">
-							<span role="button" tabindex="0" :title="$t('ajouterCapsule')" @click="ouvrirModaleBloc('creation', '', indexCol)">
-								<i class="material-icons">add</i>
-							</span>
-						</div>
-					</section>
-				</template>
-				<section class="colonne" v-if="admin">
-					<div class="bloc haut ajouter-colonne" @click="ouvrirModaleColonne('creation', '')">
-						<div class="titre-colonne">
-							<span>{{ $t('ajouterColonne') }}</span>
-						</div>
-					</div>
-				</section>
-			</div>
-		</transition>
-		<!-- Affichage colonne // avec recherche -->
-		<transition name="fondu">
-			<div id="blocs" class="colonnes" v-if="pad.affichage === 'colonnes' && action !== 'organiser' && recherche">
-				<template v-for="(col, indexCol) in pad.colonnes">
-					<section :id="'colonne' + indexCol" class="colonne" :class="{'masquee': admin && pad.hasOwnProperty('affichageColonnes') && !pad.affichageColonnes[indexCol], 'large': pad.hasOwnProperty('largeur') && pad.largeur === 'large'}" v-if="!pad.hasOwnProperty('affichageColonnes') || admin || (pad.hasOwnProperty('affichageColonnes') && pad.affichageColonnes[indexCol])" :key="'colonne' + indexCol">
-						<div class="bloc haut">
-							<div class="titre-colonne">
-								<span>{{ col }}</span>
-							</div>
-						</div>
-						<div class="conteneur-colonne ascenseur" v-if="blocsRecherche[indexCol].length > 0">
-							<div :id="item.bloc" class="bloc" :class="{'privee': item.visibilite === 'privee'}" v-for="(item, indexItem) in blocsRecherche[indexCol]" :style="{'border-color': item.couleur}" :data-bloc="item.bloc" :key="'bloc' + indexItem">
-								<div class="contenu">
-									<div class="titre" v-if="item.titre !== ''" :style="{'background': eclaircirCouleur(item.couleur)}">
-										<span>{{ item.titre }}</span>
-									</div>
-									<div class="texte" v-if="item.texte !== ''" v-html="item.texte" />
-									<div class="media" v-if="item.media !== ''">
-										<img v-if="item.type === 'image'" :src="'/' + definirDossierFichiers(pad.id) + '/' + pad.id + '/' + item.media" loading="lazy" @click="afficherVisionneuse(item)">
-										<img v-else-if="item.type === 'lien-image'" :src="item.media" loading="lazy" @click="afficherVisionneuse(item)">
-										<span v-else-if="item.type === 'audio' || item.type === 'video' || item.type === 'document' || item.type === 'pdf' || item.type === 'office' || item.type === 'embed'" @click="afficherVisionneuse(item)"><img :class="{'vignette': definirVignette(item).substring(0, 5) !== '/img/'}" :src="definirVignette(item)" loading="lazy"></span>
-										<span v-else-if="item.type === 'lien'"><a :href="item.media" target="_blank"><img :class="{'vignette': definirVignette(item).substring(0, 5) !== '/img/'}" :src="definirVignette(item)" loading="lazy"></a></span>
-										<span v-else><a :href="'/' + definirDossierFichiers(pad.id) + '/' + pad.id + '/' + item.media" download><img :class="{'vignette': definirVignette(item).substring(0, 5) !== '/img/'}" :src="definirVignette(item)" loading="lazy"></a></span>
-									</div>
-									<div class="evaluation" v-if="pad.evaluations === 'activees'">
-										<span class="etoiles">
-											<i class="material-icons" :class="{'evalue': verifierUtilisateurEvaluation(item.evaluations) === true}" v-for="etoile in definirEvaluationCapsule(item.evaluations)" :key="'etoilepleine_' + etoile">star</i>
-											<i class="material-icons" :class="{'evalue': verifierUtilisateurEvaluation(item.evaluations) === true}" v-for="etoile in (5 - definirEvaluationCapsule(item.evaluations))" :key="'etoilevide_' + etoile">star_outline</i>
-											<span>({{ item.evaluations.length }})</span>
-										</span>
-										<span role="button" tabindex="0" class="bouton" :title="$t('evaluerCapsule')" :style="{'color': couleur}" @click="ouvrirModaleEvaluations(item.bloc, item.titre, '')" v-if="verifierUtilisateurEvaluation(item.evaluations) === false"><i class="material-icons">add_comment</i></span>
-										<span role="button" tabindex="0" class="bouton" :title="$t('evaluerCapsule')" :style="{'color': couleur}" @click="ouvrirModaleEvaluations(item.bloc, item.titre, item.evaluations)" v-else><i class="material-icons">rate_review</i></span>
-									</div>
-									<div class="action" :style="{'color': item.couleur}">
-										<span role="button" tabindex="0" class="bouton" :title="$t('modifierCapsule')" @click="ouvrirModaleBloc('edition', item, indexCol)" v-if="item.identifiant === identifiant || admin || pad.contributions === 'modifiables'"><i class="material-icons">edit</i></span>
-										<span role="button" tabindex="0" class="bouton" :title="$t('commenterCapsule')" @click="ouvrirModaleCommentaires(item.bloc, item.titre)" v-if="pad.commentaires === 'actives'"><i class="material-icons">comment</i><span class="badge">{{ item.commentaires }}</span></span>
-										<span role="button" tabindex="0" class="bouton info" :title="$t('informationsCapsule')" :data-description="definirDescription(item)"><i class="material-icons">info</i></span>
-										<span class="media-type" v-if="item.media !== ''"><i class="material-icons">{{ definirIconeMedia(item) }}</i></span>
-										<span role="button" tabindex="0" class="bouton" :title="$t('copierCapsule')" @click="afficherEnvoyerBloc(item.bloc, item.titre)" v-if="admin && pad.copieBloc === 'activee' && (statut === 'utilisateur' || digidrive)"><i class="material-icons">send</i></span>
-										<span role="button" tabindex="0" class="bouton supprimer" :title="$t('supprimerCapsule')" @click="afficherSupprimerBloc(item.bloc, item.titre, indexCol)" v-if="item.identifiant === identifiant || admin"><i class="material-icons">delete</i></span>
-									</div>
-									<div class="moderation" v-if="item.visibilite === 'privee' && admin">
-										<span role="button" tabindex="0" class="bouton" @click="autoriserBloc(item, 'privee')">{{ $t('afficherCapsule') }}</span>
-									</div>
-									<div class="moderation" v-else-if="pad.contributions === 'moderees' && item.visibilite === 'masquee'">
-										<span role="button" tabindex="0" class="bouton" @click="autoriserBloc(item, 'moderee')" v-if="admin">{{ $t('validerCapsule') }}</span>
-										<span class="bouton" v-else-if="item.identifiant === identifiant">{{ $t('enAttenteModeration') }}</span>
-									</div>
-								</div>
-							</div>
-						</div>
-					</section>
-				</template>
-			</div>
-		</transition>
-		<!-- Mode Organiser // Affichage mur et flux vertical -->
-		<transition name="fondu">
-			<draggable id="blocs" :class="{'mur': pad.affichage === 'mur', 'flux-vertical': pad.affichage === 'flux-vertical', 'large': pad.hasOwnProperty('largeur') && pad.largeur === 'large'}" v-model="blocs" draggable=".bloc" :sort="true" :animation="250" :swap-threshold="0.5" :force-fallback="true" :fallback-tolerance="10" :scroll-sensitivity="convertirRem(4)" :scroll-speed="convertirRem(4)" @start="demarrerDeplacerBloc" @end="deplacerBloc" v-if="(pad.affichage === 'mur' || pad.affichage === 'flux-vertical') && action === 'organiser'">
-				<div :id="item.bloc" class="bloc" :class="{'privee': item.visibilite === 'privee'}" v-for="(item, indexItem) in blocs" :style="{'border-color': item.couleur}" :data-bloc="item.bloc" :key="'bloc' + indexItem">
-					<div class="contenu">
-						<div class="titre" v-if="item.titre !== ''" :style="{'background': eclaircirCouleur(item.couleur)}">
-							<span>{{ item.titre }}</span>
-							<i class="material-icons">drag_indicator</i>
-						</div>
-						<div class="texte" v-if="item.texte !== ''" v-html="item.texte" />
-						<div class="media" v-if="item.media !== ''">
-							<img v-if="item.type === 'image'" :src="'/' + definirDossierFichiers(pad.id) + '/' + pad.id + '/' + item.media" loading="lazy">
-							<img v-else-if="item.type === 'lien-image'" :src="item.media" loading="lazy">
-							<span v-else-if="item.type === 'audio' || item.type === 'video' || item.type === 'document' || item.type === 'pdf' || item.type === 'embed'"><img :class="{'vignette': definirVignette(item).substring(0, 5) !== '/img/'}" :src="definirVignette(item)" loading="lazy"></span>
-							<span v-else-if="item.type === 'lien'"><img :class="{'vignette': definirVignette(item).substring(0, 5) !== '/img/'}" :src="definirVignette(item)" loading="lazy"></span>
-							<span v-else><img :class="{'vignette': definirVignette(item).substring(0, 5) !== '/img/'}" :src="definirVignette(item)" loading="lazy"></span>
-						</div>
-						<div class="evaluation" v-if="pad.evaluations === 'activees'">
-							<span class="etoiles">
-								<i class="material-icons" :class="{'evalue': verifierUtilisateurEvaluation(item.evaluations) === true}" v-for="etoile in definirEvaluationCapsule(item.evaluations)" :key="'etoilepleine_' + etoile">star</i>
-								<i class="material-icons" :class="{'evalue': verifierUtilisateurEvaluation(item.evaluations) === true}" v-for="etoile in (5 - definirEvaluationCapsule(item.evaluations))" :key="'etoilevide_' + etoile">star_outline</i>
-								<span>({{ item.evaluations.length }})</span>
-							</span>
-						</div>
-						<div class="action" :style="{'color': item.couleur}">
-							<span role="button" tabindex="0" class="bouton" :title="$t('commenterCapsule')" @click="ouvrirModaleCommentaires(item.bloc, item.titre)" v-if="pad.commentaires === 'actives'"><i class="material-icons">comment</i><span class="badge">{{ item.commentaires }}</span></span>
-							<span role="button" tabindex="0" class="bouton info" :title="$t('informationsCapsule')" :data-description="definirDescription(item)"><i class="material-icons">info</i></span>
-							<span class="media-type" v-if="item.media !== ''"><i class="material-icons">{{ definirIconeMedia(item) }}</i></span>
-						</div>
-						<div class="moderation" v-if="item.visibilite === 'privee' && admin">
-							<span role="button" tabindex="0" class="bouton" @click="autoriserBloc(item, 'privee')">{{ $t('afficherCapsule') }}</span>
-						</div>
-						<div class="moderation" v-else-if="pad.contributions === 'moderees' && item.visibilite === 'masquee'">
-							<span role="button" tabindex="0" class="bouton" @click="autoriserBloc(item, 'moderee')">{{ $t('validerCapsule') }}</span>
-						</div>
-					</div>
-				</div>
-			</draggable>
-		</transition>
-		<!-- Mode Organiser // Affichage colonnes -->
-		<transition name="fondu">
-			<div id="blocs" class="colonnes" v-if="pad.affichage === 'colonnes' && action === 'organiser'">
-				<section :id="'colonne' + indexCol" class="colonne" :class="{'masquee': admin && pad.hasOwnProperty('affichageColonnes') && !pad.affichageColonnes[indexCol], 'large': pad.hasOwnProperty('largeur') && pad.largeur === 'large'}" v-for="(col, indexCol) in pad.colonnes" :key="'colonne' + indexCol">
+		<div id="blocs" class="colonnes" v-else-if="pad.affichage === 'colonnes' && action !== 'organiser' && !recherche">
+			<template v-for="(col, indexCol) in pad.colonnes">
+				<section :id="'colonne' + indexCol" class="colonne" :class="{'masquee': admin && pad.hasOwnProperty('affichageColonnes') && !pad.affichageColonnes[indexCol], 'large': pad.hasOwnProperty('largeur') && pad.largeur === 'large'}" v-if="!pad.hasOwnProperty('affichageColonnes') || admin || (pad.hasOwnProperty('affichageColonnes') && pad.affichageColonnes[indexCol])" :key="'colonne_' + indexCol">
 					<div class="bloc haut">
 						<div class="titre-colonne">
 							<span>{{ col }}</span>
 						</div>
-						<div class="menu-colonne" v-if="admin && pad.colonnes.length > 1">
-							<span role="button" tabindex="0" class="bouton gauche" :title="$t('deplacerGauche')" @click="deplacerColonne('gauche', indexCol)" v-if="indexCol > 0"><i class="material-icons">arrow_back</i></span>
-							<span role="button" tabindex="0" class="bouton droite" :title="$t('deplacerDroite')" @click="deplacerColonne('droite', indexCol)" v-if="indexCol < (pad.colonnes.length - 1)"><i class="material-icons">arrow_forward</i></span>
+						<div class="menu-colonne" v-if="admin">
+							<span role="button" tabindex="0" class="bouton" :title="$t('masquerColonne')" @click="masquerColonne(indexCol)" v-if="!pad.hasOwnProperty('affichageColonnes') || pad.affichageColonnes[indexCol]"><i class="material-icons">visibility_off</i></span>
+							<span role="button" tabindex="0" class="bouton" :title="$t('afficherColonne')" @click="afficherColonne(indexCol)" v-else-if="pad.hasOwnProperty('affichageColonnes') && !pad.affichageColonnes[indexCol]"><i class="material-icons">visibility</i></span>
+							<span role="button" tabindex="0" class="bouton" :title="$t('modifierColonne')" @click="ouvrirModaleColonne('edition', indexCol)"><i class="material-icons">edit</i></span>
+							<span role="button" tabindex="0" class="bouton supprimer" :title="$t('supprimerColonne')" @click="afficherSupprimerColonne(indexCol)" v-if="pad.colonnes.length > 1"><i class="material-icons">delete</i></span>
 						</div>
 					</div>
-					<draggable class="conteneur-colonne ascenseur" v-model="colonnes[indexCol]" group="colonne" draggable=".bloc" :sort="true" :animation="250" :swap-threshold="0.5" :force-fallback="true" :fallback-tolerance="10" :scroll-sensitivity="convertirRem(4)" :scroll-speed="convertirRem(4)" :data-index="indexCol" @start="demarrerDeplacerBloc" @end="deplacerBloc">
-						<div :id="item.bloc" class="bloc" :class="{'privee': item.visibilite === 'privee'}" v-for="(item, indexItem) in colonnes[indexCol]" :style="{'border-color': item.couleur}" :data-bloc="item.bloc" :key="'bloc' + indexItem">
+					<div class="conteneur-colonne ascenseur" v-if="colonnes[indexCol].length > 0">
+						<div :id="item.bloc" class="bloc" :class="{'privee': item.visibilite === 'privee'}" v-for="(item, indexItem) in colonnes[indexCol]" :style="{'border-color': item.couleur}" :data-bloc="item.bloc" :key="'bloc_' + indexItem">
 							<div class="contenu">
 								<div class="titre" v-if="item.titre !== ''" :style="{'background': eclaircirCouleur(item.couleur)}">
 									<span>{{ item.titre }}</span>
-									<i class="material-icons" v-show="item.identifiant === identifiant || admin">drag_indicator</i>
 								</div>
 								<div class="texte" v-if="item.texte !== ''" v-html="item.texte" />
 								<div class="media" v-if="item.media !== ''">
-									<img v-if="item.type === 'image'" :src="'/' + definirDossierFichiers(pad.id) + '/' + pad.id + '/' + item.media" loading="lazy">
-									<img v-else-if="item.type === 'lien-image'" :src="item.media" loading="lazy">
-									<span v-else-if="item.type === 'audio' || item.type === 'video' || item.type === 'document' || item.type === 'pdf' || item.type === 'office' || item.type === 'embed'"><img :class="{'vignette': definirVignette(item).substring(0, 5) !== '/img/'}" :src="definirVignette(item)" loading="lazy"></span>
-									<span v-else-if="item.type === 'lien'"><img :class="{'vignette': definirVignette(item).substring(0, 5) !== '/img/'}" :src="definirVignette(item)" loading="lazy"></span>
-									<span v-else><img :class="{'vignette': definirVignette(item).substring(0, 5) !== '/img/'}" :src="definirVignette(item)" loading="lazy"></span>
+									<img v-if="item.type === 'image'" :src="'/' + definirDossierFichiers(pad.id) + '/' + pad.id + '/' + item.media" loading="lazy" @click="afficherVisionneuse(item)">
+									<img v-else-if="item.type === 'lien-image'" :src="item.media" loading="lazy" @click="afficherVisionneuse(item)">
+									<span v-else-if="item.type === 'audio' || item.type === 'video' || item.type === 'document' || item.type === 'pdf' || item.type === 'office' || item.type === 'embed'" @click="afficherVisionneuse(item)"><img :class="{'vignette': definirVignette(item).substring(0, 5) !== '/img/'}" :src="definirVignette(item)" loading="lazy"></span>
+									<span v-else-if="item.type === 'lien'"><a :href="item.media" target="_blank"><img :class="{'vignette': definirVignette(item).substring(0, 5) !== '/img/'}" :src="definirVignette(item)" loading="lazy"></a></span>
+									<span v-else><a :href="'/' + definirDossierFichiers(pad.id) + '/' + pad.id + '/' + item.media" download><img :class="{'vignette': definirVignette(item).substring(0, 5) !== '/img/'}" :src="definirVignette(item)" loading="lazy"></a></span>
 								</div>
 								<div class="evaluation" v-if="pad.evaluations === 'activees'">
 									<span class="etoiles">
@@ -785,33 +611,191 @@
 										<i class="material-icons" :class="{'evalue': verifierUtilisateurEvaluation(item.evaluations) === true}" v-for="etoile in (5 - definirEvaluationCapsule(item.evaluations))" :key="'etoilevide_' + etoile">star_outline</i>
 										<span>({{ item.evaluations.length }})</span>
 									</span>
+									<span role="button" tabindex="0" class="bouton" :title="$t('evaluerCapsule')" :style="{'color': couleur}" @click="ouvrirModaleEvaluations(item.bloc, item.titre, '')" v-if="verifierUtilisateurEvaluation(item.evaluations) === false"><i class="material-icons">add_comment</i></span>
+									<span role="button" tabindex="0" class="bouton" :title="$t('evaluerCapsule')" :style="{'color': couleur}" @click="ouvrirModaleEvaluations(item.bloc, item.titre, item.evaluations)" v-else><i class="material-icons">rate_review</i></span>
 								</div>
 								<div class="action" :style="{'color': item.couleur}">
+									<span role="button" tabindex="0" class="bouton" :title="$t('modifierCapsule')" @click="ouvrirModaleBloc('edition', item, indexCol)" v-if="item.identifiant === identifiant || admin || pad.contributions === 'modifiables'"><i class="material-icons">edit</i></span>
 									<span role="button" tabindex="0" class="bouton" :title="$t('commenterCapsule')" @click="ouvrirModaleCommentaires(item.bloc, item.titre)" v-if="pad.commentaires === 'actives'"><i class="material-icons">comment</i><span class="badge">{{ item.commentaires }}</span></span>
 									<span role="button" tabindex="0" class="bouton info" :title="$t('informationsCapsule')" :data-description="definirDescription(item)"><i class="material-icons">info</i></span>
 									<span class="media-type" v-if="item.media !== ''"><i class="material-icons">{{ definirIconeMedia(item) }}</i></span>
+									<span role="button" tabindex="0" class="bouton" :title="$t('copierCapsule')" @click="afficherEnvoyerBloc(item.bloc, item.titre)" v-if="admin && pad.copieBloc === 'activee' && (statut === 'utilisateur' || digidrive)"><i class="material-icons">send</i></span>
+									<span role="button" tabindex="0" class="bouton supprimer" :title="$t('supprimerCapsule')" @click="afficherSupprimerBloc(item.bloc, item.titre, indexCol)" v-if="item.identifiant === identifiant || admin"><i class="material-icons">delete</i></span>
 								</div>
 								<div class="moderation" v-if="item.visibilite === 'privee' && admin">
 									<span role="button" tabindex="0" class="bouton" @click="autoriserBloc(item, 'privee')">{{ $t('afficherCapsule') }}</span>
 								</div>
 								<div class="moderation" v-else-if="pad.contributions === 'moderees' && item.visibilite === 'masquee'">
-									<span role="button" tabindex="0" class="bouton" @click="autoriserBloc(item, 'moderee')">{{ $t('validerCapsule') }}</span>
+									<span role="button" tabindex="0" class="bouton" @click="autoriserBloc(item, 'moderee')" v-if="admin">{{ $t('validerCapsule') }}</span>
+									<span class="bouton" v-else-if="item.identifiant === identifiant">{{ $t('enAttenteModeration') }}</span>
 								</div>
 							</div>
 						</div>
-					</draggable>
+					</div>
+					<div class="ajouter" v-if="accesAutorise && (admin || pad.contributions !== 'fermees')">
+						<span role="button" tabindex="0" :title="$t('ajouterCapsule')" @click="ouvrirModaleBloc('creation', '', indexCol)">
+							<i class="material-icons">add</i>
+						</span>
+					</div>
 				</section>
+			</template>
+			<section class="colonne" v-if="admin">
+				<div class="bloc haut ajouter-colonne" @click="ouvrirModaleColonne('creation', '')">
+					<div class="titre-colonne">
+						<span>{{ $t('ajouterColonne') }}</span>
+					</div>
+				</div>
+			</section>
+		</div>
+		<!-- Affichage colonne // avec recherche -->
+		<div id="blocs" class="colonnes" v-else-if="pad.affichage === 'colonnes' && action !== 'organiser' && recherche">
+			<template v-for="(col, indexCol) in pad.colonnes">
+				<section :id="'colonne' + indexCol" class="colonne" :class="{'masquee': admin && pad.hasOwnProperty('affichageColonnes') && !pad.affichageColonnes[indexCol], 'large': pad.hasOwnProperty('largeur') && pad.largeur === 'large'}" v-if="!pad.hasOwnProperty('affichageColonnes') || admin || (pad.hasOwnProperty('affichageColonnes') && pad.affichageColonnes[indexCol])" :key="'colonne_' + indexCol">
+					<div class="bloc haut">
+						<div class="titre-colonne">
+							<span>{{ col }}</span>
+						</div>
+					</div>
+					<div class="conteneur-colonne ascenseur" v-if="blocsRecherche[indexCol].length > 0">
+						<div :id="item.bloc" class="bloc" :class="{'privee': item.visibilite === 'privee'}" v-for="(item, indexItem) in blocsRecherche[indexCol]" :style="{'border-color': item.couleur}" :data-bloc="item.bloc" :key="'bloc_' + indexItem">
+							<div class="contenu">
+								<div class="titre" v-if="item.titre !== ''" :style="{'background': eclaircirCouleur(item.couleur)}">
+									<span>{{ item.titre }}</span>
+								</div>
+								<div class="texte" v-if="item.texte !== ''" v-html="item.texte" />
+								<div class="media" v-if="item.media !== ''">
+									<img v-if="item.type === 'image'" :src="'/' + definirDossierFichiers(pad.id) + '/' + pad.id + '/' + item.media" loading="lazy" @click="afficherVisionneuse(item)">
+									<img v-else-if="item.type === 'lien-image'" :src="item.media" loading="lazy" @click="afficherVisionneuse(item)">
+									<span v-else-if="item.type === 'audio' || item.type === 'video' || item.type === 'document' || item.type === 'pdf' || item.type === 'office' || item.type === 'embed'" @click="afficherVisionneuse(item)"><img :class="{'vignette': definirVignette(item).substring(0, 5) !== '/img/'}" :src="definirVignette(item)" loading="lazy"></span>
+									<span v-else-if="item.type === 'lien'"><a :href="item.media" target="_blank"><img :class="{'vignette': definirVignette(item).substring(0, 5) !== '/img/'}" :src="definirVignette(item)" loading="lazy"></a></span>
+									<span v-else><a :href="'/' + definirDossierFichiers(pad.id) + '/' + pad.id + '/' + item.media" download><img :class="{'vignette': definirVignette(item).substring(0, 5) !== '/img/'}" :src="definirVignette(item)" loading="lazy"></a></span>
+								</div>
+								<div class="evaluation" v-if="pad.evaluations === 'activees'">
+									<span class="etoiles">
+										<i class="material-icons" :class="{'evalue': verifierUtilisateurEvaluation(item.evaluations) === true}" v-for="etoile in definirEvaluationCapsule(item.evaluations)" :key="'etoilepleine_' + etoile">star</i>
+										<i class="material-icons" :class="{'evalue': verifierUtilisateurEvaluation(item.evaluations) === true}" v-for="etoile in (5 - definirEvaluationCapsule(item.evaluations))" :key="'etoilevide_' + etoile">star_outline</i>
+										<span>({{ item.evaluations.length }})</span>
+									</span>
+									<span role="button" tabindex="0" class="bouton" :title="$t('evaluerCapsule')" :style="{'color': couleur}" @click="ouvrirModaleEvaluations(item.bloc, item.titre, '')" v-if="verifierUtilisateurEvaluation(item.evaluations) === false"><i class="material-icons">add_comment</i></span>
+									<span role="button" tabindex="0" class="bouton" :title="$t('evaluerCapsule')" :style="{'color': couleur}" @click="ouvrirModaleEvaluations(item.bloc, item.titre, item.evaluations)" v-else><i class="material-icons">rate_review</i></span>
+								</div>
+								<div class="action" :style="{'color': item.couleur}">
+									<span role="button" tabindex="0" class="bouton" :title="$t('modifierCapsule')" @click="ouvrirModaleBloc('edition', item, indexCol)" v-if="item.identifiant === identifiant || admin || pad.contributions === 'modifiables'"><i class="material-icons">edit</i></span>
+									<span role="button" tabindex="0" class="bouton" :title="$t('commenterCapsule')" @click="ouvrirModaleCommentaires(item.bloc, item.titre)" v-if="pad.commentaires === 'actives'"><i class="material-icons">comment</i><span class="badge">{{ item.commentaires }}</span></span>
+									<span role="button" tabindex="0" class="bouton info" :title="$t('informationsCapsule')" :data-description="definirDescription(item)"><i class="material-icons">info</i></span>
+									<span class="media-type" v-if="item.media !== ''"><i class="material-icons">{{ definirIconeMedia(item) }}</i></span>
+									<span role="button" tabindex="0" class="bouton" :title="$t('copierCapsule')" @click="afficherEnvoyerBloc(item.bloc, item.titre)" v-if="admin && pad.copieBloc === 'activee' && (statut === 'utilisateur' || digidrive)"><i class="material-icons">send</i></span>
+									<span role="button" tabindex="0" class="bouton supprimer" :title="$t('supprimerCapsule')" @click="afficherSupprimerBloc(item.bloc, item.titre, indexCol)" v-if="item.identifiant === identifiant || admin"><i class="material-icons">delete</i></span>
+								</div>
+								<div class="moderation" v-if="item.visibilite === 'privee' && admin">
+									<span role="button" tabindex="0" class="bouton" @click="autoriserBloc(item, 'privee')">{{ $t('afficherCapsule') }}</span>
+								</div>
+								<div class="moderation" v-else-if="pad.contributions === 'moderees' && item.visibilite === 'masquee'">
+									<span role="button" tabindex="0" class="bouton" @click="autoriserBloc(item, 'moderee')" v-if="admin">{{ $t('validerCapsule') }}</span>
+									<span class="bouton" v-else-if="item.identifiant === identifiant">{{ $t('enAttenteModeration') }}</span>
+								</div>
+							</div>
+						</div>
+					</div>
+				</section>
+			</template>
+		</div>
+		<!-- Mode Organiser // Affichage mur et flux vertical -->
+		<draggable id="blocs" :class="{'mur': pad.affichage === 'mur', 'flux-vertical': pad.affichage === 'flux-vertical', 'large': pad.hasOwnProperty('largeur') && pad.largeur === 'large'}" v-model="blocs" draggable=".bloc" :sort="true" :animation="250" :swap-threshold="0.5" :force-fallback="true" :fallback-tolerance="10" :scroll-sensitivity="convertirRem(4)" :scroll-speed="convertirRem(4)" @start="demarrerDeplacerBloc" @end="deplacerBloc" v-else-if="(pad.affichage === 'mur' || pad.affichage === 'flux-vertical') && action === 'organiser'">
+			<div :id="item.bloc" class="bloc" :class="{'privee': item.visibilite === 'privee'}" v-for="(item, indexItem) in blocs" :style="{'border-color': item.couleur}" :data-bloc="item.bloc" :key="'bloc_' + indexItem">
+				<div class="contenu">
+					<div class="titre" v-if="item.titre !== ''" :style="{'background': eclaircirCouleur(item.couleur)}">
+						<span>{{ item.titre }}</span>
+						<i class="material-icons">drag_indicator</i>
+					</div>
+					<div class="texte" v-if="item.texte !== ''" v-html="item.texte" />
+					<div class="media" v-if="item.media !== ''">
+						<img v-if="item.type === 'image'" :src="'/' + definirDossierFichiers(pad.id) + '/' + pad.id + '/' + item.media" loading="lazy">
+						<img v-else-if="item.type === 'lien-image'" :src="item.media" loading="lazy">
+						<span v-else-if="item.type === 'audio' || item.type === 'video' || item.type === 'document' || item.type === 'pdf' || item.type === 'embed'"><img :class="{'vignette': definirVignette(item).substring(0, 5) !== '/img/'}" :src="definirVignette(item)" loading="lazy"></span>
+						<span v-else-if="item.type === 'lien'"><img :class="{'vignette': definirVignette(item).substring(0, 5) !== '/img/'}" :src="definirVignette(item)" loading="lazy"></span>
+						<span v-else><img :class="{'vignette': definirVignette(item).substring(0, 5) !== '/img/'}" :src="definirVignette(item)" loading="lazy"></span>
+					</div>
+					<div class="evaluation" v-if="pad.evaluations === 'activees'">
+						<span class="etoiles">
+							<i class="material-icons" :class="{'evalue': verifierUtilisateurEvaluation(item.evaluations) === true}" v-for="etoile in definirEvaluationCapsule(item.evaluations)" :key="'etoilepleine_' + etoile">star</i>
+							<i class="material-icons" :class="{'evalue': verifierUtilisateurEvaluation(item.evaluations) === true}" v-for="etoile in (5 - definirEvaluationCapsule(item.evaluations))" :key="'etoilevide_' + etoile">star_outline</i>
+							<span>({{ item.evaluations.length }})</span>
+						</span>
+					</div>
+					<div class="action" :style="{'color': item.couleur}">
+						<span role="button" tabindex="0" class="bouton" :title="$t('commenterCapsule')" @click="ouvrirModaleCommentaires(item.bloc, item.titre)" v-if="pad.commentaires === 'actives'"><i class="material-icons">comment</i><span class="badge">{{ item.commentaires }}</span></span>
+						<span role="button" tabindex="0" class="bouton info" :title="$t('informationsCapsule')" :data-description="definirDescription(item)"><i class="material-icons">info</i></span>
+						<span class="media-type" v-if="item.media !== ''"><i class="material-icons">{{ definirIconeMedia(item) }}</i></span>
+					</div>
+					<div class="moderation" v-if="item.visibilite === 'privee' && admin">
+						<span role="button" tabindex="0" class="bouton" @click="autoriserBloc(item, 'privee')">{{ $t('afficherCapsule') }}</span>
+					</div>
+					<div class="moderation" v-else-if="pad.contributions === 'moderees' && item.visibilite === 'masquee'">
+						<span role="button" tabindex="0" class="bouton" @click="autoriserBloc(item, 'moderee')">{{ $t('validerCapsule') }}</span>
+					</div>
+				</div>
 			</div>
-		</transition>
+		</draggable>
+		<!-- Mode Organiser // Affichage colonnes -->
+		<div id="blocs" class="colonnes" v-else-if="pad.affichage === 'colonnes' && action === 'organiser'">
+			<section :id="'colonne' + indexCol" class="colonne" :class="{'masquee': admin && pad.hasOwnProperty('affichageColonnes') && !pad.affichageColonnes[indexCol], 'large': pad.hasOwnProperty('largeur') && pad.largeur === 'large'}" v-for="(col, indexCol) in pad.colonnes" :key="'colonne_' + indexCol">
+				<div class="bloc haut">
+					<div class="titre-colonne">
+						<span>{{ col }}</span>
+					</div>
+					<div class="menu-colonne" v-if="admin && pad.colonnes.length > 1">
+						<span role="button" tabindex="0" class="bouton gauche" :title="$t('deplacerGauche')" @click="deplacerColonne('gauche', indexCol)" v-if="indexCol > 0"><i class="material-icons">arrow_back</i></span>
+						<span role="button" tabindex="0" class="bouton droite" :title="$t('deplacerDroite')" @click="deplacerColonne('droite', indexCol)" v-if="indexCol < (pad.colonnes.length - 1)"><i class="material-icons">arrow_forward</i></span>
+					</div>
+				</div>
+				<draggable class="conteneur-colonne ascenseur" v-model="colonnes[indexCol]" group="colonne" draggable=".bloc" :sort="true" :animation="250" :swap-threshold="0.5" :force-fallback="true" :fallback-tolerance="10" :scroll-sensitivity="convertirRem(4)" :scroll-speed="convertirRem(4)" :data-index="indexCol" @start="demarrerDeplacerBloc" @end="deplacerBloc">
+					<div :id="item.bloc" class="bloc" :class="{'privee': item.visibilite === 'privee'}" v-for="(item, indexItem) in colonnes[indexCol]" :style="{'border-color': item.couleur}" :data-bloc="item.bloc" :key="'bloc_' + indexItem">
+						<div class="contenu">
+							<div class="titre" v-if="item.titre !== ''" :style="{'background': eclaircirCouleur(item.couleur)}">
+								<span>{{ item.titre }}</span>
+								<i class="material-icons" v-show="item.identifiant === identifiant || admin">drag_indicator</i>
+							</div>
+							<div class="texte" v-if="item.texte !== ''" v-html="item.texte" />
+							<div class="media" v-if="item.media !== ''">
+								<img v-if="item.type === 'image'" :src="'/' + definirDossierFichiers(pad.id) + '/' + pad.id + '/' + item.media" loading="lazy">
+								<img v-else-if="item.type === 'lien-image'" :src="item.media" loading="lazy">
+								<span v-else-if="item.type === 'audio' || item.type === 'video' || item.type === 'document' || item.type === 'pdf' || item.type === 'office' || item.type === 'embed'"><img :class="{'vignette': definirVignette(item).substring(0, 5) !== '/img/'}" :src="definirVignette(item)" loading="lazy"></span>
+								<span v-else-if="item.type === 'lien'"><img :class="{'vignette': definirVignette(item).substring(0, 5) !== '/img/'}" :src="definirVignette(item)" loading="lazy"></span>
+								<span v-else><img :class="{'vignette': definirVignette(item).substring(0, 5) !== '/img/'}" :src="definirVignette(item)" loading="lazy"></span>
+							</div>
+							<div class="evaluation" v-if="pad.evaluations === 'activees'">
+								<span class="etoiles">
+									<i class="material-icons" :class="{'evalue': verifierUtilisateurEvaluation(item.evaluations) === true}" v-for="etoile in definirEvaluationCapsule(item.evaluations)" :key="'etoilepleine_' + etoile">star</i>
+									<i class="material-icons" :class="{'evalue': verifierUtilisateurEvaluation(item.evaluations) === true}" v-for="etoile in (5 - definirEvaluationCapsule(item.evaluations))" :key="'etoilevide_' + etoile">star_outline</i>
+									<span>({{ item.evaluations.length }})</span>
+								</span>
+							</div>
+							<div class="action" :style="{'color': item.couleur}">
+								<span role="button" tabindex="0" class="bouton" :title="$t('commenterCapsule')" @click="ouvrirModaleCommentaires(item.bloc, item.titre)" v-if="pad.commentaires === 'actives'"><i class="material-icons">comment</i><span class="badge">{{ item.commentaires }}</span></span>
+								<span role="button" tabindex="0" class="bouton info" :title="$t('informationsCapsule')" :data-description="definirDescription(item)"><i class="material-icons">info</i></span>
+								<span class="media-type" v-if="item.media !== ''"><i class="material-icons">{{ definirIconeMedia(item) }}</i></span>
+							</div>
+							<div class="moderation" v-if="item.visibilite === 'privee' && admin">
+								<span role="button" tabindex="0" class="bouton" @click="autoriserBloc(item, 'privee')">{{ $t('afficherCapsule') }}</span>
+							</div>
+							<div class="moderation" v-else-if="pad.contributions === 'moderees' && item.visibilite === 'masquee'">
+								<span role="button" tabindex="0" class="bouton" @click="autoriserBloc(item, 'moderee')">{{ $t('validerCapsule') }}</span>
+							</div>
+						</div>
+					</div>
+				</draggable>
+			</section>
+		</div>
 	</div>
 
 	<div id="pad" :style="{'background': '#00ced1'}" v-else />
 
-	<transition name="fondu">
+	<Transition name="fondu">
 		<span role="button" tabindex="0" id="ajouter" :title="$t('ajouterCapsule')" @click="ouvrirModaleBloc('creation', '', 0)" v-if="accesAutorise && !recherche && ((pad.affichage === 'mur' || pad.affichage === 'flux-vertical') && ((admin && action !== 'organiser') || (!admin && pad.contributions !== 'fermees')))">
 			<i class="material-icons">add</i>
 		</span>
-	</transition>
+	</Transition>
 
 	<div class="conteneur-modale" v-if="modaleColonne">
 		<div class="modale">
@@ -1026,7 +1010,7 @@
 				<div class="conteneur conteneur-commentaires" v-if="pad.commentaires === 'actives'">
 					<label>{{ $t('commentaires') }}</label>
 					<ul class="commentaires" v-if="commentaires.length > 0">
-						<li :class="{'edition': editionCommentaire && commentaireId === entreeCommentaire.id}" v-for="(entreeCommentaire, indexEntreeCommentaire) in commentaires" :key="indexEntreeCommentaire">
+						<li :class="{'edition': editionCommentaire && commentaireId === entreeCommentaire.id}" v-for="(entreeCommentaire, indexEntreeCommentaire) in commentaires" :key="'commentaire_' + indexEntreeCommentaire">
 							<span class="meta" :class="{'auteur': entreeCommentaire.identifiant === identifiant || admin}">{{ $t('par') }} {{ definirNom(entreeCommentaire) }}, {{ $formaterDateRelative(entreeCommentaire.date, langue) }}</span>
 							<div class="action" v-if="entreeCommentaire.identifiant === identifiant || admin">
 								<span role="button" tabindex="0" :title="$t('modifierCommentaire')" @click="afficherModifierCommentaire(entreeCommentaire.id, entreeCommentaire.texte)" v-if="commentaireId !== entreeCommentaire.id"><i class="material-icons">edit</i></span>
@@ -1091,7 +1075,7 @@
 				<span role="button" tabindex="0" class="fermer" @click="fermerModaleCommentaire"><i class="material-icons">close</i></span>
 			</div>
 			<ul class="commentaires ascenseur">
-				<li :class="{'edition': editionCommentaire && commentaireId === entreeCommentaire.id}" v-for="(entreeCommentaire, indexEntreeCommentaire) in commentaires" :key="indexEntreeCommentaire">
+				<li :class="{'edition': editionCommentaire && commentaireId === entreeCommentaire.id}" v-for="(entreeCommentaire, indexEntreeCommentaire) in commentaires" :key="'commentaire_' + indexEntreeCommentaire">
 					<span class="meta" :class="{'auteur': entreeCommentaire.identifiant === identifiant || admin}">{{ $t('par') }} {{ definirNom(entreeCommentaire) }}, {{ $formaterDateRelative(entreeCommentaire.date, langue) }}</span>
 					<div class="action" v-if="entreeCommentaire.identifiant === identifiant || admin">
 						<span role="button" tabindex="0" :title="$t('modifierCommentaire')" @click="afficherModifierCommentaire(entreeCommentaire.id, entreeCommentaire.texte)" v-if="commentaireId !== entreeCommentaire.id"><i class="material-icons">edit</i></span>
@@ -1279,7 +1263,7 @@
 		</div>
 	</div>
 
-	<div class="conteneur-modale alerte" v-if="modaleConfirmer">
+	<div id="conteneur-message" class="conteneur-modale" v-if="modaleConfirmer">
 		<div class="modale">
 			<div class="conteneur">
 				<div class="contenu">
@@ -1302,5 +1286,11 @@
 
 	<div id="masque" />
 
-	<chargement :chargement="chargement" v-if="chargement" />
-</main>
+	<Notification :notification="notification" @fermer="notification = ''" v-if="notification !== ''" />
+
+    <Message :message="message" @fermer="message = ''" v-if="message !== ''" />
+
+    <Chargement v-if="chargement" />
+
+    <ChargementPage v-if="chargementPage" />
+</div>

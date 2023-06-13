@@ -1,5 +1,5 @@
 <template>
-	<main id="page" v-if="acces">
+	<div id="page" v-if="acces">
 		<div id="accueil">
 			<div id="langues">
 				<span class="bouton" role="button" tabindex="0" :class="{'selectionne': langue === 'fr'}" @click="modifierLangue('fr')">FR</span>
@@ -112,7 +112,7 @@
 			</div>
 		</div>
 
-		<div class="conteneur-modale alerte" v-if="modale !== ''">
+		<div id="conteneur-message" class="conteneur-modale" v-if="modale !== ''">
 			<div class="modale">
 				<div class="conteneur">
 					<div class="contenu">
@@ -128,23 +128,39 @@
 			</div>
 		</div>
 
-		<chargement :chargement="chargement" v-if="chargement" />
-	</main>
+		<Notification :notification="notification" @fermer="notification = ''" v-if="notification !== ''" />
+
+		<Message :message="message" @fermer="message = ''" v-if="message !== ''" />
+
+		<Chargement v-if="chargement" />
+
+		<ChargementPage v-if="chargementPage" />
+	</div>
 </template>
 
 <script>
 import axios from 'axios'
-import saveAs from 'file-saver'
-import chargement from '../components/chargement.vue'
+import fileSaver from 'file-saver'
+const { saveAs } = fileSaver
+import ChargementPage from '#root/components/chargement-page.vue'
+import Chargement from '#root/components/chargement.vue'
+import Message from '#root/components/message.vue'
+import Notification from '#root/components/notification.vue'
 
 export default {
 	name: 'Admin',
 	components: {
-		chargement
+		ChargementPage,
+		Chargement,
+		Message,
+		Notification
 	},
 	data () {
 		return {
+			chargementPage: true,
 			chargement: false,
+			message: '',
+			notification: '',
 			acces: false,
 			admin: '',
 			modale: '',
@@ -160,24 +176,13 @@ export default {
 			champ: '',
 			valeur: '',
 			maintenance: false,
-			suppressionFichiers: true
-		}
-	},
-	head () {
-		return {
-			title: 'Admin - Digipad by La Digitale'
-		}
-	},
-	computed: {
-		hote () {
-			return this.$store.state.hote
-		},
-		langue () {
-			return this.$store.state.langue
+			suppressionFichiers: true,
+			hote: this.$pageContext.pageProps.hote,
+			langue: this.$pageContext.pageProps.langue
 		}
 	},
 	created () {
-		this.$i18n.setLocale(this.langue)
+		this.$i18n.locale = this.langue
 		this.$socket.emit('verifiermaintenance')
 		this.$socket.on('verifiermaintenance', function (valeur) {
 			this.maintenance = valeur
@@ -185,9 +190,10 @@ export default {
 	},
 	mounted () {
 		const motdepasse = prompt(this.$t('motDePasse'), '')
-		if (motdepasse === process.env.adminPassword) {
+		if (motdepasse === import.meta.env.VITE_ADMIN_PASSWORD) {
 			this.acces = true
 			this.admin = motdepasse
+			this.chargementPage = false
 		}
 	},
 	methods: {
@@ -197,12 +203,12 @@ export default {
 					identifiant: this.identifiant,
 					langue: langue
 				}).then(function () {
-					this.$i18n.setLocale(langue)
+					this.$i18n.locale = langue
 					document.getElementsByTagName('html')[0].setAttribute('lang', langue)
-					this.$store.dispatch('modifierLangue', langue)
-					this.$store.dispatch('modifierMessage', this.$t('langueModifiee'))
+					this.langue = langue
+					this.notification = this.$t('langueModifiee')
 				}.bind(this)).catch(function () {
-					this.$store.dispatch('modifierAlerte', this.$t('erreurCommunicationServeur'))
+					this.message = this.$t('erreurCommunicationServeur')
 				}.bind(this))
 			}
 		},
@@ -224,15 +230,15 @@ export default {
 					this.chargement = false
 					const donnees = reponse.data
 					if (donnees === 'erreur') {
-						this.$store.dispatch('modifierAlerte', this.$t('erreurActionServeur'))
+						this.message = this.$t('erreurActionServeur')
 					} else if (donnees === 'identifiant_non_valide') {
-						this.$store.dispatch('modifierAlerte', this.$t('identifiantNonValide'))
+						this.message = this.$t('identifiantNonValide')
 					} else if (donnees === 'email_non_valide') {
-						this.$store.dispatch('modifierAlerte', this.$t('erreurEmail'))
+						this.message = this.$t('erreurEmail')
 					} else {
-						this.$store.dispatch('modifierMessage', this.$t('motDePasseModifie'))
+						this.notification = this.$t('motDePasseModifie')
 						if (donnees !== 'motdepasse_modifie') {
-							this.$store.dispatch('modifierAlerte', this.$t('identifiant') + ' : ' + donnees)
+							this.message = this.$t('identifiant') + ' : ' + donnees
 						}
 					}
 					this.identifiant = ''
@@ -240,7 +246,7 @@ export default {
 					this.email = ''
 				}.bind(this)).catch(function () {
 					this.chargement = false
-					this.$store.dispatch('modifierAlerte', this.$t('erreurCommunicationServeur'))
+					this.message = this.$t('erreurCommunicationServeur')
 				}.bind(this))
 			}
 		},
@@ -253,16 +259,16 @@ export default {
 					this.chargement = false
 					const donnees = reponse.data
 					if (donnees === 'erreur') {
-						this.$store.dispatch('modifierAlerte', this.$t('erreurActionServeur'))
+						this.message = this.$t('erreurActionServeur')
 					} else if (donnees === 'pad_inexistant') {
-						this.$store.dispatch('modifierAlerte', this.$t('padInexistant'))
+						this.message = this.$t('padInexistant')
 					} else {
 						this.donneesPad = donnees
 					}
 					this.padId = ''
 				}.bind(this)).catch(function () {
 					this.chargement = false
-					this.$store.dispatch('modifierAlerte', this.$t('erreurCommunicationServeur'))
+					this.message = this.$t('erreurCommunicationServeur')
 				}.bind(this))
 			}
 		},
@@ -277,18 +283,18 @@ export default {
 					this.chargement = false
 					const donnees = reponse.data
 					if (donnees === 'erreur') {
-						this.$store.dispatch('modifierAlerte', this.$t('erreurActionServeur'))
+						this.message = this.$t('erreurActionServeur')
 					} else if (donnees === 'pad_inexistant') {
-						this.$store.dispatch('modifierAlerte', this.$t('padInexistant'))
+						this.message = this.$t('murInexistant')
 					} else {
-						this.$store.dispatch('modifierMessage', this.$t('donneesModifiees'))
+						this.notification = this.$t('donneesModifiees')
 					}
 					this.padIdM = ''
 					this.champ = ''
 					this.valeur = ''
 				}.bind(this)).catch(function () {
 					this.chargement = false
-					this.$store.dispatch('modifierAlerte', this.$t('erreurCommunicationServeur'))
+					this.message = this.$t('erreurCommunicationServeur')
 				}.bind(this))
 			}
 		},
@@ -310,7 +316,7 @@ export default {
 					const donnees = reponse.data
 					if (donnees === 'erreur_export') {
 						this.chargement = false
-						this.$store.dispatch('modifierAlerte', this.$t('erreurExportPad'))
+						this.message = this.$t('erreurExportPad')
 					} else {
 						saveAs('/temp/' + donnees, 'pad-' + this.padIdE + '.zip')
 						this.chargement = false
@@ -319,7 +325,7 @@ export default {
 				}.bind(this)).catch(function () {
 					this.chargement = false
 					this.padIdE = ''
-					this.$store.dispatch('modifierAlerte', this.$t('erreurCommunicationServeur'))
+					this.message = this.$t('erreurCommunicationServeur')
 				}.bind(this))
 			}
 		},
@@ -333,9 +339,9 @@ export default {
 					this.chargement = false
 					const donnees = reponse.data
 					if (donnees === 'erreur') {
-						this.$store.dispatch('modifierAlerte', this.$t('erreurActionServeur'))
+						this.message = this.$t('erreurActionServeur')
 					} else if (donnees === 'pad_inexistant') {
-						this.$store.dispatch('modifierAlerte', this.$t('padInexistant'))
+						this.message = this.$t('padInexistant')
 					} else {
 						const identifiant = donnees.identifiant
 						axios.post(this.hote + '/api/supprimer-pad', {
@@ -348,9 +354,9 @@ export default {
 							this.chargement = false
 							const donnees = reponse.data
 							if (donnees === 'erreur_suppression') {
-								this.$store.dispatch('modifierAlerte', this.$t('erreurSuppressionPad'))
+								this.message = this.$t('erreurSuppressionMur')
 							} else {
-								this.$store.dispatch('modifierMessage', this.$t('padSupprime'))
+								this.notification = this.$t('padSupprime')
 								this.padIdS = ''
 								this.suppressionFichiers = true
 							}
@@ -358,14 +364,14 @@ export default {
 							this.chargement = false
 							this.padIdS = ''
 							this.suppressionFichiers = true
-							this.$store.dispatch('modifierAlerte', this.$t('erreurCommunicationServeur'))
+							this.message = this.$t('erreurCommunicationServeur')
 						}.bind(this))
 					}
 				}.bind(this)).catch(function () {
 					this.chargement = false
 					this.padIdS = ''
 					this.suppressionFichiers = true
-					this.$store.dispatch('modifierAlerte', this.$t('erreurCommunicationServeur'))
+					this.message = this.$t('erreurCommunicationServeur')
 				}.bind(this))
 			}
 		},
@@ -380,14 +386,14 @@ export default {
 					this.chargement = false
 					const donnees = reponse.data
 					if (donnees === 'erreur') {
-						this.$store.dispatch('modifierAlerte', this.$t('erreurActionServeur'))
+						this.message = this.$t('erreurActionServeur')
 					} else {
-						this.$store.dispatch('modifierMessage', this.$t('compteSupprime'))
+						this.notification = this.$t('compteSupprime')
 						this.identifiantS = ''
 					}
 				}.bind(this)).catch(function () {
 					this.chargement = false
-					this.$store.dispatch('modifierAlerte', this.$t('erreurCommunicationServeur'))
+					this.message = this.$t('erreurCommunicationServeur')
 				}.bind(this))
 			}
 		}

@@ -1,13 +1,13 @@
 /* @font-face {
 	font-family: 'HKGroteskWide-ExtraBold';
-	src: url('~@/assets/fonts/HKGroteskWide-ExtraBold.woff') format('woff'), url('~@/assets/fonts/HKGroteskWide-ExtraBold.woff2') format('woff2');
+	src: url('/fonts/HKGroteskWide-ExtraBold.woff') format('woff'), url('/fonts/HKGroteskWide-ExtraBold.woff2') format('woff2');
 	font-weight: normal;
 	font-style: normal;
 } */
 
 @font-face {
 	font-family: 'HKGrotesk-ExtraBold';
-	src: url('~@/assets/fonts/HKGrotesk-ExtraBold.woff') format('woff'), url('~@/assets/fonts/HKGrotesk-ExtraBold.woff2') format('woff2');
+	src: url('/fonts/HKGrotesk-ExtraBold.woff') format('woff'), url('/fonts/HKGrotesk-ExtraBold.woff2') format('woff2');
 	font-weight: normal;
 	font-style: normal;
 }
@@ -16,14 +16,14 @@
 	font-family: 'Roboto-Slab';
 	font-style: normal;
 	font-weight: 500;
-	src: local('Roboto Slab Medium'), local('Roboto-Slab-Medium'), url('~@/assets/fonts/Roboto-Slab-Medium.woff2') format('woff2'), url('~@/assets/fonts/Roboto-Slab-Medium.woff') format('woff');
+	src: local('Roboto Slab Medium'), local('Roboto-Slab-Medium'), url('/fonts/Roboto-Slab-Medium.woff2') format('woff2'), url('/fonts/Roboto-Slab-Medium.woff') format('woff');
 }
 
 @font-face {
     font-family: 'Material Icons';
     font-style: normal;
     font-weight: 400;
-    src: local('Material Icons'), local('MaterialIcons-Regular'), url('~@/assets/fonts/MaterialIcons-Regular.woff2') format('woff2'), url('~@/assets/fonts/MaterialIcons-Regular.woff') format('woff')
+    src: local('Material Icons'), local('MaterialIcons-Regular'), url('/fonts/MaterialIcons-Regular.woff2') format('woff2'), url('/fonts/MaterialIcons-Regular.woff') format('woff')
 }
 
 .material-icons {
@@ -178,9 +178,8 @@ input:disabled {
 	display: none;
 }
 
-#__nuxt,
-#__layout,
-#app {
+#app,
+main {
 	width: 100%;
 	height: 100%;
 	overflow: hidden;
@@ -663,30 +662,26 @@ label.bouton-bleu {
 	margin-right: 1.5rem;
 }
 
-#alerte {
-	cursor: pointer;
-}
-
-.alerte .modale .conteneur {
+#conteneur-message .modale .conteneur {
 	padding: 30px 25px;
 	text-align: center;
 	max-width: 500px;
 }
 
-.alerte .message {
+#conteneur-message .message {
 	font-size: 18px;
 	line-height: 1.5;
 }
 
-.alerte .bouton {
+#conteneur-message .bouton {
 	margin-top: 20px;
 }
 
-.alerte .modale .actions {
+#conteneur-message .modale .actions {
 	font-size: 0;
 }
 
-.alerte .modale .actions span {
+#conteneur-message .modale .actions span {
 	min-width: 70px;
 }
 
@@ -1029,14 +1024,12 @@ label.bouton-bleu {
 
 /* Transition
 –––––––––––––––––––––––––––––––––––––––––––––––––– */
-.fondu-enter-active {
-	transition-property: opacity;
-	transition-duration: 0.2s;
+.fondu-enter-active,
+.fondu-leave-active {
+	transition: opacity 0.2s;
 }
 
-.fondu-enter,
-.fondu-leave-active,
-.fondu-leave,
+.fondu-enter-from,
 .fondu-leave-to {
 	opacity: 0;
 }

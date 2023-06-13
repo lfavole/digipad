@@ -1,5 +1,5 @@
 <template>
-	<main id="page">
+	<div id="page">
 		<div id="accueil" :style="{'background-image': 'url(./img/fond.png)'}">
 			<div id="langues">
 				<span class="bouton" role="button" tabindex="0" :class="{'selectionne': langue === 'fr'}" @click="modifierLangue('fr')">FR</span>
@@ -23,13 +23,13 @@
 					</div>
 				</div>
 				<div id="credits">
-					<p><span class="mentions-legales" @click="modaleMentionsLegales = true">{{ $t('mentionsLegales') }}</span> - <a href="https://opencollective.com/ladigitale" target="_blank">{{ $t('soutien') }} ❤️.</a></p>
+					<p><span class="mentions-legales" @click="modale = 'mentions-legales'">{{ $t('mentionsLegales') }}</span> - <a href="https://opencollective.com/ladigitale" target="_blank">{{ $t('soutien') }} ❤️.</a></p>
 					<p>{{ new Date().getFullYear() }} - <a href="https://ladigitale.dev" target="_blank" rel="noreferrer">La Digitale</a> - <a href="https://codeberg.org/ladigitale/digipad" target="_blank" rel="noreferrer">{{ $t('codeSource') }}</a> - <span class="hub" @click="ouvrirHub"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#001d1d" width="36px" height="36px"><path d="M0 0h24v24H0z" fill="none" /><path d="M4 8h4V4H4v4zm6 12h4v-4h-4v4zm-6 0h4v-4H4v4zm0-6h4v-4H4v4zm6 0h4v-4h-4v4zm6-10v4h4V4h-4zm-6 4h4V4h-4v4zm6 6h4v-4h-4v4zm0 6h4v-4h-4v4z" /></svg></span></p>
 				</div>
 			</div>
 		</div>
 
-		<div class="conteneur-modale" v-if="modaleCreer">
+		<div class="conteneur-modale" v-if="modale === 'creer'">
 			<div id="creation" class="modale">
 				<div class="en-tete">
 					<span class="titre">{{ $t('creerPad') }}</span>
@@ -53,8 +53,8 @@
 			</div>
 		</div>
 
-		<div class="conteneur-modale" v-else-if="modaleConnexion || modaleMotDePasseOublie">
-			<div id="connexion" class="modale" v-if="modaleConnexion">
+		<div class="conteneur-modale" v-else-if="modale === 'connexion' || modale === 'mot-de-passe-oublie'">
+			<div id="connexion" class="modale" v-if="modale === 'connexion'">
 				<div class="en-tete">
 					<span class="titre">{{ $t('seConnecter') }}</span>
 					<span class="fermer" role="button" tabindex="0" @click="fermerModaleConnexion"><i class="material-icons">close</i></span>
@@ -75,7 +75,7 @@
 					</div>
 				</div>
 			</div>
-			<div class="modale" v-else-if="modaleMotDePasseOublie">
+			<div class="modale" v-else-if="modale === 'mot-de-passe-oublie'">
 				<div class="en-tete">
 					<span class="titre">{{ $t('motDePasseOublie') }}</span>
 					<span class="fermer" @click="fermerModaleMotDePasseOublie"><i class="material-icons">close</i></span>
@@ -97,7 +97,7 @@
 			</div>
 		</div>
 
-		<div class="conteneur-modale" v-else-if="modaleInscription">
+		<div class="conteneur-modale" v-else-if="modale === 'inscription'">
 			<div id="inscription" class="modale">
 				<div class="en-tete">
 					<span class="titre">{{ $t('sInscrire') }}</span>
@@ -126,7 +126,7 @@
 			</div>
 		</div>
 
-		<div class="conteneur-modale" v-else-if="modaleMentionsLegales">
+		<div class="conteneur-modale" v-else-if="modale === 'mentions-legales'">
 			<div id="mentions-legales" class="modale">
 				<div class="en-tete">
 					<span class="titre">{{ $t('mentionsLegales') }}</span>
@@ -156,65 +156,68 @@
 			<span @click="fermerHub"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#fff" width="36px" height="36px"><path d="M0 0h24v24H0z" fill="none" /><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" /></svg></span>
 			<iframe src="https://ladigitale.dev/hub.html" />
 		</div>
-	</main>
+
+		<Notification :notification="notification" @fermer="notification = ''" v-if="notification !== ''" />
+
+		<Message :message="message" @fermer="message = ''" v-if="message !== ''" />
+
+		<ChargementPage v-if="chargementPage" />
+	</div>
 </template>
 
 <script>
 import axios from 'axios'
+import ChargementPage from '#root/components/chargement-page.vue'
+import Message from '#root/components/message.vue'
+import Notification from '#root/components/notification.vue'
 
 export default {
 	name: 'Accueil',
+	components: {
+		ChargementPage,
+		Message,
+		Notification
+	},
 	data () {
 		return {
+			chargementPage: true,
 			chargement: false,
+			message: '',
+			notification: '',
+			modale: '',
 			titre: '',
 			motDePassePad: '',
-			modaleCreer: false,
-			modaleConnexion: false,
-			modaleInscription: false,
-			modaleMotDePasseOublie: false,
 			identifiant: '',
 			motDePasse: '',
 			confirmationMotDePasse: '',
 			email: '',
-			modaleMentionsLegales: false,
-			hub: false
-		}
-	},
-	head () {
-		return {
-			title: 'Digipad by La Digitale'
-		}
-	},
-	computed: {
-		hote () {
-			return this.$store.state.hote
-		},
-		langue () {
-			return this.$store.state.langue
-		},
-		langues () {
-			return this.$store.state.langues
+			hub: false,
+			hote: this.$pageContext.pageProps.hote,
+			langues: this.$pageContext.pageProps.langues,
+			langue: this.$pageContext.pageProps.langue
 		}
 	},
 	created () {
-		const langue = this.$route.query.lang
-		if (this.langues.includes(langue) === true) {
-			this.$i18n.setLocale(langue)
-			this.$store.dispatch('modifierLangue', langue)
+		const params = this.$pageContext.pageProps.params
+		const langue = params.lang
+		if (langue && this.langues.includes(langue) === true) {
+			this.$i18n.locale = langue
+			this.langue = langue
 			this.$socket.emit('modifierlangue', langue)
 		} else {
-			this.$i18n.setLocale(this.langue)
+			this.$i18n.locale = this.langue
 		}
 	},
 	mounted () {
+		document.getElementsByTagName('html')[0].setAttribute('lang', this.langue)
+
 		setTimeout(function () {
-			document.getElementsByTagName('html')[0].setAttribute('lang', this.langue)
-		}.bind(this), 100)
+			this.chargementPage = false
+		}.bind(this), 300)
 	},
 	methods: {
 		afficherModaleCreer () {
-			this.modaleCreer = true
+			this.modale = 'creer'
 			this.$nextTick(function () {
 				document.querySelector('input').focus()
 			})
@@ -229,25 +232,24 @@ export default {
 					const donnees = reponse.data
 					if (donnees === 'erreur_creation') {
 						this.chargement = false
-						this.$store.dispatch('modifierAlerte', this.$t('erreurCreationPad'))
+						this.message = this.$t('erreurCreationPad')
 					} else {
-						this.$store.dispatch('modifierUtilisateur', donnees)
 						window.location.href = '/p/' + donnees.id + '/' + donnees.token
 					}
 				}.bind(this)).catch(function () {
 					this.chargement = false
-					this.$store.dispatch('modifierAlerte', this.$t('erreurCommunicationServeur'))
+					this.message = this.$t('erreurCommunicationServeur')
 				}.bind(this))
 			} else {
-				this.$store.dispatch('modifierAlerte', this.$t('remplirChamps'))
+				this.message = this.$t('remplirChamps')
 			}
 		},
 		fermerModaleCreer () {
-			this.modaleCreer = false
+			this.modale = ''
 			this.titre = ''
 		},
 		afficherModaleConnexion () {
-			this.modaleConnexion = true
+			this.modale = 'connexion'
 			this.$nextTick(function () {
 				document.querySelector('input').focus()
 			})
@@ -259,25 +261,23 @@ export default {
 					identifiant: this.identifiant,
 					motdepasse: this.motDePasse
 				}).then(function (reponse) {
-					this.chargement = false
 					const donnees = reponse.data
 					if (donnees === 'erreur_connexion') {
-						this.$store.dispatch('modifierAlerte', this.$t('informationsConnexionIncorrectes'))
+						this.chargement = false
+						this.message = this.$t('informationsConnexionIncorrectes')
 					} else {
-						this.$store.dispatch('modifierUtilisateur', donnees)
-						this.$socket.emit('connexioncompte', donnees)
-						this.$router.replace('/u/' + donnees.identifiant)
+						window.location.href = '/u/' + donnees.identifiant
 					}
 				}.bind(this)).catch(function () {
 					this.chargement = false
-					this.$store.dispatch('modifierAlerte', this.$t('erreurCommunicationServeur'))
+					this.message = this.$t('erreurCommunicationServeur')
 				}.bind(this))
 			} else {
-				this.$store.dispatch('modifierAlerte', this.$t('remplirChamps'))
+				this.message = this.$t('remplirChamps')
 			}
 		},
 		afficherModaleInscription () {
-			this.modaleInscription = true
+			this.modale = 'inscription'
 			this.$nextTick(function () {
 				document.querySelector('input').focus()
 			})
@@ -290,31 +290,28 @@ export default {
 					motdepasse: this.motDePasse.trim(),
 					email: this.email.trim()
 				}).then(function (reponse) {
-					this.chargement = false
 					const donnees = reponse.data
 					if (donnees === 'utilisateur_existe_deja') {
-						this.$store.dispatch('modifierAlerte', this.$t('identifiantExisteDeja', { identifiant: this.identifiant }))
+						this.chargement = false
+						this.message = this.$t('identifiantExisteDeja', { identifiant: this.identifiant })
 					} else {
-						this.$store.dispatch('modifierUtilisateur', donnees)
-						this.$socket.emit('connexioncompte', donnees)
-						this.$router.replace('/u/' + donnees.identifiant)
+						window.location.href = '/u/' + donnees.identifiant
 					}
 				}.bind(this)).catch(function () {
 					this.chargement = false
-					this.$store.dispatch('modifierAlerte', this.$t('erreurCommunicationServeur'))
+					this.message = this.$t('erreurCommunicationServeur')
 				}.bind(this))
 			} else if (this.identifiant.trim() === '' || this.motDePasse.trim() === '' || this.confirmationMotDePasse.trim() === '' || this.email.trim() === '') {
-				this.$store.dispatch('modifierAlerte', this.$t('remplirChamps'))
+				this.message = this.$t('remplirChamps')
 			} else if (this.motDePasse.trim() !== this.confirmationMotDePasse.trim()) {
-				this.$store.dispatch('modifierAlerte', this.$t('motsDePassePasIdentiques'))
+				this.message = this.$t('motsDePassePasIdentiques')
 			} else if (this.$verifierEmail(this.email.trim()) === false) {
-				this.$store.dispatch('modifierAlerte', this.$t('erreurEmail'))
+				this.message = this.$t('erreurEmail')
 			}
 		},
 		afficherModaleMotDePasseOublie () {
 			this.motDePasse = ''
-			this.modaleConnexion = false
-			this.modaleMotDePasseOublie = true
+			this.modale = 'mot-de-passe-oublie'
 			this.$nextTick(function () {
 				document.querySelector('input').focus()
 			})
@@ -329,38 +326,38 @@ export default {
 					this.chargement = false
 					const donnees = reponse.data
 					if (donnees === 'erreur') {
-						this.$store.dispatch('modifierAlerte', this.$t('erreurCommunicationServeur'))
+						this.message = this.$t('erreurCommunicationServeur')
 					} else if (donnees === 'identifiant_invalide') {
-						this.$store.dispatch('modifierAlerte', this.$t('identifiantNonValide'))
+						this.message = this.$t('identifiantNonValide')
 					} else if (donnees === 'email_invalide') {
-						this.$store.dispatch('modifierAlerte', this.$t('emailNonValide'))
+						this.message = this.$t('emailNonValide')
 					} else {
 						this.fermerModaleMotDePasseOublie()
-						this.$store.dispatch('modifierMessage', this.$t('emailEnvoye'))
+						this.notification = this.$t('emailEnvoye')
 					}
 				}.bind(this)).catch(function () {
 					this.chargement = false
-					this.$store.dispatch('modifierAlerte', this.$t('erreurCommunicationServeur'))
+					this.message = this.$t('erreurCommunicationServeur')
 				}.bind(this))
 			} else if (this.identifiant.trim() === '' || this.email.trim() === '') {
-				this.$store.dispatch('modifierAlerte', this.$t('remplirChamps'))
+				this.message = this.$t('remplirChamps')
 			} else if (this.$verifierEmail(this.email.trim()) === false) {
-				this.$store.dispatch('modifierAlerte', this.$t('erreurEmail'))
+				this.message = this.$t('erreurEmail')
 			}
 		},
 		fermerModaleConnexion () {
-			this.modaleConnexion = false
+			this.modale = ''
 			this.identifiant = ''
 			this.motDePasse = ''
 		},
 		fermerModaleInscription () {
-			this.modaleInscription = false
+			this.modale = ''
 			this.identifiant = ''
 			this.motDePasse = ''
 			this.confirmationMotDePasse = ''
 		},
 		fermerModaleMotDePasseOublie () {
-			this.modaleMotDePasseOublie = false
+			this.modale = ''
 			this.identifiant = ''
 			this.email = ''
 		},
@@ -370,12 +367,12 @@ export default {
 					identifiant: this.identifiant,
 					langue: langue
 				}).then(function () {
-					this.$i18n.setLocale(langue)
+					this.$i18n.locale = langue
 					document.getElementsByTagName('html')[0].setAttribute('lang', langue)
-					this.$store.dispatch('modifierLangue', langue)
-					this.$store.dispatch('modifierMessage', this.$t('langueModifiee'))
+					this.langue = langue
+					this.notification = this.$t('langueModifiee')
 				}.bind(this)).catch(function () {
-					this.$store.dispatch('modifierAlerte', this.$t('erreurCommunicationServeur'))
+					this.message = this.$t('erreurCommunicationServeur')
 				}.bind(this))
 			}
 		},

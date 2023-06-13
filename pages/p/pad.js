@@ -3,82 +3,34 @@ import imagesLoaded from 'imagesloaded'
 import pell from 'pell'
 import linkifyHtml from 'linkify-html'
 import stripTags from 'voca/strip_tags'
-import saveAs from 'file-saver'
+import fileSaver from 'file-saver'
+const { saveAs } = fileSaver
 import Panzoom from '@panzoom/panzoom'
 import ClipboardJS from 'clipboard'
 import lamejs from 'lamejstmp'
-import draggable from 'vuedraggable'
-import chargement from '@/components/chargement.vue'
-import emojis from '@/components/emojis.vue'
+import ChargementPage from '#root/components/chargement-page.vue'
+import Chargement from '#root/components/chargement.vue'
+import Message from '#root/components/message.vue'
+import Notification from '#root/components/notification.vue'
+import Emojis from '#root/components/emojis.vue'
+import { VueDraggableNext } from 'vue-draggable-next'
 
 export default {
 	name: 'Pad',
 	components: {
-		draggable,
-		chargement,
-		emojis
-	},
-	async asyncData (context) {
-		const id = context.route.params.id
-		const token = context.route.params.pad
-		const identifiant = context.store.state.identifiant
-		const statut = context.store.state.statut
-		let redirection
-		const reponse = await axios.post(context.store.state.hote + '/api/recuperer-donnees-pad', {
-			id: id,
-			token: token,
-			identifiant: identifiant,
-			statut: statut
-		}, {
-			headers: { 'Content-Type': 'application/json' }
-		}).catch(function () {
-			redirection = '/'
-			if (statut === 'utilisateur') {
-				redirection = '/u/' + identifiant
-			}
-			return {
-				redirection: redirection,
-				pad: {},
-				blocs: [],
-				activite: []
-			}
-		})
-		if (!reponse || !reponse.hasOwnProperty('data')) {
-			redirection = '/'
-			if (statut === 'utilisateur') {
-				redirection = '/u/' + identifiant
-			}
-			return {
-				redirection: redirection,
-				pad: {},
-				blocs: [],
-				activite: []
-			}
-		} else if (reponse.data && reponse.data === 'erreur_pad' && statut === 'utilisateur') {
-			return {
-				redirection: '/u/' + identifiant,
-				pad: {},
-				blocs: [],
-				activite: []
-			}
-		} else if (reponse.data && reponse.data === 'erreur_pad' && (statut === 'invite' || statut === 'auteur' || statut === '')) {
-			return {
-				redirection: '/',
-				pad: {},
-				blocs: [],
-				activite: []
-			}
-		} else {
-			return {
-				pad: reponse.data.pad,
-				blocs: reponse.data.blocs,
-				activite: reponse.data.activite
-			}
-		}
+		ChargementPage,
+		Chargement,
+		Message,
+		Notification,
+		Emojis,
+		draggable: VueDraggableNext
 	},
 	data () {
 		return {
+			chargementPage: true,
 			chargement: false,
+			message: '',
+			notification: '',
 			modaleBloc: false,
 			titreModale: '',
 			action: '',
@@ -124,9 +76,9 @@ export default {
 			evaluations: [],
 			evaluation: 0,
 			evaluationId: '',
-			messages: [],
-			message: '',
-			nouveauxMessages: 0,
+			messagesChat: [],
+			messageChat: '',
+			nouveauxMessagesChat: 0,
 			utilisateurs: [],
 			utilisateur: '',
 			modaleModifierNom: false,
@@ -173,63 +125,32 @@ export default {
 			donneesUtilisateur: {},
 			modaleCopieBloc: false,
 			padDestination: '',
-			colonneDestination: ''
-		}
-	},
-	head () {
-		return {
-			title: this.pad.hasOwnProperty('titre') ? this.pad.titre + ' - Digipad by La Digitale' : 'Digipad by La Digitale',
-			meta: [
-				{
-					hid: 'robots',
-					name: 'robots',
-					content: 'noindex, nofollow'
-				}
-			]
+			colonneDestination: '',
+			hote: this.$pageContext.pageProps.hote,
+			userAgent: this.$pageContext.pageProps.userAgent,
+			langues: this.$pageContext.pageProps.langues,
+			identifiant: this.$pageContext.pageProps.identifiant,
+			nom: this.$pageContext.pageProps.nom,
+			statut: this.$pageContext.pageProps.statut,
+			langue: this.$pageContext.pageProps.langue,
+			acces: this.$pageContext.pageProps.acces,
+			pads: this.$pageContext.pageProps.pads,
+			padsDigidrive: this.$pageContext.pageProps.digidrive,
+			pad: this.$pageContext.pageProps.pad,
+			blocs: this.$pageContext.pageProps.blocs,
+			activite: this.$pageContext.pageProps.activite,
+			etherpad: import.meta.env.VITE_ETHERPAD,
+			etherpadApi: import.meta.env.VITE_ETHERPAD_API_KEY,
+			limite: parseInt(import.meta.env.VITE_UPLOAD_LIMIT),
+			fichiersAutorises: import.meta.env.VITE_UPLOAD_FILE_TYPES
 		}
 	},
 	computed: {
-		hote () {
-			return this.$store.state.hote
-		},
-		userAgent () {
-			return this.$store.state.userAgent
-		},
-		identifiant () {
-			return this.$store.state.identifiant
-		},
-		nom () {
-			return this.$store.state.nom
-		},
-		langue () {
-			return this.$store.state.langue
-		},
-		langues () {
-			return this.$store.state.langues
-		},
 		admin () {
 			return (this.pad.hasOwnProperty('identifiant') && this.pad.identifiant === this.identifiant) || (this.pad.hasOwnProperty('admins') && this.pad.admins.includes(this.identifiant))
 		},
-		statut () {
-			return this.$store.state.statut
-		},
-		acces () {
-			return this.$store.state.acces
-		},
 		digidrive () {
-			return this.statut === 'auteur' && this.$store.state.digidrive.includes(this.pad.id)
-		},
-		etherpad () {
-			return process.env.etherpad
-		},
-		etherpadApi () {
-			return process.env.etherpadApi
-		},
-		limite () {
-			return process.env.uploadLimit
-		},
-		fichiersAutorises () {
-			return process.env.uploadFileTypes
+			return this.statut === 'auteur' && this.padsDigidrive.includes(this.pad.id)
 		},
 		blocsRecherche () {
 			let resultats = []
@@ -314,34 +235,37 @@ export default {
 				this.desactiverDefilementHorizontal()
 			}
 		},
-		blocs: function () {
-			this.$nextTick(function () {
-				imagesLoaded('#pad', { background: true }, function () {
-					this.chargement = false
-					let auteur = false
-					if (this.utilisateur === this.identifiant) {
-						auteur = true
-					}
-					const blocActif = document.querySelector('.bloc.actif')
-					if (blocActif && this.action !== 'modifier' && this.bloc !== '' && auteur === true) {
-						blocActif.classList.remove('actif')
-					}
-					if (this.action === 'ajouter' && auteur === true) {
-						this.$store.dispatch('modifierMessage', this.$t('capsuleAjoutee'))
-						document.querySelector('#' + this.bloc).classList.add('actif')
-					} else if (this.action === 'modifier' && auteur === true) {
-						this.$store.dispatch('modifierMessage', this.$t('capsuleModifiee'))
-					} else if (this.action === 'supprimer' && auteur === true) {
-						this.$store.dispatch('modifierMessage', this.$t('capsuleSupprimee'))
-					}
-					this.utilisateur = ''
-					if (this.action !== 'organiser' && auteur === true) {
-						this.fermerModaleBloc()
-					}
+		blocs: {
+			handler () {
+				this.$nextTick(function () {
+					imagesLoaded('#pad', { background: true }, function () {
+						this.chargement = false
+						let auteur = false
+						if (this.utilisateur === this.identifiant) {
+							auteur = true
+						}
+						const blocActif = document.querySelector('.bloc.actif')
+						if (blocActif && this.action !== 'modifier' && this.bloc !== '' && auteur === true) {
+							blocActif.classList.remove('actif')
+						}
+						if (this.action === 'ajouter' && auteur === true) {
+							this.notification = this.$t('capsuleAjoutee')
+							document.querySelector('#' + this.bloc).classList.add('actif')
+						} else if (this.action === 'modifier' && auteur === true) {
+							this.notification = this.$t('capsuleModifiee')
+						} else if (this.action === 'supprimer' && auteur === true) {
+							this.notification = this.$t('capsuleSupprimee')
+						}
+						this.utilisateur = ''
+						if (this.action !== 'organiser' && auteur === true) {
+							this.fermerModaleBloc()
+						}
+					}.bind(this))
 				}.bind(this))
-			}.bind(this))
+			},
+			deep: true
 		},
-		messages: function () {
+		messagesChat: function () {
 			this.$nextTick(function () {
 				document.querySelector('#messages').scrollIntoView({ behavior: 'smooth', block: 'end' })
 			})
@@ -359,18 +283,10 @@ export default {
 			}
 		}
 	},
-	watchQuery: ['page'],
 	async created () {
-		if (this.redirection) {
-			this.$router.replace(this.redirection)
-			return false
-		}
-		if (this.pad.affichage === 'colonnes') {
-			this.definirColonnes(this.blocs)
-		}
-		this.ecouterSocket()
-		const identifiant = this.$route.query.id
-		const motdepasse = this.$route.query.mdp
+		const params = this.$pageContext.pageProps.params
+		const identifiant = params.id
+		const motdepasse = params.mdp
 		if (identifiant && identifiant !== '' && motdepasse && motdepasse !== '') {
 			const reponse = await axios.post(this.hote + '/api/verifier-acces', {
 				pad: this.pad.id,
@@ -378,23 +294,41 @@ export default {
 				motdepasse: window.atob(motdepasse)
 			})
 			if (reponse.data.hasOwnProperty('message') && reponse.data.message === 'pad_debloque') {
-				this.$store.dispatch('modifierUtilisateur', { identifiant: identifiant, nom: reponse.data.nom, langue: reponse.data.langue, statut: 'auteur', digidrive: reponse.data.digidrive })
+				this.identifiant = identifiant
+				this.nom = reponse.data.nom
+				this.langue = reponse.data.langue
+				this.statut = 'auteur'
+				this.padsDigidrive = reponse.data.digidrive
 			}
 			window.history.replaceState({}, document.title, window.location.href.split('?')[0])
 		}
+
+		const langue = params.lang
+		if (langue && this.langues.includes(langue) === true) {
+			this.$i18n.locale = langue
+			this.langue = langue
+			this.$socket.emit('modifierlangue', langue)
+		} else {
+			this.$i18n.locale = this.langue
+		}
+
+		if (this.pad.affichage === 'colonnes') {
+			this.definirColonnes(this.blocs)
+		}
+
+		this.ecouterSocket()
+
 		if (this.pad.acces === 'public' || (this.pad.acces === 'prive' && this.admin)) {
-			this.$nuxt.$loading.start()
 			this.accesAutorise = true
 			this.$socket.emit('connexion', { pad: this.pad.id, identifiant: this.identifiant, nom: this.nom })
 		} else if (this.pad.acces === 'code') {
-			this.$nuxt.$loading.start()
 			let autorisation = false
 			this.acces.forEach(function (acces) {
 				if (acces.hasOwnProperty('code') && acces.code === this.pad.code && acces.hasOwnProperty('pad') && acces.pad === this.pad.id) {
 					autorisation = true
 				}
 			}.bind(this))
-			const code = this.$route.query.code
+			const code = params.code
 			if (code === this.pad.code) {
 				autorisation = true
 			}
@@ -406,20 +340,45 @@ export default {
 				this.modaleCodeAcces = true
 			}
 		} else if (this.statut === 'utilisateur') {
-			this.$router.replace('/u/' + this.identifiant)
+			window.location.href = '/u/' + this.identifiant
 		} else {
-			this.$router.replace('/')
+			window.location.href = '/'
 		}
-		const langue = this.$route.query.lang
-		if (this.langues.includes(langue) === true) {
-			this.$i18n.setLocale(langue)
-			this.$store.dispatch('modifierLangue', langue)
-			this.$socket.emit('modifierlangue', langue)
-		} else {
-			this.$i18n.setLocale(this.langue)
+
+		if (this.fichiersAutorises === null || this.fichiersAutorises === undefined) {
+			this.fichiersAutorises = '.jpg,.jpeg,.png,.gif,.mp4,.m4v,.mp3,.m4a,.ogg,.wav,.pdf,.ppt,.pptx,.odp,.doc,.docx,.odt,.ods,.odg,.xls,.xlsx'
 		}
+		if (this.limite === 0 || this.limite === null || this.limite === undefined) {
+			this.limite = 10
+		}
+
+		const observer = new PerformanceObserver((liste) => {
+			liste.getEntries().forEach(async function (entree) {
+				if (entree.type === 'back_forward') {
+					const reponse = await axios.post(this.hote + '/api/recuperer-donnees-pad', {
+						id: this.pad.id,
+						token: this.pad.token,
+						identifiant: this.identifiant,
+						statut: this.statut
+					}, {
+						headers: { 'Content-Type': 'application/json' }
+					})
+					if (reponse && reponse.hasOwnProperty('data') && reponse.data !== 'erreur_pad') {
+						this.pad = reponse.data.pad
+						this.blocs = reponse.data.blocs
+						this.activite = reponse.data.activite
+						if (this.pad.affichage === 'colonnes') {
+							this.definirColonnes(this.blocs)
+						}
+					}
+				}
+			}.bind(this))
+		})
+		observer.observe({ type: 'navigation', buffered: true })
 	},
 	mounted () {
+		document.getElementsByTagName('html')[0].setAttribute('lang', this.langue)
+
 		imagesLoaded('#pad', { background: true }, function () {
 			if (Object.keys(this.pad).length > 0) {
 				document.documentElement.setAttribute('lang', this.langue)
@@ -431,6 +390,7 @@ export default {
 				if (this.pad.affichage === 'colonnes') {
 					this.activerDefilementHorizontal()
 				}
+
 				const lien = this.hote + '/p/' + this.pad.id + '/' + this.pad.token
 				const clipboardLien = new ClipboardJS('#copier-lien .lien', {
 					text: function () {
@@ -438,7 +398,7 @@ export default {
 					}
 				})
 				clipboardLien.on('success', function () {
-					this.$store.dispatch('modifierMessage', this.$t('lienCopie'))
+					this.notification = this.$t('lienCopie')
 				}.bind(this))
 				const iframe = '<iframe src="' + this.hote + '/p/' + this.pad.id + '/' + this.pad.token + '" frameborder="0" width="100%" height="500"></iframe>'
 				const clipboardCode = new ClipboardJS('#copier-code span', {
@@ -447,13 +407,12 @@ export default {
 					}
 				})
 				clipboardCode.on('success', function () {
-					this.$store.dispatch('modifierMessage', this.$t('codeCopie'))
+					this.notification = this.$t('codeCopie')
 				}.bind(this))
 
 				setTimeout(function () {
-					this.$nuxt.$loading.finish()
-					document.getElementsByTagName('html')[0].setAttribute('lang', this.langue)
-				}.bind(this), 100)
+					this.chargementPage = false
+				}.bind(this), 300)
 
 				document.querySelector('#pad').addEventListener('dragover', function (event) {
 					event.preventDefault()
@@ -484,7 +443,7 @@ export default {
 			}
 		}.bind(this))
 	},
-	beforeDestroy () {
+	beforeUnmount () {
 		this.panneaux.forEach(function (panneau) {
 			panneau.close()
 		})
@@ -498,12 +457,12 @@ export default {
 		allerAccueil () {
 			if (this.statut === 'invite' || this.statut === 'auteur') {
 				this.quitterPage()
-				this.$router.replace('/')
+				window.location.href = '/'
 			}
 		},
 		allerCompte () {
 			this.quitterPage()
-			this.$router.push('/u/' + this.identifiant)
+			window.location.href = '/u/' + this.identifiant
 		},
 		ecouterMessage (event) {
 			if (this.source === 'digiview') {
@@ -787,7 +746,7 @@ export default {
 				donnees = { default: 4, 1729: 4, 1449: 3, 1365: 2, 899: 2, 499: 1 }
 				break
 			case 'normale':
-				donnees = { default: 6, 1729: 5, 1449: 4, 1365: 3, 899: 2, 499: 1 }
+				donnees = { default: 5, 1729: 5, 1449: 4, 1365: 3, 899: 2, 499: 1 }
 				break
 			}
 			return donnees
@@ -908,11 +867,11 @@ export default {
 				}).then(function (reponse) {
 					const donnees = reponse.data
 					if (donnees === 'non_connecte') {
-						this.$router.replace('/')
+						window.location.href = '/'
 					} else if (donnees === 'erreur_televersement') {
 						champ.value = ''
 						this.progressionFichier = 0
-						this.$store.dispatch('modifierAlerte', this.$t('erreurTeleversementFichier'))
+						this.message = this.$t('erreurTeleversementFichier')
 					} else {
 						this.chargementMedia = true
 						this.media = donnees.fichier
@@ -972,13 +931,13 @@ export default {
 				}.bind(this)).catch(function () {
 					champ.value = ''
 					this.progressionFichier = 0
-					this.$store.dispatch('modifierAlerte', this.$t('erreurCommunicationServeur'))
+					this.message = this.$t('erreurCommunicationServeur')
 				}.bind(this))
 			} else {
 				if (fichiersAutorises.includes(extension) === false) {
-					this.$store.dispatch('modifierAlerte', this.$t('formatFichierPasAccepte'))
+					this.message = this.$t('formatFichierPasAccepte')
 				} else if (champ.files[0].size > this.limite * 1024000) {
-					this.$store.dispatch('modifierAlerte', this.$t('tailleMaximale', { taille: this.limite }))
+					this.message = this.$t('tailleMaximale', { taille: this.limite })
 				}
 				champ.value = ''
 			}
@@ -1018,10 +977,10 @@ export default {
 			}).then(function (reponse) {
 				const donnees = reponse.data
 				if (donnees === 'non_connecte') {
-					this.$router.replace('/')
+					window.location.href = '/'
 				} else if (donnees === 'erreur_televersement') {
 					this.progressionEnregistrement = false
-					this.$store.dispatch('modifierAlerte', this.$t('erreurTeleversementFichier'))
+					this.message = this.$t('erreurTeleversementFichier')
 				} else {
 					this.modaleBloc = false
 					if (this.mode === 'creation') {
@@ -1033,7 +992,7 @@ export default {
 				this.progressionEnregistrement = false
 			}.bind(this)).catch(function () {
 				this.progressionEnregistrement = false
-				this.$store.dispatch('modifierAlerte', this.$t('erreurCommunicationServeur'))
+				this.message = this.$t('erreurCommunicationServeur')
 			}.bind(this))
 		},
 		blobEnMp3 () {
@@ -1051,7 +1010,7 @@ export default {
 		},
 		enregistrerAudio () {
 			if (!navigator.mediaDevices || !navigator.mediaDevices?.enumerateDevices) {
-				this.$store.dispatch('modifierMessage', this.$t('enregistrementNonSupporte'))
+				this.notification = this.$t('enregistrementNonSupporte')
 			} else {
 				navigator.mediaDevices.enumerateDevices().then(function (devices) {
 					let entreeAudio = false
@@ -1063,7 +1022,7 @@ export default {
 					}
 					if (entreeAudio === true) {
 						if (!navigator.mediaDevices?.getUserMedia) {
-							this.$store.dispatch('modifierMessage', this.$t('enregistrementNonSupporte'))
+							this.notification = this.$t('enregistrementNonSupporte')
 						} else {
 							navigator.mediaDevices.getUserMedia({ audio: true }).then(function (flux) {
 								this.mediaRecorder = new MediaRecorder(flux)
@@ -1117,11 +1076,11 @@ export default {
 								this.mediaRecorder = ''
 								this.flux = []
 								this.contexte = ''
-								this.$store.dispatch('modifierMessage', this.$t('erreurMicro'))
+								this.notification = this.$t('erreurMicro')
 							}.bind(this))
 						}
 					} else {
-						this.$store.dispatch('modifierMessage', this.$t('aucuneEntreeAudio'))
+						this.notification = this.$t('aucuneEntreeAudio')
 					}
 				}.bind(this))
 			}
@@ -1276,7 +1235,7 @@ export default {
 					}.bind(this)).catch(function () {
 						this.chargementLien = false
 						this.lien = ''
-						this.$store.dispatch('modifierAlerte', this.$t('erreurRecuperationContenu'))
+						this.message = this.$t('erreurRecuperationContenu')
 					}.bind(this))
 				} else if (this.verifierURL(this.lien) === true && this.lien.match(/\.(jpeg|jpg|gif|png)$/) !== null) {
 					this.chargementMedia = true
@@ -1320,7 +1279,7 @@ export default {
 				}.bind(this)).catch(function () {
 					this.chargementLien = false
 					this.lien = ''
-					this.$store.dispatch('modifierAlerte', this.$t('erreurRecuperationContenu'))
+					this.message = this.$t('erreurRecuperationContenu')
 				}.bind(this))
 			}
 		},
@@ -1411,11 +1370,11 @@ export default {
 				}).then(function (reponse) {
 					const donnees = reponse.data
 					if (donnees === 'non_connecte') {
-						this.$router.replace('/')
+						window.location.href = '/'
 					} else if (donnees === 'erreur_televersement') {
 						champ.value = ''
 						this.progressionVignette = 0
-						this.$store.dispatch('modifierAlerte', this.$t('erreurTeleversementVignette'))
+						this.message = this.$t('erreurTeleversementVignette')
 					} else {
 						this.vignette = donnees
 						this.$nextTick(function () {
@@ -1432,13 +1391,13 @@ export default {
 				}.bind(this)).catch(function () {
 					champ.value = ''
 					this.progressionVignette = 0
-					this.$store.dispatch('modifierAlerte', this.$t('erreurCommunicationServeur'))
+					this.message = this.$t('erreurCommunicationServeur')
 				}.bind(this))
 			} else {
 				if (formats.includes(extension) === false) {
-					this.$store.dispatch('modifierAlerte', this.$t('formatFichierPasAccepte'))
+					this.message = this.$t('formatFichierPasAccepte')
 				} else if (champ.files[0].size > 3072000) {
-					this.$store.dispatch('modifierAlerte', this.$t('tailleMaximale', { taille: 3 }))
+					this.message = this.$t('tailleMaximale', { taille: 3 })
 				}
 				champ.value = ''
 			}
@@ -1555,7 +1514,7 @@ export default {
 					headers: { 'Content-Type': 'application/json' }
 				}).catch(function () {
 					this.chargement = false
-					this.$store.dispatch('modifierAlerte', this.$t('erreurCommunicationServeur'))
+					this.message = this.$t('erreurCommunicationServeur')
 				}.bind(this))
 				this.chargement = false
 				const padsCrees = reponse.data.padsCrees.filter(function (element) {
@@ -1759,7 +1718,7 @@ export default {
 											}
 										})
 										clipboardLien.on('success', function () {
-											that.$store.dispatch('modifierMessage', that.$t('lienCopie'))
+											that.notification = that.$t('lienCopie')
 										})
 									}
 								})
@@ -1880,21 +1839,29 @@ export default {
 		},
 		activerModeOrganiser () {
 			if (this.blocs.length > 1 || (this.pad.affichage === 'colonnes' && this.pad.colonnes.length > 1)) {
+				this.chargement = true
 				this.menuActivite = false
 				this.menuChat = false
 				this.menuOptions = false
 				this.recherche = false
-				this.action = 'organiser'
-				this.$store.dispatch('modifierMessage', this.$t('modeOrganiserActive'))
+				setTimeout(function () {
+					this.chargement = false
+					this.action = 'organiser'
+					this.notification = this.$t('modeOrganiserActive')
+				}.bind(this), 100)
 			}
 		},
 		desactiverModeOrganiser () {
+			this.chargement = true
 			this.menuActivite = false
 			this.menuChat = false
 			this.menuOptions = false
 			this.recherche = false
-			this.action = ''
-			this.$store.dispatch('modifierMessage', this.$t('modeOrganiserDesactive'))
+			setTimeout(function () {
+				this.chargement = false
+				this.action = ''
+				this.notification = this.$t('modeOrganiserDesactive')
+			}.bind(this), 100)
 		},
 		afficherModaleDiaporama () {
 			if (this.blocs.length > 0) {
@@ -2066,16 +2033,16 @@ export default {
 					this.chargement = false
 					const donnees = reponse.data
 					if (donnees === 'erreur') {
-						this.$store.dispatch('modifierAlerte', this.$t('erreurCommunicationServeur'))
+						this.message = this.$t('erreurCommunicationServeur')
 					} else if (donnees === 'identifiant_non_valide') {
-						this.$store.dispatch('modifierAlerte', this.$t('identifiantNonValide'))
+						this.message = this.$t('identifiantNonValide')
 					} else {
 						this.admins.push(identifiantAdmin)
 					}
 					document.querySelector('#ajouter-admin input').value = ''
 				}.bind(this)).catch(function () {
 					this.chargement = false
-					this.$store.dispatch('modifierAlerte', this.$t('erreurCommunicationServeur'))
+					this.message = this.$t('erreurCommunicationServeur')
 				}.bind(this))
 			}
 		},
@@ -2438,7 +2405,7 @@ export default {
 			this.menuActivite = false
 			this.menuOptions = false
 			this.menuChat = !this.menuChat
-			this.nouveauxMessages = 0
+			this.nouveauxMessagesChat = 0
 		},
 		afficherOptions () {
 			this.menuUtilisateurs = false
@@ -2454,9 +2421,9 @@ export default {
 			this.menuUtilisateurs = !this.menuUtilisateurs
 		},
 		envoyerMessage () {
-			if (this.message !== '') {
-				this.$socket.emit('message', this.pad.id, this.message, this.identifiant, this.nom)
-				this.message = ''
+			if (this.messageChat !== '') {
+				this.$socket.emit('message', this.pad.id, this.messageChat, this.identifiant, this.nom)
+				this.messageChat = ''
 			}
 		},
 		afficherReinitialiserMessages () {
@@ -2498,12 +2465,12 @@ export default {
 					identifiant: this.identifiant,
 					langue: langue
 				}).then(function () {
-					this.$i18n.setLocale(langue)
+					this.$i18n.locale = langue
 					document.getElementsByTagName('html')[0].setAttribute('lang', langue)
-					this.$store.dispatch('modifierLangue', langue)
-					this.$store.dispatch('modifierMessage', this.$t('langueModifiee'))
+					this.langue = langue
+					this.notification = this.$t('langueModifiee')
 				}.bind(this)).catch(function () {
-					this.$store.dispatch('modifierAlerte', this.$t('erreurCommunicationServeur'))
+					this.message = this.$t('erreurCommunicationServeur')
 				}.bind(this))
 			}
 		},
@@ -2563,10 +2530,10 @@ export default {
 				const donnees = reponse.data
 				if (donnees === 'code_incorrect') {
 					this.chargement = false
-					this.$store.dispatch('modifierAlerte', this.$t('codePasCorrect'))
+					this.message = this.$t('codePasCorrect')
 				} else if (donnees === 'erreur') {
 					this.chargement = false
-					this.$store.dispatch('modifierAlerte', this.$t('erreurCommunicationServeur'))
+					this.message = this.$t('erreurCommunicationServeur')
 				} else {
 					this.chargement = false
 					this.accesAutorise = true
@@ -2575,7 +2542,7 @@ export default {
 				}
 			}.bind(this)).catch(function () {
 				this.chargement = false
-				this.$store.dispatch('modifierAlerte', this.$t('erreurCommunicationServeur'))
+				this.message = this.$t('erreurCommunicationServeur')
 			}.bind(this))
 		},
 		fermerModaleCodeAcces () {
@@ -2639,11 +2606,11 @@ export default {
 				}).then(function (reponse) {
 					const donnees = reponse.data
 					if (donnees === 'non_connecte') {
-						this.$router.replace('/')
+						window.location.href = '/'
 					} else if (donnees === 'erreur_televersement') {
 						champ.value = ''
 						this.progressionFond = 0
-						this.$store.dispatch('modifierAlerte', this.$t('erreurTeleversementFichier'))
+						this.message = this.$t('erreurTeleversementFichier')
 					} else {
 						this.$socket.emit('modifierfond', this.pad.id, donnees, this.pad.fond, this.identifiant)
 					}
@@ -2652,10 +2619,10 @@ export default {
 				}.bind(this)).catch(function () {
 					champ.value = ''
 					this.progressionFond = 0
-					this.$store.dispatch('modifierAlerte', this.$t('erreurCommunicationServeur'))
+					this.message = this.$t('erreurCommunicationServeur')
 				}.bind(this))
 			} else {
-				this.$store.dispatch('modifierAlerte', this.$t('formatFichierPasAccepte'))
+				this.message = this.$t('formatFichierPasAccepte')
 				champ.value = ''
 			}
 		},
@@ -2794,7 +2761,7 @@ export default {
 					entree[caracteristique] = valeur
 				}
 			})
-			this.messages.forEach(function (message) {
+			this.messagesChat.forEach(function (message) {
 				if (message.identifiant === identifiant && message.hasOwnProperty(caracteristique)) {
 					message[caracteristique] = valeur
 				}
@@ -2822,10 +2789,9 @@ export default {
 			const identifiant = this.identifiant
 			axios.post(this.hote + '/api/deconnexion').then(function () {
 				this.$socket.emit('deconnexion', identifiant)
-				this.$store.dispatch('reinitialiser')
-				this.$router.replace('/')
+				window.location.href = '/'
 			}.bind(this)).catch(function () {
-				this.$store.dispatch('modifierAlerte', this.$t('erreurCommunicationServeur'))
+				this.message = this.$t('erreurCommunicationServeur')
 			}.bind(this))
 		},
 		afficherModaleModifierMotDePasse () {
@@ -2849,24 +2815,24 @@ export default {
 				}).then(function (reponse) {
 					const donnees = reponse.data
 					if (donnees === 'non_connecte') {
-						this.$router.replace('/')
+						window.location.href = '/'
 					} else if (donnees === 'motdepasse_incorrect') {
 						this.chargement = false
-						this.$store.dispatch('modifierAlerte', this.$t('motDePasseActuelPasCorrect'))
+						this.message = this.$t('motDePasseActuelPasCorrect')
 					} else if (donnees === 'erreur') {
 						this.chargement = false
-						this.$store.dispatch('modifierAlerte', this.$t('erreurCommunicationServeur'))
+						this.message = this.$t('erreurCommunicationServeur')
 					} else {
-						this.$store.dispatch('modifierMessage', this.$t('motDePasseModifie'))
+						this.notification = this.$t('motDePasseModifie')
 						this.fermerModaleModifierMotDePasse()
 						this.chargement = false
 					}
 				}.bind(this)).catch(function () {
 					this.chargement = false
-					this.$store.dispatch('modifierAlerte', this.$t('erreurCommunicationServeur'))
+					this.message = this.$t('erreurCommunicationServeur')
 				}.bind(this))
 			} else {
-				this.$store.dispatch('modifierAlerte', this.$t('remplirChamps'))
+				this.message = this.$t('remplirChamps')
 			}
 		},
 		fermerModaleModifierMotDePasse () {
@@ -2890,10 +2856,10 @@ export default {
 				const donnees = reponse.data
 				if (donnees === 'motdepasse_incorrect') {
 					this.chargement = false
-					this.$store.dispatch('modifierAlerte', this.$t('motDePassePasCorrect'))
+					this.message = this.$t('motDePassePasCorrect')
 				} else if (donnees === 'erreur') {
 					this.chargement = false
-					this.$store.dispatch('modifierAlerte', this.$t('erreurCommunicationServeur'))
+					this.message = this.$t('erreurCommunicationServeur')
 				} else {
 					this.accesAutorise = true
 					this.$socket.emit('debloquerpad', this.pad.id, this.pad.identifiant)
@@ -2901,7 +2867,7 @@ export default {
 				}
 			}.bind(this)).catch(function () {
 				this.chargement = false
-				this.$store.dispatch('modifierAlerte', this.$t('erreurCommunicationServeur'))
+				this.message = this.$t('erreurCommunicationServeur')
 			}.bind(this))
 		},
 		fermerModaleMotDePasse () {
@@ -2921,12 +2887,12 @@ export default {
 			}).then(function (reponse) {
 				const donnees = reponse.data
 				if (donnees === 'deconnecte') {
-					this.$router.go()
+					window.location.reload()
 				}
 				this.chargement = false
 			}.bind(this)).catch(function () {
 				this.chargement = false
-				this.$store.dispatch('modifierAlerte', this.$t('erreurCommunicationServeur'))
+				this.message = this.$t('erreurCommunicationServeur')
 			}.bind(this))
 		},
 		afficherExporterPad () {
@@ -2945,14 +2911,14 @@ export default {
 				const donnees = reponse.data
 				if (donnees === 'erreur_export') {
 					this.chargement = false
-					this.$store.dispatch('modifierAlerte', this.$t('erreurExportPad'))
+					this.message = this.$t('erreurExportPad')
 				} else {
 					saveAs('/temp/' + donnees, 'pad-' + this.pad.id + '.zip')
 					this.chargement = false
 				}
 			}.bind(this)).catch(function () {
 				this.chargement = false
-				this.$store.dispatch('modifierAlerte', this.$t('erreurCommunicationServeur'))
+				this.message = this.$t('erreurCommunicationServeur')
 			}.bind(this))
 		},
 		afficherSupprimerPad () {
@@ -2972,13 +2938,13 @@ export default {
 				const donnees = reponse.data
 				if (donnees === 'erreur_suppression') {
 					this.chargement = false
-					this.$store.dispatch('modifierAlerte', this.$t('erreurSuppressionPad'))
+					this.message = this.$t('erreurSuppressionPad')
 				} else {
-					this.$router.replace('/')
+					window.location.href = '/'
 				}
 			}.bind(this)).catch(function () {
 				this.chargement = false
-				this.$store.dispatch('modifierAlerte', this.$t('erreurCommunicationServeur'))
+				this.message = this.$t('erreurCommunicationServeur')
 			}.bind(this))
 		},
 		envoyerNotificationAdmins () {
@@ -3016,10 +2982,10 @@ export default {
 			}
 		},
 		definirDossierFichiers (id) {
-			if (process.env.nfs2PadNumber && process.env.nfs2PadNumber !== '' && process.env.nfs2Folder && process.env.nfs2Folder !== '' && parseInt(id) > parseInt(process.env.nfs2PadNumber)) {
-				return process.env.nfs2Folder
-			} else if (process.env.nfsPadNumber && process.env.nfsPadNumber !== '' && process.env.nfsFolder && process.env.nfsFolder !== '' && parseInt(id) > parseInt(process.env.nfsPadNumber)) {
-				return process.env.nfsFolder
+			if (import.meta.env.VITE_NFS2_PAD_NUMBER && import.meta.env.VITE_NFS2_PAD_NUMBER !== '' && import.meta.env.VITE_NFS2_FOLDER && import.meta.env.VITE_NFS2_FOLDER !== '' && parseInt(id) > parseInt(import.meta.env.VITE_NFS2_PAD_NUMBER)) {
+				return import.meta.env.VITE_NFS2_FOLDER
+			} else if (import.meta.env.VITE_NFS_PAD_NUMBER && import.meta.env.VITE_NFS_PAD_NUMBER !== '' && import.meta.env.VITE_NFS_FOLDER && import.meta.env.VITE_NFS_FOLDER !== '' && parseInt(id) > parseInt(import.meta.env.VITE_NFS_PAD_NUMBER)) {
+				return import.meta.env.VITE_NFS_FOLDER
 			} else {
 				return 'fichiers'
 			}
@@ -3135,7 +3101,7 @@ export default {
 
 			this.$socket.on('erreur', function () {
 				this.chargement = false
-				this.$store.dispatch('modifierAlerte', this.$t('erreurActionServeur'))
+				this.message = this.$t('erreurActionServeur')
 			}.bind(this))
 
 			this.$socket.on('ajouterbloc', function (donnees) {
@@ -3178,7 +3144,7 @@ export default {
 
 			this.$socket.on('copierbloc', function () {
 				this.chargement = false
-				this.$store.dispatch('modifierMessage', this.$t('capsuleCopiee'))
+				this.notification = this.$t('capsuleCopiee')
 			}.bind(this))
 
 			this.$socket.on('modifierbloc', function (donnees) {
@@ -3252,11 +3218,11 @@ export default {
 					}
 				})
 				if (this.admin && this.identifiant === donnees.admin && donnees.moderation === 'moderee') {
-					this.$store.dispatch('modifierMessage', this.$t('capsuleValidee'))
+					this.notification = this.$t('capsuleValidee')
 				} else if (this.admin && this.identifiant === donnees.admin && donnees.moderation === 'privee') {
-					this.$store.dispatch('modifierMessage', this.$t('capsuleVisible'))
+					this.notification = this.$t('capsuleVisible')
 				} else if (!this.admin && donnees.identifiant === this.identifiant) {
-					this.$store.dispatch('modifierMessage', this.$t('capsulePubliee', { titre: donnees.titre }))
+					this.notification = this.$t('capsulePubliee', { titre: donnees.titre })
 				}
 				if (this.modaleDiaporama) {
 					this.$nextTick(function () {
@@ -3426,23 +3392,24 @@ export default {
 				this.modifierCaracteristique(donnees.identifiant, 'nom', donnees.nom)
 				this.chargement = false
 				if (donnees.identifiant === this.identifiant) {
-					this.$store.dispatch('modifierNom', donnees.nom)
-					this.$store.dispatch('modifierMessage', this.$t('nomModifie'))
+					this.nom = donnees.nom
+					this.notification = this.$t('nomModifie')
 				}
 			}.bind(this))
 
 			this.$socket.on('modifiercouleur', function (donnees) {
 				this.modifierCaracteristique(donnees.identifiant, 'couleur', donnees.couleur)
 				if (donnees.identifiant === this.identifiant) {
-					this.$store.dispatch('modifierMessage', this.$t('couleurModifiee'))
+					this.notification = this.$t('couleurModifiee')
 				}
 			}.bind(this))
 
 			this.$socket.on('modifiertitre', function (titre) {
 				this.pad.titre = titre
+				document.title = titre + ' - Digipad by La Digitale'
 				this.chargement = false
 				if (this.admin) {
-					this.$store.dispatch('modifierMessage', this.$t('titrePadModifie'))
+					this.notification = this.$t('titrePadModifie')
 				}
 			}.bind(this))
 
@@ -3451,7 +3418,7 @@ export default {
 				this.chargement = false
 				this.modificationCode = false
 				if (this.admin) {
-					this.$store.dispatch('modifierMessage', this.$t('codeAccesModifie'))
+					this.notification = this.$t('codeAccesModifie')
 				}
 			}.bind(this))
 
@@ -3459,7 +3426,7 @@ export default {
 				this.pad.admins = admins
 				this.chargement = false
 				if (this.admin) {
-					this.$store.dispatch('modifierMessage', this.$t('listeAdminsModifiee'))
+					this.notification = this.$t('listeAdminsModifiee')
 				}
 			}.bind(this))
 
@@ -3471,11 +3438,11 @@ export default {
 						this.pad.code = donnees.code
 						this.codeVisible = true
 					}
-					this.$store.dispatch('modifierMessage', this.$t('accesPadModifie'))
+					this.notification = this.$t('accesPadModifie')
 				} else {
 					if (donnees.acces === 'prive') {
 						this.$socket.emit('sortie', this.pad.id, this.identifiant)
-						this.$router.replace('/')
+						window.location.href = '/'
 					}
 				}
 			}.bind(this))
@@ -3484,10 +3451,10 @@ export default {
 				this.pad.contributions = donnees.contributions
 				this.chargement = false
 				if (this.admin) {
-					this.$store.dispatch('modifierMessage', this.$t('statutPadModifie'))
+					this.notification = this.$t('statutPadModifie')
 				}
 				if (!this.admin && donnees.contributionsPrecedentes === 'moderees') {
-					this.$store.dispatch('modifierMessage', this.$t('rechargerPage'))
+					this.notification = this.$t('rechargerPage')
 				}
 			}.bind(this))
 
@@ -3497,7 +3464,7 @@ export default {
 				this.chargement = false
 				if (this.admin) {
 					this.action = ''
-					this.$store.dispatch('modifierMessage', this.$t('affichagePadModifie'))
+					this.notification = this.$t('affichagePadModifie')
 				}
 			}.bind(this))
 
@@ -3520,7 +3487,7 @@ export default {
 				})
 				this.chargement = false
 				if (this.admin) {
-					this.$store.dispatch('modifierMessage', this.$t('parametreOrdreModifie'))
+					this.notification = this.$t('parametreOrdreModifie')
 				}
 			}.bind(this))
 
@@ -3534,7 +3501,7 @@ export default {
 				}
 				this.chargement = false
 				if (this.admin) {
-					this.$store.dispatch('modifierMessage', this.$t('parametreLargeurModifie'))
+					this.notification = this.$t('parametreLargeurModifie')
 				}
 			}.bind(this))
 
@@ -3543,7 +3510,7 @@ export default {
 				imagesLoaded('#pad', { background: true }, function () {
 					this.chargement = false
 					if (this.admin) {
-						this.$store.dispatch('modifierMessage', this.$t('arrierePlanModifie'))
+						this.notification = this.$t('arrierePlanModifie')
 					}
 				}.bind(this))
 			}.bind(this))
@@ -3552,7 +3519,7 @@ export default {
 				this.pad.fond = fond
 				this.chargement = false
 				if (this.admin) {
-					this.$store.dispatch('modifierMessage', this.$t('arrierePlanModifie'))
+					this.notification = this.$t('arrierePlanModifie')
 				}
 			}.bind(this))
 
@@ -3560,7 +3527,7 @@ export default {
 				this.pad.registreActivite = statut
 				this.chargement = false
 				if (this.admin) {
-					this.$store.dispatch('modifierMessage', this.$t('parametreActiviteModifie'))
+					this.notification = this.$t('parametreActiviteModifie')
 				}
 			}.bind(this))
 
@@ -3568,15 +3535,18 @@ export default {
 				this.pad.conversation = statut
 				this.chargement = false
 				if (this.admin) {
-					this.$store.dispatch('modifierMessage', this.$t('parametreConversationModifie'))
+					this.notification = this.$t('parametreConversationModifie')
 				}
 			}.bind(this))
 
 			this.$socket.on('modifierlisteutilisateurs', function (statut) {
+				if (statut === 'desactivee') {
+					this.menuUtilisateurs = false
+				}
 				this.pad.listeUtilisateurs = statut
 				this.chargement = false
 				if (this.admin) {
-					this.$store.dispatch('modifierMessage', this.$t('parametreListeUtilisateursModifie'))
+					this.notification = this.$t('parametreListeUtilisateursModifie')
 				}
 			}.bind(this))
 
@@ -3584,7 +3554,7 @@ export default {
 				this.pad.editionNom = statut
 				this.chargement = false
 				if (this.admin) {
-					this.$store.dispatch('modifierMessage', this.$t('parametreEditionNomModifie'))
+					this.notification = this.$t('parametreEditionNomModifie')
 				}
 			}.bind(this))
 
@@ -3592,7 +3562,7 @@ export default {
 				this.pad.fichiers = statut
 				this.chargement = false
 				if (this.admin) {
-					this.$store.dispatch('modifierMessage', this.$t('parametreFichiersModifie'))
+					this.notification = this.$t('parametreFichiersModifie')
 				}
 			}.bind(this))
 
@@ -3600,7 +3570,7 @@ export default {
 				this.pad.enregistrements = statut
 				this.chargement = false
 				if (this.admin) {
-					this.$store.dispatch('modifierMessage', this.$t('parametreEnregistrementsModifie'))
+					this.notification = this.$t('parametreEnregistrementsModifie')
 				}
 			}.bind(this))
 
@@ -3608,7 +3578,7 @@ export default {
 				this.pad.liens = statut
 				this.chargement = false
 				if (this.admin) {
-					this.$store.dispatch('modifierMessage', this.$t('parametreLiensModifie'))
+					this.notification = this.$t('parametreLiensModifie')
 				}
 			}.bind(this))
 
@@ -3616,7 +3586,7 @@ export default {
 				this.pad.documents = statut
 				this.chargement = false
 				if (this.admin) {
-					this.$store.dispatch('modifierMessage', this.$t('parametreDocumentsModifie'))
+					this.notification = this.$t('parametreDocumentsModifie')
 				}
 			}.bind(this))
 
@@ -3624,7 +3594,7 @@ export default {
 				this.pad.commentaires = statut
 				this.chargement = false
 				if (this.admin) {
-					this.$store.dispatch('modifierMessage', this.$t('parametreCommentairesModifie'))
+					this.notification = this.$t('parametreCommentairesModifie')
 				}
 			}.bind(this))
 
@@ -3632,7 +3602,7 @@ export default {
 				this.pad.evaluations = statut
 				this.chargement = false
 				if (this.admin) {
-					this.$store.dispatch('modifierMessage', this.$t('parametreEvaluationModifie'))
+					this.notification = this.$t('parametreEvaluationModifie')
 				}
 			}.bind(this))
 
@@ -3640,23 +3610,23 @@ export default {
 				this.pad.copieBloc = statut
 				this.chargement = false
 				if (this.admin) {
-					this.$store.dispatch('modifierMessage', this.$t('parametreCopieBlocModifie'))
+					this.notification = this.$t('parametreCopieBlocModifie')
 				}
 			}.bind(this))
 
 			this.$socket.on('message', function (message) {
-				this.messages.push(message)
+				this.messagesChat.push(message)
 				if (message.identifiant !== this.identifiant && !this.menuChat) {
-					this.nouveauxMessages++
+					this.nouveauxMessagesChat++
 				}
 			}.bind(this))
 
 			this.$socket.on('reinitialisermessages', function () {
-				this.messages = []
-				this.nouveauxMessages = 0
+				this.messagesChat = []
+				this.nouveauxMessagesChat = 0
 				this.chargement = false
 				if (this.admin) {
-					this.$store.dispatch('modifierMessage', this.$t('historiqueConversationSupprime'))
+					this.notification = this.$t('historiqueConversationSupprime')
 				}
 			}.bind(this))
 
@@ -3664,7 +3634,7 @@ export default {
 				this.activite = []
 				this.chargement = false
 				if (this.admin) {
-					this.$store.dispatch('modifierMessage', this.$t('activiteSupprimee'))
+					this.notification = this.$t('activiteSupprimee')
 				}
 			}.bind(this))
 
@@ -3676,7 +3646,7 @@ export default {
 				}.bind(this))
 				this.chargement = false
 				if (this.admin) {
-					this.$store.dispatch('modifierMessage', this.$t('entreeActiviteSupprimee'))
+					this.notification = this.$t('entreeActiviteSupprimee')
 				}
 			}.bind(this))
 
@@ -3687,7 +3657,7 @@ export default {
 				this.pad.affichageColonnes = donnees.affichageColonnes
 				this.activite.unshift({ id: donnees.activiteId, identifiant: donnees.identifiant, nom: donnees.nom, titre: donnees.titre, date: donnees.date, couleur: donnees.couleur, type: 'colonne-ajoutee' })
 				if (this.admin) {
-					this.$store.dispatch('modifierMessage', this.$t('colonneAjoutee'))
+					this.notification = this.$t('colonneAjoutee')
 				}
 				this.chargement = false
 			}.bind(this))
@@ -3695,7 +3665,7 @@ export default {
 			this.$socket.on('modifiertitrecolonne', function (colonnes) {
 				this.pad.colonnes = colonnes
 				if (this.admin) {
-					this.$store.dispatch('modifierMessage', this.$t('nomColonneModifie'))
+					this.notification = this.$t('nomColonneModifie')
 				}
 				this.chargement = false
 			}.bind(this))
@@ -3703,7 +3673,7 @@ export default {
 			this.$socket.on('modifieraffichagecolonne', function (affichageColonnes) {
 				this.pad.affichageColonnes = affichageColonnes
 				if (this.admin) {
-					this.$store.dispatch('modifierMessage', this.$t('affichageColonneModifie'))
+					this.notification = this.$t('affichageColonneModifie')
 				}
 				this.chargement = false
 			}.bind(this))
@@ -3722,10 +3692,10 @@ export default {
 				this.blocs = blocs
 				this.activite.unshift({ id: donnees.activiteId, identifiant: donnees.identifiant, nom: donnees.nom, titre: donnees.titre, date: donnees.date, couleur: donnees.couleur, type: 'colonne-supprimee' })
 				if (this.admin) {
-					this.$store.dispatch('modifierMessage', this.$t('colonneSupprimee'))
+					this.notification = this.$t('colonneSupprimee')
 				} else if (!this.admin && this.modaleBloc && parseInt(this.colonne) === parseInt(donnees.colonne)) {
 					this.fermerModaleBloc()
-					this.$store.dispatch('modifierMessage', this.$t('colonneActuelleSupprimee'))
+					this.notification = this.$t('colonneActuelleSupprimee')
 				}
 				this.chargement = false
 			}.bind(this))
@@ -3760,7 +3730,7 @@ export default {
 				this.blocs = blocs
 				this.activite.unshift({ id: donnees.activiteId, identifiant: donnees.identifiant, nom: donnees.nom, titre: donnees.titre, date: donnees.date, couleur: donnees.couleur, type: 'colonne-deplacee' })
 				if (this.admin) {
-					this.$store.dispatch('modifierMessage', this.$t('colonneDeplacee'))
+					this.notification = this.$t('colonneDeplacee')
 				} else {
 					if (this.modaleBloc && parseInt(this.colonne) === parseInt(donnees.colonne) && donnees.direction === 'gauche') {
 						this.colonne = parseInt(donnees.colonne) - 1
@@ -3780,8 +3750,11 @@ export default {
 				this.modifierCaracteristique(this.identifiant, 'identifiant', donnees.identifiant)
 				this.modifierCaracteristique(donnees.identifiant, 'nom', donnees.nom)
 				this.modifierCaracteristique(donnees.identifiant, 'couleur', donnees.couleur)
-				this.$store.dispatch('modifierUtilisateur', { identifiant: donnees.identifiant, nom: donnees.nom, langue: donnees.langue, statut: 'auteur' })
-				this.$store.dispatch('modifierMessage', this.$t('padDebloque'))
+				this.identifiant = donnees.identifiant
+				this.nom = donnees.nom
+				this.langue = donnees.langue
+				this.statut = 'auteur'
+				this.notification = this.$t('padDebloque')
 			}.bind(this))
 
 			this.$socket.on('modifiernotification', function (donnees) {
@@ -3798,13 +3771,13 @@ export default {
 
 			this.$socket.on('reponsemodifierbloc', function (donnees) {
 				if (this.identifiant === donnees.identifiant && donnees.reponse === true) {
-					this.$store.dispatch('modifierMessage', this.$t('capsuleEnCoursModification'))
+					this.notification = this.$t('capsuleEnCoursModification')
 				}
 			}.bind(this))
 
 			this.$socket.on('deconnecte', function () {
 				this.chargement = false
-				this.$store.dispatch('modifierMessage', this.$t('problemeConnexion'))
+				this.notification = this.$t('problemeConnexion')
 			}.bind(this))
 
 			this.$socket.on('maintenance', function () {

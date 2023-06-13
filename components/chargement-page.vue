@@ -1,37 +1,29 @@
 <template>
-	<div id="conteneur-chargement" v-if="chargement">
-		<div id="chargement">
-			<div class="spinner">
-				<div />
-				<div />
-				<div />
-				<div />
-				<div />
-				<div />
-				<div />
-				<div />
-				<div />
-				<div />
-				<div />
-				<div />
+	<Transition name="fondu">
+		<div id="conteneur-chargement">
+			<div id="chargement">
+				<div class="spinner">
+					<div />
+					<div />
+					<div />
+					<div />
+					<div />
+					<div />
+					<div />
+					<div />
+					<div />
+					<div />
+					<div />
+					<div />
+				</div>
 			</div>
 		</div>
-	</div>
+	</Transition>
 </template>
 
 <script>
 export default {
-	data: () => ({
-		chargement: false
-	}),
-	methods: {
-		start () {
-			this.chargement = true
-		},
-		finish () {
-			this.chargement = false
-		}
-	}
+	name: 'ChargementPage'
 }
 </script>
 
@@ -44,8 +36,8 @@ export default {
 	bottom: 0;
 	width: 100%;
 	height: 100%;
-	background: rgba(255, 255, 255, 0.85);
 	z-index: 100000;
+	background: rgba(255, 255, 255, 0.85);
 }
 
 #chargement {
