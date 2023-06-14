@@ -340,7 +340,7 @@ async function demarrerServeur () {
 					req.session.langue = langue
 					req.session.statut = 'utilisateur'
 					req.session.cookie.expires = new Date(Date.now() + dureeSession)
-					res.json({ identifiant: identifiant, nom: '', email: email, langue: langue, statut: 'utilisateur', affichage: 'liste' })
+					res.json({ identifiant: identifiant })
 				})
 			} else {
 				res.send('utilisateur_existe_deja')
@@ -379,7 +379,7 @@ async function demarrerServeur () {
 						}
 						req.session.email = email
 						req.session.cookie.expires = new Date(Date.now() + dureeSession)
-						res.json({ identifiant: identifiant, nom: nom, email: email, langue: langue, statut: 'utilisateur', affichage: affichage, classement: classement })
+						res.json({ identifiant: identifiant })
 					} else {
 						res.send('erreur_connexion')
 					}
