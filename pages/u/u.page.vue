@@ -610,7 +610,7 @@ export default {
 				}).then(function (reponse) {
 					const donnees = reponse.data
 					if (donnees === 'non_connecte') {
-						window.location.href = '/'
+						window.location.replace('/')
 					} else if (donnees === 'erreur_creation') {
 						this.chargementModale = true
 						this.message = this.$t('erreurCreationPad')
@@ -656,7 +656,7 @@ export default {
 					this.fermerModaleImporterPad()
 					const donnees = reponse.data
 					if (donnees === 'non_connecte') {
-						window.location.href = '/'
+						window.location.replace('/')
 					} else if (donnees === 'erreur_import') {
 						this.message = this.$t('erreurImportPad')
 					} else if (donnees === 'donnees_corrompues') {
@@ -709,7 +709,7 @@ export default {
 				this.chargement = false
 				const donnees = reponse.data
 				if (donnees === 'non_connecte') {
-					window.location.href = '/'
+					window.location.replace('/')
 				} else if (donnees === 'erreur_ajout_favori') {
 					this.message = this.$t('erreurAjoutFavoris')
 				} else {
@@ -731,7 +731,7 @@ export default {
 				this.chargement = false
 				const donnees = reponse.data
 				if (donnees === 'non_connecte') {
-					window.location.href = '/'
+					window.location.replace('/')
 				} else if (donnees === 'erreur_suppression_favori') {
 					this.message = this.$t('erreurSuppressionFavoris')
 				} else {
@@ -797,7 +797,7 @@ export default {
 					this.chargement = false
 					const donnees = reponse.data
 					if (donnees === 'non_connecte') {
-						window.location.href = '/'
+						window.location.replace('/')
 					} else if (donnees === 'erreur_deplacement') {
 						this.message = this.$t('erreurDeplacementPad')
 					} else {
@@ -842,7 +842,7 @@ export default {
 				this.chargement = false
 				const donnees = reponse.data
 				if (donnees === 'non_connecte') {
-					window.location.href = '/'
+					window.location.replace('/')
 				} else if (donnees === 'erreur_duplication') {
 					this.message = this.$t('erreurDuplicationPad')
 				} else {
@@ -868,7 +868,7 @@ export default {
 				this.chargement = false
 				const donnees = reponse.data
 				if (donnees === 'non_connecte') {
-					window.location.href = '/'
+					window.location.replace('/')
 				} else if (donnees === 'erreur_export') {
 					this.message = this.$t('erreurExportPad')
 				} else {
@@ -894,7 +894,7 @@ export default {
 				this.chargement = false
 				const donnees = reponse.data
 				if (donnees === 'non_connecte') {
-					window.location.href = '/'
+					window.location.replace('/')
 				} else if (donnees === 'erreur_suppression') {
 					this.message = this.$t('erreurSuppressionPad')
 				} else {
@@ -1026,7 +1026,7 @@ export default {
 					this.chargement = false
 					const donnees = reponse.data
 					if (donnees === 'non_connecte') {
-						window.location.href = '/'
+						window.location.replace('/')
 					} else {
 						this.classer(classement)
 						this.classement = classement
@@ -1056,7 +1056,7 @@ export default {
 					this.chargement = false
 					const donnees = reponse.data
 					if (donnees === 'non_connecte') {
-						window.location.href = '/'
+						window.location.replace('/')
 					} else {
 						this.nom = nom
 						this.email = email
@@ -1090,7 +1090,7 @@ export default {
 					this.chargement = false
 					const donnees = reponse.data
 					if (donnees === 'non_connecte') {
-						window.location.href = '/'
+						window.location.replace('/')
 					} else if (donnees === 'motdepasse_incorrect') {
 						this.message = this.$t('motDePasseActuelPasCorrect')
 					} else if (donnees === 'erreur') {
@@ -1122,7 +1122,7 @@ export default {
 				}).then(function (reponse) {
 					const donnees = reponse.data
 					if (donnees === 'non_connecte') {
-						window.location.href = '/'
+						window.location.replace('/')
 					} else {
 						this.$i18n.locale = langue
 						document.getElementsByTagName('html')[0].setAttribute('lang', langue)
@@ -1144,7 +1144,7 @@ export default {
 					this.chargement = false
 					const donnees = reponse.data
 					if (donnees === 'non_connecte') {
-						window.location.href = '/'
+						window.location.replace('/')
 					} else {
 						this.affichage = affichage
 						this.notification = this.$t('affichageModifie')
@@ -1172,7 +1172,7 @@ export default {
 					this.chargement = false
 					const donnees = reponse.data
 					if (donnees === 'non_connecte') {
-						window.location.href = '/'
+						window.location.replace('/')
 					} else if (donnees === 'erreur_ajout_dossier') {
 						this.message = this.$t('erreurAjoutDossier')
 					} else {
@@ -1217,7 +1217,7 @@ export default {
 					this.chargement = false
 					const donnees = reponse.data
 					if (donnees === 'non_connecte') {
-						window.location.href = '/'
+						window.location.replace('/')
 					} else if (donnees === 'erreur_modification_dossier') {
 						this.message = this.$t('erreurModificationDossier')
 					} else {
@@ -1251,7 +1251,7 @@ export default {
 				this.chargement = false
 				const donnees = reponse.data
 				if (donnees === 'non_connecte') {
-					window.location.href = '/'
+					window.location.replace('/')
 				} else if (donnees === 'erreur_suppression_dossier') {
 					this.message = this.$t('erreurSuppressionDossier')
 				} else {
@@ -1284,7 +1284,7 @@ export default {
 					this.message = this.$t('erreurCommunicationServeur')
 				} else {
 					this.$socket.emit('deconnexion', identifiant)
-					window.location.href = '/'
+					window.location.replace('/')
 				}
 			}.bind(this)).catch(function () {
 				this.chargement = false
@@ -1296,7 +1296,7 @@ export default {
 			const identifiant = this.identifiant
 			axios.post(this.hote + '/api/deconnexion').then(function () {
 				this.$socket.emit('deconnexion', identifiant)
-				window.location.href = '/'
+				window.location.replace('/')
 			}.bind(this)).catch(function () {
 				this.chargement = false
 				this.message = this.$t('erreurCommunicationServeur')
@@ -1779,6 +1779,7 @@ export default {
 	display: inline-block;
 	border-radius: 50%;
 	background: #e32f6c;
+	margin-right: 0.7rem;
 }
 
 .pad.mosaique .mise-a-jour {
