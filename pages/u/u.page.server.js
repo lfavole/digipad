@@ -13,7 +13,7 @@ async function onBeforeRender (pageContext) {
 		erreur = true
 		pageProps = { erreur }
 	})
-	if (reponse.hasOwnProperty('data') || identifiant !== pageContext.identifiant || pageContext.statut === 'invite') {
+	if (reponse && reponse.hasOwnProperty('data') && identifiant === pageContext.identifiant && pageContext.statut === 'utilisateur') {
 		const params = pageContext.params
 		const hote = pageContext.hote
 		const nom = pageContext.nom
