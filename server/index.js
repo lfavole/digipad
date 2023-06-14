@@ -2593,6 +2593,7 @@ async function demarrerServeur () {
 			const protocole = req.body.protocole
 			const reponse = await axios.get(protocole + '//' + domaine, { responseType: 'document' }).catch(function () {
 				res.send('erreur')
+				return false
 			})
 			if (reponse && reponse.hasOwnProperty('data')) {
 				const $ = cheerio.load(reponse.data)
