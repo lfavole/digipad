@@ -2591,10 +2591,7 @@ async function demarrerServeur () {
 			let favicon = ''
 			const domaine = req.body.domaine
 			const protocole = req.body.protocole
-			const reponse = await axios.get(protocole + '//' + domaine, { responseType: 'document' }).catch(function () {
-				res.send('erreur')
-				return false
-			})
+			const reponse = await axios.get(protocole + '//' + domaine, { responseType: 'document' })
 			if (reponse && reponse.hasOwnProperty('data')) {
 				const $ = cheerio.load(reponse.data)
 				const recupererTaille = function (el) {
@@ -2625,7 +2622,7 @@ async function demarrerServeur () {
 			} else if (favicon !== '') {
 				res.send(protocole + '//' + domaine + '/' + favicon)
 			} else {
-				res.send('')
+				res.send(favicon)
 			}
 		}
 	})
