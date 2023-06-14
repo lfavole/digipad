@@ -2624,7 +2624,7 @@ async function demarrerServeur () {
 			} else if (favicon !== '') {
 				res.send(protocole + '//' + domaine + '/' + favicon)
 			} else {
-				res.send(favicon)
+				res.send('')
 			}
 		}
 	})
