@@ -2591,39 +2591,46 @@ async function demarrerServeur () {
 			let favicon = ''
 			const domaine = req.body.domaine
 			const protocole = req.body.protocole
-			const reponse = await axios.get(protocole + '//' + domaine, { responseType: 'document' })
-			if (reponse && reponse.hasOwnProperty('data')) {
-				const $ = cheerio.load(reponse.data)
-				const recupererTaille = function (el) {
-					return (el.attribs.sizes && parseInt(el.attribs.sizes, 10)) || 0
-				}
-				let favicons = [
-					...$('meta[property="og:image"]')
-				]
-				if (favicons.length > 0 && favicons[0].hasOwnProperty('attribs')) {
-					favicon = favicons[0].attribs.content
-				} else {
-					favicons = [
-						...$('link[rel="shortcut icon"], link[rel="icon"], link[rel="apple-touch-icon"]')
-					].sort((a, b) => {
-						return recupererTaille(b) - recupererTaille(a)
-					})
-					if (favicons.length > 0 && favicons[0].hasOwnProperty('attribs')) {
-						favicon = favicons[0].attribs.href
+			axios.get(protocole + '//' + domaine, { 
+				responseType: 'document'
+			}).then(function (reponse) {
+				if (reponse && reponse.hasOwnProperty('data')) {
+					const $ = cheerio.load(reponse.data)
+					const recupererTaille = function (el) {
+						return (el.attribs.sizes && parseInt(el.attribs.sizes, 10)) || 0
 					}
+					let favicons = [
+						...$('meta[property="og:image"]')
+					]
+					if (favicons.length > 0 && favicons[0].hasOwnProperty('attribs')) {
+						favicon = favicons[0].attribs.content
+					} else {
+						favicons = [
+							...$('link[rel="shortcut icon"], link[rel="icon"], link[rel="apple-touch-icon"]')
+						].sort((a, b) => {
+							return recupererTaille(b) - recupererTaille(a)
+						})
+						if (favicons.length > 0 && favicons[0].hasOwnProperty('attribs')) {
+							favicon = favicons[0].attribs.href
+						}
+					}
+					if (favicon !== '' && verifierURL(favicon, ['https', 'http']) === true) {
+						res.send(favicon)
+					} else if (favicon !== '' && favicon.substring(0, 2) === './') {
+						res.send(protocole + '//' + domaine + favicon.substring(1))
+					} else if (favicon !== '' && favicon.substring(0, 1) === '/') {
+						res.send(protocole + '//' + domaine + favicon)
+					} else if (favicon !== '') {
+						res.send(protocole + '//' + domaine + '/' + favicon)
+					} else {
+						res.send(favicon)
+					}
+				} else {
+					res.send(favicon)
 				}
-			}
-			if (favicon !== '' && verifierURL(favicon, ['https', 'http']) === true) {
-				res.send(favicon)
-			} else if (favicon !== '' && favicon.substring(0, 2) === './') {
-				res.send(protocole + '//' + domaine + favicon.substring(1))
-			} else if (favicon !== '' && favicon.substring(0, 1) === '/') {
-				res.send(protocole + '//' + domaine + favicon)
-			} else if (favicon !== '') {
-				res.send(protocole + '//' + domaine + '/' + favicon)
-			} else {
-				res.send(favicon)
-			}
+			}).catch(function () {
+				res.send('erreur')
+			})
 		}
 	})
 
