@@ -980,8 +980,8 @@ async function demarrerServeur () {
 										db.hgetall('pad-' + pad + ':' + bloc, function (err, infos) {
 											if (err || !infos) { resolve({}) }
 											const date = dayjs().format()
-											if (infos.hasOwnProperty('vignette') && infos.vignette !== '') {
-												infos.vignette = infos.vignette.replace('/' + definirDossierFichiers(pad) + '/' + pad, '/' + definirDossierFichiers(id) + '/' + id)
+											if (infos.hasOwnProperty('vignette') && infos.vignette !== '' && !infos.vignette.includes('/img/') && !verifierURL(infos.vignette, ['https', 'http'])) {
+												infos.vignette = '/' + definirDossierFichiers(id) + '/' + id + '/' + path.basename(infos.vignette)
 											}
 											let visibilite = 'visible'
 											if (infos.hasOwnProperty('visibilite')) {
@@ -1051,6 +1051,9 @@ async function demarrerServeur () {
 											affichageColonnes.push(true)
 										})
 									}
+									if (!donnees.fond.includes('/img/') && donnees.fond.substring(0, 1) !== '#') {
+										donnees.fond = '/' + definirDossierFichiers(id) + '/' + id + '/' + path.basename(donnees.fond)
+									}
 									const multi = db.multi()
 									multi.incr('pad')
 									if (donnees.hasOwnProperty('code')) {
@@ -1078,8 +1081,8 @@ async function demarrerServeur () {
 							for (const [indexBloc, bloc] of donnees.blocs.entries()) {
 								const donneesBloc = new Promise(function (resolve) {
 									if (Object.keys(bloc).length > 0) {
-										if (bloc.hasOwnProperty('vignette') && bloc.vignette !== '') {
-											bloc.vignette = bloc.vignette.replace('/' + definirDossierFichiers(pad) + '/' + pad, '/' + definirDossierFichiers(id) + '/' + id)
+										if (bloc.hasOwnProperty('vignette') && bloc.vignette !== '' && !bloc.vignette.includes('/img/') && !verifierURL(bloc.vignette, ['https', 'http'])) {
+											bloc.vignette = '/' + definirDossierFichiers(id) + '/' + id + '/' + path.basename(bloc.vignette)
 										}
 										let visibilite = 'visible'
 										if (bloc.hasOwnProperty('visibilite')) {
@@ -1149,6 +1152,9 @@ async function demarrerServeur () {
 									JSON.parse(donnees.pad.colonnes).forEach(function () {
 										affichageColonnes.push(true)
 									})
+								}
+								if (!donnees.pad.fond.includes('/img/') && donnees.pad.fond.substring(0, 1) !== '#') {
+									donnees.pad.fond = '/' + definirDossierFichiers(id) + '/' + id + '/' + path.basename(donnees.pad.fond)
 								}
 								const multi = db.multi()
 								multi.incr('pad')
@@ -1280,8 +1286,11 @@ async function demarrerServeur () {
 							await fs.mkdirp(path.normalize(chemin + '/' + id + '/static'))
 							await fs.writeFile(path.normalize(chemin + '/' + id + '/donnees.json'), JSON.stringify(parametres, '', 4), 'utf8')
 							await fs.writeFile(path.normalize(chemin + '/' + id + '/index.html'), html, 'utf8')
-							if (!parametres.pad.fond.includes('/img/') && parametres.pad.fond.substring(0, 1) !== '#' && await fs.pathExists(path.join(__dirname, '..', '/static' + parametres.pad.fond))) {
-								await fs.copy(path.join(__dirname, '..', '/static' + parametres.pad.fond), path.normalize(chemin + '/' + id + '/fichiers/' + parametres.pad.fond.split('/').pop(), { overwrite: true }))
+							if (!parametres.pad.fond.includes('/img/') && parametres.pad.fond.substring(0, 1) !== '#') {
+								const fichierFond = path.basename(parametres.pad.fond)
+								if (await fs.pathExists(path.join(__dirname, '..', '/static/' + definirDossierFichiers(id) + '/' + id + '/' + fichierFond))) {
+									await fs.copy(path.join(__dirname, '..', '/static/' + definirDossierFichiers(id) + '/' + id + '/' + fichierFond), path.normalize(chemin + '/' + id + '/fichiers/' + fichierFond, { overwrite: true }))
+								}
 							} else if (parametres.pad.fond.includes('/img/') && await fs.pathExists(path.join(__dirname, '..', '/public' + parametres.pad.fond))) {
 								await fs.copy(path.join(__dirname, '..', '/public' + parametres.pad.fond), path.normalize(chemin + '/' + id + '/static' + parametres.pad.fond, { overwrite: true }))
 							}
@@ -1300,10 +1309,15 @@ async function demarrerServeur () {
 								if (Object.keys(bloc).length > 0 && bloc.media !== '' && bloc.type !== 'embed' && await fs.pathExists(path.join(__dirname, '..', '/static/' + definirDossierFichiers(id) + '/' + id + '/' + bloc.media))) {
 									await fs.copy(path.join(__dirname, '..', '/static/' + definirDossierFichiers(id) + '/' + id + '/' + bloc.media), path.normalize(chemin + '/' + id + '/fichiers/' + bloc.media, { overwrite: true }))
 								}
-								if (Object.keys(bloc).length > 0 && bloc.vignette && bloc.vignette !== '' && bloc.vignette.substring(1, definirDossierFichiers(id).length + 1) === definirDossierFichiers(id) && await fs.pathExists(path.join(__dirname, '..', '/static' + bloc.vignette))) {
-									await fs.copy(path.join(__dirname, '..', '/static' + bloc.vignette), path.normalize(chemin + '/' + id + '/fichiers/' + bloc.vignette.replace('/' + definirDossierFichiers(id) + '/' + id + '/', ''), { overwrite: true }))
-								} else if (Object.keys(bloc).length > 0 && bloc.vignette && bloc.vignette !== '' && bloc.vignette.includes('/img/') && !verifierURL(bloc.vignette, ['https', 'http']) && await fs.pathExists(path.join(__dirname, '..', '/public' + bloc.vignette))) {
-									await fs.copy(path.join(__dirname, '..', '/public' + bloc.vignette), path.normalize(chemin + '/' + id + '/static' + bloc.vignette, { overwrite: true }))
+								if (Object.keys(bloc).length > 0 && bloc.vignette && bloc.vignette !== '') {
+									if (bloc.vignette.includes('/img/') && !verifierURL(bloc.vignette, ['https', 'http']) && await fs.pathExists(path.join(__dirname, '..', '/public' + bloc.vignette))) {
+										await fs.copy(path.join(__dirname, '..', '/public' + bloc.vignette), path.normalize(chemin + '/' + id + '/static' + bloc.vignette, { overwrite: true }))
+									} else if (!verifierURL(bloc.vignette, ['https', 'http'])) {
+										const fichierVignette = path.basename(bloc.vignette)
+										if (await fs.pathExists(path.join(__dirname, '..', '/static/' + definirDossierFichiers(id) + '/' + id + '/' + fichierVignette))) {
+											await fs.copy(path.join(__dirname, '..', '/static/' + definirDossierFichiers(id) + '/' + id + '/' + fichierVignette), path.normalize(chemin + '/' + id + '/fichiers/' + fichierVignette, { overwrite: true }))
+										}
+									}
 								}
 							}
 							const archiveId = Math.floor((Math.random() * 100000) + 1)
@@ -1332,8 +1346,11 @@ async function demarrerServeur () {
 						await fs.mkdirp(path.normalize(chemin + '/' + id + '/static'))
 						await fs.writeFile(path.normalize(chemin + '/' + id + '/donnees.json'), JSON.stringify(donnees, '', 4), 'utf8')
 						await fs.writeFile(path.normalize(chemin + '/' + id + '/index.html'), html, 'utf8')
-						if (!donnees.pad.fond.includes('/img/') && donnees.pad.fond.substring(0, 1) !== '#' && await fs.pathExists(path.join(__dirname, '..', '/static' + donnees.pad.fond))) {
-							await fs.copy(path.join(__dirname, '..', '/static' + donnees.pad.fond), path.normalize(chemin + '/' + id + '/fichiers/' + donnees.pad.fond.split('/').pop(), { overwrite: true }))
+						if (!donnees.pad.fond.includes('/img/') && donnees.pad.fond.substring(0, 1) !== '#') {
+							const fichierFond = path.basename(donnees.pad.fond)
+							if (await fs.pathExists(path.join(__dirname, '..', '/static/' + definirDossierFichiers(id) + '/' + id + '/' + fichierFond))) {
+								await fs.copy(path.join(__dirname, '..', '/static/' + definirDossierFichiers(id) + '/' + id + '/' + fichierFond), path.normalize(chemin + '/' + id + '/fichiers/' + fichierFond, { overwrite: true }))
+							}
 						} else if (donnees.pad.fond.includes('/img/') && await fs.pathExists(path.join(__dirname, '..', '/public' + donnees.pad.fond))) {
 							await fs.copy(path.join(__dirname, '..', '/public' + donnees.pad.fond), path.normalize(chemin + '/' + id + '/static' + donnees.pad.fond, { overwrite: true }))
 						}
@@ -1352,10 +1369,15 @@ async function demarrerServeur () {
 							if (Object.keys(bloc).length > 0 && bloc.media !== '' && bloc.type !== 'embed' && await fs.pathExists(path.join(__dirname, '..', '/static/' + definirDossierFichiers(id) + '/' + id + '/' + bloc.media))) {
 								await fs.copy(path.join(__dirname, '..', '/static/' + definirDossierFichiers(id) + '/' + id + '/' + bloc.media), path.normalize(chemin + '/' + id + '/fichiers/' + bloc.media, { overwrite: true }))
 							}
-							if (Object.keys(bloc).length > 0 && bloc.vignette && bloc.vignette !== '' && bloc.vignette.substring(1, definirDossierFichiers(id).length + 1) === definirDossierFichiers(id) && await fs.pathExists(path.join(__dirname, '..', '/static' + bloc.vignette))) {
-								await fs.copy(path.join(__dirname, '..', '/static' + bloc.vignette), path.normalize(chemin + '/' + id + '/fichiers/' + bloc.vignette.replace('/' + definirDossierFichiers(id) + '/' + id + '/', ''), { overwrite: true }))
-							} else if (Object.keys(bloc).length > 0 && bloc.vignette && bloc.vignette !== '' && bloc.vignette.includes('/img/') && !verifierURL(bloc.vignette, ['https', 'http']) && await fs.pathExists(path.join(__dirname, '..', '/public' + bloc.vignette))) {
-								await fs.copy(path.join(__dirname, '..', '/public' + bloc.vignette), path.normalize(chemin + '/' + id + '/static' + bloc.vignette, { overwrite: true }))
+							if (Object.keys(bloc).length > 0 && bloc.vignette && bloc.vignette !== '') {
+								if (bloc.vignette.includes('/img/') && !verifierURL(bloc.vignette, ['https', 'http']) && await fs.pathExists(path.join(__dirname, '..', '/public' + bloc.vignette))) {
+									await fs.copy(path.join(__dirname, '..', '/public' + bloc.vignette), path.normalize(chemin + '/' + id + '/static' + bloc.vignette, { overwrite: true }))
+								} else if (!verifierURL(bloc.vignette, ['https', 'http'])) {
+									const fichierVignette = path.basename(bloc.vignette)
+									if (await fs.pathExists(path.join(__dirname, '..', '/static/' + definirDossierFichiers(id) + '/' + id + '/' + fichierVignette))) {
+										await fs.copy(path.join(__dirname, '..', '/static/' + definirDossierFichiers(id) + '/' + id + '/' + fichierVignette), path.normalize(chemin + '/' + id + '/fichiers/' + fichierVignette, { overwrite: true }))
+									}
+								}
 							}
 						}
 						const archiveId = Math.floor((Math.random() * 100000) + 1)
@@ -1417,8 +1439,8 @@ async function demarrerServeur () {
 										if (parametres.evaluations === true) {
 											evaluations = bloc.evaluations
 										}
-										if (bloc.vignette !== '') {
-											bloc.vignette = bloc.vignette.replace('/' + definirDossierFichiers(donnees.pad.id) + '/' + donnees.pad.id, '/' + definirDossierFichiers(id) + '/' + id)
+										if (bloc.vignette !== '' && !bloc.vignette.includes('/img/') && !verifierURL(bloc.vignette, ['https', 'http'])) {
+											bloc.vignette = '/' + definirDossierFichiers(donnees.pad.id) + '/' + donnees.pad.id + '/' + path.basename(bloc.vignette)
 										}
 										let visibilite = 'visible'
 										if (bloc.hasOwnProperty('visibilite')) {
@@ -1446,8 +1468,8 @@ async function demarrerServeur () {
 											if (bloc.hasOwnProperty('media') && bloc.media !== '' && bloc.type !== 'embed' && await fs.pathExists(path.normalize(cible + '/fichiers/' + bloc.media))) {
 												await fs.copy(path.normalize(cible + '/fichiers/' + bloc.media), path.normalize(chemin + '/' + bloc.media, { overwrite: true }))
 											}
-											if (bloc.hasOwnProperty('vignette') && bloc.vignette !== '' && bloc.vignette.substring(1, definirDossierFichiers(id).length + 1) === definirDossierFichiers(id) && await fs.pathExists(path.normalize(cible + '/fichiers/' + bloc.vignette.replace('/' + definirDossierFichiers(id) + '/' + id + '/', '')))) {
-												await fs.copy(path.normalize(cible + '/fichiers/' + bloc.vignette.replace('/' + definirDossierFichiers(id) + '/' + id + '/', '')), path.normalize(chemin + '/' + bloc.vignette.replace('/' + definirDossierFichiers(id) + '/' + id + '/', ''), { overwrite: true }))
+											if (bloc.hasOwnProperty('vignette') && bloc.vignette !== '' && !bloc.vignette.includes('/img/') && !verifierURL(bloc.vignette, ['https', 'http']) && await fs.pathExists(path.normalize(cible + '/fichiers/' + path.basename(bloc.vignette)))) {
+												await fs.copy(path.normalize(cible + '/fichiers/' + path.basename(bloc.vignette)), path.normalize(chemin + '/' + path.basename(bloc.vignette), { overwrite: true }))
 											}
 											resolve({ bloc: bloc.bloc, blocId: blocId })
 										})
@@ -1506,8 +1528,8 @@ async function demarrerServeur () {
 								if (parametres.activite === true) {
 									activiteId = donnees.pad.activite
 								}
-								if (!donnees.pad.fond.includes('/img/') && donnees.pad.fond.substring(0, 1) !== '#' && await fs.pathExists(path.normalize(cible + '/fichiers/' + donnees.pad.fond.split('/').pop()))) {
-									await fs.copy(path.normalize(cible + '/fichiers/' + donnees.pad.fond.split('/').pop()), path.normalize(chemin + '/' + donnees.pad.fond.split('/').pop(), { overwrite: true }))
+								if (!donnees.pad.fond.includes('/img/') && donnees.pad.fond.substring(0, 1) !== '#' && await fs.pathExists(path.normalize(cible + '/fichiers/' + path.basename(donnees.pad.fond)))) {
+									await fs.copy(path.normalize(cible + '/fichiers/' + path.basename(donnees.pad.fond)), path.normalize(chemin + '/' + path.basename(donnees.pad.fond), { overwrite: true }))
 								}
 								const multi = db.multi()
 								multi.incr('pad')
@@ -1963,8 +1985,8 @@ async function demarrerServeur () {
 														if (donnees.hasOwnProperty('media') && donnees.media !== '' && donnees.type !== 'embed') {
 															supprimerFichier(pad, donnees.media)
 														}
-														if (donnees.hasOwnProperty('vignette') && donnees.vignette !== '' && donnees.vignette.substring(1, definirDossierFichiers(pad).length + 1) === definirDossierFichiers(pad)) {
-															supprimerVignette(donnees.vignette)
+														if (donnees.hasOwnProperty('vignette') && donnees.vignette !== '' && !donnees.vignette.includes('/img/') && !verifierURL(donnees.vignette, ['https', 'http'])) {
+															supprimerFichier(pad, path.basename(donnees.vignette))
 														}
 														const multi = db.multi()
 														multi.del('pad-' + pad + ':' + blocs[i])
@@ -2051,8 +2073,8 @@ async function demarrerServeur () {
 													if (blocs[i].hasOwnProperty('media') && blocs[i].media !== '' && blocs[i].type !== 'embed') {
 														supprimerFichier(pad, blocs[i].media)
 													}
-													if (blocs[i].hasOwnProperty('vignette') && blocs[i].vignette !== '' && blocs[i].vignette.substring(1, definirDossierFichiers(pad).length + 1) === definirDossierFichiers(pad)) {
-														supprimerVignette(blocs[i].vignette)
+													if (blocs[i].hasOwnProperty('vignette') && blocs[i].vignette !== '' && !blocs[i].vignette.includes('/img/') && !verifierURL(blocs[i].vignette, ['https', 'http'])) {
+														supprimerFichier(pad, path.basename(blocs[i].vignette))
 													}
 													const multi = db.multi()
 													multi.del('pad-' + pad + ':' + blocs[i].bloc)
@@ -3139,8 +3161,8 @@ async function demarrerServeur () {
 													await fs.copy(path.join(__dirname, '..', '/static/temp/' + path.basename(vignette)), path.join(__dirname, '..', '/static' + vignette))
 													await fs.remove(path.join(__dirname, '..', '/static/temp/' + path.basename(vignette)))
 												}
-												if (objet.hasOwnProperty('vignette') && objet.vignette !== vignette && objet.vignette.substring(1, definirDossierFichiers(pad).length + 1) === definirDossierFichiers(pad)) {
-													supprimerVignette(objet.vignette)
+												if (objet.hasOwnProperty('vignette') && objet.vignette !== vignette && objet.vignette !== '' && !objet.vignette.includes('/img/') && !verifierURL(objet.vignette, ['https', 'http'])) {
+													supprimerFichier(pad, path.basename(objet.vignette))
 												}
 												io.in('pad-' + pad).emit('modifierbloc', { bloc: bloc, titre: titre, texte: texte, media: media, iframe: iframe, type: type, source: source, vignette: vignette, identifiant: identifiant, nom: nom, modifie: date, couleur: couleur, colonne: colonne, visibilite: visibilite, activiteId: activiteId })
 												socket.request.session.cookie.expires = new Date(Date.now() + dureeSession)
@@ -3162,8 +3184,8 @@ async function demarrerServeur () {
 													await fs.copy(path.join(__dirname, '..', '/static/temp/' + path.basename(vignette)), path.join(__dirname, '..', '/static' + vignette))
 													await fs.remove(path.join(__dirname, '..', '/static/temp/' + path.basename(vignette)))
 												}
-												if (objet.hasOwnProperty('vignette') && objet.vignette !== vignette && objet.vignette.substring(1, definirDossierFichiers(pad).length + 1) === definirDossierFichiers(pad)) {
-													supprimerVignette(objet.vignette)
+												if (objet.hasOwnProperty('vignette') && objet.vignette !== vignette && objet.vignette !== '' && !objet.vignette.includes('/img/') && !verifierURL(objet.vignette, ['https', 'http'])) {
+													supprimerFichier(pad, path.basename(objet.vignette))
 												}
 												io.in('pad-' + pad).emit('modifierbloc', { bloc: bloc, titre: titre, texte: texte, media: media, iframe: iframe, type: type, source: source, vignette: vignette, identifiant: identifiant, nom: nom, modifie: date, couleur: couleur, colonne: colonne, visibilite: visibilite })
 												socket.request.session.cookie.expires = new Date(Date.now() + dureeSession)
@@ -3181,8 +3203,8 @@ async function demarrerServeur () {
 												await fs.copy(path.join(__dirname, '..', '/static/temp/' + path.basename(vignette)), path.join(__dirname, '..', '/static' + vignette))
 												await fs.remove(path.join(__dirname, '..', '/static/temp/' + path.basename(vignette)))
 											}
-											if (objet.hasOwnProperty('vignette') && objet.vignette !== vignette && objet.vignette.substring(1, definirDossierFichiers(pad).length + 1) === definirDossierFichiers(pad)) {
-												supprimerVignette(objet.vignette)
+											if (objet.hasOwnProperty('vignette') && objet.vignette !== vignette && objet.vignette !== '' && !objet.vignette.includes('/img/') && !verifierURL(objet.vignette, ['https', 'http'])) {
+												supprimerFichier(pad, path.basename(objet.vignette))
 											}
 											io.in('pad-' + pad).emit('modifierbloc', { bloc: bloc, titre: titre, texte: texte, media: media, iframe: iframe, type: type, source: source, vignette: vignette, identifiant: identifiant, nom: nom, modifie: date, couleur: couleur, colonne: colonne, visibilite: visibilite })
 											socket.request.session.cookie.expires = new Date(Date.now() + dureeSession)
@@ -3357,8 +3379,8 @@ async function demarrerServeur () {
 									if (objet.hasOwnProperty('media') && objet.media !== '' && objet.type !== 'embed') {
 										supprimerFichier(pad, objet.media)
 									}
-									if (objet.hasOwnProperty('vignette') && objet.vignette !== '' && objet.vignette.substring(1, definirDossierFichiers(pad).length + 1) === definirDossierFichiers(pad)) {
-										supprimerVignette(objet.vignette)
+									if (objet.hasOwnProperty('vignette') && objet.vignette !== '' && !objet.vignette.includes('/img/') && !verifierURL(objet.vignette, ['https', 'http'])) {
+										supprimerFichier(pad, path.basename(objet.vignette))
 									}
 									let etherpadId, url
 									if (objet.hasOwnProperty('iframe') && objet.iframe !== '' && objet.iframe.includes(etherpad)) {
@@ -3812,12 +3834,11 @@ async function demarrerServeur () {
 				return false
 			}
 			if (identifiant !== '' && identifiant !== undefined && socket.request.session.identifiant === identifiant) {
-				db.hset('pads:' + pad, 'fond', fond, async function (err) {
+				db.hset('pads:' + pad, 'fond', fond, function (err) {
 					if (err) { socket.emit('erreur'); return false }
 					io.in('pad-' + pad).emit('modifierfond', fond)
-					if (ancienfond.substring(1, definirDossierFichiers(pad).length + 1) === definirDossierFichiers(pad)) {
-						const chemin = path.join(__dirname, '..', '/static' + ancienfond)
-						await fs.remove(chemin)
+					if (!ancienfond.includes('/img/') && ancienfond.substring(0, 1) !== '#') {
+						supprimerFichier(pad, path.basename(ancienfond))
 					}
 					socket.request.session.cookie.expires = new Date(Date.now() + dureeSession)
 					socket.request.session.save()
@@ -3836,9 +3857,8 @@ async function demarrerServeur () {
 				db.hset('pads:' + pad, 'fond', fond, async function (err) {
 					if (err) { socket.emit('erreur'); return false }
 					io.in('pad-' + pad).emit('modifiercouleurfond', fond)
-					if (ancienfond.substring(1, definirDossierFichiers(pad).length + 1) === definirDossierFichiers(pad)) {
-						const chemin = path.join(__dirname, '..', '/static' + ancienfond)
-						await fs.remove(chemin)
+					if (!ancienfond.includes('/img/') && ancienfond.substring(0, 1) !== '#') {
+						supprimerFichier(pad, path.basename(ancienfond))
 					}
 					socket.request.session.cookie.expires = new Date(Date.now() + dureeSession)
 					socket.request.session.save()
@@ -4187,8 +4207,8 @@ async function demarrerServeur () {
 												if (objet.hasOwnProperty('media') && objet.media !== '' && objet.type !== 'embed') {
 													supprimerFichier(pad, objet.media)
 												}
-												if (objet.hasOwnProperty('vignette') && objet.vignette !== '' && objet.vignette.substring(1, definirDossierFichiers(pad).length + 1) === definirDossierFichiers(pad)) {
-													supprimerVignette(objet.vignette)
+												if (objet.hasOwnProperty('vignette') && objet.vignette !== '' && !objet.vignette.includes('/img/') && !verifierURL(objet.vignette, ['https', 'http'])) {
+													supprimerFichier(pad, path.basename(objet.vignette))
 												}
 												if (objet.hasOwnProperty('bloc') && objet.bloc === blocSupprime) {
 													const multi = db.multi()
@@ -4945,6 +4965,14 @@ async function demarrerServeur () {
 										if (parseInt(donnees.colonne) >= nombreColonnes) {
 											donnees.colonne = nombreColonnes - 1
 										}
+										// Pour résoudre le problème de chemin pour les fichiers déplacés
+										if (donnees.hasOwnProperty('fond') && !donnees.fond.includes('/img/') && donnees.fond.substring(0, 1) !== '#') {
+											donnees.fond = '/' + definirDossierFichiers(id) + '/' + id + '/' + path.basename(donnees.fond)
+										}
+										// Pour résoudre le problème de chemin pour les fichiers déplacés
+										if (donnees.hasOwnProperty('vignette') && donnees.vignette !== '' && !donnees.vignette.includes('/img/') && !verifierURL(donnees.vignette, ['https', 'http'])) {
+											donnees.vignette = '/' + definirDossierFichiers(id) + '/' + id + '/' + path.basename(donnees.vignette)
+										}
 										// Pour homogénéité des paramètres du bloc avec modération activée
 										if (!donnees.hasOwnProperty('visibilite')) {
 											donnees.visibilite = 'visible'
@@ -5304,11 +5332,6 @@ async function demarrerServeur () {
 
 	async function supprimerFichier (pad, fichier) {
 		const chemin = path.join(__dirname, '..', '/static/' + definirDossierFichiers(pad) + '/' + pad + '/' + fichier)
-		await fs.remove(chemin)
-	}
-
-	async function supprimerVignette (vignette) {
-		const chemin = path.join(__dirname, '..', '/static' + vignette)
 		await fs.remove(chemin)
 	}
 
