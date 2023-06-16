@@ -4958,7 +4958,11 @@ async function demarrerServeur () {
 				} else if (pad.hasOwnProperty('admins')) {
 					pad.admins = JSON.parse(pad.admins)
 				}
-				// Pour homogénéité des paramètres de pad avec coadministration
+
+				// Pour résoudre le problème de chemin pour les fichiers déplacés
+				if (pad.hasOwnProperty('fond') && !pad.fond.includes('/img/') && pad.fond.substring(0, 1) !== '#' && pad.fond !== '') {
+					pad.fond = '/' + definirDossierFichiers(id) + '/' + id + '/' + path.basename(pad.fond)
+				}
 				
 				const blocsPad = new Promise(function (resolveMain) {
 					const donneesBlocs = []
@@ -4972,10 +4976,6 @@ async function demarrerServeur () {
 										// Pour résoudre le problème des capsules qui sont référencées dans une colonne inexistante
 										if (parseInt(donnees.colonne) >= nombreColonnes) {
 											donnees.colonne = nombreColonnes - 1
-										}
-										// Pour résoudre le problème de chemin pour les fichiers déplacés
-										if (donnees.hasOwnProperty('fond') && !donnees.fond.includes('/img/') && donnees.fond.substring(0, 1) !== '#' && donnees.fond !== '') {
-											donnees.fond = '/' + definirDossierFichiers(id) + '/' + id + '/' + path.basename(donnees.fond)
 										}
 										// Pour résoudre le problème de chemin pour les fichiers déplacés
 										if (donnees.hasOwnProperty('vignette') && donnees.vignette !== '' && !donnees.vignette.includes('/img/') && !verifierURL(donnees.vignette, ['https', 'http'])) {
