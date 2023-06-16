@@ -1051,7 +1051,7 @@ async function demarrerServeur () {
 											affichageColonnes.push(true)
 										})
 									}
-									if (!donnees.fond.includes('/img/') && donnees.fond.substring(0, 1) !== '#') {
+									if (!donnees.fond.includes('/img/') && donnees.fond.substring(0, 1) !== '#' && donnees.fond !== '') {
 										donnees.fond = '/' + definirDossierFichiers(id) + '/' + id + '/' + path.basename(donnees.fond)
 									}
 									const multi = db.multi()
@@ -1153,7 +1153,7 @@ async function demarrerServeur () {
 										affichageColonnes.push(true)
 									})
 								}
-								if (!donnees.pad.fond.includes('/img/') && donnees.pad.fond.substring(0, 1) !== '#') {
+								if (!donnees.pad.fond.includes('/img/') && donnees.pad.fond.substring(0, 1) !== '#' && donnees.pad.fond !== '') {
 									donnees.pad.fond = '/' + definirDossierFichiers(id) + '/' + id + '/' + path.basename(donnees.pad.fond)
 								}
 								const multi = db.multi()
@@ -1286,7 +1286,7 @@ async function demarrerServeur () {
 							await fs.mkdirp(path.normalize(chemin + '/' + id + '/static'))
 							await fs.writeFile(path.normalize(chemin + '/' + id + '/donnees.json'), JSON.stringify(parametres, '', 4), 'utf8')
 							await fs.writeFile(path.normalize(chemin + '/' + id + '/index.html'), html, 'utf8')
-							if (!parametres.pad.fond.includes('/img/') && parametres.pad.fond.substring(0, 1) !== '#') {
+							if (!parametres.pad.fond.includes('/img/') && parametres.pad.fond.substring(0, 1) !== '#' && parametres.pad.fond !== '') {
 								const fichierFond = path.basename(parametres.pad.fond)
 								if (await fs.pathExists(path.join(__dirname, '..', '/static/' + definirDossierFichiers(id) + '/' + id + '/' + fichierFond))) {
 									await fs.copy(path.join(__dirname, '..', '/static/' + definirDossierFichiers(id) + '/' + id + '/' + fichierFond), path.normalize(chemin + '/' + id + '/fichiers/' + fichierFond, { overwrite: true }))
@@ -1346,7 +1346,7 @@ async function demarrerServeur () {
 						await fs.mkdirp(path.normalize(chemin + '/' + id + '/static'))
 						await fs.writeFile(path.normalize(chemin + '/' + id + '/donnees.json'), JSON.stringify(donnees, '', 4), 'utf8')
 						await fs.writeFile(path.normalize(chemin + '/' + id + '/index.html'), html, 'utf8')
-						if (!donnees.pad.fond.includes('/img/') && donnees.pad.fond.substring(0, 1) !== '#') {
+						if (!donnees.pad.fond.includes('/img/') && donnees.pad.fond.substring(0, 1) !== '#' && donnees.pad.fond !== '') {
 							const fichierFond = path.basename(donnees.pad.fond)
 							if (await fs.pathExists(path.join(__dirname, '..', '/static/' + definirDossierFichiers(id) + '/' + id + '/' + fichierFond))) {
 								await fs.copy(path.join(__dirname, '..', '/static/' + definirDossierFichiers(id) + '/' + id + '/' + fichierFond), path.normalize(chemin + '/' + id + '/fichiers/' + fichierFond, { overwrite: true }))
@@ -1528,7 +1528,7 @@ async function demarrerServeur () {
 								if (parametres.activite === true) {
 									activiteId = donnees.pad.activite
 								}
-								if (!donnees.pad.fond.includes('/img/') && donnees.pad.fond.substring(0, 1) !== '#' && await fs.pathExists(path.normalize(cible + '/fichiers/' + path.basename(donnees.pad.fond)))) {
+								if (!donnees.pad.fond.includes('/img/') && donnees.pad.fond.substring(0, 1) !== '#' && donnees.pad.fond !== '' && await fs.pathExists(path.normalize(cible + '/fichiers/' + path.basename(donnees.pad.fond)))) {
 									await fs.copy(path.normalize(cible + '/fichiers/' + path.basename(donnees.pad.fond)), path.normalize(chemin + '/' + path.basename(donnees.pad.fond), { overwrite: true }))
 								}
 								const multi = db.multi()
@@ -3845,7 +3845,7 @@ async function demarrerServeur () {
 				db.hset('pads:' + pad, 'fond', fond, function (err) {
 					if (err) { socket.emit('erreur'); return false }
 					io.in('pad-' + pad).emit('modifierfond', fond)
-					if (!ancienfond.includes('/img/') && ancienfond.substring(0, 1) !== '#') {
+					if (!ancienfond.includes('/img/') && ancienfond.substring(0, 1) !== '#' && ancienfond !== '') {
 						supprimerFichier(pad, path.basename(ancienfond))
 					}
 					socket.request.session.cookie.expires = new Date(Date.now() + dureeSession)
@@ -3865,7 +3865,7 @@ async function demarrerServeur () {
 				db.hset('pads:' + pad, 'fond', fond, async function (err) {
 					if (err) { socket.emit('erreur'); return false }
 					io.in('pad-' + pad).emit('modifiercouleurfond', fond)
-					if (!ancienfond.includes('/img/') && ancienfond.substring(0, 1) !== '#') {
+					if (!ancienfond.includes('/img/') && ancienfond.substring(0, 1) !== '#' && ancienfond !== '') {
 						supprimerFichier(pad, path.basename(ancienfond))
 					}
 					socket.request.session.cookie.expires = new Date(Date.now() + dureeSession)
@@ -4974,7 +4974,7 @@ async function demarrerServeur () {
 											donnees.colonne = nombreColonnes - 1
 										}
 										// Pour résoudre le problème de chemin pour les fichiers déplacés
-										if (donnees.hasOwnProperty('fond') && !donnees.fond.includes('/img/') && donnees.fond.substring(0, 1) !== '#') {
+										if (donnees.hasOwnProperty('fond') && !donnees.fond.includes('/img/') && donnees.fond.substring(0, 1) !== '#' && donnees.fond !== '') {
 											donnees.fond = '/' + definirDossierFichiers(id) + '/' + id + '/' + path.basename(donnees.fond)
 										}
 										// Pour résoudre le problème de chemin pour les fichiers déplacés
