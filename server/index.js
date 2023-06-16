@@ -526,7 +526,7 @@ async function demarrerServeur () {
 			)
 			// Récupération et vérification des dossiers utilisateur
 			db.hgetall('utilisateurs:' + identifiant, function (err, donnees) {
-				if (err || !donnees) {
+				if (err || !donnees || donnees === null) {
 					res.json({ padsCrees: padsCrees, padsRejoints: padsRejoints, padsAdmins: padsAdmins, padsFavoris: padsFavoris, dossiers: [], affichage: 'liste', classement: 'date-asc' })
 				} else {
 					let dossiers = []
@@ -978,7 +978,7 @@ async function demarrerServeur () {
 								for (const [indexBloc, bloc] of blocs.entries()) {
 									const donneesBloc = new Promise(function (resolve) {
 										db.hgetall('pad-' + pad + ':' + bloc, function (err, infos) {
-											if (err || !infos) { resolve({}) }
+											if (err || !infos || infos === null) { resolve({}) }
 											const date = dayjs().format()
 											if (infos.hasOwnProperty('vignette') && infos.vignette !== '' && !infos.vignette.includes('/img/') && !verifierURL(infos.vignette, ['https', 'http'])) {
 												infos.vignette = '/' + definirDossierFichiers(id) + '/' + id + '/' + path.basename(infos.vignette)
@@ -1205,17 +1205,17 @@ async function demarrerServeur () {
 							for (const bloc of blocs) {
 								const donneesBloc = new Promise(function (resolve) {
 									db.hgetall('pad-' + id + ':' + bloc, function (err, donnees) {
-										if (err || !donnees) { resolve({}) }
+										if (err || !donnees || donnees === null) { resolve({}) }
 										const donneesCommentaires = []
 										db.zrange('commentaires:' + bloc, 0, -1, function (err, commentaires) {
-											if (err || !commentaires) { resolve(donnees) }
+											if (err || !commentaires || commentaires === null) { resolve(donnees) }
 											for (let commentaire of commentaires) {
 												donneesCommentaires.push(JSON.parse(commentaire))
 											}
 											donnees.commentaires = donneesCommentaires.length
 											donnees.listeCommentaires = donneesCommentaires
 											db.zrange('evaluations:' + bloc, 0, -1, function (err, evaluations) {
-												if (err || !evaluations) { resolve(donnees) }
+												if (err || !evaluations || evaluations === null) { resolve(donnees) }
 												const donneesEvaluations = []
 												evaluations.forEach(function (evaluation) {
 													donneesEvaluations.push(JSON.parse(evaluation))
@@ -1254,7 +1254,7 @@ async function demarrerServeur () {
 					const activitePad = new Promise(function (resolveMain) {
 						const donneesEntrees = []
 						db.zrange('activite:' + id, 0, -1, function (err, entrees) {
-							if (err || !entrees) { resolveMain(donneesEntrees) }
+							if (err || !entrees || entrees === null) { resolveMain(donneesEntrees) }
 							for (let entree of entrees) {
 								entree = JSON.parse(entree)
 								const donneesEntree = new Promise(function (resolve) {
@@ -2223,7 +2223,7 @@ async function demarrerServeur () {
 	app.post('/api/verifier-mot-de-passe', function (req, res) {
 		const pad = req.body.pad
 		db.hgetall('pads:' + pad, async function (err, donnees) {
-			if (err || !donnees || !donnees.hasOwnProperty('motdepasse')) { res.send('erreur'); return false }
+			if (err || !donnees || donnees === null || !donnees.hasOwnProperty('motdepasse')) { res.send('erreur'); return false }
 			if (await bcrypt.compare(req.body.motdepasse, donnees.motdepasse)) {
 				res.send('motdepasse_correct')
 			} else {
@@ -2235,7 +2235,7 @@ async function demarrerServeur () {
 	app.post('/api/verifier-code-acces', function (req, res) {
 		const pad = req.body.pad
 		db.hgetall('pads:' + pad, function (err, donnees) {
-			if (err || !donnees || !donnees.hasOwnProperty('code')) { res.send('erreur'); return false }
+			if (err || !donnees || donnees === null || !donnees.hasOwnProperty('code')) { res.send('erreur'); return false }
 			if (req.body.code === donnees.code) {
 				if (!req.session.acces) {
 					req.session.acces = []
@@ -3069,7 +3069,7 @@ async function demarrerServeur () {
 			}
 			if (identifiant !== '' && identifiant !== undefined && socket.request.session.identifiant === identifiant) {
 				db.hgetall('pads:' + pad, function (err, donnees) {
-					if (err || !donnees || !donnees.hasOwnProperty('id') || !donnees.hasOwnProperty('token') || !donnees.hasOwnProperty('identifiant')) { socket.emit('erreur'); return false }
+					if (err || !donnees || donnees === null || !donnees.hasOwnProperty('id') || !donnees.hasOwnProperty('token') || !donnees.hasOwnProperty('identifiant')) { socket.emit('erreur'); return false }
 					const proprietaire = donnees.identifiant
 					let admins = []
 					if (donnees.hasOwnProperty('admins')) {
@@ -3125,7 +3125,7 @@ async function demarrerServeur () {
 			}
 			if (identifiant !== '' && identifiant !== undefined && socket.request.session.identifiant === identifiant) {
 				db.hgetall('pads:' + pad, function (err, donnees) {
-					if (err || !donnees || !donnees.hasOwnProperty('id') || !donnees.hasOwnProperty('token')) { socket.emit('erreur'); return false }
+					if (err || !donnees || donnees === null || !donnees.hasOwnProperty('id') || !donnees.hasOwnProperty('token')) { socket.emit('erreur'); return false }
 					if (donnees.id === pad && donnees.token === token) {
 						const proprietaire = donnees.identifiant
 						let admins = []
@@ -3236,7 +3236,7 @@ async function demarrerServeur () {
 			}
 			if (identifiant !== '' && identifiant !== undefined && socket.request.session.identifiant === identifiant) {
 				db.hgetall('pads:' + pad, function (err, donnees) {
-					if (err || !donnees || !donnees.hasOwnProperty('id') || !donnees.hasOwnProperty('token')) { socket.emit('erreur'); return false }
+					if (err || !donnees || donnees === null || !donnees.hasOwnProperty('id') || !donnees.hasOwnProperty('token')) { socket.emit('erreur'); return false }
 					const id = parseInt(donnees.bloc) + 1
 					db.hincrby('pads:' + pad, 'bloc', 1)
 					if (donnees.id === pad && donnees.token === token) {
@@ -3282,7 +3282,7 @@ async function demarrerServeur () {
 			}
 			if (identifiant !== '' && identifiant !== undefined && socket.request.session.identifiant === identifiant) {
 				db.hgetall('pads:' + pad, function (err, donnees) {
-					if (err || !donnees || !donnees.hasOwnProperty('id') || !donnees.hasOwnProperty('token')) { socket.emit('erreur'); return false }
+					if (err || !donnees || donnees === null || !donnees.hasOwnProperty('id') || !donnees.hasOwnProperty('token')) { socket.emit('erreur'); return false }
 					if (donnees.id === pad && donnees.token === token) {
 						db.exists('pad-' + pad + ':' + item.bloc, function (err, resultat) {
 							if (err) { socket.emit('erreur'); return false }
@@ -3372,7 +3372,7 @@ async function demarrerServeur () {
 			}
 			if (identifiant !== '' && identifiant !== undefined && socket.request.session.identifiant === identifiant) {
 				db.hgetall('pads:' + pad, function (err, donnees) {
-					if (err || !donnees || !donnees.hasOwnProperty('id') || !donnees.hasOwnProperty('token')) { socket.emit('erreur'); return false }
+					if (err || !donnees || donnees === null || !donnees.hasOwnProperty('id') || !donnees.hasOwnProperty('token')) { socket.emit('erreur'); return false }
 					if (donnees.id === pad && donnees.token === token) {
 						const proprietaire = donnees.identifiant
 						let admins = []
@@ -3436,9 +3436,9 @@ async function demarrerServeur () {
 			}
 			if (identifiant !== '' && identifiant !== undefined && socket.request.session.identifiant === identifiant) {
 				db.hgetall('pads:' + pad, function (err, resultat) {
-					if (err || !resultat || !resultat.hasOwnProperty('activite')) { socket.emit('erreur'); return false }
+					if (err || !resultat || resultat === null || !resultat.hasOwnProperty('activite')) { socket.emit('erreur'); return false }
 					db.hgetall('pad-' + pad + ':' + bloc, function (err, donnees) {
-						if (err || !donnees || !donnees.hasOwnProperty('commentaires')) { socket.emit('erreur'); return false }
+						if (err || !donnees || donnees === null || !donnees.hasOwnProperty('commentaires')) { socket.emit('erreur'); return false }
 						db.zcard('commentaires:' + bloc, function (err, commentaires) {
 							if (err) { socket.emit('erreur'); return false }
 							const date = dayjs().format()
@@ -3472,7 +3472,7 @@ async function demarrerServeur () {
 			}
 			if (identifiant !== '' && identifiant !== undefined && socket.request.session.identifiant === identifiant) {
 				db.zrangebyscore('commentaires:' + bloc, id, id, function (err, resultats) {
-					if (err || !resultats) { socket.emit('erreur'); return false }
+					if (err || !resultats || resultats === null) { socket.emit('erreur'); return false }
 					const dateModification = dayjs().format()
 					const donnees = JSON.parse(resultats)
 					const date = donnees.date
@@ -3563,9 +3563,9 @@ async function demarrerServeur () {
 			}
 			if (identifiant !== '' && identifiant !== undefined && socket.request.session.identifiant === identifiant) {
 				db.hgetall('pads:' + pad, function (err, resultat) {
-					if (err || !resultat || !resultat.hasOwnProperty('activite')) { socket.emit('erreur'); return false }
+					if (err || !resultat || resultat === null || !resultat.hasOwnProperty('activite')) { socket.emit('erreur'); return false }
 					db.hgetall('pad-' + pad + ':' + bloc, function (err, donnees) {
-						if (err || !donnees || !donnees.hasOwnProperty('evaluations')) { socket.emit('erreur'); return false }
+						if (err || !donnees || donnees === null || !donnees.hasOwnProperty('evaluations')) { socket.emit('erreur'); return false }
 						const date = dayjs().format()
 						const activiteId = parseInt(resultat.activite) + 1
 						const evaluationId = parseInt(donnees.evaluations) + 1
@@ -4092,7 +4092,7 @@ async function demarrerServeur () {
 			}
 			if (identifiant !== '' && identifiant !== undefined && socket.request.session.identifiant === identifiant) {
 				db.hgetall('pads:' + pad, function (err, resultat) {
-					if (err || !resultat || !resultat.hasOwnProperty('activite')) { socket.emit('erreur'); return false }
+					if (err || !resultat || resultat === null || !resultat.hasOwnProperty('activite')) { socket.emit('erreur'); return false }
 					const date = dayjs().format()
 					const activiteId = parseInt(resultat.activite) + 1
 					colonnes.push(titre)
@@ -4120,7 +4120,7 @@ async function demarrerServeur () {
 			}
 			if (identifiant !== '' && identifiant !== undefined && socket.request.session.identifiant === identifiant) {
 				db.hgetall('pads:' + pad, function (err, donnees) {
-					if (err || !donnees || !donnees.hasOwnProperty('colonnes')) { socket.emit('erreur'); return false }
+					if (err || !donnees || donnees === null || !donnees.hasOwnProperty('colonnes')) { socket.emit('erreur'); return false }
 					const colonnes = JSON.parse(donnees.colonnes)
 					colonnes[index] = titre
 					db.hset('pads:' + pad, 'colonnes', JSON.stringify(colonnes), function () {
@@ -4141,7 +4141,7 @@ async function demarrerServeur () {
 			}
 			if (identifiant !== '' && identifiant !== undefined && socket.request.session.identifiant === identifiant) {
 				db.hgetall('pads:' + pad, function (err, donnees) {
-					if (err || !donnees) { socket.emit('erreur'); return false }
+					if (err || !donnees || donnees === null) { socket.emit('erreur'); return false }
 					let affichageColonnes = []
 					if (donnees.hasOwnProperty('affichageColonnes')) {
 						affichageColonnes = JSON.parse(donnees.affichageColonnes)
@@ -4170,7 +4170,7 @@ async function demarrerServeur () {
 			}
 			if (identifiant !== '' && identifiant !== undefined && socket.request.session.identifiant === identifiant) {
 				db.hgetall('pads:' + pad, function (err, donnees) {
-					if (err || !donnees || !donnees.hasOwnProperty('colonnes')) { socket.emit('erreur'); return false }
+					if (err || !donnees || donnees === null || !donnees.hasOwnProperty('colonnes')) { socket.emit('erreur'); return false }
 					const colonnes = JSON.parse(donnees.colonnes)
 					colonnes.splice(colonne, 1)
 					let affichageColonnes = []
@@ -4282,7 +4282,7 @@ async function demarrerServeur () {
 			}
 			if (identifiant !== '' && identifiant !== undefined && socket.request.session.identifiant === identifiant) {
 				db.hgetall('pads:' + pad, function (err, donnees) {
-					if (err || !donnees || !donnees.hasOwnProperty('colonnes')) { socket.emit('erreur'); return false }
+					if (err || !donnees || donnees === null || !donnees.hasOwnProperty('colonnes')) { socket.emit('erreur'); return false }
 					const colonnes = JSON.parse(donnees.colonnes)
 					let affichageColonnes = []
 					if (donnees.hasOwnProperty('affichageColonnes')) {
