@@ -12,7 +12,7 @@ if (process.env.NODE_ENV === 'production') {
 } else {
 	db = redis.createClient({ port: db_port })
 }
-const moment = require('moment')
+const dayjs = require('dayjs')
 
 exporterPadsJson(10)
 
@@ -28,7 +28,7 @@ function exporterPadsJson (jours) {
 					if (resultat === 1) {
 						db.hgetall('pads:' + id, function (err, donnees) {
 							if (err) { resolveExport() }
-							if ((donnees.hasOwnProperty('modifie') && moment(donnees.modifie).isBefore(moment().subtract(jours, 'days'))) || (donnees.hasOwnProperty('date') && moment(donnees.date).isBefore(moment().subtract(jours, 'days')))) {
+							if ((donnees.hasOwnProperty('modifie') && dayjs(new Date(donnees.modifie)).isBefore(dayjs().subtract(jours, 'days'))) || (donnees.hasOwnProperty('date') && dayjs(new Date(donnees.date)).isBefore(dayjs().subtract(jours, 'days')))) {
 								const donneesPad = new Promise(function (resolveMain) {
 									db.hgetall('pads:' + id, function (err, resultats) {
 										if (err) { resolveMain({}) }
