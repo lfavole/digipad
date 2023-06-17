@@ -3439,14 +3439,17 @@ async function demarrerServeur () {
 					if (err || !resultat || resultat === null || !resultat.hasOwnProperty('activite')) { socket.emit('erreur'); return false }
 					db.hgetall('pad-' + pad + ':' + bloc, function (err, donnees) {
 						if (err || !donnees || donnees === null || !donnees.hasOwnProperty('commentaires')) { socket.emit('erreur'); return false }
-						db.zcard('commentaires:' + bloc, function (err, commentaires) {
+						db.zrange('commentaires:' + bloc, 0, -1, function (err, commentaires) {
 							if (err) { socket.emit('erreur'); return false }
 							const date = dayjs().format()
 							const activiteId = parseInt(resultat.activite) + 1
-							const commentaireId = parseInt(donnees.commentaires) + 1
+							let commentaireId = parseInt(donnees.commentaires) + 1
+							if (commentaireId === commentaires.length || commentaireId < commentaires.length) {
+								commentaireId = commentaires.length + 1
+							}
 							const multi = db.multi()
 							const commentaire = { id: commentaireId, identifiant: identifiant, date: date, texte: texte }
-							multi.hincrby('pad-' + pad + ':' + bloc, 'commentaires', 1)
+							multi.hset('pad-' + pad + ':' + bloc, 'commentaires', commentaireId)
 							multi.hset('dates-pads:' + pad, 'date', date)
 							multi.zadd('commentaires:' + bloc, commentaireId, JSON.stringify(commentaire))
 							// Enregistrer entrée du registre d'activité
