@@ -120,7 +120,7 @@
 								<span class="mise-a-jour" v-if="pad.hasOwnProperty('notification') && pad.notification.includes(identifiant)" />
 								<span class="titre">{{ pad.titre }}</span>
 								<span class="date">{{ $t('creeLe') }} {{ $formaterDate(pad.date, langue) }}</span>
-								<span class="auteur" v-if="pad.identifiant !== identifiant"> {{ $t('par') }} {{ pad.identifiant }}</span>
+								<span class="auteur" v-if="pad.identifiant !== identifiant">&nbsp;{{ $t('par') }} {{ pad.identifiant }}</span>
 								<span class="vues" v-if="pad.hasOwnProperty('vues') && pad.vues > 1"> - {{ pad.vues }} {{ $t('vues') }}</span>
 								<span class="vues" v-else-if="pad.hasOwnProperty('vues') && pad.vues < 2"> - {{ pad.vues }} {{ $t('vue') }}</span>
 								<span class="vues" v-else-if="!pad.hasOwnProperty('vues')"> - 0 {{ $t('vue') }}</span>
@@ -148,7 +148,7 @@
 								<div class="meta">
 									<span class="titre"><span class="mise-a-jour" v-if="pad.hasOwnProperty('notification') && pad.notification.includes(identifiant)" />{{ pad.titre }}</span>
 									<span class="date">{{ $t('creeLe') }} {{ $formaterDate(pad.date, langue) }}</span>
-									<span class="auteur" v-if="pad.identifiant !== identifiant"> {{ $t('par') }} {{ pad.identifiant }}</span>
+									<span class="auteur" v-if="pad.identifiant !== identifiant">&nbsp;{{ $t('par') }} {{ pad.identifiant }}</span>
 									<span class="vues" v-if="pad.hasOwnProperty('vues') && pad.vues > 1"> - {{ pad.vues }} {{ $t('vues') }}</span>
 									<span class="vues" v-else-if="pad.hasOwnProperty('vues') && pad.vues < 2"> - {{ pad.vues }} {{ $t('vue') }}</span>
 									<span class="vues" v-else-if="!pad.hasOwnProperty('vues')"> - 0 {{ $t('vue') }}</span>
@@ -187,7 +187,7 @@
 								<span class="mise-a-jour" v-if="pad.hasOwnProperty('notification') && pad.notification.includes(identifiant)" />
 								<span class="titre">{{ pad.titre }}</span>
 								<span class="date">{{ $t('creeLe') }} {{ $formaterDate(pad.date, langue) }}</span>
-								<span class="auteur" v-if="pad.identifiant !== identifiant"> {{ $t('par') }} {{ pad.identifiant }}</span>
+								<span class="auteur" v-if="pad.identifiant !== identifiant">&nbsp;{{ $t('par') }} {{ pad.identifiant }}</span>
 								<span class="vues" v-if="pad.hasOwnProperty('vues') && pad.vues > 1"> - {{ pad.vues }} {{ $t('vues') }}</span>
 								<span class="vues" v-else-if="pad.hasOwnProperty('vues') && pad.vues < 2"> - {{ pad.vues }} {{ $t('vue') }}</span>
 								<span class="vues" v-else-if="!pad.hasOwnProperty('vues')"> - 0 {{ $t('vue') }}</span>
@@ -215,7 +215,7 @@
 								<div class="meta">
 									<span class="titre"><span class="mise-a-jour" v-if="pad.hasOwnProperty('notification') && pad.notification.includes(identifiant)" />{{ pad.titre }}</span>
 									<span class="date">{{ $t('creeLe') }} {{ $formaterDate(pad.date, langue) }}</span>
-									<span class="auteur" v-if="pad.identifiant !== identifiant"> {{ $t('par') }} {{ pad.identifiant }}</span>
+									<span class="auteur" v-if="pad.identifiant !== identifiant">&nbsp;{{ $t('par') }} {{ pad.identifiant }}</span>
 									<span class="vues" v-if="pad.hasOwnProperty('vues') && pad.vues > 1"> - {{ pad.vues }} {{ $t('vues') }}</span>
 									<span class="vues" v-else-if="pad.hasOwnProperty('vues') && pad.vues < 2"> - {{ pad.vues }} {{ $t('vue') }}</span>
 									<span class="vues" v-else-if="!pad.hasOwnProperty('vues')"> - 0 {{ $t('vue') }}</span>
