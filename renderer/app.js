@@ -44,7 +44,7 @@ function createPageApp (pageContext) {
 	app.use(masonry)
 
 	app.config.globalProperties.$socket = io(pageProps.hote, {
-		transports: ['websocket', 'polling'],
+		// transports: ['websocket', 'polling'],
 		autoConnect: true,
 		closeOnBeforeunload: false
 	})
