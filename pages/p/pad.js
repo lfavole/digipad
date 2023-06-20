@@ -288,18 +288,6 @@ export default {
 		const identifiant = params.id
 		const motdepasse = params.mdp
 		if (identifiant && identifiant !== '' && motdepasse && motdepasse !== '') {
-			const reponse = await axios.post(this.hote + '/api/verifier-acces', {
-				pad: this.pad.id,
-				identifiant: identifiant,
-				motdepasse: window.atob(motdepasse)
-			})
-			if (reponse.data.hasOwnProperty('message') && reponse.data.message === 'pad_debloque') {
-				this.identifiant = identifiant
-				this.nom = reponse.data.nom
-				this.langue = reponse.data.langue
-				this.statut = 'auteur'
-				this.padsDigidrive = reponse.data.digidrive
-			}
 			window.history.replaceState({}, document.title, window.location.href.split('?')[0])
 		}
 
