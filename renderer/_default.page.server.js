@@ -7,7 +7,7 @@ import { escapeInject } from 'vite-plugin-ssr/server'
 async function render (pageContext) {
 	let titre = 'Digipad by La Digitale'
 	if (pageContext.pageProps.hasOwnProperty('titre')) {
-		titre = pageContext.pageProps.titre + ' - Digipad by La Digitale'
+		titre = pageContext.pageProps.titre
 	}
 	const documentHtml = escapeInject`<!DOCTYPE html>
 		<html lang="fr">
