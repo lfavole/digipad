@@ -241,7 +241,7 @@ async function demarrerServeur () {
 			return false
 		}
 		const userAgent = req.headers['user-agent']
-		if (req.session.identifiant === '' || req.session.identifiant === undefined) {
+		if (!req.query.id && !req.query.mdp && (req.session.identifiant === '' || req.session.identifiant === undefined)) {
 			const identifiant = 'u' + Math.random().toString(16).slice(3)
 			req.session.identifiant = identifiant
 			req.session.nom = identifiant.slice(0, 8).toUpperCase()
@@ -253,13 +253,13 @@ async function demarrerServeur () {
 			req.session.digidrive = []
 			req.session.cookie.expires = new Date(Date.now() + dureeSession)
 		}
-		if (!req.session.hasOwnProperty('acces')) {
+		if (!req.query.id && !req.query.mdp && !req.session.hasOwnProperty('acces')) {
 			req.session.acces = []
 		}
-		if (!req.session.hasOwnProperty('pads')) {
+		if (!req.query.id && !req.query.mdp && !req.session.hasOwnProperty('pads')) {
 			req.session.pads = []
 		}
-		if (!req.session.hasOwnProperty('digidrive')) {
+		if (!req.query.id && !req.query.mdp && !req.session.hasOwnProperty('digidrive')) {
 			req.session.digidrive = []
 		}
 		const pageContextInit = {
@@ -2702,9 +2702,6 @@ async function demarrerServeur () {
 							if (creation === true) {
 								const chemin = path.join(__dirname, '..', '/static/' + definirDossierFichiers(id) + '/' + id)
 								await fs.mkdirs(chemin)
-								req.session.langue = langue
-								req.session.statut = 'auteur'
-								req.session.cookie.expires = new Date(Date.now() + dureeSession)
 								res.send(id + '/' + token)
 							} else {
 								res.send('erreur_creation')
@@ -2715,9 +2712,6 @@ async function demarrerServeur () {
 						if (creation === true) {
 							const chemin = path.join(__dirname, '..', '/static/' + definirDossierFichiers(1) + '/1')
 							await fs.mkdirs(chemin)
-							req.session.langue = langue
-							req.session.statut = 'auteur'
-							req.session.cookie.expires = new Date(Date.now() + dureeSession)
 							res.send('1/' + token)
 						} else {
 							res.send('erreur_creation')
