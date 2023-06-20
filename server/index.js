@@ -370,9 +370,12 @@ async function demarrerServeur () {
 			if (reponse === 1) {
 				db.hgetall('utilisateurs:' + identifiant, async function (err, donnees) {
 					if (err) { res.send('erreur_connexion'); return false }
-					const comparaison = await bcrypt.compare(motdepasse, donnees.motdepasse)
+					let comparaison = false
+					if (motdepasse !== '' && donnees.hasOwnProperty('motdepasse') && donnees.motdepasse !== '') {
+						comparaison = await bcrypt.compare(motdepasse, donnees.motdepasse)
+					}
 					let comparaisonTemp = false
-					if (donnees.hasOwnProperty('motdepassetemp')) {
+					if (donnees.hasOwnProperty('motdepassetemp') && donnees.motdepassetemp !== '') {
 						comparaisonTemp = await bcrypt.compare(motdepasse, donnees.motdepassetemp)
 					}
 					if (comparaison === true || comparaisonTemp === true) {
