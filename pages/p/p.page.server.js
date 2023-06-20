@@ -44,9 +44,9 @@ async function onBeforeRender (pageContext) {
 			const langues = pageContext.langues
 			const nom = pageContext.nom
 			const langue = pageContext.langue
-			const digidrive = pageContext.digidrive
 			const acces = pageContext.acces
 			const pads = pageContext.pads
+			const digidrive = pageContext.digidrive
 			const pad = reponse.data.pad
 			const blocs = reponse.data.blocs
 			const activite = reponse.data.activite
