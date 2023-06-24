@@ -1,6 +1,7 @@
 require('dotenv').config()
 const path = require('path')
 const fs = require('fs-extra')
+const onHeaders = require('on-headers')
 const express = require('express')
 const { createServer } = require('http')
 const { Server } = require('socket.io')
@@ -146,6 +147,12 @@ async function demarrerServeur () {
 			}
 		})
 	)
+	app.use(function (req, res, next) {
+		onHeaders(res, function () {
+			res.removeHeader('Accept-Ranges')
+		})
+		next()
+	})
 	app.use(bodyParser.json({ limit: '200mb' }))
 	app.use(sessionMiddleware)
 	app.use(cors({ 'origin': domainesAutorises }))
@@ -532,12 +539,12 @@ async function demarrerServeur () {
 				if (err || !donnees || donnees === null) {
 					res.json({ padsCrees: padsCrees, padsRejoints: padsRejoints, padsAdmins: padsAdmins, padsFavoris: padsFavoris, dossiers: [], affichage: 'liste', classement: 'date-asc' })
 				} else {
-					let dossiers = []
+					let dossiers
 					if (donnees.hasOwnProperty('dossiers')) {
 						try {
 							dossiers = JSON.parse(donnees.dossiers)
 						} catch (err) {
-							console.log(err)
+							dossiers = []
 						}
 					}
 					const listePadsDossiers = []
@@ -2483,8 +2490,13 @@ async function demarrerServeur () {
 					} else if (mimetype === 'application/vnd.oasis.opendocument.presentation' || mimetype === 'application/vnd.oasis.opendocument.text' || mimetype === 'application/vnd.oasis.opendocument.spreadsheet') {
 						mimetype = 'document'
 						const docBuffer = await fs.readFile(chemin)
-						const pdfBuffer = await libre.convertAsync(docBuffer, '.pdf', undefined)
-						if (pdfBuffer) {
+						let pdfBuffer
+						try {
+							pdfBuffer = await libre.convertAsync(docBuffer, '.pdf', undefined)
+						} catch (err) {
+							pdfBuffer = 'erreur'
+						}
+						if (pdfBuffer && pdfBuffer !== 'erreur') {
 							await fs.writeFile(destinationPDF, pdfBuffer)
 							if (await fs.pathExists(destinationPDF)) {
 								gm(destinationPDF + '[0]').setFormat('jpg').resize(450).quality(80).write(destination, async function (erreur) {
@@ -2504,8 +2516,13 @@ async function demarrerServeur () {
 					} else if (mimetype === 'application/msword' || mimetype === 'application/vnd.ms-powerpoint' || mimetype === 'application/vnd.ms-excel' || mimetype.includes('officedocument') === true) {
 						mimetype = 'office'
 						const docBuffer = await fs.readFile(chemin)
-						const pdfBuffer = await libre.convertAsync(docBuffer, '.pdf', undefined)
-						if (pdfBuffer) {
+						let pdfBuffer
+						try {
+							pdfBuffer = await libre.convertAsync(docBuffer, '.pdf', undefined)
+						} catch (err) {
+							pdfBuffer = 'erreur'
+						}
+						if (pdfBuffer && pdfBuffer !== 'erreur') {
 							await fs.writeFile(destinationPDF, pdfBuffer)
 							if (await fs.pathExists(destinationPDF)) {
 								gm(destinationPDF + '[0]').setFormat('jpg').resize(450).quality(80).write(destination, async function (erreur) {
@@ -5206,7 +5223,7 @@ async function demarrerServeur () {
 										padDejaRejoint = true
 									}
 								}
-								if (padDejaRejoint === false) {
+								if (padDejaRejoint === false && pad.acces !== 'prive') {
 									const multi = db.multi()
 									multi.sadd('pads-rejoints:' + identifiant, id)
 									multi.sadd('pads-utilisateurs:' + identifiant, id)
