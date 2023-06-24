@@ -539,7 +539,7 @@ async function demarrerServeur () {
 				if (err || !donnees || donnees === null) {
 					res.json({ padsCrees: padsCrees, padsRejoints: padsRejoints, padsAdmins: padsAdmins, padsFavoris: padsFavoris, dossiers: [], affichage: 'liste', classement: 'date-asc' })
 				} else {
-					let dossiers
+					let dossiers = []
 					if (donnees.hasOwnProperty('dossiers')) {
 						try {
 							dossiers = JSON.parse(donnees.dossiers)
