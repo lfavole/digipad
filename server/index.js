@@ -560,7 +560,7 @@ async function demarrerServeur () {
 					for (const pad of listePadsDossiers) {
 						const donneePadsDossiers = new Promise(function (resolve) {
 							db.exists('pads:' + pad, async function (err, resultat) {
-								if (err) { resolve() }
+								if (err) { resolve(); return false }
 								if (resultat === 1) {
 									resolve()
 								} else if (resultat !== 1 && await fs.pathExists(path.join(__dirname, '..', '/static/pads/pad-' + pad + '.json'))) {
@@ -988,7 +988,7 @@ async function demarrerServeur () {
 								for (const [indexBloc, bloc] of blocs.entries()) {
 									const donneesBloc = new Promise(function (resolve) {
 										db.hgetall('pad-' + pad + ':' + bloc, function (err, infos) {
-											if (err || !infos || infos === null) { resolve({}) }
+											if (err || !infos || infos === null) { resolve({}); return false }
 											const date = dayjs().format()
 											if (infos.hasOwnProperty('vignette') && infos.vignette !== '' && !infos.vignette.includes('/img/') && !verifierURL(infos.vignette, ['https', 'http'])) {
 												infos.vignette = '/' + definirDossierFichiers(id) + '/' + id + '/' + path.basename(infos.vignette)
@@ -1204,28 +1204,28 @@ async function demarrerServeur () {
 				if (resultat === 1) {
 					const donneesPad = new Promise(function (resolveMain) {
 						db.hgetall('pads:' + id, function (err, resultats) {
-							if (err) { resolveMain({}) }
+							if (err) { resolveMain({}); return false }
 							resolveMain(resultats)
 						})
 					})
 					const blocsPad = new Promise(function (resolveMain) {
 						const donneesBlocs = []
 						db.zrange('blocs:' + id, 0, -1, function (err, blocs) {
-							if (err) { resolveMain(donneesBlocs) }
+							if (err) { resolveMain(donneesBlocs); return false }
 							for (const bloc of blocs) {
 								const donneesBloc = new Promise(function (resolve) {
 									db.hgetall('pad-' + id + ':' + bloc, function (err, donnees) {
-										if (err || !donnees || donnees === null) { resolve({}) }
+										if (err || !donnees || donnees === null) { resolve({}); return false }
 										const donneesCommentaires = []
 										db.zrange('commentaires:' + bloc, 0, -1, function (err, commentaires) {
-											if (err || !commentaires || commentaires === null) { resolve(donnees) }
+											if (err || !commentaires || commentaires === null) { resolve(donnees); return false }
 											for (let commentaire of commentaires) {
 												donneesCommentaires.push(JSON.parse(commentaire))
 											}
 											donnees.commentaires = donneesCommentaires.length
 											donnees.listeCommentaires = donneesCommentaires
 											db.zrange('evaluations:' + bloc, 0, -1, function (err, evaluations) {
-												if (err || !evaluations || evaluations === null) { resolve(donnees) }
+												if (err || !evaluations || evaluations === null) { resolve(donnees); return false }
 												const donneesEvaluations = []
 												evaluations.forEach(function (evaluation) {
 													donneesEvaluations.push(JSON.parse(evaluation))
@@ -1233,10 +1233,10 @@ async function demarrerServeur () {
 												donnees.evaluations = donneesEvaluations.length
 												donnees.listeEvaluations = donneesEvaluations
 												db.exists('noms:' + donnees.identifiant, function (err, resultat) {
-													if (err) { resolve(donnees) }
+													if (err) { resolve(donnees); return false }
 													if (resultat === 1) {
 														db.hget('noms:' + donnees.identifiant, 'nom', function (err, nom) {
-															if (err) { resolve(donnees) }
+															if (err) { resolve(donnees); return false }
 															donnees.nom = nom
 															donnees.info = formaterDate(donnees, req.session.langue)
 															resolve(donnees)
@@ -1264,12 +1264,12 @@ async function demarrerServeur () {
 					const activitePad = new Promise(function (resolveMain) {
 						const donneesEntrees = []
 						db.zrange('activite:' + id, 0, -1, function (err, entrees) {
-							if (err || !entrees || entrees === null) { resolveMain(donneesEntrees) }
+							if (err || !entrees || entrees === null) { resolveMain(donneesEntrees); return false }
 							for (let entree of entrees) {
 								entree = JSON.parse(entree)
 								const donneesEntree = new Promise(function (resolve) {
 									db.exists('utilisateurs:' + entree.identifiant, function (err) {
-										if (err) { resolve({}) }
+										if (err) { resolve({}); return false }
 										resolve(entree)
 									})
 								})
@@ -1824,7 +1824,7 @@ async function demarrerServeur () {
 						utilisateurs.forEach(function (utilisateur) {
 							const donneesUtilisateur = new Promise(function (resolve) {
 								db.hgetall('utilisateurs:' + utilisateur.substring(13), function (err, donnees) {
-									if (err) { resolve({}) }
+									if (err) { resolve({}); return false }
 									if (donnees.hasOwnProperty('email')) {
 										resolve({ identifiant: utilisateur.substring(13), email: donnees.email })
 									} else {
@@ -1899,6 +1899,40 @@ async function demarrerServeur () {
 		})
 	})
 
+	app.post('/api/transferer-compte', function (req, res) {
+		const identifiant = req.body.identifiant
+		const nouvelIdentifiant = req.body.nouvelIdentifiant
+		db.exists('utilisateurs:' + identifiant, function (err, reponse) {
+			if (err) { res.send('erreur'); return false  }
+			if (reponse === 1) {
+				db.exists('utilisateurs:' + nouvelIdentifiant, function (err, resultat) {
+					if (err) { res.send('erreur'); return false  }
+					if (resultat === 1) {
+						db.smembers('pads-crees:' + identifiant, function (err, pads) {
+							if (err) { res.send('erreur'); return false }
+							for (const pad of pads) {
+								const multi = db.multi()
+								multi.sadd('pads-crees:' + nouvelIdentifiant, pad)
+								multi.srem('pads-crees:' + identifiant, pad)
+								multi.sadd('utilisateurs-pads:' + pad, nouvelIdentifiant)
+								multi.srem('utilisateurs-pads:' + pad, identifiant)
+								multi.hset('pads:' + pad, 'identifiant', nouvelIdentifiant)
+								multi.srem('pads-rejoints:' + nouvelIdentifiant, pad)
+								multi.srem('pads-utilisateurs:' + nouvelIdentifiant, pad)
+								multi.exec()
+							}
+							res.send('compte_transfere')
+						})
+					} else {
+						res.send('utilisateur_inexistant')
+					}
+				})
+			} else {
+				res.send('utilisateur_inexistant')
+			}
+		})
+	})
+
 	app.post('/api/supprimer-compte', function (req, res) {
 		if (maintenance === true) {
 			res.redirect('/maintenance')
@@ -1918,10 +1952,10 @@ async function demarrerServeur () {
 				for (const pad of pads) {
 					const donneesPad = new Promise(function (resolve) {
 						db.exists('pads:' + pad, async function (err, resultat) {
-							if (err) { resolve() }
+							if (err) { resolve(); return false }
 							if (resultat === 1) {
 								db.zrange('blocs:' + pad, 0, -1, function (err, blocs) {
-									if (err) { resolve() }
+									if (err) { resolve(); return false }
 									const multi = db.multi()
 									for (let i = 0; i < blocs.length; i++) {
 										multi.del('commentaires:' + blocs[i])
@@ -1933,7 +1967,7 @@ async function demarrerServeur () {
 									multi.del('activite:' + pad)
 									multi.del('dates-pads:' + pad)
 									multi.smembers('utilisateurs-pads:' + pad, function (err, utilisateurs) {
-										if (err) { resolve() }
+										if (err) { resolve(); return false }
 										for (let j = 0; j < utilisateurs.length; j++) {
 											db.srem('pads-rejoints:' + utilisateurs[j], pad)
 											db.srem('pads-utilisateurs:' + utilisateurs[j], pad)
@@ -1952,7 +1986,7 @@ async function demarrerServeur () {
 							} else if (resultat !== 1 && await fs.pathExists(path.join(__dirname, '..', '/static/pads/' + pad + '.json'))) {
 								const multi = db.multi()
 								multi.smembers('utilisateurs-pads:' + pad, function (err, utilisateurs) {
-									if (err) { resolve() }
+									if (err) { resolve(); return false }
 									for (let j = 0; j < utilisateurs.length; j++) {
 										db.srem('pads-rejoints:' + utilisateurs[j], pad)
 										db.srem('pads-utilisateurs:' + utilisateurs[j], pad)
@@ -1987,10 +2021,10 @@ async function demarrerServeur () {
 								if (resultat === 1) {
 									const donneesBloc = new Promise(function (resolve) {
 										db.zrange('blocs:' + pad, 0, -1, function (err, blocs) {
-											if (err) { resolve() }
+											if (err) { resolve(); return false }
 											for (let i = 0; i < blocs.length; i++) {
 												db.hgetall('pad-' + pad + ':' + blocs[i], function (err, donnees) {
-													if (err) { resolve() }
+													if (err) { resolve(); return false }
 													if (donnees.hasOwnProperty('identifiant') && donnees.identifiant === identifiant) {
 														if (donnees.hasOwnProperty('media') && donnees.media !== '' && donnees.type !== 'embed') {
 															supprimerFichier(pad, donnees.media)
@@ -2016,7 +2050,7 @@ async function demarrerServeur () {
 									donneesBlocs.push(donneesBloc)
 									const donneesActivite = new Promise(function (resolve) {
 										db.zrange('activite:' + pad, 0, -1, function (err, entrees) {
-											if (err) { resolve() }
+											if (err) { resolve(); return false }
 											for (let i = 0; i < entrees.length; i++) {
 												const entree = JSON.parse(entrees[i])
 												if (entree.identifiant === identifiant) {
@@ -2035,7 +2069,7 @@ async function demarrerServeur () {
 											if (err) { resolve() }
 											for (let i = 0; i < blocs.length; i++) {
 												db.zrange('commentaires:' + blocs[i], 0, -1, function (err, commentaires) {
-													if (err) { resolve() }
+													if (err) { resolve(); return false }
 													for (let j = 0; j < commentaires.length; j++) {
 														const commentaire = JSON.parse(commentaires[j])
 														if (commentaire.identifiant === identifiant) {
@@ -2053,10 +2087,10 @@ async function demarrerServeur () {
 									donneesCommentaires.push(donneesCommentaire)
 									const donneesEvaluation = new Promise(function (resolve) {
 										db.zrange('blocs:' + pad, 0, -1, function (err, blocs) {
-											if (err) { resolve() }
+											if (err) { resolve(); return false }
 											for (let i = 0; i < blocs.length; i++) {
 												db.zrange('evaluations:' + blocs[i], 0, -1, function (err, evaluations) {
-													if (err) { resolve() }
+													if (err) { resolve(); return false }
 													for (let j = 0; j < evaluations.length; j++) {
 														const evaluation = JSON.parse(evaluations[j])
 														if (evaluation.identifiant === identifiant) {
@@ -2115,7 +2149,7 @@ async function demarrerServeur () {
 										const donneesCommentaire = new Promise(function (resolve) {
 											for (let i = 0; i < blocs.length; i++) {
 												db.zrange('commentaires:' + blocs[i].bloc, 0, -1, function (err, commentaires) {
-													if (err) { resolve() }
+													if (err) { resolve(); return false }
 													for (let j = 0; j < commentaires.length; j++) {
 														const commentaire = JSON.parse(commentaires[j])
 														if (commentaire.identifiant === identifiant) {
@@ -2133,7 +2167,7 @@ async function demarrerServeur () {
 										const donneesEvaluation = new Promise(function (resolve) {
 											for (let i = 0; i < blocs.length; i++) {
 												db.zrange('evaluations:' + blocs[i].bloc, 0, -1, function (err, evaluations) {
-													if (err) { resolve() }
+													if (err) { resolve(); return false }
 													for (let j = 0; j < evaluations.length; j++) {
 														const evaluation = JSON.parse(evaluations[j])
 														if (evaluation.identifiant === identifiant) {
@@ -2178,12 +2212,8 @@ async function demarrerServeur () {
 											sessions.forEach(function (session) {
 												const donneesSession = new Promise(function (resolve) {
 													db.get('sessions:' + session.substring(9), function (err, donnees) {
-														if (err) { resolve({}) }
-														if (donnees !== null) {
-															donnees = JSON.parse(donnees)
-														} else {
-															resolve({})
-														}
+														if (err || !donnees || donnees === null) { resolve({}); return false }
+														donnees = JSON.parse(donnees)
 														if (donnees.hasOwnProperty('identifiant')) {
 															resolve({ session: session.substring(9), identifiant: donnees.identifiant })
 														} else {
@@ -3339,7 +3369,7 @@ async function demarrerServeur () {
 				for (let i = 0; i < items.length; i++) {
 					const donneeBloc = new Promise(function (resolve) {
 						db.exists('pad-' + pad + ':' + items[i].bloc, function (err, resultat) {
-							if (err) { resolve('erreur') }
+							if (err) { resolve('erreur'); return false }
 							if (resultat === 1) {
 								const multi = db.multi()
 								multi.zrem('blocs:' + pad, items[i].bloc)
@@ -3348,7 +3378,7 @@ async function demarrerServeur () {
 									multi.hset('pad-' + pad + ':' + items[i].bloc, 'colonne', items[i].colonne)
 								}
 								multi.exec(function (err) {
-									if (err) { resolve('erreur') }
+									if (err) { resolve('erreur'); return false }
 									resolve(i)
 								})
 							} else {
@@ -3541,19 +3571,19 @@ async function demarrerServeur () {
 					const donneeCommentaire = new Promise(function (resolve) {
 						const identifiant = commentaire.identifiant
 						db.exists('utilisateurs:' + identifiant, function (err, resultat) {
-							if (err) { resolve() }
+							if (err) { resolve(); return false }
 							if (resultat === 1) {
 								db.hgetall('utilisateurs:' + identifiant, function (err, utilisateur) {
-									if (err) { resolve() }
+									if (err) { resolve(); return false }
 									commentaire.nom = utilisateur.nom
 									resolve(commentaire)
 								})
 							} else {
 								db.exists('noms:' + identifiant, function (err, resultat) {
-									if (err) { resolve() }
+									if (err) { resolve(); return false }
 									if (resultat === 1) {
 										db.hget('noms:' + identifiant, 'nom', function (err, nom) {
-											if (err) { resolve() }
+											if (err) { resolve(); return false }
 											commentaire.nom = nom
 											resolve(commentaire)
 										})
@@ -4205,7 +4235,7 @@ async function demarrerServeur () {
 						for (const bloc of blocs) {
 							const donneesBloc = new Promise(function (resolve) {
 								db.hgetall('pad-' + pad + ':' + bloc, function (err, resultat) {
-									if (err) { resolve({}) }
+									if (err) { resolve({}); return false }
 									resolve(resultat)
 								})
 							})
@@ -4225,10 +4255,10 @@ async function demarrerServeur () {
 							for (const blocSupprime of blocsSupprimes) {
 								const donneesBlocSupprime = new Promise(function (resolve) {
 									db.exists('pad-' + pad + ':' + blocSupprime, function (err, resultat) {
-										if (err) { resolve() }
+										if (err) { resolve(); return false }
 										if (resultat === 1) {
 											db.hgetall('pad-' + pad + ':' + blocSupprime, function (err, objet) {
-												if (err) { resolve() }
+												if (err) { resolve(); return false }
 												if (objet.hasOwnProperty('media') && objet.media !== '' && objet.type !== 'embed') {
 													supprimerFichier(pad, objet.media)
 												}
@@ -4242,7 +4272,7 @@ async function demarrerServeur () {
 													multi.del('commentaires:' + blocSupprime)
 													multi.del('evaluations:' + blocSupprime)
 													multi.exec(function (err) {
-														if (err) { resolve() }
+														if (err) { resolve(); return false }
 														resolve('supprime')
 													})
 												} else {
@@ -4261,7 +4291,7 @@ async function demarrerServeur () {
 								const donneeBloc = new Promise(function (resolve) {
 									if (parseInt(blocsRestants[i].colonne) > parseInt(colonne)) {
 										db.hset('pad-' + pad + ':' + blocsRestants[i].bloc, 'colonne', (parseInt(blocsRestants[i].colonne) - 1), function (err) {
-											if (err) { resolve() }
+											if (err) { resolve(); return false }
 											resolve(i)
 										})
 									} else {
@@ -4330,7 +4360,7 @@ async function demarrerServeur () {
 						for (const bloc of blocs) {
 							const donneesBloc = new Promise(function (resolve) {
 								db.hgetall('pad-' + pad + ':' + bloc, function (err, resultat) {
-									if (err) { resolve({}) }
+									if (err) { resolve({}); return false }
 									resolve(resultat)
 								})
 							})
@@ -4342,25 +4372,25 @@ async function demarrerServeur () {
 								const donneesBlocDeplace = new Promise(function (resolve) {
 									if (item && item.hasOwnProperty('bloc')) {
 										db.exists('pad-' + pad + ':' + item.bloc, function (err, resultat) {
-											if (err) { resolve() }
+											if (err) { resolve(); return false }
 											if (resultat === 1 && parseInt(item.colonne) === parseInt(colonne) && direction === 'gauche') {
 												db.hset('pad-' + pad + ':' + item.bloc, 'colonne', (parseInt(colonne) - 1), function (err) {
-													if (err) { resolve() }
+													if (err) { resolve(); return false }
 													resolve('deplace')
 												})
 											} else if (resultat === 1 && parseInt(item.colonne) === parseInt(colonne) && direction === 'droite') {
 												db.hset('pad-' + pad + ':' + item.bloc, 'colonne', (parseInt(colonne) + 1), function (err) {
-													if (err) { resolve() }
+													if (err) { resolve(); return false }
 													resolve('deplace')
 												})
 											} else if (resultat === 1 && parseInt(item.colonne) === (parseInt(colonne) - 1) && direction === 'gauche') {
 												db.hset('pad-' + pad + ':' + item.bloc, 'colonne', parseInt(colonne), function (err) {
-													if (err) { resolve() }
+													if (err) { resolve(); return false }
 													resolve('deplace')
 												})
 											} else if (resultat === 1 && parseInt(item.colonne) === (parseInt(colonne) + 1) && direction === 'droite') {
 												db.hset('pad-' + pad + ':' + item.bloc, 'colonne', parseInt(colonne), function (err) {
-													if (err) { resolve() }
+													if (err) { resolve(); return false }
 													resolve('deplace')
 												})
 											} else {
@@ -4544,24 +4574,26 @@ async function demarrerServeur () {
 		const donneesPadsCrees = new Promise(function (resolveMain) {
 			db.smembers('pads-crees:' + identifiant, function (err, pads) {
 				const donneesPads = []
-				if (err) { resolveMain(donneesPads) }
+				if (err) { resolveMain(donneesPads); return false }
 				for (const pad of pads) {
 					const donneePad = new Promise(function (resolve) {
 						db.exists('pads:' + pad, async function (err, resultat) {
-							if (err) { resolve({}) }
+							if (err) { resolve({}); return false }
 							if (resultat === 1) {
 								db.hgetall('pads:' + pad, function (err, donnees) {
-									if (err) { resolve({}) }
+									if (err) { resolve({}); return false }
 									db.exists('utilisateurs:' + donnees.identifiant, function (err, resultat) {
 										if (err) {
 											donnees.nom = donnees.identifiant
 											resolve(donnees)
+											return false
 										}
 										if (resultat === 1) {
 											db.hgetall('utilisateurs:' + donnees.identifiant, function (err, utilisateur) {
 												if (err) {
 													donnees.nom = donnees.identifiant
 													resolve(donnees)
+													return false
 												}
 												if (utilisateur.nom === '') {
 													donnees.nom = donnees.identifiant
@@ -4589,6 +4621,7 @@ async function demarrerServeur () {
 												if (err) {
 													donnees.nom = donnees.identifiant
 													resolve(donnees)
+													return false
 												}
 												if (utilisateur.nom === '') {
 													donnees.nom = donnees.identifiant
@@ -4621,24 +4654,26 @@ async function demarrerServeur () {
 		const donneesPadsRejoints = new Promise(function (resolveMain) {
 			db.smembers('pads-rejoints:' + identifiant, function (err, pads) {
 				const donneesPads = []
-				if (err) { resolveMain(donneesPads) }
+				if (err) { resolveMain(donneesPads); return false }
 				for (const pad of pads) {
 					const donneePad = new Promise(function (resolve) {
 						db.exists('pads:' + pad, async function (err, resultat) {
-							if (err) { resolve({}) }
+							if (err) { resolve({}); return false }
 							if (resultat === 1) {
 								db.hgetall('pads:' + pad, function (err, donnees) {
-									if (err) { resolve({}) }
+									if (err) { resolve({}); return false }
 									db.exists('utilisateurs:' + donnees.identifiant, function (err, resultat) {
 										if (err) {
 											donnees.nom = donnees.identifiant
 											resolve(donnees)
+											return false
 										}
 										if (resultat === 1) {
 											db.hgetall('utilisateurs:' + donnees.identifiant, function (err, utilisateur) {
 												if (err) {
 													donnees.nom = donnees.identifiant
 													resolve(donnees)
+													return false
 												}
 												if (utilisateur.nom === '') {
 													donnees.nom = donnees.identifiant
@@ -4660,12 +4695,14 @@ async function demarrerServeur () {
 										if (err) {
 											donnees.nom = donnees.identifiant
 											resolve(donnees)
+											return false
 										}
 										if (resultat === 1) {
 											db.hgetall('utilisateurs:' + donnees.identifiant, function (err, utilisateur) {
 												if (err) {
 													donnees.nom = donnees.identifiant
 													resolve(donnees)
+													return false
 												}
 												if (utilisateur.nom === '') {
 													donnees.nom = donnees.identifiant
@@ -4698,11 +4735,11 @@ async function demarrerServeur () {
 		const donneesPadsAdmins = new Promise(function (resolveMain) {
 			db.smembers('pads-admins:' + identifiant, function (err, pads) {
 				const donneesPads = []
-				if (err) { resolveMain(donneesPads) }
+				if (err) { resolveMain(donneesPads); return false }
 				for (const pad of pads) {
 					const donneePad = new Promise(function (resolve) {
 						db.exists('pads:' + pad, async function (err, resultat) {
-							if (err) { resolve({}) }
+							if (err) { resolve({}); return false }
 							if (resultat === 1) {
 								db.hgetall('pads:' + pad, function (err, donnees) {
 									if (err) { resolve({}) }
@@ -4710,12 +4747,14 @@ async function demarrerServeur () {
 										if (err) {
 											donnees.nom = donnees.identifiant
 											resolve(donnees)
+											return false
 										}
 										if (resultat === 1) {
 											db.hgetall('utilisateurs:' + donnees.identifiant, function (err, utilisateur) {
 												if (err) {
 													donnees.nom = donnees.identifiant
 													resolve(donnees)
+													return false
 												}
 												if (utilisateur.nom === '') {
 													donnees.nom = donnees.identifiant
@@ -4737,12 +4776,14 @@ async function demarrerServeur () {
 										if (err) {
 											donnees.nom = donnees.identifiant
 											resolve(donnees)
+											return false
 										}
 										if (resultat === 1) {
 											db.hgetall('utilisateurs:' + donnees.identifiant, function (err, utilisateur) {
 												if (err) {
 													donnees.nom = donnees.identifiant
 													resolve(donnees)
+													return false
 												}
 												if (utilisateur.nom === '') {
 													donnees.nom = donnees.identifiant
@@ -4779,20 +4820,22 @@ async function demarrerServeur () {
 				for (const pad of pads) {
 					const donneePad = new Promise(function (resolve) {
 						db.exists('pads:' + pad, async function (err, resultat) {
-							if (err) { resolve({}) }
+							if (err) { resolve({}); return false }
 							if (resultat === 1) {
 								db.hgetall('pads:' + pad, function (err, donnees) {
-									if (err) { resolve({}) }
+									if (err) { resolve({}); return false }
 									db.exists('utilisateurs:' + donnees.identifiant, function (err, resultat) {
 										if (err) {
 											donnees.nom = donnees.identifiant
 											resolve(donnees)
+											return false
 										}
 										if (resultat === 1) {
 											db.hgetall('utilisateurs:' + donnees.identifiant, function (err, utilisateur) {
 												if (err) {
 													donnees.nom = donnees.identifiant
 													resolve(donnees)
+													return false
 												}
 												if (utilisateur.nom === '') {
 													donnees.nom = donnees.identifiant
@@ -4814,12 +4857,14 @@ async function demarrerServeur () {
 										if (err) {
 											donnees.nom = donnees.identifiant
 											resolve(donnees)
+											return false
 										}
 										if (resultat === 1) {
 											db.hgetall('utilisateurs:' + donnees.identifiant, function (err, utilisateur) {
 												if (err) {
 													donnees.nom = donnees.identifiant
 													resolve(donnees)
+													return false
 												}
 												if (utilisateur.nom === '') {
 													donnees.nom = donnees.identifiant
@@ -4860,10 +4905,10 @@ async function demarrerServeur () {
 				for (const pad of pads) {
 					const donneePad = new Promise(function (resolve) {
 						db.exists('pads:' + pad, async function (err, resultat) {
-							if (err) { resolve({}) }
+							if (err) { resolve({}); return false }
 							if (resultat === 1) {
 								db.hgetall('pads:' + pad, function (err, donnees) {
-									if (err) { resolve({}) }
+									if (err) { resolve({}); return false }
 									resolve(donnees)
 								})
 							} else if (resultat !== 1 && await fs.pathExists(path.join(__dirname, '..', '/static/pads/pad-' + pad + '.json'))) {
@@ -4893,10 +4938,10 @@ async function demarrerServeur () {
 				for (const pad of pads) {
 					const donneePad = new Promise(function (resolve) {
 						db.exists('pads:' + pad, async function (err, resultat) {
-							if (err) { resolve({}) }
+							if (err) { resolve({}); return false }
 							if (resultat === 1) {
 								db.hgetall('pads:' + pad, function (err, donnees) {
-									if (err) { resolve({}) }
+									if (err) { resolve({}); return false }
 									resolve(donnees)
 								})
 							} else if (resultat !== 1 && await fs.pathExists(path.join(__dirname, '..', '/static/pads/pad-' + pad + '.json'))) {
@@ -4984,11 +5029,11 @@ async function demarrerServeur () {
 				const blocsPad = new Promise(function (resolveMain) {
 					const donneesBlocs = []
 					db.zrange('blocs:' + id, 0, -1, function (err, blocs) {
-						if (err) { resolveMain(donneesBlocs) }
+						if (err) { resolveMain(donneesBlocs); return false }
 						for (const bloc of blocs) {
 							const donneesBloc = new Promise(function (resolve) {
 								db.hgetall('pad-' + id + ':' + bloc, function (err, donnees) {
-									if (err) { resolve({}) }
+									if (err) { resolve({}); return false }
 									if (donnees && Object.keys(donnees).length > 0) {
 										// Pour résoudre le problème des capsules qui sont référencées dans une colonne inexistante
 										if (parseInt(donnees.colonne) >= nombreColonnes) {
@@ -5013,17 +5058,20 @@ async function demarrerServeur () {
 										// Ne pas ajouter les capsules en attente de modération ou privées
 										if (((pad.contributions === 'moderees' && donnees.visibilite === 'masquee') || donnees.visibilite === 'privee') && donnees.identifiant !== identifiant && pad.identifiant !== identifiant && !pad.admins.includes(identifiant)) {
 											resolve({})
+											return false
 										}
 										db.zcard('commentaires:' + bloc, function (err, commentaires) {
 											if (err) {
 												donnees.commentaires = []
 												resolve(donnees)
+												return false
 											}
 											donnees.commentaires = commentaires
 											db.zrange('evaluations:' + bloc, 0, -1, function (err, evaluations) {
 												if (err) {
 													donnees.evaluations = []
 													resolve(donnees)
+													return false
 												}
 												const donneesEvaluations = []
 												evaluations.forEach(function (evaluation) {
@@ -5035,6 +5083,7 @@ async function demarrerServeur () {
 														donnees.nom = ''
 														donnees.couleur = ''
 														resolve(donnees)
+														return false
 													}
 													if (resultat === 1) {
 														db.hgetall('utilisateurs:' + donnees.identifiant, function (err, utilisateur) {
@@ -5042,6 +5091,7 @@ async function demarrerServeur () {
 																donnees.nom = ''
 																donnees.couleur = ''
 																resolve(donnees)
+																return false
 															}
 															donnees.nom = utilisateur.nom
 															db.hget('couleurs:' + donnees.identifiant, 'pad' + id, function (err, couleur) {
@@ -5059,6 +5109,7 @@ async function demarrerServeur () {
 																donnees.nom = ''
 																donnees.couleur = ''
 																resolve(donnees)
+																return false
 															}
 															if (resultat === 1) {
 																db.hget('noms:' + donnees.identifiant, 'nom', function (err, nom) {
@@ -5066,6 +5117,7 @@ async function demarrerServeur () {
 																		donnees.nom = ''
 																		donnees.couleur = ''
 																		resolve(donnees)
+																		return false
 																	}
 																	donnees.nom = nom
 																	db.hget('couleurs:' + donnees.identifiant, 'pad' + id, function (err, couleur) {
@@ -5105,7 +5157,7 @@ async function demarrerServeur () {
 				const activitePad = new Promise(function (resolveMain) {
 					const donneesEntrees = []
 					db.zrange('activite:' + id, 0, -1, function (err, entrees) {
-						if (err) { resolveMain(donneesEntrees) }
+						if (err) { resolveMain(donneesEntrees); return false }
 						for (let entree of entrees) {
 							entree = JSON.parse(entree)
 							const donneesEntree = new Promise(function (resolve) {
@@ -5114,6 +5166,7 @@ async function demarrerServeur () {
 										entree.nom = ''
 										entree.couleur = ''
 										resolve(entree)
+										return false
 									}
 									if (resultat === 1) {
 										db.hgetall('utilisateurs:' + entree.identifiant, function (err, utilisateur) {
@@ -5121,6 +5174,7 @@ async function demarrerServeur () {
 												entree.nom = ''
 												entree.couleur = ''
 												resolve(entree)
+												return false
 											}
 											entree.nom = utilisateur.nom
 											db.hget('couleurs:' + entree.identifiant, 'pad' + id, function (err, couleur) {
@@ -5138,6 +5192,7 @@ async function demarrerServeur () {
 												entree.nom = ''
 												entree.couleur = ''
 												resolve(entree)
+												return false
 											}
 											if (resultat === 1) {
 												db.hget('noms:' + entree.identifiant, 'nom', function (err, nom) {
@@ -5145,6 +5200,7 @@ async function demarrerServeur () {
 														entree.nom = ''
 														entree.couleur = ''
 														resolve(entree)
+														return false
 													}
 													entree.nom = nom
 													db.hget('couleurs:' + entree.identifiant, 'pad' + id, function (err, couleur) {
