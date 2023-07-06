@@ -370,5 +370,10 @@ export default {
 	colonneDestination: 'Colonne de destination',
 	coadmin: 'coadmin',
 	aucunPadDestination: 'Aucun pad de destination.',
-	capsuleCopiee: 'Capsule copiée sur le pad de destination.'
+	capsuleCopiee: 'Capsule copiée sur le pad de destination.',
+	transfererCompte: 'Transférer les contenus d\'un compte',
+	identifiantCompteATransferer: 'Identifiant du compte à transférer',
+	identifiantDestination: 'Identifiant de destination',
+	confirmationTransfererCompte: 'Souhaitez-vous vraiment transférer les contenus du compte vers cet identifiant&nbsp;?',
+	compteTransfere: 'Contenus du compte transférés.'
 }

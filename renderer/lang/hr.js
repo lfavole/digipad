@@ -370,5 +370,10 @@ export default {
 	colonneDestination: 'Odredišni stupac',
 	coadmin: 'coadmin',
 	aucunPadDestination: 'Nema odredišne podloge.',
-	capsuleCopiee: 'Kapsula kopirana na odredišni podloge.'
+	capsuleCopiee: 'Kapsula kopirana na odredišni podloge.',
+	transfererCompte: 'Prijenos sadržaja računa',
+	identifiantCompteATransferer: 'ID računa koji se prenosi',
+	identifiantDestination: 'ID odredišta',
+	confirmationTransfererCompte: 'Jeste li sigurni da želite prenijeti sadržaj računa na ovaj ID?',
+	compteTransfere: 'Prenesen sadržaj računa.'
 }

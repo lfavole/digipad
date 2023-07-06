@@ -100,6 +100,20 @@
 					<span class="bouton" role="button" tabindex="0" @click="modale = 'supprimer-pad'">{{ $t('valider') }}</span>
 				</div>
 				<h1>
+					<span>{{ $t('transfererCompte') }}</span>
+				</h1>
+				<div class="conteneur">
+					<label>{{ $t('identifiantCompteATransferer') }}</label>
+					<input type="text" :value="identifiantO" @input="identifiantO = $event.target.value">
+				</div>
+				<div class="conteneur">
+					<label>{{ $t('identifiantDestination') }}</label>
+					<input type="text" :value="identifiantT" @input="identifiantT = $event.target.value">
+				</div>
+				<div class="actions">
+					<span class="bouton" role="button" tabindex="0" @click="modale = 'transferer-compte'">{{ $t('valider') }}</span>
+				</div>
+				<h1>
 					<span>{{ $t('supprimerCompte') }}</span>
 				</h1>
 				<div class="conteneur">
@@ -117,10 +131,12 @@
 				<div class="conteneur">
 					<div class="contenu">
 						<div class="message" v-html="$t('confirmationSupprimerPad')" v-if="modale === 'supprimer-pad'" />
+						<div class="message" v-html="$t('confirmationTransfererCompte')" v-else-if="modale === 'transferer-compte'" />
 						<div class="message" v-html="$t('confirmationSupprimerCompteAdmin')" v-else-if="modale === 'supprimer-compte'" />
 						<div class="actions">
 							<span role="button" tabindex="0" class="bouton" @click="modale = ''">{{ $t('non') }}</span>
 							<span role="button" tabindex="0" class="bouton" @click="supprimerPad" v-if="modale === 'supprimer-pad'">{{ $t('oui') }}</span>
+							<span role="button" tabindex="0" class="bouton" @click="transfererCompte" v-else-if="modale === 'transferer-compte'">{{ $t('oui') }}</span>
 							<span role="button" tabindex="0" class="bouton" @click="supprimerCompte" v-else-if="modale === 'supprimer-compte'">{{ $t('oui') }}</span>
 						</div>
 					</div>
@@ -173,6 +189,8 @@ export default {
 			padIdE: '',
 			donneesPad: '',
 			identifiantS: '',
+			identifiantO: '',
+			identifiantT: '',
 			champ: '',
 			valeur: '',
 			maintenance: false,
@@ -371,6 +389,29 @@ export default {
 					this.chargement = false
 					this.padIdS = ''
 					this.suppressionFichiers = true
+					this.message = this.$t('erreurCommunicationServeur')
+				}.bind(this))
+			}
+		},
+		transfererCompte () {
+			if (this.identifiantO !== '' && this.identifiantT !== '') {
+				this.modale = ''
+				this.chargement = true
+				axios.post(this.hote + '/api/transferer-compte', {
+					identifiant: this.identifiantO,
+					nouvelIdentifiant: this.identifiantT
+				}).then(function (reponse) {
+					this.chargement = false
+					const donnees = reponse.data
+					if (donnees === 'erreur') {
+						this.message = this.$t('erreurActionServeur')
+					} else {
+						this.notification = this.$t('compteTransfere')
+						this.identifiantO = ''
+						this.identifiantT = ''
+					}
+				}.bind(this)).catch(function () {
+					this.chargement = false
 					this.message = this.$t('erreurCommunicationServeur')
 				}.bind(this))
 			}
