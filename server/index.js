@@ -4963,7 +4963,7 @@ async function demarrerServeur () {
 				})
 			})
 		})
-		return Promise.all([donneesPadsCrees, donneesPadsRejoints, donneesPadsAdmins, donneesPadsFavoris])
+		return Promise.all([donneesPadsCrees, donneesPadsAdmins])
 	}
 
 	function recupererDonneesPad (id, token, identifiant, statut, res) {
