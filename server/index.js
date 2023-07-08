@@ -605,7 +605,7 @@ async function demarrerServeur () {
 
 	app.post('/api/recuperer-donnees-auteur', function (req, res) {
 		const identifiant = req.body.identifiant
-		recupererDonneesUtilisateur(identifiant).then(function (pads) {
+		recupererDonneesAuteur(identifiant).then(function (pads) {
 			let padsCrees = pads[0].filter(function (element) {
 				return element !== '' && Object.keys(element).length > 0
 			})
