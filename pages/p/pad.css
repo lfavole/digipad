@@ -1704,6 +1704,10 @@
 	padding: 0;
 }
 
+.modale .vide {
+	margin-bottom: 20px;
+}
+
 #codeqr .contenu {
 	text-align: center;
 	font-size: 0;
