@@ -375,5 +375,6 @@ export default {
 	identifiantCompteATransferer: 'Usuario de la cuenta a transferir',
 	identifiantDestination: 'Nombre de usuario de destino',
 	confirmationTransfererCompte: '¿Realmente desea transferir el contenido de la cuenta a este usuario?',
-	compteTransfere: 'Contenido de la cuenta transferido.'
+	compteTransfere: 'Contenido de la cuenta transferido.',
+	utilisateurInexistant: 'Al menos uno de los usuarios especificados no existe.'
 }

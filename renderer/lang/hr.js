@@ -375,5 +375,6 @@ export default {
 	identifiantCompteATransferer: 'ID računa koji se prenosi',
 	identifiantDestination: 'ID odredišta',
 	confirmationTransfererCompte: 'Jeste li sigurni da želite prenijeti sadržaj računa na ovaj ID?',
-	compteTransfere: 'Prenesen sadržaj računa.'
+	compteTransfere: 'Prenesen sadržaj računa.',
+	utilisateurInexistant: 'Najmanje jedan od navedenih korisnika ne postoji.'
 }

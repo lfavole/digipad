@@ -375,5 +375,6 @@ export default {
 	identifiantCompteATransferer: 'Username to be transferred',
 	identifiantDestination: 'Destination username',
 	confirmationTransfererCompte: 'Do you really want to transfer contents to this username?',
-	compteTransfere: 'Account contents transferred.'
+	compteTransfere: 'Account contents transferred.',
+	utilisateurInexistant: 'At least one of the specified username does not exist.'
 }

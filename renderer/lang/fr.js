@@ -375,5 +375,6 @@ export default {
 	identifiantCompteATransferer: 'Identifiant du compte à transférer',
 	identifiantDestination: 'Identifiant de destination',
 	confirmationTransfererCompte: 'Souhaitez-vous vraiment transférer les contenus du compte vers cet identifiant&nbsp;?',
-	compteTransfere: 'Contenus du compte transférés.'
+	compteTransfere: 'Contenus du compte transférés.',
+	utilisateurInexistant: 'Au moins un des identifiants indiqués n\'existe pas.'
 }

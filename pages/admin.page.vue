@@ -405,6 +405,8 @@ export default {
 					const donnees = reponse.data
 					if (donnees === 'erreur') {
 						this.message = this.$t('erreurActionServeur')
+					} else if (donnees === 'utilisateur_inexistant') {
+						this.message = this.$t('utilisateurInexistant')
 					} else {
 						this.notification = this.$t('compteTransfere')
 						this.identifiantO = ''
