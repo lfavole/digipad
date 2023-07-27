@@ -1,8 +1,8 @@
-import en from './en'
-import es from './es'
-import fr from './fr'
-import hr from './hr'
-import it from './it'
+import en from './en.json'
+import es from './es.json'
+import fr from './fr.json'
+import hr from './hr.json'
+import it from './it.json'
 
 export default {
 	en,
