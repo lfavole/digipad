@@ -1899,6 +1899,42 @@ async function demarrerServeur () {
 		})
 	})
 
+	app.post('/api/rattacher-pad', function (req, res) {
+		const pad = req.body.padId
+		const identifiant = req.body.identifiant
+		db.exists('utilisateurs:' + identifiant, function (err, reponse) {
+			if (err) { res.send('erreur'); return false  }
+			if (reponse === 1) {
+				db.exists('pads:' + pad, function (err, resultat) {
+					if (err) { res.send('erreur'); return false  }
+					if (resultat === 1) {
+						db.hgetall('pads:' + pad, function (err, donnees) {
+							if (err || !donnees || donnees === null) { res.send('erreur'); return false }
+							if (donnees.hasOwnProperty('motdepasse')) {
+								const multi = db.multi()
+								multi.sadd('pads-crees:' + identifiant, pad)
+								multi.sadd('utilisateurs-pads:' + pad, identifiant)
+								multi.hset('pads:' + pad, 'identifiant', identifiant)
+								multi.hdel('pads:' + pad, 'motdepasse')
+								multi.srem('pads-rejoints:' + identifiant, pad)
+								multi.srem('pads-utilisateurs:' + identifiant, pad)
+								multi.exec(function () {
+									res.send('pad_transfere')
+								})
+							} else {
+								res.send('pad_cree_avec_compte')
+							}
+						})
+					} else {
+						res.send('pad_inexistant')
+					}
+				})
+			} else {
+				res.send('utilisateur_inexistant')
+			}
+		})
+	})
+
 	app.post('/api/transferer-compte', function (req, res) {
 		const identifiant = req.body.identifiant
 		const nouvelIdentifiant = req.body.nouvelIdentifiant
@@ -1917,6 +1953,7 @@ async function demarrerServeur () {
 								multi.sadd('utilisateurs-pads:' + pad, nouvelIdentifiant)
 								multi.srem('utilisateurs-pads:' + pad, identifiant)
 								multi.hset('pads:' + pad, 'identifiant', nouvelIdentifiant)
+								multi.srem('pads-admins:' + nouvelIdentifiant, pad)
 								multi.srem('pads-rejoints:' + nouvelIdentifiant, pad)
 								multi.srem('pads-utilisateurs:' + nouvelIdentifiant, pad)
 								multi.exec()

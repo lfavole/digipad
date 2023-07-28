@@ -81,6 +81,20 @@
 					<span class="bouton" role="button" tabindex="0" @click="exporterPad">{{ $t('valider') }}</span>
 				</div>
 				<h1>
+					<span>{{ $t('rattacherPad') }}</span>
+				</h1>
+				<div class="conteneur">
+					<label>{{ $t('numeroPad') }}</label>
+					<input type="number" :value="padIdR" @input="padIdR = $event.target.value">
+				</div>
+				<div class="conteneur">
+					<label>{{ $t('identifiantDestination') }}</label>
+					<input type="text" :value="identifiantR" @input="identifiantR = $event.target.value">
+				</div>
+				<div class="actions">
+					<span class="bouton" role="button" tabindex="0" @click="modale = 'rattacher-pad'">{{ $t('valider') }}</span>
+				</div>
+				<h1>
 					<span>{{ $t('supprimerPad') }}</span>
 				</h1>
 				<div class="conteneur">
@@ -130,12 +144,14 @@
 			<div class="modale">
 				<div class="conteneur">
 					<div class="contenu">
-						<div class="message" v-html="$t('confirmationSupprimerPad')" v-if="modale === 'supprimer-pad'" />
+						<div class="message" v-html="$t('confirmationRattacherPad')" v-if="modale === 'rattacher-pad'" />
+						<div class="message" v-html="$t('confirmationSupprimerPad')" v-else-if="modale === 'supprimer-pad'" />
 						<div class="message" v-html="$t('confirmationTransfererCompte')" v-else-if="modale === 'transferer-compte'" />
 						<div class="message" v-html="$t('confirmationSupprimerCompteAdmin')" v-else-if="modale === 'supprimer-compte'" />
 						<div class="actions">
 							<span role="button" tabindex="0" class="bouton" @click="modale = ''">{{ $t('non') }}</span>
-							<span role="button" tabindex="0" class="bouton" @click="supprimerPad" v-if="modale === 'supprimer-pad'">{{ $t('oui') }}</span>
+							<span role="button" tabindex="0" class="bouton" @click="rattacherPad" v-if="modale === 'rattacher-pad'">{{ $t('oui') }}</span>
+							<span role="button" tabindex="0" class="bouton" @click="supprimerPad" v-else-if="modale === 'supprimer-pad'">{{ $t('oui') }}</span>
 							<span role="button" tabindex="0" class="bouton" @click="transfererCompte" v-else-if="modale === 'transferer-compte'">{{ $t('oui') }}</span>
 							<span role="button" tabindex="0" class="bouton" @click="supprimerCompte" v-else-if="modale === 'supprimer-compte'">{{ $t('oui') }}</span>
 						</div>
@@ -187,10 +203,12 @@ export default {
 			padIdS: '',
 			padIdM: '',
 			padIdE: '',
+			padIdR: '',
 			donneesPad: '',
 			identifiantS: '',
 			identifiantO: '',
 			identifiantT: '',
+			identifiantR: '',
 			champ: '',
 			valeur: '',
 			maintenance: false,
@@ -347,6 +365,35 @@ export default {
 				}.bind(this))
 			}
 		},
+		rattacherPad () {
+			if (this.padIdR !== '' && this.identifiantR !== '') {
+				this.modale = ''
+				this.chargement = true
+				axios.post(this.hote + '/api/rattacher-pad', {
+					padId: this.padIdR,
+					identifiant: this.identifiantR
+				}).then(function (reponse) {
+					this.chargement = false
+					const donnees = reponse.data
+					if (donnees === 'erreur') {
+						this.message = this.$t('erreurActionServeur')
+					} else if (donnees === 'utilisateur_inexistant') {
+						this.message = this.$t('utilisateurInexistant')
+					} else if (donnees === 'pad_inexistant') {
+						this.message = this.$t('padInexistant')
+					} else if (donnees === 'pad_cree_avec_compte') {
+						this.message = this.$t('padCreeAvecCompte')
+					} else {
+						this.notification = this.$t('padTransfere')
+						this.padIdR = ''
+						this.identifiantR = ''
+					}
+				}.bind(this)).catch(function () {
+					this.chargement = false
+					this.message = this.$t('erreurCommunicationServeur')
+				}.bind(this))
+			}
+		},
 		supprimerPad () {
 			if (this.padIdS !== '') {
 				this.modale = ''
@@ -406,7 +453,7 @@ export default {
 					if (donnees === 'erreur') {
 						this.message = this.$t('erreurActionServeur')
 					} else if (donnees === 'utilisateur_inexistant') {
-						this.message = this.$t('utilisateurInexistant')
+						this.message = this.$t('utilisateursInexistants')
 					} else {
 						this.notification = this.$t('compteTransfere')
 						this.identifiantO = ''
