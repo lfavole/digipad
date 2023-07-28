@@ -376,5 +376,10 @@
 	"identifiantDestination": "ID odredišta",
 	"confirmationTransfererCompte": "Jeste li sigurni da želite prenijeti sadržaj računa na ovaj ID?",
 	"compteTransfere": "Prenesen sadržaj računa.",
-	"utilisateurInexistant": "Najmanje jedan od navedenih korisnika ne postoji."
+	"utilisateursInexistants": "Najmanje jedan od navedenih korisnika ne postoji.",
+	"rattacherPad": "Povežite podloga kreiran bez računa s računom",
+	"confirmationRattacherPad": "Jeste li sigurni da želite prenijeti ovu podlogu na ovaj ID?",
+	"padTransfere": "Podloga prenesena.",
+	"padCreeAvecCompte": "Ova podloga već pripada drugom korisniku.",
+	"utilisateurInexistant": "Ovaj račun ne postoji."
 }

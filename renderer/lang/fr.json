@@ -376,5 +376,10 @@
 	"identifiantDestination": "Identifiant de destination",
 	"confirmationTransfererCompte": "Souhaitez-vous vraiment transférer les contenus du compte vers cet identifiant&nbsp;?",
 	"compteTransfere": "Contenus du compte transférés.",
-	"utilisateurInexistant": "Au moins un des identifiants indiqués n'existe pas."
+	"utilisateursInexistants": "Au moins un des identifiants indiqués n'existe pas.",
+	"rattacherPad": "Rattacher un pad créé sans compte à un compte",
+	"confirmationRattacherPad": "Souhaitez-vous vraiment transférer ce pad vers cet identifiant&nbsp;?",
+	"padTransfere": "Pad transféré.",
+	"padCreeAvecCompte": "Ce pad appartient déjà à un autre utilisateur.",
+	"utilisateurInexistant": "Ce compte n'existe pas."
 }

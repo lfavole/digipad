@@ -376,5 +376,10 @@
 	"identifiantDestination": "Nome utente di destinazione",
 	"confirmationTransfererCompte": "Si desidera davvero trasferire il contenuto dell'account a questo nome utente?",
 	"compteTransfere": "Contenuto dell'account trasferito.",
-	"utilisateurInexistant": "Almeno uno degli utenti specificati non esiste."
+	"utilisateursInexistants": "Almeno uno degli utenti specificati non esiste.",
+	"rattacherPad": "Collega un pad creato senza un account a un account",
+	"confirmationRattacherPad": "Sei sicuro di voler trasferire questo pad a questo account?",
+	"padTransfere": "Pad trasferito.",
+	"padCreeAvecCompte": "Questo pad appartiene già a un altro utente.",
+	"utilisateurInexistant": "Questo account non esiste."
 }
