@@ -381,5 +381,6 @@
 	"confirmationRattacherPad": "Souhaitez-vous vraiment transférer ce pad vers cet identifiant&nbsp;?",
 	"padTransfere": "Pad transféré.",
 	"padCreeAvecCompte": "Ce pad appartient déjà à un autre utilisateur.",
-	"utilisateurInexistant": "Ce compte n'existe pas."
+	"utilisateurInexistant": "Ce compte n'existe pas.",
+	"identifiantNonConforme": "L'identifiant est trop court ou comporte des caractères non autorisés."
 }

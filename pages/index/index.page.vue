@@ -283,7 +283,7 @@ export default {
 			})
 		},
 		sInscrire () {
-			if (this.identifiant.trim() !== '' && this.motDePasse.trim() !== '' && this.motDePasse.trim() === this.confirmationMotDePasse.trim() && this.email.trim() !== '' && this.$verifierEmail(this.email.trim()) === true) {
+			if (this.identifiant.trim() !== '' && this.verifierIdentifant(this.identifiant.trim()) === true && this.motDePasse.trim() !== '' && this.motDePasse.trim() === this.confirmationMotDePasse.trim() && this.email.trim() !== '' && this.$verifierEmail(this.email.trim()) === true) {
 				this.chargement = true
 				axios.post(this.hote + '/api/inscription', {
 					identifiant: this.identifiant.trim(),
@@ -303,11 +303,26 @@ export default {
 				}.bind(this))
 			} else if (this.identifiant.trim() === '' || this.motDePasse.trim() === '' || this.confirmationMotDePasse.trim() === '' || this.email.trim() === '') {
 				this.message = this.$t('remplirChamps')
+			} else if (this.verifierIdentifant(this.identifiant.trim()) === false) {
+				this.message = this.$t('identifiantNonConforme')
 			} else if (this.motDePasse.trim() !== this.confirmationMotDePasse.trim()) {
 				this.message = this.$t('motsDePassePasIdentiques')
 			} else if (this.$verifierEmail(this.email.trim()) === false) {
 				this.message = this.$t('erreurEmail')
 			}
+		},
+		verifierIdentifant (identifiant) {
+			const caracteres = ['?', '#', '$', '&', '%', '[', ']', '{', '}', '<', '>', '/', '@', '"', "'", '*', '+', '°', '=', '€']
+			let conforme = true
+			caracteres.forEach(function (caractere) {
+				if (identifiant.includes(caractere)) {
+					conforme = false
+				}
+			})
+			if (identifiant.length < 3) {
+				conforme = false
+			}
+			return conforme
 		},
 		afficherModaleMotDePasseOublie () {
 			this.motDePasse = ''

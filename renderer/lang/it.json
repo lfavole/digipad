@@ -381,5 +381,6 @@
 	"confirmationRattacherPad": "Sei sicuro di voler trasferire questo pad a questo account?",
 	"padTransfere": "Pad trasferito.",
 	"padCreeAvecCompte": "Questo pad appartiene già a un altro utente.",
-	"utilisateurInexistant": "Questo account non esiste."
+	"utilisateurInexistant": "Questo account non esiste.",
+	"identifiantNonConforme": "Il nome utente è troppo corto o contiene caratteri non validi."
 }
