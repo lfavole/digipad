@@ -841,6 +841,9 @@ export default {
 				document.querySelector('#texte .contenu-editeur').addEventListener('blur', function () {
 					document.querySelector('#texte').classList.remove('focus')
 				})
+				document.querySelector('#texte .contenu-editeur').addEventListener('contextmenu', function (event) {
+					event.preventDefault()
+				})
 				document.querySelector('#couleur-texte').addEventListener('change', this.modifierCouleurTexte)
 			}.bind(this))
 		},
@@ -2122,6 +2125,9 @@ export default {
 						pell.exec('insertText', event.clipboardData.getData('text/plain'))
 					}
 				}
+				document.querySelector('#commentaire-modifie .contenu-editeur-commentaire').addEventListener('contextmenu', function (event) {
+					event.preventDefault()
+				})
 				document.querySelector('#couleur-texte-commentaire-modifie').addEventListener('change', this.modifierCouleurCommentaireModifie)
 			}.bind(this))
 		},
@@ -2188,6 +2194,9 @@ export default {
 						pell.exec('insertText', event.clipboardData.getData('text/plain'))
 					}
 				}
+				document.querySelector('#commentaire .contenu-editeur-commentaire').addEventListener('contextmenu', function (event) {
+					event.preventDefault()
+				})
 				document.querySelector('#couleur-texte-commentaire').addEventListener('change', this.modifierCouleurCommentaire)
 			}
 		},
