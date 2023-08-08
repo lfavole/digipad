@@ -58,6 +58,7 @@ export default {
 			progressionFond: 0,
 			progressionEnregistrement: false,
 			visibilite: false,
+			visibiliteInitiale: '',
 			chargementLien: false,
 			chargementMedia: false,
 			menuActivite: false,
@@ -778,6 +779,9 @@ export default {
 				} else {
 					this.visibilite = false
 				}
+				if (mode === 'edition' && item.hasOwnProperty('visibilite') && item.visibilite === 'privee') {
+					this.visibiliteInitiale = 'privee'
+				}
 				if (item.iframe !== '') {
 					this.lien = item.media
 				}
@@ -1470,6 +1474,7 @@ export default {
 			this.chargementVignette = false
 			this.resultats = {}
 			this.visibilite = false
+			this.visibiliteInitiale = ''
 			this.donneesBloc = {}
 			this.blob = ''
 			this.enregistrement = false

@@ -828,8 +828,8 @@
 					<div class="conteneur-interrupteur" v-if="admin">
 						<span>{{ $t('capsulePrivee') }}</span>
 						<label class="bouton-interrupteur">
-							<input type="checkbox" :checked="visibilite" @change="modifierVisibiliteCapsule">
-							<span class="barre" />
+							<input type="checkbox" :checked="visibilite" :disabled="mode === 'edition' && visibiliteInitiale === 'privee'" @change="modifierVisibiliteCapsule">
+							<span class="barre" :class="{'desactive': mode === 'edition' && visibiliteInitiale === 'privee'}" />
 						</label>
 					</div>
 					<label for="champ-titre">{{ $t('titre') }}</label>
