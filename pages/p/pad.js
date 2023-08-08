@@ -150,6 +150,13 @@ export default {
 		admin () {
 			return (this.pad.hasOwnProperty('identifiant') && this.pad.identifiant === this.identifiant) || (this.pad.hasOwnProperty('admins') && this.pad.admins.includes(this.identifiant))
 		},
+		mobile () {
+			if (((this.userAgent.match(/iPhone/i) || this.userAgent.match(/iPad/i) || this.userAgent.match(/iPod/i)) && this.userAgent.match(/Mobile/i)) || this.userAgent.match(/Android/i)) {
+				return true
+			} else {
+				return false
+			}
+		},
 		digidrive () {
 			return this.statut === 'auteur' && this.padsDigidrive.includes(this.pad.id)
 		},
@@ -840,9 +847,6 @@ export default {
 				})
 				document.querySelector('#texte .contenu-editeur').addEventListener('blur', function () {
 					document.querySelector('#texte').classList.remove('focus')
-				})
-				document.querySelector('#texte .contenu-editeur').addEventListener('contextmenu', function (event) {
-					event.preventDefault()
 				})
 				document.querySelector('#couleur-texte').addEventListener('change', this.modifierCouleurTexte)
 			}.bind(this))
@@ -2125,9 +2129,6 @@ export default {
 						pell.exec('insertText', event.clipboardData.getData('text/plain'))
 					}
 				}
-				document.querySelector('#commentaire-modifie .contenu-editeur-commentaire').addEventListener('contextmenu', function (event) {
-					event.preventDefault()
-				})
 				document.querySelector('#couleur-texte-commentaire-modifie').addEventListener('change', this.modifierCouleurCommentaireModifie)
 			}.bind(this))
 		},
@@ -2194,14 +2195,11 @@ export default {
 						pell.exec('insertText', event.clipboardData.getData('text/plain'))
 					}
 				}
-				document.querySelector('#commentaire .contenu-editeur-commentaire').addEventListener('contextmenu', function (event) {
-					event.preventDefault()
-				})
 				document.querySelector('#couleur-texte-commentaire').addEventListener('change', this.modifierCouleurCommentaire)
 			}
 		},
 		definirActionsEditeur (type) {
-			let actions = [
+			const actions = [
 				{ name: 'gras', title: this.$t('gras'), icon: '<i class="material-icons">format_bold</i>', result: () => pell.exec('bold') },
 				{ name: 'italique', title: this.$t('italique'), icon: '<i class="material-icons">format_italic</i>', result: () => pell.exec('italic') },
 				{ name: 'souligne', title: this.$t('souligne'), icon: '<i class="material-icons">format_underlined</i>', result: () => pell.exec('underline') },
@@ -2210,9 +2208,6 @@ export default {
 				{ name: 'lien', title: this.$t('lien'), icon: '<i class="material-icons">link</i>', result: () => { const url = window.prompt(this.$t('adresseLien')); if (url) { pell.exec('createLink', url) } } },
 				{ name: 'emojis', title: this.$t('emoticones'), icon: '<i class="material-icons">insert_emoticon</i>', result: function () { this.afficherEmojis(type) }.bind(this) }
 			]
-			if (((this.userAgent.match(/iPhone/i) || this.userAgent.match(/iPad/i) || this.userAgent.match(/iPod/i)) && this.userAgent.match(/Mobile/i)) || this.userAgent.match(/Android/i)) {
-				actions = [{ name: 'gras', title: this.$t('gras'), icon: '<i class="material-icons">format_bold</i>', result: () => pell.exec('bold') }, { name: 'italique', title: this.$t('italique'), icon: '<i class="material-icons">format_italic</i>', result: () => pell.exec('italic') }, { name: 'souligne', title: this.$t('souligne'), icon: '<i class="material-icons">format_underlined</i>', result: () => pell.exec('underline') }, { name: 'barre', title: this.$t('barre'), icon: '<i class="material-icons">format_strikethrough</i>', result: () => pell.exec('strikethrough') }]
-			}
 			return actions
 		},
 		afficherEmojis (type) {

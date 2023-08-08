@@ -846,17 +846,31 @@ label.bouton-bleu {
 	border-top-left-radius: 4px;
 }
 
-#texte .boutons-editeur {
+#texte:not(.mobile) .boutons-editeur {
 	border-top-left-radius: 4px;
     border-top-right-radius: 4px;
+}
+
+#texte.mobile .boutons-editeur {
+	position: sticky;
+	bottom: -2rem;
+	order: 2;
+	border-bottom-left-radius: 4px;
+    border-bottom-right-radius: 4px;
+	border-top: 1px solid #ddd;
+	border-bottom: 0;
+}
+
+#texte.mobile .contenu-editeur  {
+	position: sticky;
+	bottom: -2rem;
+	order: 1;
 }
 
 .contenu-editeur {
 	padding: 10px 15px;
 	font-size: 16px;
-	position: sticky;
 	min-height: 9rem;
-	top: 0;
 	outline: none!important;
 	user-select: text!important;
 	-webkit-user-select: text!important;
@@ -886,6 +900,30 @@ label.bouton-bleu {
 .contenu-editeur:lang(hr):empty:before {
 	content: 'Dodavanje teksta...';
 	color: #aaa;
+}
+
+#commentaire.mobile .boutons-editeur-commentaire {
+	order: 2;
+	border-top-left-radius: 0;
+	border-bottom-left-radius: 10px;
+	border-top: 1px solid #ddd;
+}
+
+#diapositive #commentaire.mobile .boutons-editeur-commentaire {
+	border-bottom-left-radius: 4px;
+}
+
+#commentaire-modifie.mobile .boutons-editeur-commentaire {
+	order: 2;
+	border-top-left-radius: 0;
+	border-bottom-left-radius: 4px;
+	border-top: 1px solid #ddd;
+	border-bottom: 0;
+}
+
+#commentaire-modifie.mobile .contenu-editeur-commentaire,
+#commentaire.mobile .contenu-editeur-commentaire {
+	order: 1;
 }
 
 .contenu-editeur-commentaire {
