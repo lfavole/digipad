@@ -1378,7 +1378,7 @@
 
 .commentaires li .texte {
 	font-size: 16px;
-	padding: 1rem;
+	padding: 1rem 1.5rem;
 	border: 1px solid #ddd;
 	border-radius: 4px;
 }
@@ -1629,6 +1629,10 @@
 .modale .bouton-interrupteur input:checked + .barre:before,
 .menu .bouton-interrupteur input:checked + .barre:before {
 	transform: translateX(1.6rem);
+}
+
+.modale .bouton-interrupteur .barre.desactive {
+	opacity: 0.5;
 }
 
 .menu .conteneur.fond {
