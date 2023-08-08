@@ -4619,6 +4619,10 @@ async function demarrerServeur () {
 							if (resultat === 1) {
 								db.hgetall('pads:' + pad, function (err, donnees) {
 									if (err) { resolve({}); return false }
+									// Pour résoudre le problème de chemin pour les fichiers déplacés
+									if (donnees.hasOwnProperty('fond') && !donnees.fond.includes('/img/') && donnees.fond.substring(0, 1) !== '#' && donnees.fond !== '') {
+										donnees.fond = '/' + definirDossierFichiers(pad) + '/' + pad + '/' + path.basename(donnees.fond)
+									}
 									db.exists('utilisateurs:' + donnees.identifiant, function (err, resultat) {
 										if (err) {
 											donnees.nom = donnees.identifiant
@@ -4648,6 +4652,10 @@ async function demarrerServeur () {
 							} else if (resultat !== 1 && await fs.pathExists(path.join(__dirname, '..', '/static/pads/pad-' + pad + '.json'))) {
 								const donnees = await fs.readJson(path.join(__dirname, '..', '/static/pads/pad-' + pad + '.json'))
 								if (typeof donnees === 'object' && donnees !== null && donnees.hasOwnProperty('identifiant')) {
+									// Pour résoudre le problème de chemin pour les fichiers déplacés
+									if (donnees.hasOwnProperty('fond') && !donnees.fond.includes('/img/') && donnees.fond.substring(0, 1) !== '#' && donnees.fond !== '') {
+										donnees.fond = '/' + definirDossierFichiers(pad) + '/' + pad + '/' + path.basename(donnees.fond)
+									}
 									db.exists('utilisateurs:' + donnees.identifiant, function (err, resultat) {
 										if (err) {
 											donnees.nom = donnees.identifiant
@@ -4699,6 +4707,10 @@ async function demarrerServeur () {
 							if (resultat === 1) {
 								db.hgetall('pads:' + pad, function (err, donnees) {
 									if (err) { resolve({}); return false }
+									// Pour résoudre le problème de chemin pour les fichiers déplacés
+									if (donnees.hasOwnProperty('fond') && !donnees.fond.includes('/img/') && donnees.fond.substring(0, 1) !== '#' && donnees.fond !== '') {
+										donnees.fond = '/' + definirDossierFichiers(pad) + '/' + pad + '/' + path.basename(donnees.fond)
+									}
 									db.exists('utilisateurs:' + donnees.identifiant, function (err, resultat) {
 										if (err) {
 											donnees.nom = donnees.identifiant
@@ -4728,6 +4740,10 @@ async function demarrerServeur () {
 							} else if (resultat !== 1 && await fs.pathExists(path.join(__dirname, '..', '/static/pads/pad-' + pad + '.json'))) {
 								const donnees = await fs.readJson(path.join(__dirname, '..', '/static/pads/pad-' + pad + '.json'))
 								if (typeof donnees === 'object' && donnees !== null && donnees.hasOwnProperty('identifiant')) {
+									// Pour résoudre le problème de chemin pour les fichiers déplacés
+									if (donnees.hasOwnProperty('fond') && !donnees.fond.includes('/img/') && donnees.fond.substring(0, 1) !== '#' && donnees.fond !== '') {
+										donnees.fond = '/' + definirDossierFichiers(pad) + '/' + pad + '/' + path.basename(donnees.fond)
+									}
 									db.exists('utilisateurs:' + donnees.identifiant, function (err, resultat) {
 										if (err) {
 											donnees.nom = donnees.identifiant
@@ -4780,6 +4796,10 @@ async function demarrerServeur () {
 							if (resultat === 1) {
 								db.hgetall('pads:' + pad, function (err, donnees) {
 									if (err) { resolve({}) }
+									// Pour résoudre le problème de chemin pour les fichiers déplacés
+									if (donnees.hasOwnProperty('fond') && !donnees.fond.includes('/img/') && donnees.fond.substring(0, 1) !== '#' && donnees.fond !== '') {
+										donnees.fond = '/' + definirDossierFichiers(pad) + '/' + pad + '/' + path.basename(donnees.fond)
+									}
 									db.exists('utilisateurs:' + donnees.identifiant, function (err, resultat) {
 										if (err) {
 											donnees.nom = donnees.identifiant
@@ -4809,6 +4829,10 @@ async function demarrerServeur () {
 							} else if (resultat !== 1 && await fs.pathExists(path.join(__dirname, '..', '/static/pads/pad-' + pad + '.json'))) {
 								const donnees = await fs.readJson(path.join(__dirname, '..', '/static/pads/pad-' + pad + '.json'))
 								if (typeof donnees === 'object' && donnees !== null && donnees.hasOwnProperty('identifiant')) {
+									// Pour résoudre le problème de chemin pour les fichiers déplacés
+									if (donnees.hasOwnProperty('fond') && !donnees.fond.includes('/img/') && donnees.fond.substring(0, 1) !== '#' && donnees.fond !== '') {
+										donnees.fond = '/' + definirDossierFichiers(pad) + '/' + pad + '/' + path.basename(donnees.fond)
+									}
 									db.exists('utilisateurs:' + donnees.identifiant, function (err, resultat) {
 										if (err) {
 											donnees.nom = donnees.identifiant
@@ -4861,6 +4885,10 @@ async function demarrerServeur () {
 							if (resultat === 1) {
 								db.hgetall('pads:' + pad, function (err, donnees) {
 									if (err) { resolve({}); return false }
+									// Pour résoudre le problème de chemin pour les fichiers déplacés
+									if (donnees.hasOwnProperty('fond') && !donnees.fond.includes('/img/') && donnees.fond.substring(0, 1) !== '#' && donnees.fond !== '') {
+										donnees.fond = '/' + definirDossierFichiers(pad) + '/' + pad + '/' + path.basename(donnees.fond)
+									}
 									db.exists('utilisateurs:' + donnees.identifiant, function (err, resultat) {
 										if (err) {
 											donnees.nom = donnees.identifiant
@@ -4890,6 +4918,10 @@ async function demarrerServeur () {
 							} else if (resultat !== 1 && await fs.pathExists(path.join(__dirname, '..', '/static/pads/pad-' + pad + '.json'))) {
 								const donnees = await fs.readJson(path.join(__dirname, '..', '/static/pads/pad-' + pad + '.json'))
 								if (typeof donnees === 'object' && donnees !== null && donnees.hasOwnProperty('identifiant')) {
+									// Pour résoudre le problème de chemin pour les fichiers déplacés
+									if (donnees.hasOwnProperty('fond') && !donnees.fond.includes('/img/') && donnees.fond.substring(0, 1) !== '#' && donnees.fond !== '') {
+										donnees.fond = '/' + definirDossierFichiers(pad) + '/' + pad + '/' + path.basename(donnees.fond)
+									}
 									db.exists('utilisateurs:' + donnees.identifiant, function (err, resultat) {
 										if (err) {
 											donnees.nom = donnees.identifiant
