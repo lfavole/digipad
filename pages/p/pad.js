@@ -142,7 +142,7 @@ export default {
 			activite: this.$pageContext.pageProps.activite,
 			etherpad: import.meta.env.VITE_ETHERPAD,
 			etherpadApi: import.meta.env.VITE_ETHERPAD_API_KEY,
-			limite: parseInt(import.meta.env.VITE_UPLOAD_LIMIT),
+			limite: parseFloat(import.meta.env.VITE_UPLOAD_LIMIT),
 			fichiersAutorises: import.meta.env.VITE_UPLOAD_FILE_TYPES
 		}
 	},
