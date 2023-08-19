@@ -207,11 +207,14 @@ async function demarrerServeur () {
 			if (!httpResponse) {
 				return next()
 			}
-			const { body, statusCode, contentType, earlyHints } = httpResponse
+			const { body, statusCode, headers, earlyHints } = httpResponse
 			if (res.writeEarlyHints) {
 				res.writeEarlyHints({ link: earlyHints.map((e) => e.earlyHintLink) })
 			}
-			res.status(statusCode).type(contentType).send(body)
+			if (headers) {
+				headers.forEach(([name, value]) => res.setHeader(name, value))
+			}
+			res.status(statusCode).send(body)
 		}
   	})
 
@@ -233,10 +236,17 @@ async function demarrerServeur () {
 			}
 			const pageContext = await renderPage(pageContextInit)
 			const { httpResponse } = pageContext
-			if (!httpResponse) return next()
-			const { body, statusCode, contentType, earlyHints } = httpResponse
-			if (res.writeEarlyHints) res.writeEarlyHints({ link: earlyHints.map((e) => e.earlyHintLink) })
-			res.status(statusCode).type(contentType).send(body)
+			if (!httpResponse) {
+				return next()
+			}
+			const { body, statusCode, headers, earlyHints } = httpResponse
+			if (res.writeEarlyHints) {
+				res.writeEarlyHints({ link: earlyHints.map((e) => e.earlyHintLink) })
+			}
+			if (headers) {
+				headers.forEach(([name, value]) => res.setHeader(name, value))
+			}
+			res.status(statusCode).send(body)
 		} else {
 			res.redirect('/')
 		}
@@ -286,10 +296,17 @@ async function demarrerServeur () {
 		}
 		const pageContext = await renderPage(pageContextInit)
 		const { httpResponse } = pageContext
-		if (!httpResponse) return next()
-		const { body, statusCode, contentType, earlyHints } = httpResponse
-		if (res.writeEarlyHints) res.writeEarlyHints({ link: earlyHints.map((e) => e.earlyHintLink) })
-		res.status(statusCode).type(contentType).send(body)
+		if (!httpResponse) {
+			return next()
+		}
+		const { body, statusCode, headers, earlyHints } = httpResponse
+		if (res.writeEarlyHints) {
+			res.writeEarlyHints({ link: earlyHints.map((e) => e.earlyHintLink) })
+		}
+		if (headers) {
+			headers.forEach(([name, value]) => res.setHeader(name, value))
+		}
+		res.status(statusCode).send(body)
   	})
 
 	app.get('/maintenance', async function (req, res, next) {
@@ -310,11 +327,14 @@ async function demarrerServeur () {
 		if (!httpResponse) {
 			return next()
 		}
-		const { body, statusCode, contentType, earlyHints } = httpResponse
+		const { body, statusCode, headers, earlyHints } = httpResponse
 		if (res.writeEarlyHints) {
 			res.writeEarlyHints({ link: earlyHints.map((e) => e.earlyHintLink) })
 		}
-		res.status(statusCode).type(contentType).send(body)
+		if (headers) {
+			headers.forEach(([name, value]) => res.setHeader(name, value))
+		}
+		res.status(statusCode).send(body)
   	})
 	
 	app.get('/admin', async function (req, res, next) {
@@ -332,11 +352,14 @@ async function demarrerServeur () {
 		if (!httpResponse) {
 			return next()
 		}
-		const { body, statusCode, contentType, earlyHints } = httpResponse
+		const { body, statusCode, headers, earlyHints } = httpResponse
 		if (res.writeEarlyHints) {
 			res.writeEarlyHints({ link: earlyHints.map((e) => e.earlyHintLink) })
 		}
-		res.status(statusCode).type(contentType).send(body)
+		if (headers) {
+			headers.forEach(([name, value]) => res.setHeader(name, value))
+		}
+		res.status(statusCode).send(body)
   	})
 
 	app.post('/api/inscription', function (req, res) {
