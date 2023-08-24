@@ -12,5 +12,8 @@ export default {
 		watch: {
 			ignored: ["**/static/**"],
 		}
+	},
+	build: {
+		target: ['es2020', 'edge88', 'firefox78', 'chrome87', 'safari12']
 	}
 }
