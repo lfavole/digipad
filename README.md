@@ -23,7 +23,7 @@ npm run prod
 ### Avec PM2
 ```
 npm run build
-pm2 start
+pm2 start ecosystem.config.cjs
 ```
 
 ### Variables d'environnement pour la mise en production (fichier .env à créer à la racine du dossier)
