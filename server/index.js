@@ -1,46 +1,52 @@
-require('dotenv').config()
-const path = require('path')
-const fs = require('fs-extra')
-const onHeaders = require('on-headers')
-const express = require('express')
-const { createServer } = require('http')
-const { Server } = require('socket.io')
-const session = require('express-session')
-const axios = require('axios')
-const cors = require('cors')
-const redis = require('redis')
-const bodyParser = require('body-parser')
-const helmet = require('helmet')
-const v = require('voca')
-const multer = require('multer')
-const sharp = require('sharp')
-const gm = require('gm')
-const archiver = require('archiver')
-const extract = require('extract-zip')
-const dayjs = require('dayjs')
-require('dayjs/locale/fr')
-require('dayjs/locale/es')
-require('dayjs/locale/it')
-require('dayjs/locale/hr')
-const localizedFormat = require('dayjs/plugin/localizedFormat')
-const bcrypt = require('bcrypt')
-const cron = require('node-cron')
-const nodemailer = require('nodemailer')
-const { URL } = require('url')
-const cheerio = require('cheerio')
-const libre = require('libreoffice-convert')
-libre.convertAsync = require('util').promisify(libre.convert)
-const { renderPage } = require('vite-plugin-ssr/server')
+import 'dotenv/config'
+import path from 'path'
+import fs from 'fs-extra'
+import onHeaders from 'on-headers'
+import express from 'express'
+import { createServer } from 'http'
+import { Server } from 'socket.io'
+import compression from 'compression'
+import axios from 'axios'
+import cors from 'cors'
+import redis from 'redis'
+import bodyParser from 'body-parser'
+import helmet from 'helmet'
+import v from 'voca'
+import multer from 'multer'
+import sharp from 'sharp'
+import gm from 'gm'
+import archiver from 'archiver'
+import extract from 'extract-zip'
+import dayjs from 'dayjs'
+import 'dayjs/locale/es.js'
+import 'dayjs/locale/fr.js'
+import 'dayjs/locale/hr.js'
+import 'dayjs/locale/it.js'
+import localizedFormat from 'dayjs/plugin/localizedFormat.js'
+import bcrypt from 'bcrypt'
+import cron from 'node-cron'
+import nodemailer from 'nodemailer'
+import { URL, fileURLToPath } from 'url'
+import cheerio from 'cheerio'
+import libre from 'libreoffice-convert'
+import util from 'util'
+libre.convertAsync = util.promisify(libre.convert)
+import connectRedis from 'connect-redis'
+import session from 'express-session'
+import events from 'events'
+import { renderPage } from 'vite-plugin-ssr/server'
 
 const production = process.env.NODE_ENV === 'production'
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const root = `${__dirname}/..`
 
 demarrerServeur()
 
 async function demarrerServeur () {
 	const app = express()
+	app.use(compression())
 	const httpServer = createServer(app)
-	const RedisStore = require('connect-redis')(session)
+	const RedisStore = connectRedis(session)
 
 	let hote = 'http://localhost:3000'
 	if (process.env.PORT) {
@@ -132,7 +138,7 @@ async function demarrerServeur () {
 	const etherpadApi = process.env.VITE_ETHERPAD_API_KEY
 
 	// Augmenter nombre de tâches asynchrones par défaut
-	require('events').EventEmitter.defaultMaxListeners = 50
+	events.EventEmitter.defaultMaxListeners = 50
 
 	app.set('trust proxy', true)
 	app.use(
@@ -173,9 +179,10 @@ async function demarrerServeur () {
 	}
 
 	if (production) {
-		app.use(express.static('dist/client'))
+		const sirv = (await import('sirv')).default
+		app.use(sirv(`${root}/dist/client`))
 	} else {
-    	const vite = require('vite')
+		const vite = await import('vite')
     	const viteDevMiddleware = (
       		await vite.createServer({
         		root,

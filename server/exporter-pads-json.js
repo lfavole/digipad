@@ -1,7 +1,7 @@
-require('dotenv').config()
-const path = require('path')
-const fs = require('fs-extra')
-const redis = require('redis')
+import 'dotenv/config'
+import path from 'path'
+import fs from 'fs-extra'
+import redis from 'redis'
 let db
 let db_port = 6379
 if (process.env.DB_PORT) {
@@ -12,7 +12,7 @@ if (process.env.NODE_ENV === 'production') {
 } else {
 	db = redis.createClient({ port: db_port })
 }
-const dayjs = require('dayjs')
+import dayjs from 'dayjs'
 
 exporterPadsJson(10)
 
