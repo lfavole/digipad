@@ -2,6 +2,7 @@ import 'dotenv/config'
 import path from 'path'
 import fs from 'fs-extra'
 import redis from 'redis'
+import { fileURLToPath } from 'url'
 let db
 let db_port = 6379
 if (process.env.DB_PORT) {
@@ -13,6 +14,8 @@ if (process.env.NODE_ENV === 'production') {
 	db = redis.createClient({ port: db_port })
 }
 import dayjs from 'dayjs'
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 exporterPadsJson(10)
 
