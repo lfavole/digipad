@@ -17,8 +17,8 @@
 						<p v-html="$t('slogan')" />
 						<div id="actions">
 							<span class="bouton" role="button" tabindex="0" @click="afficherModaleConnexion">{{ $t('seConnecter') }}</span>
-							<span class="bouton" role="button" tabindex="1" @click="afficherModaleInscription">{{ $t('sInscrire') }}</span>
-							<div>
+							<span class="bouton" role="button" tabindex="1" @click="afficherModaleInscription" v-if="creationCompte === 1">{{ $t('sInscrire') }}</span>
+							<div v-if="creationPadSansCompte === 1">
 								<span class="bouton" role="button" tabindex="2" @click="afficherModaleCreer">{{ $t('creerPad') }}</span>
 							</div>
 						</div>
@@ -196,7 +196,9 @@ export default {
 			hub: false,
 			hote: this.$pageContext.pageProps.hote,
 			langues: this.$pageContext.pageProps.langues,
-			langue: this.$pageContext.pageProps.langue
+			langue: this.$pageContext.pageProps.langue,
+			creationCompte: 1,
+			creationPadSansCompte: 0
 		}
 	},
 	created () {
@@ -208,6 +210,12 @@ export default {
 			this.$socket.emit('modifierlangue', langue)
 		} else {
 			this.$i18n.locale = this.langue
+		}
+		if (import.meta.env.VITE_CREATE_ACCOUNT && import.meta.env.VITE_CREATE_ACCOUNT !== '') {
+			this.creationCompte = parseInt(import.meta.env.VITE_CREATE_ACCOUNT)
+		}
+		if (import.meta.env.VITE_PAD_WITHOUT_ACCOUNT && import.meta.env.VITE_PAD_WITHOUT_ACCOUNT !== '') {
+			this.creationPadSansCompte = parseInt(import.meta.env.VITE_PAD_WITHOUT_ACCOUNT)
 		}
 	},
 	mounted () {
