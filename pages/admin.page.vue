@@ -321,7 +321,7 @@ export default {
 					if (donnees === 'erreur') {
 						this.message = this.$t('erreurActionServeur')
 					} else if (donnees === 'pad_inexistant') {
-						this.message = this.$t('murInexistant')
+						this.message = this.$t('padInexistant')
 					} else {
 						this.notification = this.$t('donneesModifiees')
 					}
