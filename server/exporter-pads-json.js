@@ -3,6 +3,7 @@ import path from 'path'
 import fs from 'fs-extra'
 import redis from 'redis'
 import { fileURLToPath } from 'url'
+import dayjs from 'dayjs'
 let db
 let db_port = 6379
 if (process.env.DB_PORT) {
@@ -13,7 +14,6 @@ if (process.env.NODE_ENV === 'production') {
 } else {
 	db = redis.createClient({ port: db_port })
 }
-import dayjs from 'dayjs'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
