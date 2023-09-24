@@ -8,6 +8,9 @@ export default {
 			'#root': __dirname
 		}
 	},
+	define: {
+		'app_version': JSON.stringify(process.env.npm_package_version)
+	},
 	server: {
 		watch: {
 			ignored: ["**/static/**"],
