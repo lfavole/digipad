@@ -7,7 +7,7 @@ import fileSaver from 'file-saver'
 const { saveAs } = fileSaver
 import Panzoom from '@panzoom/panzoom'
 import ClipboardJS from 'clipboard'
-import lamejs from 'lamejstmp'
+import lamejs from 'lamejs'
 import ChargementPage from '#root/components/chargement-page.vue'
 import Chargement from '#root/components/chargement.vue'
 import Message from '#root/components/message.vue'
@@ -142,6 +142,7 @@ export default {
 			activite: this.$pageContext.pageProps.activite,
 			etherpad: import.meta.env.VITE_ETHERPAD,
 			etherpadApi: import.meta.env.VITE_ETHERPAD_API_KEY,
+			pixabayApi: import.meta.env.VITE_PIXABAY_API_KEY,
 			limite: parseFloat(import.meta.env.VITE_UPLOAD_LIMIT),
 			fichiersAutorises: import.meta.env.VITE_UPLOAD_FILE_TYPES
 		}
@@ -1277,7 +1278,7 @@ export default {
 				if (page === 1) {
 					this.page = page
 				}
-				axios.get('https://pixabay.com/api/?key=17995783-8722cfb0d46adc88b39d0bb64&q=' + requete + '&image_type=photo&lang=' + this.langue + '&orientation=horizontal&safesearch=true&per_page=16&page=' + page).then(function (reponse) {
+				axios.get('https://pixabay.com/api/?key=' + this.pixabayApi + '&q=' + requete + '&image_type=photo&lang=' + this.langue + '&orientation=horizontal&safesearch=true&per_page=16&page=' + page).then(function (reponse) {
 					this.chargementLien = false
 					const donnees = reponse.data
 					if (donnees && donnees.total > 0) {
@@ -1295,7 +1296,7 @@ export default {
 			}
 		},
 		modifierPage (type) {
-			if (type === 'suivante' && this.page < (this.resultats.total / 12)) {
+			if (type === 'suivante' && this.page < (this.resultats.total / 16)) {
 				this.page++
 			} else if (type === 'precedente' && this.page > 1) {
 				this.page--
