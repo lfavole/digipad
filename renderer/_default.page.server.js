@@ -2,7 +2,7 @@ export { render }
 
 export const passToClient = ['pageProps']
 
-import { escapeInject } from 'vite-plugin-ssr/server'
+import { escapeInject } from 'vike/server'
 
 async function render (pageContext) {
 	let titre = 'Digipad by La Digitale'

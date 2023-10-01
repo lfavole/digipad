@@ -34,7 +34,7 @@ libre.convertAsync = util.promisify(libre.convert)
 import connectRedis from 'connect-redis'
 import session from 'express-session'
 import events from 'events'
-import { renderPage } from 'vite-plugin-ssr/server'
+import { renderPage } from 'vike/server'
 
 const production = process.env.NODE_ENV === 'production'
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
