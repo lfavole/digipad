@@ -4,7 +4,7 @@ export { onBeforeRender }
 
 async function onBeforeRender (pageContext) {
 	let pageProps, erreur
-	const identifiant = pageContext.routeParams.utilisateur
+	const identifiant = pageContext.identifiant
 	const reponse = await axios.post(pageContext.hote + '/api/recuperer-donnees-utilisateur', {
 		identifiant: identifiant
 	}, {
@@ -13,7 +13,7 @@ async function onBeforeRender (pageContext) {
 		erreur = true
 		pageProps = { erreur }
 	})
-	if (reponse && reponse.hasOwnProperty('data') && identifiant === pageContext.identifiant && pageContext.statut === 'utilisateur') {
+	if (reponse && reponse.hasOwnProperty('data') && pageContext.statut === 'utilisateur') {
 		const params = pageContext.params
 		const hote = pageContext.hote
 		const nom = pageContext.nom
