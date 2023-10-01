@@ -304,7 +304,7 @@ export default {
 					const donnees = reponse.data
 					if (donnees === 'utilisateur_existe_deja') {
 						this.chargement = false
-						this.message = this.$t('identifiantExisteDeja', { identifiant: this.identifiant })
+						this.message = this.$t('identifiantExisteDeja', { identifiant: this.identifiant.trim() })
 					} else {
 						window.location.href = '/u/' + donnees.identifiant
 					}
