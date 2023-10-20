@@ -22,7 +22,7 @@ exporterPadsJson(10)
 function exporterPadsJson (jours) {
 	db.get('pad', function (err, pad) {
 		const exportPads = []
-		for (let i = 0; i < pad; i++) {
+		for (let i = 0; i < pad + 1; i++) {
 			const exportPad = new Promise(function (resolveExport) {
 				const id = i
 				const chemin = path.join(__dirname, '..', '/static/pads')
