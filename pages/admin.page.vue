@@ -12,7 +12,7 @@
 				<h1>
 					<span>{{ $t('maintenance') }}</span>
 				</h1>
-				<div class="actions">
+				<div class="conteneur actions">
 					<span class="bouton maintenance" role="button" tabindex="0" @click="activerMaintenance" v-if="maintenance === false">{{ $t('activerMaintenance') }}</span>
 					<span class="bouton maintenance" role="button" tabindex="0" @click="desactiverMaintenance" v-else>{{ $t('desactiverMaintenance') }}</span>
 				</div>
@@ -31,7 +31,7 @@
 					<label>{{ $t('motDePasse') }}</label>
 					<input type="text" maxlength="48" :value="motdepasse" @input="motdepasse = $event.target.value">
 				</div>
-				<div class="actions">
+				<div class="conteneur actions">
 					<span class="bouton" role="button" tabindex="0" @click="modifierMotDePasse">{{ $t('valider') }}</span>
 				</div>
 				<h1>
@@ -44,7 +44,7 @@
 				<div class="conteneur" v-if="donneesPad !== ''">
 					<span class="donnees">{{ donneesPad }}</span>
 				</div>
-				<div class="actions">
+				<div class="conteneur actions">
 					<span class="bouton" role="button" tabindex="0" @click="recupererDonneesPad">{{ $t('valider') }}</span>
 				</div>
 				<h1>
@@ -67,7 +67,7 @@
 					<input type="text" :value="valeur" :maxlength="4" @input="valeur = $event.target.value" v-if="champ === 'code'">
 					<input type="text" :value="valeur" @input="valeur = $event.target.value" v-else>
 				</div>
-				<div class="actions">
+				<div class="conteneur actions">
 					<span class="bouton" role="button" tabindex="0" @click="modifierDonneesPad">{{ $t('valider') }}</span>
 				</div>
 				<h1>
@@ -77,7 +77,7 @@
 					<label>{{ $t('numeroPad') }}</label>
 					<input type="number" :value="padIdE" @input="padIdE = $event.target.value">
 				</div>
-				<div class="actions">
+				<div class="conteneur actions">
 					<span class="bouton" role="button" tabindex="0" @click="exporterPad">{{ $t('valider') }}</span>
 				</div>
 				<h1>
@@ -91,7 +91,7 @@
 					<label>{{ $t('identifiantDestination') }}</label>
 					<input type="text" :value="identifiantR" @input="identifiantR = $event.target.value">
 				</div>
-				<div class="actions">
+				<div class="conteneur actions">
 					<span class="bouton" role="button" tabindex="0" @click="modale = 'rattacher-pad'">{{ $t('valider') }}</span>
 				</div>
 				<h1>
@@ -110,7 +110,7 @@
 						</label>
 					</div>
 				</div>
-				<div class="actions">
+				<div class="conteneur actions">
 					<span class="bouton" role="button" tabindex="0" @click="modale = 'supprimer-pad'">{{ $t('valider') }}</span>
 				</div>
 				<h1>
@@ -124,7 +124,7 @@
 					<label>{{ $t('identifiantDestination') }}</label>
 					<input type="text" :value="identifiantT" @input="identifiantT = $event.target.value">
 				</div>
-				<div class="actions">
+				<div class="conteneur actions">
 					<span class="bouton" role="button" tabindex="0" @click="modale = 'transferer-compte'">{{ $t('valider') }}</span>
 				</div>
 				<h1>
@@ -134,7 +134,7 @@
 					<label>{{ $t('identifiant') }}</label>
 					<input type="text" :value="identifiantS" @input="identifiantS = $event.target.value">
 				</div>
-				<div class="actions">
+				<div class="conteneur actions">
 					<span class="bouton" role="button" tabindex="0" @click="modale = 'supprimer-compte'">{{ $t('valider') }}</span>
 				</div>
 			</div>
