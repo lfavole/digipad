@@ -436,7 +436,7 @@ export default {
 				document.querySelector('#pad').addEventListener('drop', function (event) {
 					event.preventDefault()
 					event.stopPropagation()
-					if (event.dataTransfer.files && event.dataTransfer.files[0] && this.accesAutorise && !this.recherche && ((this.admin && this.action !== 'organiser') || (!this.admin && this.pad.contributions !== 'fermees'))) {
+					if (event.dataTransfer.files && event.dataTransfer.files[0] && this.accesAutorise && !this.recherche && this.pad.fichiers === 'actives' && ((this.admin && this.action !== 'organiser') || (!this.admin && this.pad.contributions !== 'fermees'))) {
 						let indexColonne = 0
 						if (this.pad.affichage === 'colonnes') {
 							this.pad.colonnes.forEach(function (colonne, index) {
@@ -1712,6 +1712,11 @@ export default {
 									width: largeurPanneau,
 									height: '150px'
 								}).reposition()
+								panel.addControl({
+									html: '<a class="material-icons telecharger" download href="/' + that.definirDossierFichiers(that.pad.id) + '/' + that.pad.id + '/' + item.media + '" target="_blank">file_download</a>',
+									name: 'telecharger',
+									handler: function () {}
+								})
 							} else if (item.type === 'embed') {
 								panel.addControl({
 									html: '<span class="material-icons lien">link</span>',
@@ -1737,8 +1742,9 @@ export default {
 								})
 							} else if (item.type === 'pdf' || item.type === 'document' || item.type === 'office') {
 								panel.addControl({
-									html: '<a class="material-icons telecharger" href="/' + that.definirDossierFichiers(that.pad.id) + '/' + that.pad.id + '/' + item.media + '" target="_blank">file_download</a>',
-									name: 'telecharger'
+									html: '<a class="material-icons telecharger" download href="/' + that.definirDossierFichiers(that.pad.id) + '/' + that.pad.id + '/' + item.media + '" target="_blank">file_download</a>',
+									name: 'telecharger',
+									handler: function () {}
 								})
 							}
 						},
