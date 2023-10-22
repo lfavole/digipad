@@ -1946,11 +1946,16 @@
 		display: none!important;
 	}
 
+	header {
+		height: auto!important;
+	}
+
 	#pad {
 		height: auto!important;
 		margin-left: 0!important;
 		width: 100%!important;
-		padding-bottom: 100rem!important;
+		padding-top: 1.5rem!important;
+		padding-bottom: 10rem!important;
 	}
 
 	#titre {
@@ -1992,7 +1997,7 @@
 	#blocs.colonnes .colonne {
 		width: 100%!important;
 		height: auto!important;
-		margin-bottom: 5rem!important;
+		margin-bottom: 3rem!important;
 	}
 
 	#blocs.colonnes .bloc {
