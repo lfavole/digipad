@@ -64,7 +64,7 @@
 				</div>
 				<div class="conteneur">
 					<label>{{ $t('valeur') }}</label>
-					<input type="text" :value="valeur" :maxlength="4" @input="valeur = $event.target.value" v-if="champ === 'code'">
+					<input type="text" :value="valeur" :maxlength="18" @input="valeur = $event.target.value" v-if="champ === 'code'">
 					<input type="text" :value="valeur" @input="valeur = $event.target.value" v-else>
 				</div>
 				<div class="conteneur actions">
