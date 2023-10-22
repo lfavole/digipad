@@ -3520,8 +3520,15 @@ async function demarrerServeur () {
 							const date = dayjs().format()
 							const activiteId = parseInt(resultat.activite) + 1
 							let commentaireId = parseInt(donnees.commentaires) + 1
-							if (commentaireId === commentaires.length || commentaireId < commentaires.length) {
-								commentaireId = commentaires.length + 1
+							const listeCommentaires = []
+							for (let commentaire of commentaires) {
+								listeCommentaires.push(JSON.parse(commentaire))
+							}
+							const maxCommentaireId = listeCommentaires.reduce(function (p, c) {
+								return (p && p.id > c.id) ? p : c
+							})
+							if (commentaireId === maxCommentaireId.id || commentaireId < maxCommentaireId.id) {
+								commentaireId = maxCommentaireId.id + 1
 							}
 							const multi = db.multi()
 							const commentaire = { id: commentaireId, identifiant: identifiant, date: date, texte: texte }
