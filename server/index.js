@@ -3524,9 +3524,12 @@ async function demarrerServeur () {
 							for (let commentaire of commentaires) {
 								listeCommentaires.push(JSON.parse(commentaire))
 							}
-							const maxCommentaireId = listeCommentaires.reduce(function (p, c) {
-								return (p && p.id > c.id) ? p : c
-							})
+							let maxCommentaireId = 0
+							if (listeCommentaires.length > 0) {
+								maxCommentaireId = listeCommentaires.reduce(function (p, c) {
+									return (p && p.id > c.id) ? p : c
+								})
+							}
 							if (commentaireId === maxCommentaireId.id || commentaireId < maxCommentaireId.id) {
 								commentaireId = maxCommentaireId.id + 1
 							}
