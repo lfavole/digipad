@@ -27,7 +27,7 @@ import bcrypt from 'bcrypt'
 import cron from 'node-cron'
 import nodemailer from 'nodemailer'
 import { URL, fileURLToPath } from 'url'
-import cheerio from 'cheerio'
+import * as cheerio from 'cheerio'
 import libre from 'libreoffice-convert'
 import util from 'util'
 libre.convertAsync = util.promisify(libre.convert)
