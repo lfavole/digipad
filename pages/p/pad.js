@@ -1153,6 +1153,11 @@ export default {
 			if (this.lien !== '') {
 				const regex = /<iframe(.+)<\/iframe>/g
 				if (regex.test(this.lien) === true) {
+					const regexDigiview = /\/digiview\/inc\/video(.*?)vignette=/g
+					if (regexDigiview.test(this.lien) === true) {
+						this.vignette = this.lien.match(/https:\/\/i.ytimg(.*)hqdefault.jpg/g)[0]
+						this.vignetteDefaut = this.lien.match(/https:\/\/i.ytimg(.*)hqdefault.jpg/g)[0]
+					}
 					this.lien = this.lien.match(/<iframe [^>]*src="[^"]*"[^>]*>/g).map(x => x.replace(/.*src="([^"]*)".*/, '$1'))[0]
 				}
 				if (this.verifierURL(this.lien) === true && this.lien.match(/\.(jpeg|jpg|gif|png)$/) === null) {
@@ -1214,7 +1219,7 @@ export default {
 										this.vignetteDefaut = this.definirVignette(donnees)
 										this.chargementVignette = false
 									}.bind(this))
-								} else {
+								} else if (this.vignette === '' && this.vignetteDefaut === '') {
 									this.vignette = this.definirVignette(donnees)
 									this.vignetteDefaut = this.definirVignette(donnees)
 									this.chargementLien = false
@@ -1239,8 +1244,10 @@ export default {
 								donnees.media = this.media
 								donnees.source = this.source
 								donnees.type = this.type
-								this.vignette = this.definirVignette(donnees)
-								this.vignetteDefaut = this.definirVignette(donnees)
+								if (this.vignette === '' && this.vignetteDefaut === '') {
+									this.vignette = this.definirVignette(donnees)
+									this.vignetteDefaut = this.definirVignette(donnees)
+								}
 							}
 							this.chargementLien = false
 						}
