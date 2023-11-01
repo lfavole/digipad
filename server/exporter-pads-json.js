@@ -27,10 +27,10 @@ function exporterPadsJson (jours) {
 				const id = i
 				const chemin = path.join(__dirname, '..', '/static/pads')
 				db.exists('pads:' + id, function (err, resultat) {
-					if (err) { resolveExport(); return false }
+					if (err) { resolveExport(''); return false }
 					if (resultat === 1) {
 						db.hgetall('pads:' + id, function (err, donnees) {
-							if (err) { resolveExport() }
+							if (err) { resolveExport('') }
 							if ((donnees.hasOwnProperty('modifie') && dayjs(new Date(donnees.modifie)).isBefore(dayjs().subtract(jours, 'days'))) || (donnees.hasOwnProperty('date') && dayjs(new Date(donnees.date)).isBefore(dayjs().subtract(jours, 'days')))) {
 								const donneesPad = new Promise(function (resolveMain) {
 									db.hgetall('pads:' + id, function (err, resultats) {
@@ -104,12 +104,12 @@ function exporterPadsJson (jours) {
 										parametres.blocs = donnees[1]
 										parametres.activite = donnees[2]
 										fs.writeFile(path.normalize(chemin + '/' + id + '.json'), JSON.stringify(parametres, '', 4), 'utf8', function (err) {
-											if (err) { resolveExport(); return false }
+											if (err) { resolveExport(''); return false }
 											fs.writeFile(path.normalize(chemin + '/pad-' + id + '.json'), JSON.stringify(parametres.pad, '', 4), 'utf8', function (err) {
-												if (err) { resolveExport(); return false }
+												if (err) { resolveExport(''); return false }
 												// Suppression données redis
 												db.zrange('blocs:' + id, 0, -1, function (err, blocs) {
-													if (err) { resolveExport(); return false }
+													if (err) { resolveExport(''); return false }
 													const multi = db.multi()
 													for (let i = 0; i < blocs.length; i++) {
 														multi.del('commentaires:' + blocs[i])
@@ -121,25 +121,27 @@ function exporterPadsJson (jours) {
 													multi.del('activite:' + id)
 													multi.exec(function () {
 														console.log(id)
-														resolveExport()
+														resolveExport(id)
 													})
 												})
 											})
 										})
 									} else {
-										resolveExport()
+										resolveExport('')
 									}
 								})
 							} else {
-								resolveExport()
+								resolveExport('')
 							}
 						})
 					} else {
-						resolveExport()
+						resolveExport('')
 					}
 				})
 			})
-			exportPads.push(exportPad)
+			if (exportPad !== '') {
+				exportPads.push(exportPad)
+			}
 		}
 		Promise.all(exportPads).then(function () {
 			console.log('Fin du script')
