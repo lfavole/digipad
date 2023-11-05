@@ -77,7 +77,7 @@ function exporterPadsJson (jours) {
 							const activitePad = new Promise(function (resolveMain) {
 								const donneesEntrees = []
 								db.zrange('activite:' + id, 0, -1, function (err, entrees) {
-									if (err) { resolveMain(donneesEntrees) }
+									if (err) { resolveMain(donneesEntrees); return false }
 									for (let entree of entrees) {
 										entree = JSON.parse(entree)
 										const donneesEntree = new Promise(function (resolve) {
