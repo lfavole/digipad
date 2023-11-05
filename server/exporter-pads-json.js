@@ -119,9 +119,6 @@ function exporterPadsJson (jours) {
 										})
 									})
 								}
-								if (id === (pad - 1)) {
-									console.log('Fin du script')
-								}
 							})
 						}
 					})
