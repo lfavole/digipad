@@ -1664,11 +1664,23 @@ export default {
 				}
 				this.$nextTick(function () {
 					const that = this
-					let largeurPanneau = '308px'
-					let hauteurPanneau = '300px'
-					if (document.querySelector('#page').offsetWidth > 580 && document.querySelector('#page').offsetHeight > 580) {
-						largeurPanneau = '508px'
+					let largeurPanneau = '320px'
+					let hauteurPanneau = '312px'
+					let position = 'center'
+					if (document.querySelector('#page').offsetWidth > 1023) {
+						largeurPanneau = '948px'
+						hauteurPanneau = '940px'
+						position = { my: 'center', at: 'center', offsetX: this.convertirRem(2), offsetY: this.convertirRem(2) }
+					} else if (document.querySelector('#page').offsetWidth < 1024 && document.querySelector('#page').offsetWidth > 359) {
+						largeurPanneau = document.querySelector('#page').offsetWidth - this.convertirRem(7) + 'px'
 						hauteurPanneau = '500px'
+						if (parseInt(largeurPanneau) < 328) {
+							largeurPanneau = '328px'
+						}
+						position = { my: 'center', at: 'center', offsetX: this.convertirRem(2), offsetY: this.convertirRem(2) }
+					}
+					if (parseInt(hauteurPanneau) > (document.querySelector('#page').offsetHeight - this.convertirRem(7))) {
+						hauteurPanneau = document.querySelector('#page').offsetHeight - this.convertirRem(7) + 'px'
 					}
 					const snapOptions = this.definirOptionsSnap()
 					// eslint-disable-next-line no-undef
@@ -1680,7 +1692,7 @@ export default {
 						closeOnEscape: true,
 						border: '4px solid ' + item.couleur,
 						headerTitle: item.titre,
-						position: 'center',
+						position: position,
 						maximizedMargin: 0,
 						syncMargins: true,
 						resizeit: {
