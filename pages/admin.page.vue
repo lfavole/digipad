@@ -5,6 +5,7 @@
 				<span class="bouton" role="button" tabindex="0" :class="{'selectionne': langue === 'fr'}" @click="modifierLangue('fr')">FR</span>
 				<span class="bouton" role="button" tabindex="0" :class="{'selectionne': langue === 'es'}" @click="modifierLangue('es')">ES</span>
 				<span class="bouton" role="button" tabindex="0" :class="{'selectionne': langue === 'it'}" @click="modifierLangue('it')">IT</span>
+				<span class="bouton" role="button" tabindex="0" :class="{'selectionne': langue === 'de'}" @click="modifierLangue('de')">DE</span>
 				<span class="bouton" role="button" tabindex="0" :class="{'selectionne': langue === 'hr'}" @click="modifierLangue('hr')">HR</span>
 				<span class="bouton" role="button" tabindex="0" :class="{'selectionne': langue === 'en'}" @click="modifierLangue('en')">EN</span>
 			</div>
@@ -255,7 +256,7 @@ export default {
 			this.$socket.emit('desactivermaintenance')
 		},
 		modifierMotDePasse () {
-			if (this.motdepasse !== '' && (this.identifiant !== '' || this.email !== '')) {
+			if (this.motdepasse.trim() !== '' && (this.identifiant !== '' || this.email !== '')) {
 				this.chargement = true
 				axios.post(this.hote + '/api/modifier-mot-de-passe-admin', {
 					admin: this.admin,
@@ -309,7 +310,7 @@ export default {
 			}
 		},
 		modifierDonneesPad () {
-			if (this.padIdM !== '' && this.champ !== '' && this.valeur !== '') {
+			if (this.padIdM !== '' && this.champ !== '' && this.valeur.trim() !== '') {
 				this.chargement = true
 				axios.post(this.hote + '/api/modifier-donnees-pad-admin', {
 					padId: this.padIdM,

@@ -20,6 +20,7 @@ import extract from 'extract-zip'
 import dayjs from 'dayjs'
 import 'dayjs/locale/es.js'
 import 'dayjs/locale/fr.js'
+import 'dayjs/locale/de.js'
 import 'dayjs/locale/hr.js'
 import 'dayjs/locale/it.js'
 import localizedFormat from 'dayjs/plugin/localizedFormat.js'
@@ -206,7 +207,7 @@ async function demarrerServeur () {
 				urlOriginal: req.originalUrl,
 				params: req.query,
 				hote: hote,
-				langues: ['fr', 'es', 'it', 'hr', 'en'],
+				langues: ['fr', 'es', 'it', 'de', 'hr', 'en'],
 				langue: langue
 			}
 			const pageContext = await renderPage(pageContextInit)
@@ -234,7 +235,7 @@ async function demarrerServeur () {
 				urlOriginal: req.originalUrl,
 				params: req.query,
 				hote: hote,
-				langues: ['fr', 'es', 'it', 'hr', 'en'],
+				langues: ['fr', 'es', 'it', 'de', 'hr', 'en'],
 				identifiant: req.session.identifiant,
 				nom: req.session.nom,
 				email: req.session.email,
@@ -291,7 +292,7 @@ async function demarrerServeur () {
 			params: req.query,
 			hote: hote,
 			userAgent: userAgent,
-			langues: ['fr', 'es', 'it', 'hr', 'en'],
+			langues: ['fr', 'es', 'it', 'de', 'hr', 'en'],
 			identifiant: req.session.identifiant,
 			nom: req.session.nom,
 			email: req.session.email,
@@ -408,11 +409,11 @@ async function demarrerServeur () {
 				db.hgetall('utilisateurs:' + identifiant, async function (err, donnees) {
 					if (err) { res.send('erreur_connexion'); return false }
 					let comparaison = false
-					if (motdepasse !== '' && donnees.hasOwnProperty('motdepasse') && donnees.motdepasse !== '') {
+					if (motdepasse.trim() !== '' && donnees.hasOwnProperty('motdepasse') && donnees.motdepasse.trim() !== '') {
 						comparaison = await bcrypt.compare(motdepasse, donnees.motdepasse)
 					}
 					let comparaisonTemp = false
-					if (donnees.hasOwnProperty('motdepassetemp') && donnees.motdepassetemp !== '') {
+					if (donnees.hasOwnProperty('motdepassetemp') && donnees.motdepassetemp.trim() !== '' && motdepasse.trim() !== '') {
 						comparaisonTemp = await bcrypt.compare(motdepasse, donnees.motdepassetemp)
 					}
 					if (comparaison === true || comparaisonTemp === true) {
@@ -828,8 +829,10 @@ async function demarrerServeur () {
 			const pad = req.body.pad
 			db.hgetall('pads:' + pad, async function (err, donnees) {
 				if (err) { res.send('erreur'); return false }
-				if (await bcrypt.compare(req.body.motdepasse, donnees.motdepasse)) {
-					const hash = await bcrypt.hash(req.body.nouveaumotdepasse, 10)
+				const motdepasse = req.body.motdepasse
+				const nouveaumotdepasse = req.body.nouveaumotdepasse
+				if (motdepasse.trim() !== '' && nouveaumotdepasse.trim() !== '' && donnees.hasOwnProperty('motdepasse') && donnees.motdepasse.trim() !== '' && await bcrypt.compare(motdepasse, donnees.motdepasse)) {
+					const hash = await bcrypt.hash(nouveaumotdepasse, 10)
 					db.hset('pads:' + pad, 'motdepasse', hash)
 					res.send('motdepasse_modifie')
 				} else {
@@ -1716,8 +1719,10 @@ async function demarrerServeur () {
 		if (req.session.identifiant && req.session.identifiant === identifiant) {
 			db.hgetall('utilisateurs:' + identifiant, async function (err, donnees) {
 				if (err) { res.send('erreur'); return false }
-				if (await bcrypt.compare(req.body.motdepasse, donnees.motdepasse)) {
-					const hash = await bcrypt.hash(req.body.nouveaumotdepasse, 10)
+				const motdepasse = req.body.motdepasse
+				const nouveaumotdepasse = req.body.nouveaumotdepasse
+				if (motdepasse.trim() !== '' && nouveaumotdepasse.trim() !== '' && donnees.hasOwnProperty('motdepasse') && donnees.motdepasse.trim() !== '' && await bcrypt.compare(motdepasse, donnees.motdepasse)) {
+					const hash = await bcrypt.hash(nouveaumotdepasse, 10)
 					db.hset('utilisateurs:' + identifiant, 'motdepasse', hash)
 					res.send('motdepasse_modifie')
 				} else {
@@ -2296,7 +2301,7 @@ async function demarrerServeur () {
 		const pad = req.body.pad
 		db.hgetall('pads:' + pad, async function (err, donnees) {
 			if (err || !donnees || donnees === null || !donnees.hasOwnProperty('motdepasse')) { res.send('erreur'); return false }
-			if (await bcrypt.compare(req.body.motdepasse, donnees.motdepasse)) {
+			if (req.body.motdepasse.trim() !== '' && donnees.hasOwnProperty('motdepasse') && donnees.motdepasse.trim() !== '' && await bcrypt.compare(req.body.motdepasse, donnees.motdepasse)) {
 				res.send('motdepasse_correct')
 			} else {
 				res.send('motdepasse_incorrect')
@@ -2338,9 +2343,10 @@ async function demarrerServeur () {
 	app.post('/api/verifier-acces', function (req, res) {
 		const pad = req.body.pad
 		const identifiant = req.body.identifiant
+		const motdepasse = req.body.motdepasse
 		db.hgetall('pads:' + pad, async function (err, donnees) {
 			if (err) { res.send('erreur'); return false }
-			if (identifiant === donnees.identifiant && donnees.hasOwnProperty('motdepasse') && await bcrypt.compare(req.body.motdepasse, donnees.motdepasse)) {
+			if (identifiant === donnees.identifiant && motdepasse.trim() !== '' && donnees.hasOwnProperty('motdepasse') && donnees.motdepasse.trim() !== '' && await bcrypt.compare(motdepasse, donnees.motdepasse)) {
 				db.hgetall('utilisateurs:' + identifiant, function (err, utilisateur) {
 					if (err) { res.send('erreur'); return false }
 					req.session.identifiant = identifiant
@@ -2368,7 +2374,7 @@ async function demarrerServeur () {
 					if (resultat === 1) {
 						db.hgetall('utilisateurs:' + identifiant, async function (err, utilisateur) {
 							if (err) { res.send('erreur'); return false }
-							if (await bcrypt.compare(req.body.motdepasse, utilisateur.motdepasse)) {
+							if (motdepasse.trim() !== '' && utilisateur.hasOwnProperty('motdepasse') && utilisateur.motdepasse.trim() !== '' && await bcrypt.compare(motdepasse, utilisateur.motdepasse)) {
 								req.session.identifiant = identifiant
 								req.session.nom = utilisateur.nom
 								req.session.statut = 'auteur'
@@ -2815,7 +2821,7 @@ async function demarrerServeur () {
 					if (resultat === 1) {
 						db.hgetall('pads:' + pad, async function (err, donneesPad) {
 							if (err) { res.send('erreur'); return false }
-							if (donneesPad.hasOwnProperty('motdepasse') && await bcrypt.compare(motdepasse, donneesPad.motdepasse) && token === donneesPad.token) {
+							if (motdepasse.trim() !== '' && donneesPad.hasOwnProperty('motdepasse') && donneesPad.motdepasse.trim() !== '' && await bcrypt.compare(motdepasse, donneesPad.motdepasse) && token === donneesPad.token) {
 								const date = dayjs().format()
 								let langue = 'fr'
 								if (req.session.hasOwnProperty('langue') && req.session.langue !== '' && req.session.langue !== undefined) {
@@ -2834,7 +2840,7 @@ async function demarrerServeur () {
 									if (resultat === 1) {
 										db.hgetall('utilisateurs:' + donneesPad.identifiant, async function (err, utilisateur) {
 											if (err) { res.send('erreur'); return false }
-											if (await bcrypt.compare(motdepasse, utilisateur.motdepasse)) {
+											if (motdepasse.trim() !== '' && utilisateur.hasOwnProperty('motdepasse') && utilisateur.motdepasse.trim() !== '' && await bcrypt.compare(motdepasse, utilisateur.motdepasse)) {
 												res.json({ titre: donneesPad.titre, identifiant: donneesPad.identifiant })
 											} else {
 												res.send('non_autorise')
@@ -2851,7 +2857,7 @@ async function demarrerServeur () {
 					} else if (resultat !== 1 && await fs.pathExists(path.join(__dirname, '..', '/static/pads/pad-' + pad + '.json'))) {
 						const donneesPad = await fs.readJson(path.join(__dirname, '..', '/static/pads/pad-' + pad + '.json'))
 						if (typeof donneesPad === 'object' && donneesPad !== null) {
-							if (donneesPad.hasOwnProperty('motdepasse') && await bcrypt.compare(motdepasse, donneesPad.motdepasse) && token === donneesPad.token) {
+							if (motdepasse.trim() !== '' && donneesPad.hasOwnProperty('motdepasse') && donneesPad.motdepasse.trim() !== '' && await bcrypt.compare(motdepasse, donneesPad.motdepasse) && token === donneesPad.token) {
 								const date = dayjs().format()
 								let langue = 'fr'
 								if (req.session.hasOwnProperty('langue') && req.session.langue !== '' && req.session.langue !== undefined) {
@@ -2881,7 +2887,7 @@ async function demarrerServeur () {
 									if (resultat === 1) {
 										db.hgetall('utilisateurs:' + donneesPad.identifiant, async function (err, utilisateur) {
 											if (err) { res.send('erreur'); return false }
-											if (await bcrypt.compare(motdepasse, utilisateur.motdepasse)) {
+											if (motdepasse.trim() !== '' && utilisateur.hasOwnProperty('motdepasse') && utilisateur.motdepasse.trim() !== '' && await bcrypt.compare(motdepasse, utilisateur.motdepasse)) {
 												res.json({ titre: donneesPad.titre, identifiant: donneesPad.identifiant })
 											} else {
 												res.send('non_autorise')
@@ -2910,7 +2916,7 @@ async function demarrerServeur () {
 					if (resultat === 1) {
 						db.hgetall('pads:' + pad, async function (err, donneesPad) {
 							if (err) { res.send('erreur'); return false }
-							if (donneesPad.hasOwnProperty('motdepasse') && donneesPad.identifiant === identifiant && await bcrypt.compare(motdepasse, donneesPad.motdepasse)) {
+							if (motdepasse.trim() !== '' && donneesPad.hasOwnProperty('motdepasse') && donneesPad.motdepasse.trim() !== '' && donneesPad.identifiant === identifiant && await bcrypt.compare(motdepasse, donneesPad.motdepasse)) {
 								db.zrange('blocs:' + pad, 0, -1, function (err, blocs) {
 									if (err) { res.send('erreur'); return false }
 									const multi = db.multi()
@@ -2947,7 +2953,7 @@ async function demarrerServeur () {
 									if (resultat === 1) {
 										db.hgetall('utilisateurs:' + identifiant, async function (err, utilisateur) {
 											if (err) { res.send('erreur'); return false }
-											if (await bcrypt.compare(motdepasse, utilisateur.motdepasse)) {
+											if (motdepasse.trim() !== '' && utilisateur.hasOwnProperty('motdepasse') && utilisateur.motdepasse.trim() !== '' && await bcrypt.compare(motdepasse, utilisateur.motdepasse)) {
 												db.zrange('blocs:' + pad, 0, -1, function (err, blocs) {
 													if (err) { res.send('erreur'); return false }
 													const multi = db.multi()
@@ -2993,7 +2999,7 @@ async function demarrerServeur () {
 					} else if (resultat !== 1 && await fs.pathExists(path.join(__dirname, '..', '/static/pads/pad-' + pad + '.json'))) {
 						const donneesPad = await fs.readJson(path.join(__dirname, '..', '/static/pads/pad-' + pad + '.json'))
 						if (typeof donneesPad === 'object' && donneesPad !== null) {
-							if (donneesPad.hasOwnProperty('motdepasse') && donneesPad.identifiant === identifiant && await bcrypt.compare(motdepasse, donneesPad.motdepasse)) {
+							if (motdepasse.trim() !== '' && donneesPad.hasOwnProperty('motdepasse') && donneesPad.motdepasse.trim() !== '' && donneesPad.identifiant === identifiant && await bcrypt.compare(motdepasse, donneesPad.motdepasse)) {
 								const multi = db.multi()
 								multi.srem('pads-crees:' + identifiant, pad)
 								multi.smembers('utilisateurs-pads:' + pad, function (err, utilisateurs) {
@@ -3019,7 +3025,7 @@ async function demarrerServeur () {
 									if (resultat === 1) {
 										db.hgetall('utilisateurs:' + identifiant, async function (err, utilisateur) {
 											if (err) { res.send('erreur'); return false }
-											if (await bcrypt.compare(motdepasse, utilisateur.motdepasse)) {
+											if (motdepasse.trim() !== '' && utilisateur.hasOwnProperty('motdepasse') && utilisateur.motdepasse.trim() !== '' && await bcrypt.compare(motdepasse, utilisateur.motdepasse)) {
 												const multi = db.multi()
 												multi.srem('pads-crees:' + identifiant, pad)
 												multi.smembers('utilisateurs-pads:' + pad, function (err, utilisateurs) {
@@ -5644,6 +5650,13 @@ async function demarrerServeur () {
 				dateFormattee = 'Creazione attivata ' + dayjs(new Date(donnees.date)).locale('it').format('L') + ' alle ' + dayjs(new Date(donnees.date)).locale('it').format('LT') + ' di ' + donnees.nom + '. Modifica attivata ' + dayjs(new Date(donnees.modifie)).locale('it').format('L') + ' alle ' + dayjs(new Date(donnees.modifie)).locale('it').format('LT') + '.'
 			} else {
 				dateFormattee = 'Creazione attivata ' + dayjs(new Date(donnees.date)).locale('it').format('L') + ' alle ' + dayjs(new Date(donnees.date)).locale('it').format('LT') + ' di ' + donnees.nom + '.'
+			}
+			break
+		case 'de':
+			if (donnees.hasOwnProperty('modifie')) {
+				dateFormattee = 'Erstellt am ' + dayjs(new Date(donnees.date)).locale('de').format('L') + ' um ' + dayjs(new Date(donnees.date)).locale('de').format('LT') + ' von ' + donnees.nom + '. Geändert am ' + dayjs(new Date(donnees.modifie)).locale('de').format('L') + ' um ' + dayjs(new Date(donnees.modifie)).locale('de').format('LT') + '.'
+			} else {
+				dateFormattee = 'Erstellt am ' + dayjs(new Date(donnees.date)).locale('de').format('L') + ' um ' + dayjs(new Date(donnees.date)).locale('de').format('LT') + ' von ' + donnees.nom + '.'
 			}
 			break
 		case 'hr':

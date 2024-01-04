@@ -878,27 +878,32 @@ label.bouton-bleu {
 }
 
 .contenu-editeur:lang(fr):empty:before {
-	content: 'Ajouter du texte...';
+	content: 'Ajouter du texte…';
 	color: #aaa;
 }
 
 .contenu-editeur:lang(en):empty:before {
-	content: 'Add text...';
+	content: 'Add text…';
 	color: #aaa;
 }
 
 .contenu-editeur:lang(it):empty:before {
-	content: 'Aggiungere testo...';
+	content: 'Aggiungere testo…';
+	color: #aaa;
+}
+
+.contenu-editeur:lang(de):empty:before {
+	content: 'Text hinzufügen…';
 	color: #aaa;
 }
 
 .contenu-editeur:lang(es):empty:before {
-	content: 'Añadir texto...';
+	content: 'Añadir texto…';
 	color: #aaa;
 }
 
 .contenu-editeur:lang(hr):empty:before {
-	content: 'Dodavanje teksta...';
+	content: 'Dodavanje teksta…';
 	color: #aaa;
 }
 
@@ -938,27 +943,32 @@ label.bouton-bleu {
 }
 
 .contenu-editeur-commentaire:lang(fr):empty:before {
-	content: 'Votre commentaire...';
+	content: 'Votre commentaire…';
 	color: #aaa;
 }
 
 .contenu-editeur-commentaire:lang(en):empty:before {
-	content: 'Your comment...';
+	content: 'Your comment…';
 	color: #aaa;
 }
 
 .contenu-editeur-commentaire:lang(it):empty:before {
-	content: 'Il tuo commento...';
+	content: 'Il tuo commento…';
+	color: #aaa;
+}
+
+.contenu-editeur-commentaire:lang(de):empty:before {
+	content: 'Ihr Kommentar…';
 	color: #aaa;
 }
 
 .contenu-editeur-commentaire:lang(es):empty:before {
-	content: 'Tu comentario...';
+	content: 'Tu comentario…';
 	color: #aaa;
 }
 
 .contenu-editeur-commentaire:lang(hr):empty:before {
-	content: 'Vaš komentar...';
+	content: 'Vaš komentar…';
 	color: #aaa;
 }
 
