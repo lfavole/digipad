@@ -1,6 +1,4 @@
-export { render }
-
-export const passToClient = ['pageProps']
+export { render as onRenderHtml }
 
 import { escapeInject } from 'vike/server'
 
