@@ -76,6 +76,7 @@ Traduction en espagnol par Fernando S. Delgado Trujillo (https://gitlab.com/fers
 
 Traduction en croate par Ksenija Lekić (https://gitlab.com/Ksenija66L)
 
+Traduction en allemand par Alexander Weller (ZUM.de)
+
 ### Soutien
 https://opencollective.com/ladigitale
-
