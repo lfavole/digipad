@@ -423,8 +423,8 @@ header.pleine-largeur #titre {
 	display: flex;
 	justify-content: center;
 	align-items: center;
-	width: 4rem;
-	height: 4rem;
+	width: 3.65rem;
+	height: 3.65rem;
 	border-radius: 50%;
 	border: 1px solid #ddd;
 	margin-right: 1rem;
@@ -436,6 +436,10 @@ header.pleine-largeur #titre {
     color: #fff;
 	border: 1px solid #222;
 	cursor: default;
+}
+
+#langues span:last-child {
+    margin-right: 0;
 }
 
 /* Boutons
