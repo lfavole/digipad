@@ -18,9 +18,9 @@
 						<p v-html="$t('slogan')" />
 						<div id="actions">
 							<span class="bouton" role="button" tabindex="0" @click="afficherModaleConnexion">{{ $t('seConnecter') }}</span>
-							<span class="bouton" role="button" tabindex="1" @click="afficherModaleInscription" v-if="creationCompte === 1">{{ $t('sInscrire') }}</span>
+							<span class="bouton" role="button" tabindex="0" @click="afficherModaleInscription" v-if="creationCompte === 1">{{ $t('sInscrire') }}</span>
 							<div v-if="creationPadSansCompte === 1">
-								<span class="bouton" role="button" tabindex="2" @click="afficherModaleCreer">{{ $t('creerPad') }}</span>
+								<span class="bouton" role="button" tabindex="0" @click="afficherModaleCreer">{{ $t('creerPad') }}</span>
 							</div>
 						</div>
 					</div>
@@ -32,8 +32,8 @@
 			</div>
 		</div>
 
-		<div class="conteneur-modale" v-if="modale === 'creer'">
-			<div id="creation" class="modale">
+		<div class="conteneur-modale" role="dialog" tabindex="-1" v-if="modale === 'creer'">
+			<div id="creation" class="modale" role="document">
 				<div class="en-tete">
 					<span class="titre">{{ $t('creerPad') }}</span>
 					<span class="fermer" role="button" tabindex="0" @click="fermerModaleCreer"><i class="material-icons">close</i></span>
@@ -56,8 +56,8 @@
 			</div>
 		</div>
 
-		<div class="conteneur-modale" v-else-if="modale === 'connexion' || modale === 'mot-de-passe-oublie'">
-			<div id="connexion" class="modale" v-if="modale === 'connexion'">
+		<div class="conteneur-modale" role="dialog" tabindex="-1" v-else-if="modale === 'connexion' || modale === 'mot-de-passe-oublie'">
+			<div id="connexion" class="modale" role="document" v-if="modale === 'connexion'">
 				<div class="en-tete">
 					<span class="titre">{{ $t('seConnecter') }}</span>
 					<span class="fermer" role="button" tabindex="0" @click="fermerModaleConnexion"><i class="material-icons">close</i></span>
@@ -78,7 +78,7 @@
 					</div>
 				</div>
 			</div>
-			<div class="modale" v-else-if="modale === 'mot-de-passe-oublie'">
+			<div class="modale" role="document" v-else-if="modale === 'mot-de-passe-oublie'">
 				<div class="en-tete">
 					<span class="titre">{{ $t('motDePasseOublie') }}</span>
 					<span class="fermer" @click="fermerModaleMotDePasseOublie"><i class="material-icons">close</i></span>
@@ -100,8 +100,8 @@
 			</div>
 		</div>
 
-		<div class="conteneur-modale" v-else-if="modale === 'inscription'">
-			<div id="inscription" class="modale">
+		<div class="conteneur-modale" role="dialog" tabindex="-1" v-else-if="modale === 'inscription'">
+			<div id="inscription" class="modale" role="document">
 				<div class="en-tete">
 					<span class="titre">{{ $t('sInscrire') }}</span>
 					<span class="fermer" @click="fermerModaleInscription"><i class="material-icons">close</i></span>
@@ -129,8 +129,8 @@
 			</div>
 		</div>
 
-		<div class="conteneur-modale" v-else-if="modale === 'mentions-legales'">
-			<div id="mentions-legales" class="modale">
+		<div class="conteneur-modale" role="dialog" tabindex="-1" v-else-if="modale === 'mentions-legales'">
+			<div id="mentions-legales" class="modale" role="document">
 				<div class="en-tete">
 					<span class="titre">{{ $t('mentionsLegales') }}</span>
 					<span class="fermer" @click="modaleMentionsLegales = false"><i class="material-icons">close</i></span>

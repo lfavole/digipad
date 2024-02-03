@@ -12,7 +12,7 @@
 			<span id="deconnexion" role="button" tabindex="0" :title="$t('deconnexion')" @click="deconnexion"><i class="material-icons">power_settings_new</i></span>
 		</nav>
 
-		<div class="menu gauche" :class="{'ouvert': menu}">
+		<div class="menu gauche" :class="{'ouvert': menu}" role="menu" tabindex="-1">
 			<div class="en-tete">
 				<span class="titre">{{ $t('parametresCompte') }}</span>
 				<span role="button" tabindex="0" class="fermer" @click="menu = false"><i class="material-icons">close</i></span>
@@ -246,8 +246,8 @@
 			</div>
 		</div>
 
-		<div class="conteneur-modale" v-if="modale === 'mot-de-passe'">
-			<div id="motdepasse" class="modale">
+		<div class="conteneur-modale" role="dialog" tabindex="-1" v-if="modale === 'mot-de-passe'">
+			<div id="motdepasse" class="modale" role="document">
 				<div class="en-tete">
 					<span class="titre">{{ $t('modifierMotDePasse') }}</span>
 					<span role="button" tabindex="0" class="fermer" @click="fermerModaleMotDePasse"><i class="material-icons">close</i></span>
@@ -268,8 +268,8 @@
 			</div>
 		</div>
 
-		<div class="conteneur-modale" v-else-if="modale === 'creer-pad'">
-			<div id="creation" class="modale">
+		<div class="conteneur-modale" role="dialog" tabindex="-1" v-else-if="modale === 'creer-pad'">
+			<div id="creation" class="modale" role="document">
 				<div class="en-tete">
 					<span class="titre">{{ $t('creerPad') }}</span>
 					<span role="button" class="fermer" @click="fermerModaleCreerPad"><i class="material-icons">close</i></span>
@@ -289,8 +289,8 @@
 			</div>
 		</div>
 
-		<div class="conteneur-modale" v-else-if="modale === 'deplacer-pad'">
-			<div id="deplacement" class="modale">
+		<div class="conteneur-modale" role="dialog" tabindex="-1" v-else-if="modale === 'deplacer-pad'">
+			<div id="deplacement" class="modale" role="document">
 				<div class="en-tete">
 					<span class="titre">{{ $t('ajouterDansDossier') }}</span>
 					<span role="button" class="fermer" @click="fermerModaleDeplacerPad"><i class="material-icons">close</i></span>
@@ -315,8 +315,8 @@
 			</div>
 		</div>
 
-		<div class="conteneur-modale" v-else-if="modale === 'importer-pad'">
-			<div id="import" class="modale">
+		<div class="conteneur-modale" role="dialog" tabindex="-1" v-else-if="modale === 'importer-pad'">
+			<div id="import" class="modale" role="document">
 				<div class="en-tete">
 					<span class="titre">{{ $t('importerPad') }}</span>
 					<span role="button" tabindex="0" class="fermer" @click="fermerModaleImporterPad"><i class="material-icons">close</i></span>
@@ -355,8 +355,8 @@
 			</div>
 		</div>
 
-		<div class="conteneur-modale" v-else-if="modale === 'ajouter-dossier'">
-			<div id="ajout-dossier" class="modale">
+		<div class="conteneur-modale" role="dialog" tabindex="-1" v-else-if="modale === 'ajouter-dossier'">
+			<div id="ajout-dossier" class="modale" role="document">
 				<div class="en-tete">
 					<span class="titre">{{ $t('ajouterDossier') }}</span>
 					<span role="button" class="fermer" @click="fermerModaleAjouterDossier"><i class="material-icons">close</i></span>
@@ -373,8 +373,8 @@
 			</div>
 		</div>
 
-		<div class="conteneur-modale" v-else-if="modale === 'modifier-dossier'">
-			<div id="modification-dossier" class="modale">
+		<div class="conteneur-modale" role="dialog" tabindex="-1" v-else-if="modale === 'modifier-dossier'">
+			<div id="modification-dossier" class="modale" role="document">
 				<div class="en-tete">
 					<span class="titre">{{ $t('modifierDossier') }}</span>
 					<span role="button" class="fermer" @click="fermerModaleModifierDossier"><i class="material-icons">close</i></span>
@@ -391,8 +391,8 @@
 			</div>
 		</div>
 
-		<div id="conteneur-message" class="conteneur-modale" v-if="modaleConfirmation !== ''">
-			<div class="modale">
+		<div id="conteneur-message" class="conteneur-modale" role="dialog" tabindex="-1" v-if="modaleConfirmation !== ''">
+			<div class="modale" role="document">
 				<div class="conteneur">
 					<div class="contenu">
 						<div class="message" v-html="$t('confirmationDupliquerPad')" v-if="modaleConfirmation === 'dupliquer'" />

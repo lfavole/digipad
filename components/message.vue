@@ -1,6 +1,6 @@
 <template>
-	<div id="conteneur-message" class="conteneur-modale">
-		<div id="message" class="modale">
+	<div id="conteneur-message" class="conteneur-modale" role="dialog" tabindex="-1">
+		<div id="message" class="modale" role="document">
 			<div class="conteneur">
 				<div class="contenu">
 					<div class="message" v-html="message" />

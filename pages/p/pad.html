@@ -34,7 +34,7 @@
 		<span id="deconnexion" role="button" tabindex="0" :title="$t('seDeconnecterPad')" @click="afficherSeDeconnecterPad" v-else-if="admin"><i class="material-icons">power_settings_new</i></span>
 	</nav>
 
-	<div class="menu gauche" :class="{'ouvert': menuActivite}" v-if="pad.registreActivite === 'active'">
+	<div class="menu gauche" :class="{'ouvert': menuActivite}" role="menu" tabindex="-1" v-if="pad.registreActivite === 'active'">
 		<div class="en-tete">
 			<span class="titre">{{ $t('activitePad') }}</span>
 			<span class="action">
@@ -98,7 +98,7 @@
 		</div>
 	</div>
 
-	<div id="conversation" class="menu gauche" :class="{'ouvert': menuChat}" v-if="pad.conversation === 'activee'">
+	<div id="conversation" class="menu gauche" :class="{'ouvert': menuChat}" role="menu" tabindex="-1" v-if="pad.conversation === 'activee'">
 		<div class="en-tete">
 			<span class="titre">{{ $t('conversation') }}</span>
 			<span class="action">
@@ -117,7 +117,7 @@
 		</div>
 	</div>
 
-	<div class="menu gauche" :class="{'ouvert': menuOptions}" v-if="admin">
+	<div class="menu gauche" :class="{'ouvert': menuOptions}" role="menu" tabindex="-1" v-if="admin">
 		<div class="en-tete">
 			<span class="titre">{{ $t('parametresPad') }}</span>
 			<span role="button" tabindex="0" class="fermer" @click="fermerMenuOptions"><i class="material-icons">close</i></span>
@@ -362,7 +362,7 @@
 			</div>
 		</div>
 	</div>
-	<div class="menu gauche" :class="{'ouvert': menuOptions}" v-else-if="!admin && statut !== 'utilisateur'">
+	<div class="menu gauche" :class="{'ouvert': menuOptions}" role="menu" tabindex="-1" v-else-if="!admin && statut !== 'utilisateur'">
 		<div class="en-tete">
 			<span class="titre">{{ $t('languePad') }}</span>
 			<span role="button" tabindex="0" class="fermer" @click="fermerMenuOptions"><i class="material-icons">close</i></span>
@@ -381,7 +381,7 @@
 		</div>
 	</div>
 
-	<div class="menu droite" :class="{'ouvert': menuUtilisateurs}" v-if="pad.listeUtilisateurs === 'activee'">
+	<div class="menu droite" :class="{'ouvert': menuUtilisateurs}" role="menu" tabindex="-1" v-if="pad.listeUtilisateurs === 'activee'">
 		<div class="en-tete">
 			<span class="titre">{{ $t('utilisateursConnectes') }}</span>
 			<span role="button" tabindex="0" class="fermer" @click="menuUtilisateurs = false"><i class="material-icons">close</i></span>
@@ -799,8 +799,8 @@
 		</span>
 	</Transition>
 
-	<div class="conteneur-modale" v-if="modaleColonne">
-		<div class="modale">
+	<div class="conteneur-modale" role="dialog" tabindex="-1" v-if="modaleColonne">
+		<div class="modale" role="document">
 			<div class="en-tete">
 				<span class="titre">{{ titreModaleColonne }}</span>
 				<span role="button" tabindex="0" class="fermer" @click="fermerModaleColonne"><i class="material-icons">close</i></span>
@@ -819,8 +819,8 @@
 		</div>
 	</div>
 
-	<div class="conteneur-modale" v-else-if="modaleBloc">
-		<div id="bloc" class="modale">
+	<div class="conteneur-modale" role="dialog" tabindex="-1" v-else-if="modaleBloc">
+		<div id="bloc" class="modale" role="document">
 			<div class="en-tete">
 				<span class="titre">{{ titreModale }}</span>
 				<span role="button" tabindex="0" class="fermer" @click="fermerModaleBloc"><i class="material-icons">close</i></span>
@@ -952,8 +952,8 @@
 		</div>
 	</div>
 
-	<div class="conteneur-modale" v-else-if="modaleDiaporama">
-		<div id="diapositive" class="modale-diapositive" :class="{'privee': donneesBloc.visibilite === 'privee'}" :style="{'border-color': donneesBloc.couleur}" v-show="!chargement">
+	<div class="conteneur-modale" role="dialog" tabindex="-1" v-else-if="modaleDiaporama">
+		<div id="diapositive" class="modale-diapositive" :class="{'privee': donneesBloc.visibilite === 'privee'}" :style="{'border-color': donneesBloc.couleur}" role="document" v-show="!chargement">
 			<div class="en-tete">
 				<span class="titre"><span>{{ donneesBloc.titre }}</span> <span>{{ $t('par') }} {{ definirNom(donneesBloc) }}</span></span>
 				<span role="button" tabindex="0" class="fermer" @click="fermerModaleDiaporama"><i class="material-icons">close</i></span>
@@ -1042,8 +1042,8 @@
 		<span role="button" tabindex="0" id="suivant" v-if="blocs.length > 1" @click="afficherBlocSuivant"><i class="material-icons">arrow_forward</i></span>
 	</div>
 
-	<div class="conteneur-modale" v-else-if="modaleAdmins">
-		<div id="admins" class="modale">
+	<div class="conteneur-modale" role="dialog" tabindex="-1" v-else-if="modaleAdmins">
+		<div id="admins" class="modale" role="document">
 			<div class="en-tete">
 				<span class="titre">{{ $t('adminsPad') }}</span>
 				<span role="button" tabindex="0" class="fermer" @click="fermerModaleAdmins"><i class="material-icons">close</i></span>
@@ -1070,8 +1070,8 @@
 		</div>
 	</div>
 
-	<div class="conteneur-modale" v-else-if="modaleCommentaires">
-		<div id="discussion" class="modale">
+	<div class="conteneur-modale" role="dialog" tabindex="-1" v-else-if="modaleCommentaires">
+		<div id="discussion" class="modale" role="document">
 			<div class="en-tete">
 				<span class="titre">{{ $t('commentairesCapsule') }}</span>
 				<span role="button" tabindex="0" class="fermer" @click="fermerModaleCommentaire"><i class="material-icons">close</i></span>
@@ -1103,8 +1103,8 @@
 		</div>
 	</div>
 
-	<div class="conteneur-modale" v-else-if="modaleModifierNom">
-		<div class="modale">
+	<div class="conteneur-modale" role="dialog" tabindex="-1" v-else-if="modaleModifierNom">
+		<div class="modale" role="document">
 			<div class="en-tete">
 				<span class="titre">{{ $t('modifierNom') }}</span>
 				<span role="button" tabindex="0" class="fermer" @click="fermerModaleModifierNom"><i class="material-icons">close</i></span>
@@ -1121,8 +1121,8 @@
 		</div>
 	</div>
 
-	<div class="conteneur-modale" v-else-if="modaleMotDePasse">
-		<div class="modale">
+	<div class="conteneur-modale" role="dialog" tabindex="-1" v-else-if="modaleMotDePasse">
+		<div class="modale" role="document">
 			<div class="en-tete">
 				<span class="titre">{{ $t('motDePassePad') }}</span>
 				<span role="button" tabindex="0" class="fermer" @click="fermerModaleMotDePasse"><i class="material-icons">close</i></span>
@@ -1139,8 +1139,8 @@
 		</div>
 	</div>
 
-	<div class="conteneur-modale" v-else-if="modaleModifierMotDePasse">
-		<div id="motdepasse" class="modale">
+	<div class="conteneur-modale" role="dialog" tabindex="-1" v-else-if="modaleModifierMotDePasse">
+		<div id="motdepasse" class="modale" role="document">
 			<div class="en-tete">
 				<span class="titre">{{ $t('modifierMotDePassePad') }}</span>
 				<span role="button" tabindex="0" class="fermer" @click="fermerModaleModifierMotDePasse"><i class="material-icons">close</i></span>
@@ -1159,8 +1159,8 @@
 		</div>
 	</div>
 
-	<div class="conteneur-modale" v-else-if="modaleCopieBloc">
-		<div class="modale">
+	<div class="conteneur-modale" role="dialog" tabindex="-1" v-else-if="modaleCopieBloc">
+		<div class="modale" role="document">
 			<div class="en-tete">
 				<span class="titre">{{ $t('copierCapsule') }}</span>
 				<span role="button" tabindex="0" class="fermer" @click="fermerModaleCopieBloc"><i class="material-icons">close</i></span>
@@ -1188,8 +1188,8 @@
 		</div>
 	</div>
 
-	<div class="conteneur-modale" v-else-if="modaleCodeQR">
-		<div id="codeqr" class="modale">
+	<div class="conteneur-modale" role="dialog" tabindex="-1" v-else-if="modaleCodeQR">
+		<div id="codeqr" class="modale" role="document">
 			<div class="en-tete">
 				<span class="titre">{{ $t('codeQR') }}</span>
 				<span role="button" tabindex="0" class="fermer" @click="fermerModaleCodeQR"><i class="material-icons">close</i></span>
@@ -1202,8 +1202,8 @@
 		</div>
 	</div>
 
-	<div class="conteneur-modale" v-if="modaleEvaluations">
-		<div class="modale">
+	<div class="conteneur-modale" role="dialog" tabindex="-1" v-if="modaleEvaluations">
+		<div class="modale" role="document">
 			<div class="en-tete">
 				<span class="titre">{{ $t('evaluerCapsule') }}</span>
 				<span role="button" tabindex="0" class="fermer" @click="fermerModaleEvaluations"><i class="material-icons">close</i></span>
@@ -1234,8 +1234,8 @@
 		</div>
 	</div>
 
-	<div class="conteneur-modale" v-if="transcodage || progressionEnregistrement">
-		<div id="transcodage" class="modale">
+	<div class="conteneur-modale" role="dialog" tabindex="-1" v-if="transcodage || progressionEnregistrement">
+		<div id="transcodage" class="modale" role="document">
 			<div class="conteneur">
 				<div class="contenu">
 					<div class="conteneur-chargement">
@@ -1247,8 +1247,8 @@
 		</div>
 	</div>
 
-	<div class="conteneur-modale" v-if="modaleCodeAcces">
-		<div class="modale">
+	<div class="conteneur-modale" role="dialog" tabindex="-1" v-if="modaleCodeAcces">
+		<div class="modale" role="document">
 			<div class="en-tete">
 				<span class="titre">{{ $t('padProtegeCodeAcces') }}</span>
 			</div>
@@ -1265,8 +1265,8 @@
 		</div>
 	</div>
 
-	<div id="conteneur-message" class="conteneur-modale" v-if="modaleConfirmer">
-		<div class="modale">
+	<div id="conteneur-message" role="dialog" tabindex="-1" class="conteneur-modale" v-if="modaleConfirmer">
+		<div class="modale" role="document">
 			<div class="conteneur">
 				<div class="contenu">
 					<div class="message" v-html="messageConfirmation" />
