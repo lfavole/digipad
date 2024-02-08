@@ -107,8 +107,8 @@ async function demarrerServeur () {
 	}
 	const sessionMiddleware = session(sessionOptions)
 
-	if (production && process.env.AUTORIZED_DOMAINS) {
-		domainesAutorises = process.env.AUTORIZED_DOMAINS.split(',')
+	if (production && process.env.AUTHORIZED_DOMAINS) {
+		domainesAutorises = process.env.AUTHORIZED_DOMAINS.split(',')
 	} else {
 		domainesAutorises = '*'
 	}
