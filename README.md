@@ -61,10 +61,10 @@ VITE_NFS3_PAD_NUMBER (id de pad à partir de laquelle les fichiers seront enregi
 VITE_NFS3_FOLDER (nom du dossier monté NFS, obligatoirement situé dans le dossier /static/. ex : /static/nfs3)
 VITE_NFS4_PAD_NUMBER (id de pad à partir de laquelle les fichiers seront enregistrés dans un 4e dossier monté NFS)
 VITE_NFS4_FOLDER (nom du dossier monté NFS, obligatoirement situé dans le dossier /static/. ex : /static/nfs4)
-AUTORIZED_DOMAINS (domaines autorisés pour api serveur. ex : ladigitale.dev,example.com / par défaut *)
+AUTHORIZED_DOMAINS (domaines autorisés pour api serveur. ex : ladigitale.dev,example.com / par défaut *)
 ```
 
-### Projet Vue (Vue.js 3 et Vite SSR Plugin) avec serveur Node.js (Express) et base de données Redis
+### Projet Vue (Vue.js 3 et Vike) avec serveur Node.js (Express) et base de données Redis
 
 ### Démo
 https://digipad.app
@@ -79,4 +79,6 @@ Traduction en croate par Ksenija Lekić (https://gitlab.com/Ksenija66L)
 Traduction en allemand par Alexander Weller (ZUM.de)
 
 ### Soutien
-https://opencollective.com/ladigitale
+Open Collective : https://opencollective.com/ladigitale
+
+Liberapay : https://liberapay.com/ladigitale/
