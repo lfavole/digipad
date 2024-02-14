@@ -1956,7 +1956,7 @@ async function demarrerServeur () {
 								})
 								donneesPads.push(donneesPad)
 							}
-							Promise.all(donneesPad).then(function () {
+							Promise.all(donneesPads).then(function () {
 								res.send('compte_transfere')
 							})
 						})
