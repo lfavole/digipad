@@ -35,6 +35,7 @@ libre.convertAsync = util.promisify(libre.convert)
 import connectRedis from 'connect-redis'
 import session from 'express-session'
 import events from 'events'
+import base64 from 'base-64'
 import { renderPage } from 'vike/server'
 
 const production = process.env.NODE_ENV === 'production'
@@ -266,6 +267,9 @@ async function demarrerServeur () {
 			return false
 		}
 		const userAgent = req.headers['user-agent']
+		if (req.query.id && req.query.id !== '' && req.query.mdp && req.query.mdp !== '') {
+			await verifierAcces(req, req.params.id, req.query.id, base64.decode(req.query.mdp))
+		}
 		if (!req.query.id && !req.query.mdp && (req.session.identifiant === '' || req.session.identifiant === undefined)) {
 			const identifiant = 'u' + Math.random().toString(16).slice(3)
 			req.session.identifiant = identifiant
@@ -2336,73 +2340,6 @@ async function demarrerServeur () {
 				res.send('code_correct')
 			} else {
 				res.send('code_incorrect')
-			}
-		})
-	})
-
-	app.post('/api/verifier-acces', function (req, res) {
-		const pad = req.body.pad
-		const identifiant = req.body.identifiant
-		const motdepasse = req.body.motdepasse
-		db.hgetall('pads:' + pad, async function (err, donnees) {
-			if (err) { res.send('erreur'); return false }
-			if (identifiant === donnees.identifiant && motdepasse.trim() !== '' && donnees.hasOwnProperty('motdepasse') && donnees.motdepasse.trim() !== '' && await bcrypt.compare(motdepasse, donnees.motdepasse)) {
-				db.hgetall('utilisateurs:' + identifiant, function (err, utilisateur) {
-					if (err) { res.send('erreur'); return false }
-					req.session.identifiant = identifiant
-					req.session.nom = utilisateur.nom
-					req.session.statut = 'auteur'
-					req.session.langue = utilisateur.langue
-					if (!req.session.hasOwnProperty('acces')) {
-						req.session.acces = []
-					}
-					if (!req.session.hasOwnProperty('pads')) {
-						req.session.pads = []
-					}
-					if (!req.session.hasOwnProperty('digidrive')) {
-						req.session.digidrive = []
-					}
-					if (!req.session.digidrive.includes(pad)) {
-						req.session.digidrive.push(pad)
-					}
-					req.session.cookie.expires = new Date(Date.now() + dureeSession)
-					res.json({ message: 'pad_debloque', nom: utilisateur.nom, langue: utilisateur.langue, digidrive: req.session.digidrive })
-				})
-			} else if (identifiant === donnees.identifiant && !donnees.hasOwnProperty('motdepasse')) {
-				db.exists('utilisateurs:' + identifiant, function (err, resultat) {
-					if (err) { res.send('erreur'); return false }
-					if (resultat === 1) {
-						db.hgetall('utilisateurs:' + identifiant, async function (err, utilisateur) {
-							if (err) { res.send('erreur'); return false }
-							if (motdepasse.trim() !== '' && utilisateur.hasOwnProperty('motdepasse') && utilisateur.motdepasse.trim() !== '' && await bcrypt.compare(motdepasse, utilisateur.motdepasse)) {
-								req.session.identifiant = identifiant
-								req.session.nom = utilisateur.nom
-								req.session.statut = 'auteur'
-								req.session.langue = utilisateur.langue
-								if (!req.session.hasOwnProperty('acces')) {
-									req.session.acces = []
-								}
-								if (!req.session.hasOwnProperty('pads')) {
-									req.session.pads = []
-								}
-								if (!req.session.hasOwnProperty('digidrive')) {
-									req.session.digidrive = []
-								}
-								if (!req.session.digidrive.includes(pad)) {
-									req.session.digidrive.push(pad)
-								}
-								req.session.cookie.expires = new Date(Date.now() + dureeSession)
-								res.json({ message: 'pad_debloque', nom: utilisateur.nom, langue: utilisateur.langue, digidrive: req.session.digidrive })
-							} else {
-								res.send('erreur')
-							}
-						})
-					} else {
-						res.send('erreur')
-					}
-				})
-			} else {
-				res.send('erreur')
 			}
 		})
 	})
@@ -5505,6 +5442,72 @@ async function demarrerServeur () {
 			} else {
 				res.send('erreur_pad')
 			}
+		})
+	}
+
+	async function verifierAcces (req, pad, identifiant, motdepasse) {
+		return new Promise(function (resolve) {
+			db.hgetall('pads:' + pad, async function (err, donnees) {
+				if (err) { resolve('erreur'); return false }
+				if (identifiant === donnees.identifiant && motdepasse.trim() !== '' && donnees.hasOwnProperty('motdepasse') && donnees.motdepasse.trim() !== '' && await bcrypt.compare(motdepasse, donnees.motdepasse)) {
+					db.hgetall('utilisateurs:' + identifiant, function (err, utilisateur) {
+						if (err) { resolve('erreur'); return false }
+						req.session.identifiant = identifiant
+						req.session.nom = utilisateur.nom
+						req.session.statut = 'auteur'
+						req.session.langue = utilisateur.langue
+						if (!req.session.hasOwnProperty('acces')) {
+							req.session.acces = []
+						}
+						if (!req.session.hasOwnProperty('pads')) {
+							req.session.pads = []
+						}
+						if (!req.session.hasOwnProperty('digidrive')) {
+							req.session.digidrive = []
+						}
+						if (!req.session.digidrive.includes(pad)) {
+							req.session.digidrive.push(pad)
+						}
+						req.session.cookie.expires = new Date(Date.now() + dureeSession)
+						resolve('pad_debloque')
+					})
+				} else if (identifiant === donnees.identifiant && !donnees.hasOwnProperty('motdepasse')) {
+					db.exists('utilisateurs:' + identifiant, function (err, resultat) {
+						if (err) { resolve('erreur'); return false }
+						if (resultat === 1) {
+							db.hgetall('utilisateurs:' + identifiant, async function (err, utilisateur) {
+								if (err) { resolve('erreur'); return false }
+								if (motdepasse.trim() !== '' && utilisateur.hasOwnProperty('motdepasse') && utilisateur.motdepasse.trim() !== '' && await bcrypt.compare(motdepasse, utilisateur.motdepasse)) {
+									req.session.identifiant = identifiant
+									req.session.nom = utilisateur.nom
+									req.session.statut = 'auteur'
+									req.session.langue = utilisateur.langue
+									if (!req.session.hasOwnProperty('acces')) {
+										req.session.acces = []
+									}
+									if (!req.session.hasOwnProperty('pads')) {
+										req.session.pads = []
+									}
+									if (!req.session.hasOwnProperty('digidrive')) {
+										req.session.digidrive = []
+									}
+									if (!req.session.digidrive.includes(pad)) {
+										req.session.digidrive.push(pad)
+									}
+									req.session.cookie.expires = new Date(Date.now() + dureeSession)
+									resolve('pad_debloque')
+								} else {
+									resolve('erreur')
+								}
+							})
+						} else {
+							resolve('erreur')
+						}
+					})
+				} else {
+					resolve('erreur')
+				}
+			})
 		})
 	}
 
