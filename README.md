@@ -61,6 +61,8 @@ VITE_NFS3_PAD_NUMBER (id de pad à partir de laquelle les fichiers seront enregi
 VITE_NFS3_FOLDER (nom du dossier monté NFS, obligatoirement situé dans le dossier /static/. ex : /static/nfs3)
 VITE_NFS4_PAD_NUMBER (id de pad à partir de laquelle les fichiers seront enregistrés dans un 4e dossier monté NFS)
 VITE_NFS4_FOLDER (nom du dossier monté NFS, obligatoirement situé dans le dossier /static/. ex : /static/nfs4)
+VITE_NFS5_PAD_NUMBER (id de pad à partir de laquelle les fichiers seront enregistrés dans un 5e dossier monté NFS)
+VITE_NFS5_FOLDER (nom du dossier monté NFS, obligatoirement situé dans le dossier /static/. ex : /static/nfs5)
 AUTHORIZED_DOMAINS (domaines autorisés pour api serveur. ex : ladigitale.dev,example.com / par défaut *)
 ```
 
