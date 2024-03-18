@@ -179,6 +179,9 @@ async function demarrerServeur () {
 	if (process.env.VITE_NFS4_FOLDER && process.env.VITE_NFS4_FOLDER !== '') {
 		app.use('/' + process.env.VITE_NFS4_FOLDER, express.static('static/' + process.env.VITE_NFS4_FOLDER))
 	}
+	if (process.env.VITE_NFS5_FOLDER && process.env.VITE_NFS5_FOLDER !== '') {
+		app.use('/' + process.env.VITE_NFS5_FOLDER, express.static('static/' + process.env.VITE_NFS5_FOLDER))
+	}
 
 	if (production) {
 		const sirv = (await import('sirv')).default
@@ -268,7 +271,9 @@ async function demarrerServeur () {
 		}
 		const userAgent = req.headers['user-agent']
 		if (req.query.id && req.query.id !== '' && req.query.mdp && req.query.mdp !== '') {
-			await verifierAcces(req, req.params.id, req.query.id, base64.decode(req.query.mdp))
+			const id = req.query.id
+			const mdp = base64.decode(req.query.mdp)
+			await verifierAcces(req, req.params.id, id, mdp)
 		}
 		if (!req.query.id && !req.query.mdp && (req.session.identifiant === '' || req.session.identifiant === undefined)) {
 			const identifiant = 'u' + Math.random().toString(16).slice(3)
@@ -5448,11 +5453,11 @@ async function demarrerServeur () {
 	async function verifierAcces (req, pad, identifiant, motdepasse) {
 		return new Promise(function (resolve) {
 			db.hgetall('pads:' + pad, async function (err, donnees) {
-				if (err) { resolve('erreur'); return false }
-				if (identifiant === donnees.identifiant && motdepasse.trim() !== '' && donnees.hasOwnProperty('motdepasse') && donnees.motdepasse.trim() !== '' && await bcrypt.compare(motdepasse, donnees.motdepasse)) {
+				if (err || !donnees || !donnees.hasOwnProperty('identifiant')) { resolve('erreur'); return false }
+				if (identifiant === donnees.identifiant && donnees.hasOwnProperty('motdepasse') && await bcrypt.compare(motdepasse, donnees.motdepasse)) {
 					db.hgetall('utilisateurs:' + identifiant, function (err, utilisateur) {
-						if (err) { resolve('erreur'); return false }
-						req.session.identifiant = identifiant
+						if (err || !utilisateur || !utilisateur.hasOwnProperty('id') || !utilisateur.hasOwnProperty('nom') || !utilisateur.hasOwnProperty('langue')) { resolve('erreur'); return false }
+						req.session.identifiant = utilisateur.id
 						req.session.nom = utilisateur.nom
 						req.session.statut = 'auteur'
 						req.session.langue = utilisateur.langue
@@ -5476,9 +5481,9 @@ async function demarrerServeur () {
 						if (err) { resolve('erreur'); return false }
 						if (resultat === 1) {
 							db.hgetall('utilisateurs:' + identifiant, async function (err, utilisateur) {
-								if (err) { resolve('erreur'); return false }
-								if (motdepasse.trim() !== '' && utilisateur.hasOwnProperty('motdepasse') && utilisateur.motdepasse.trim() !== '' && await bcrypt.compare(motdepasse, utilisateur.motdepasse)) {
-									req.session.identifiant = identifiant
+								if (err || !utilisateur || !utilisateur.hasOwnProperty('id') || !utilisateur.hasOwnProperty('motdepasse') || !utilisateur.hasOwnProperty('nom') || !utilisateur.hasOwnProperty('langue')) { resolve('erreur'); return false }
+								if (motdepasse.trim() !== '' && utilisateur.motdepasse.trim() !== '' && await bcrypt.compare(motdepasse, utilisateur.motdepasse)) {
+									req.session.identifiant = utilisateur.id
 									req.session.nom = utilisateur.nom
 									req.session.statut = 'auteur'
 									req.session.langue = utilisateur.langue
@@ -5609,7 +5614,9 @@ async function demarrerServeur () {
 	}
 
 	function definirDossierFichiers (id) {
-		if (process.env.VITE_NFS4_PAD_NUMBER && process.env.VITE_NFS4_PAD_NUMBER !== '' && process.env.VITE_NFS4_FOLDER && process.env.VITE_NFS4_FOLDER !== '' && parseInt(id) > parseInt(process.env.VITE_NFS4_PAD_NUMBER)) {
+		if (process.env.VITE_NFS5_PAD_NUMBER && process.env.VITE_NFS5_PAD_NUMBER !== '' && process.env.VITE_NFS5_FOLDER && process.env.VITE_NFS5_FOLDER !== '' && parseInt(id) > parseInt(process.env.VITE_NFS5_PAD_NUMBER)) {
+			return process.env.VITE_NFS5_FOLDER
+		} else if (process.env.VITE_NFS4_PAD_NUMBER && process.env.VITE_NFS4_PAD_NUMBER !== '' && process.env.VITE_NFS4_FOLDER && process.env.VITE_NFS4_FOLDER !== '' && parseInt(id) > parseInt(process.env.VITE_NFS4_PAD_NUMBER)) {
 			return process.env.VITE_NFS4_FOLDER
 		} else if (process.env.VITE_NFS3_PAD_NUMBER && process.env.VITE_NFS3_PAD_NUMBER !== '' && process.env.VITE_NFS3_FOLDER && process.env.VITE_NFS3_FOLDER !== '' && parseInt(id) > parseInt(process.env.VITE_NFS3_PAD_NUMBER)) {
 			return process.env.VITE_NFS3_FOLDER
