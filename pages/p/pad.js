@@ -3022,7 +3022,9 @@ export default {
 			}
 		},
 		definirDossierFichiers (id) {
-			if (import.meta.env.VITE_NFS4_PAD_NUMBER && import.meta.env.VITE_NFS4_PAD_NUMBER !== '' && import.meta.env.VITE_NFS4_FOLDER && import.meta.env.VITE_NFS4_FOLDER !== '' && parseInt(id) > parseInt(import.meta.env.VITE_NFS4_PAD_NUMBER)) {
+			if (import.meta.env.VITE_NFS5_PAD_NUMBER && import.meta.env.VITE_NFS5_PAD_NUMBER !== '' && import.meta.env.VITE_NFS5_FOLDER && import.meta.env.VITE_NFS5_FOLDER !== '' && parseInt(id) > parseInt(import.meta.env.VITE_NFS5_PAD_NUMBER)) {
+				return import.meta.env.VITE_NFS5_FOLDER
+			} else if (import.meta.env.VITE_NFS4_PAD_NUMBER && import.meta.env.VITE_NFS4_PAD_NUMBER !== '' && import.meta.env.VITE_NFS4_FOLDER && import.meta.env.VITE_NFS4_FOLDER !== '' && parseInt(id) > parseInt(import.meta.env.VITE_NFS4_PAD_NUMBER)) {
 				return import.meta.env.VITE_NFS4_FOLDER
 			} else if (import.meta.env.VITE_NFS3_PAD_NUMBER && import.meta.env.VITE_NFS3_PAD_NUMBER !== '' && import.meta.env.VITE_NFS3_FOLDER && import.meta.env.VITE_NFS3_FOLDER !== '' && parseInt(id) > parseInt(import.meta.env.VITE_NFS3_PAD_NUMBER)) {
 				return import.meta.env.VITE_NFS3_FOLDER
@@ -3380,6 +3382,7 @@ export default {
 					this.modaleCommentaires = true
 					this.$nextTick(function () {
 						this.genererEditeur()
+						document.querySelector('#discussion .contenu-editeur-commentaire').focus()
 					}.bind(this))
 				} else {
 					this.chargerDiapositive()
