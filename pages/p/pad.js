@@ -2663,10 +2663,12 @@ export default {
 					if (donnees === 'non_connecte') {
 						window.location.replace('/')
 					} else if (donnees === 'erreur_televersement') {
+						this.chargement = false
 						champ.value = ''
 						this.progressionFond = 0
 						this.message = this.$t('erreurTeleversementFichier')
 					} else if (donnees === 'erreur_espace_disque') {
+						this.chargement = false
 						champ.value = ''
 						this.progressionFond = 0
 						this.message = this.$t('erreurEspaceDisque')
@@ -2676,6 +2678,7 @@ export default {
 					this.progressionFond = 0
 					champ.value = ''
 				}.bind(this)).catch(function () {
+					this.chargement = false
 					champ.value = ''
 					this.progressionFond = 0
 					this.message = this.$t('erreurCommunicationServeur')
