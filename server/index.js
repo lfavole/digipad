@@ -2473,113 +2473,105 @@ async function demarrerServeur () {
 		if (!identifiant) {
 			res.send('non_connecte')
 		} else {
-			const pad = req.body.pad
-			const dossier = path.join(__dirname, '..', '/static/' + definirDossierFichiers(pad))
-			checkDiskSpace(dossier).then(function (diskSpace) {
-				const espace = Math.round((diskSpace.free / diskSpace.size) * 100)
-				if (espace < 5) {
-					res.send('erreur_espace_disque')
-				} else {
-					televerserTemp(req, res, async function (err) {
-						if (err) { res.send('erreur_televersement'); return false }
-						const fichier = req.file
-						if (fichier.hasOwnProperty('mimetype') && fichier.hasOwnProperty('filename')) {
-							let mimetype = fichier.mimetype
-							const chemin = path.join(__dirname, '..', '/static/temp/' + fichier.filename)
-							const destination = path.join(__dirname, '..', '/static/temp/' + path.parse(fichier.filename).name + '.jpg')
-							const destinationPDF = path.join(__dirname, '..', '/static/temp/' + path.parse(fichier.filename).name + '.pdf')
-							if (mimetype.split('/')[0] === 'image') {
-								const extension = path.parse(fichier.filename).ext
-								if (extension.toLowerCase() === '.jpg' || extension.toLowerCase() === '.jpeg') {
-									sharp(chemin).withMetadata().rotate().jpeg().resize(1200, 1200, {
-										fit: sharp.fit.inside,
-										withoutEnlargement: true
-									}).toBuffer((err, buffer) => {
-										if (err) { res.send('erreur_televersement'); return false }
-										fs.writeFile(chemin, buffer, function() {
-											res.json({ fichier: fichier.filename, mimetype: mimetype })
-										})
-									})
-								} else if (extension.toLowerCase() !== '.gif') {
-									sharp(chemin).withMetadata().resize(1200, 1200, {
-										fit: sharp.fit.inside,
-										withoutEnlargement: true
-									}).toBuffer((err, buffer) => {
-										if (err) { res.send('erreur_televersement'); return false }
-										fs.writeFile(chemin, buffer, function() {
-											res.json({ fichier: fichier.filename, mimetype: mimetype })
-										})
-									})
-								} else {
+			televerserTemp(req, res, async function (err) {
+				if (err === 'erreur_espace_disque') { res.send('erreur_espace_disque'); return false }
+				else if (err) { res.send('erreur_televersement'); return false }
+				const fichier = req.file
+				if (fichier.hasOwnProperty('mimetype') && fichier.hasOwnProperty('filename')) {
+					let mimetype = fichier.mimetype
+					const chemin = path.join(__dirname, '..', '/static/temp/' + fichier.filename)
+					const destination = path.join(__dirname, '..', '/static/temp/' + path.parse(fichier.filename).name + '.jpg')
+					const destinationPDF = path.join(__dirname, '..', '/static/temp/' + path.parse(fichier.filename).name + '.pdf')
+					if (mimetype.split('/')[0] === 'image') {
+						const extension = path.parse(fichier.filename).ext
+						if (extension.toLowerCase() === '.jpg' || extension.toLowerCase() === '.jpeg') {
+							sharp(chemin).withMetadata().rotate().jpeg().resize(1200, 1200, {
+								fit: sharp.fit.inside,
+								withoutEnlargement: true
+							}).toBuffer((err, buffer) => {
+								if (err) { res.send('erreur_televersement'); return false }
+								fs.writeFile(chemin, buffer, function() {
 									res.json({ fichier: fichier.filename, mimetype: mimetype })
-								}
-							} else if (mimetype === 'application/pdf') {
-								gm(chemin + '[0]').setFormat('jpg').resize(450).quality(80).write(destination, function (erreur) {
+								})
+							})
+						} else if (extension.toLowerCase() !== '.gif') {
+							sharp(chemin).withMetadata().resize(1200, 1200, {
+								fit: sharp.fit.inside,
+								withoutEnlargement: true
+							}).toBuffer((err, buffer) => {
+								if (err) { res.send('erreur_televersement'); return false }
+								fs.writeFile(chemin, buffer, function() {
+									res.json({ fichier: fichier.filename, mimetype: mimetype })
+								})
+							})
+						} else {
+							res.json({ fichier: fichier.filename, mimetype: mimetype })
+						}
+					} else if (mimetype === 'application/pdf') {
+						gm(chemin + '[0]').setFormat('jpg').resize(450).quality(80).write(destination, function (erreur) {
+							if (erreur) {
+								res.json({ fichier: fichier.filename, mimetype: 'pdf', vignetteGeneree: false })
+							} else {
+								res.json({ fichier: fichier.filename, mimetype: 'pdf', vignetteGeneree: true })
+							}
+						})
+					} else if (mimetype === 'application/vnd.oasis.opendocument.presentation' || mimetype === 'application/vnd.oasis.opendocument.text' || mimetype === 'application/vnd.oasis.opendocument.spreadsheet') {
+						mimetype = 'document'
+						const docBuffer = await fs.readFile(chemin)
+						let pdfBuffer
+						try {
+							pdfBuffer = await libre.convertAsync(docBuffer, '.pdf', undefined)
+						} catch (err) {
+							pdfBuffer = 'erreur'
+						}
+						if (pdfBuffer && pdfBuffer !== 'erreur') {
+							await fs.writeFile(destinationPDF, pdfBuffer)
+							if (await fs.pathExists(destinationPDF)) {
+								gm(destinationPDF + '[0]').setFormat('jpg').resize(450).quality(80).write(destination, async function (erreur) {
+									await fs.remove(destinationPDF)
 									if (erreur) {
-										res.json({ fichier: fichier.filename, mimetype: 'pdf', vignetteGeneree: false })
+										res.json({ fichier: fichier.filename, mimetype: mimetype, vignetteGeneree: false })
 									} else {
-										res.json({ fichier: fichier.filename, mimetype: 'pdf', vignetteGeneree: true })
+										res.json({ fichier: fichier.filename, mimetype: mimetype, vignetteGeneree: true })
 									}
 								})
-							} else if (mimetype === 'application/vnd.oasis.opendocument.presentation' || mimetype === 'application/vnd.oasis.opendocument.text' || mimetype === 'application/vnd.oasis.opendocument.spreadsheet') {
-								mimetype = 'document'
-								const docBuffer = await fs.readFile(chemin)
-								let pdfBuffer
-								try {
-									pdfBuffer = await libre.convertAsync(docBuffer, '.pdf', undefined)
-								} catch (err) {
-									pdfBuffer = 'erreur'
-								}
-								if (pdfBuffer && pdfBuffer !== 'erreur') {
-									await fs.writeFile(destinationPDF, pdfBuffer)
-									if (await fs.pathExists(destinationPDF)) {
-										gm(destinationPDF + '[0]').setFormat('jpg').resize(450).quality(80).write(destination, async function (erreur) {
-											await fs.remove(destinationPDF)
-											if (erreur) {
-												res.json({ fichier: fichier.filename, mimetype: mimetype, vignetteGeneree: false })
-											} else {
-												res.json({ fichier: fichier.filename, mimetype: mimetype, vignetteGeneree: true })
-											}
-										})
-									} else {
-										res.json({ fichier: fichier.filename, mimetype: mimetype, vignetteGeneree: false })
-									}
-								} else {
-									res.json({ fichier: fichier.filename, mimetype: mimetype, vignetteGeneree: false })
-								}
-							} else if (mimetype === 'application/msword' || mimetype === 'application/vnd.ms-powerpoint' || mimetype === 'application/vnd.ms-excel' || mimetype.includes('officedocument') === true) {
-								mimetype = 'office'
-								const docBuffer = await fs.readFile(chemin)
-								let pdfBuffer
-								try {
-									pdfBuffer = await libre.convertAsync(docBuffer, '.pdf', undefined)
-								} catch (err) {
-									pdfBuffer = 'erreur'
-								}
-								if (pdfBuffer && pdfBuffer !== 'erreur') {
-									await fs.writeFile(destinationPDF, pdfBuffer)
-									if (await fs.pathExists(destinationPDF)) {
-										gm(destinationPDF + '[0]').setFormat('jpg').resize(450).quality(80).write(destination, async function (erreur) {
-											await fs.remove(destinationPDF)
-											if (erreur) {
-												res.json({ fichier: fichier.filename, mimetype: mimetype, vignetteGeneree: false })
-											} else {
-												res.json({ fichier: fichier.filename, mimetype: mimetype, vignetteGeneree: true })
-											}
-										})
-									} else {
-										res.json({ fichier: fichier.filename, mimetype: mimetype, vignetteGeneree: false })
-									}
-								} else {
-									res.json({ fichier: fichier.filename, mimetype: mimetype, vignetteGeneree: false })
-								}
 							} else {
-								res.json({ fichier: fichier.filename, mimetype: mimetype })
+								res.json({ fichier: fichier.filename, mimetype: mimetype, vignetteGeneree: false })
 							}
 						} else {
-							res.send('erreur_televersement')
+							res.json({ fichier: fichier.filename, mimetype: mimetype, vignetteGeneree: false })
 						}
-					})
+					} else if (mimetype === 'application/msword' || mimetype === 'application/vnd.ms-powerpoint' || mimetype === 'application/vnd.ms-excel' || mimetype.includes('officedocument') === true) {
+						mimetype = 'office'
+						const docBuffer = await fs.readFile(chemin)
+						let pdfBuffer
+						try {
+							pdfBuffer = await libre.convertAsync(docBuffer, '.pdf', undefined)
+						} catch (err) {
+							pdfBuffer = 'erreur'
+						}
+						if (pdfBuffer && pdfBuffer !== 'erreur') {
+							await fs.writeFile(destinationPDF, pdfBuffer)
+							if (await fs.pathExists(destinationPDF)) {
+								gm(destinationPDF + '[0]').setFormat('jpg').resize(450).quality(80).write(destination, async function (erreur) {
+									await fs.remove(destinationPDF)
+									if (erreur) {
+										res.json({ fichier: fichier.filename, mimetype: mimetype, vignetteGeneree: false })
+									} else {
+										res.json({ fichier: fichier.filename, mimetype: mimetype, vignetteGeneree: true })
+									}
+								})
+							} else {
+								res.json({ fichier: fichier.filename, mimetype: mimetype, vignetteGeneree: false })
+							}
+						} else {
+							res.json({ fichier: fichier.filename, mimetype: mimetype, vignetteGeneree: false })
+						}
+					} else {
+						res.json({ fichier: fichier.filename, mimetype: mimetype })
+					}
+				} else {
+					res.send('erreur_televersement')
 				}
 			})
 		}
@@ -2590,19 +2582,11 @@ async function demarrerServeur () {
 		if (!identifiant) {
 			res.send('non_connecte')
 		} else {
-			const pad = req.body.pad
-			const dossier = path.join(__dirname, '..', '/static/' + definirDossierFichiers(pad))
-			checkDiskSpace(dossier).then(function (diskSpace) {
-				const espace = Math.round((diskSpace.free / diskSpace.size) * 100)
-				if (espace < 5) {
-					res.send('erreur_espace_disque')
-				} else {
-					televerser(req, res, function (err) {
-						if (err) { res.send('erreur_televersement'); return false }
-						const fichier = req.file
-						res.send(fichier.filename)
-					})
-				}
+			televerser(req, res, function (err) {
+				if (err === 'erreur_espace_disque') { res.send('erreur_espace_disque'); return false }
+				else if (err) { res.send('erreur_televersement'); return false }
+				const fichier = req.file
+				res.send(fichier.filename)
 			})
 		}
 	})
@@ -2612,39 +2596,31 @@ async function demarrerServeur () {
 		if (!identifiant) {
 			res.send('non_connecte')
 		} else {
-			const pad = req.body.pad
-			const dossier = path.join(__dirname, '..', '/static/' + definirDossierFichiers(pad))
-			checkDiskSpace(dossier).then(function (diskSpace) {
-				const espace = Math.round((diskSpace.free / diskSpace.size) * 100)
-				if (espace < 5) {
-					res.send('erreur_espace_disque')
-				} else {
-					televerserTemp(req, res, function (err) {
+			televerserTemp(req, res, function (err) {
+				if (err === 'erreur_espace_disque') { res.send('erreur_espace_disque'); return false }
+				else if (err) { res.send('erreur_televersement'); return false }
+				const fichier = req.file
+				const chemin = path.join(__dirname, '..', '/static/temp/' + fichier.filename)
+				const extension = path.parse(fichier.filename).ext
+				if (extension.toLowerCase() === '.jpg' || extension.toLowerCase() === '.jpeg') {
+					sharp(chemin).withMetadata().rotate().jpeg().resize(400, 400, {
+						fit: sharp.fit.inside,
+						withoutEnlargement: true
+					}).toBuffer((err, buffer) => {
 						if (err) { res.send('erreur_televersement'); return false }
-						const fichier = req.file
-						const chemin = path.join(__dirname, '..', '/static/temp/' + fichier.filename)
-						const extension = path.parse(fichier.filename).ext
-						if (extension.toLowerCase() === '.jpg' || extension.toLowerCase() === '.jpeg') {
-							sharp(chemin).withMetadata().rotate().jpeg().resize(400, 400, {
-								fit: sharp.fit.inside,
-								withoutEnlargement: true
-							}).toBuffer((err, buffer) => {
-								if (err) { res.send('erreur_televersement'); return false }
-								fs.writeFile(chemin, buffer, function() {
-									res.send('/temp/' + fichier.filename)
-								})
-							})
-						} else {
-							sharp(chemin).withMetadata().resize(400, 400, {
-								fit: sharp.fit.inside,
-								withoutEnlargement: true
-							}).toBuffer((err, buffer) => {
-								if (err) { res.send('erreur_televersement'); return false }
-								fs.writeFile(chemin, buffer, function() {
-									res.send('/temp/' + fichier.filename)
-								})
-							})
-						}
+						fs.writeFile(chemin, buffer, function() {
+							res.send('/temp/' + fichier.filename)
+						})
+					})
+				} else {
+					sharp(chemin).withMetadata().resize(400, 400, {
+						fit: sharp.fit.inside,
+						withoutEnlargement: true
+					}).toBuffer((err, buffer) => {
+						if (err) { res.send('erreur_televersement'); return false }
+						fs.writeFile(chemin, buffer, function() {
+							res.send('/temp/' + fichier.filename)
+						})
 					})
 				}
 			})
@@ -2656,40 +2632,32 @@ async function demarrerServeur () {
 		if (!identifiant) {
 			res.send('non_connecte')
 		} else {
-			const pad = req.body.pad
-			const dossier = path.join(__dirname, '..', '/static/' + definirDossierFichiers(pad))
-			checkDiskSpace(dossier).then(function (diskSpace) {
-				const espace = Math.round((diskSpace.free / diskSpace.size) * 100)
-				if (espace < 5) {
-					res.send('erreur_espace_disque')
-				} else {
-					televerser(req, res, function (err) {
+			televerser(req, res, function (err) {
+				if (err === 'erreur_espace_disque') { res.send('erreur_espace_disque'); return false }
+				else if (err) { res.send('erreur_televersement'); return false }
+				const fichier = req.file
+				const pad = req.body.pad
+				const chemin = path.join(__dirname, '..', '/static/' + definirDossierFichiers(pad) + '/' + pad + '/' + fichier.filename)
+				const extension = path.parse(fichier.filename).ext
+				if (extension.toLowerCase() === '.jpg' || extension.toLowerCase() === '.jpeg') {
+					sharp(chemin).withMetadata().rotate().jpeg().resize(1200, 1200, {
+						fit: sharp.fit.inside,
+						withoutEnlargement: true
+					}).toBuffer((err, buffer) => {
 						if (err) { res.send('erreur_televersement'); return false }
-						const fichier = req.file
-						const pad = req.body.pad
-						const chemin = path.join(__dirname, '..', '/static/' + definirDossierFichiers(pad) + '/' + pad + '/' + fichier.filename)
-						const extension = path.parse(fichier.filename).ext
-						if (extension.toLowerCase() === '.jpg' || extension.toLowerCase() === '.jpeg') {
-							sharp(chemin).withMetadata().rotate().jpeg().resize(1200, 1200, {
-								fit: sharp.fit.inside,
-								withoutEnlargement: true
-							}).toBuffer((err, buffer) => {
-								if (err) { res.send('erreur_televersement'); return false }
-								fs.writeFile(chemin, buffer, function() {
-									res.send('/' + definirDossierFichiers(pad) + '/' + pad + '/' + fichier.filename)
-								})
-							})
-						} else {
-							sharp(chemin).withMetadata().resize(1200, 1200, {
-								fit: sharp.fit.inside,
-								withoutEnlargement: true
-							}).toBuffer((err, buffer) => {
-								if (err) { res.send('erreur_televersement'); return false }
-								fs.writeFile(chemin, buffer, function() {
-									res.send('/' + definirDossierFichiers(pad) + '/' + pad + '/' + fichier.filename)
-								})
-							})
-						}
+						fs.writeFile(chemin, buffer, function() {
+							res.send('/' + definirDossierFichiers(pad) + '/' + pad + '/' + fichier.filename)
+						})
+					})
+				} else {
+					sharp(chemin).withMetadata().resize(1200, 1200, {
+						fit: sharp.fit.inside,
+						withoutEnlargement: true
+					}).toBuffer((err, buffer) => {
+						if (err) { res.send('erreur_televersement'); return false }
+						fs.writeFile(chemin, buffer, function() {
+							res.send('/' + definirDossierFichiers(pad) + '/' + pad + '/' + fichier.filename)
+						})
 					})
 				}
 			})
@@ -5653,7 +5621,23 @@ async function demarrerServeur () {
 				nom = nom + '_' + Math.random().toString(36).substring(2) + extension
 				callback(null, nom)
 			}
-		})
+		}),
+		fileFilter: function (req, fichier, callback) {
+			if (req.body.pad) {
+				const pad = req.body.pad
+				const dossier = path.join(__dirname, '..', '/static/' + definirDossierFichiers(pad))
+				checkDiskSpace(dossier).then(function (diskSpace) {
+					const espace = Math.round((diskSpace.free / diskSpace.size) * 100)
+					if (espace < 50) {
+						callback('erreur_espace_disque')
+					} else {
+						callback(null, true)
+					}
+				})
+			} else {
+				callback(null, true)
+			}
+		}
 	}).single('fichier')
 
 	const televerserTemp = multer({
@@ -5674,7 +5658,23 @@ async function demarrerServeur () {
 				nom = nom + '_' + Math.random().toString(36).substring(2) + extension
 				callback(null, nom)
 			}
-		})
+		}),
+		fileFilter: function (req, fichier, callback) {
+			if (req.body.pad) {
+				const pad = req.body.pad
+				const dossier = path.join(__dirname, '..', '/static/' + definirDossierFichiers(pad))
+				checkDiskSpace(dossier).then(function (diskSpace) {
+					const espace = Math.round((diskSpace.free / diskSpace.size) * 100)
+					if (espace < 5) {
+						callback('erreur_espace_disque')
+					} else {
+						callback(null, true)
+					}
+				})
+			} else {
+				callback(null, true)
+			}
+		}
 	}).single('fichier')
 
 	async function supprimerFichier (pad, fichier) {
