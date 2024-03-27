@@ -1760,6 +1760,15 @@ async function demarrerServeur () {
 		}
 	})
 
+	app.post('/api/verifier-mot-de-passe-admin', function (req, res) {
+		const admin = req.body.admin
+		if (admin !== '' && admin === process.env.VITE_ADMIN_PASSWORD) {
+			res.send('acces_verifie')
+		} else {
+			res.send('acces_invalide')
+		}
+	})
+
 	app.post('/api/modifier-mot-de-passe-admin', function (req, res) {
 		const admin = req.body.admin
 		if (admin !== '' && admin === process.env.VITE_ADMIN_PASSWORD) {

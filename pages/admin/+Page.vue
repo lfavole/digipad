@@ -227,10 +227,19 @@ export default {
 	},
 	mounted () {
 		const motdepasse = prompt(this.$t('motDePasse'), '')
-		if (motdepasse === import.meta.env.VITE_ADMIN_PASSWORD) {
-			this.acces = true
-			this.admin = motdepasse
-			this.chargementPage = false
+		if (motdepasse) {
+			axios.post(this.hote + '/api/verifier-mot-de-passe-admin', {
+				admin: motdepasse
+			}).then(function (reponse) {
+				const donnees = reponse.data
+				if (donnees === 'acces_verifie') {
+					this.acces = true
+					this.admin = motdepasse
+				}
+				this.chargementPage = false
+			}.bind(this)).catch(function () {
+				this.message = this.$t('erreurCommunicationServeur')
+			}.bind(this))
 		}
 	},
 	methods: {
