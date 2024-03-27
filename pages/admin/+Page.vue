@@ -166,8 +166,6 @@
 		<Message :message="message" @fermer="message = ''" v-if="message !== ''" />
 
 		<Chargement v-if="chargement" />
-
-		<ChargementPage v-if="chargementPage" />
 	</div>
 </template>
 
@@ -175,7 +173,6 @@
 import axios from 'axios'
 import fileSaver from 'file-saver'
 const { saveAs } = fileSaver
-import ChargementPage from '#root/components/chargement-page.vue'
 import Chargement from '#root/components/chargement.vue'
 import Message from '#root/components/message.vue'
 import Notification from '#root/components/notification.vue'
@@ -183,14 +180,12 @@ import Notification from '#root/components/notification.vue'
 export default {
 	name: 'Admin',
 	components: {
-		ChargementPage,
 		Chargement,
 		Message,
 		Notification
 	},
 	data () {
 		return {
-			chargementPage: true,
 			chargement: false,
 			message: '',
 			notification: '',
@@ -236,9 +231,6 @@ export default {
 					this.acces = true
 					this.admin = motdepasse
 				}
-				this.chargementPage = false
-			}.bind(this)).catch(function () {
-				this.message = this.$t('erreurCommunicationServeur')
 			}.bind(this))
 		}
 	},
