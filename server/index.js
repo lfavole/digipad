@@ -353,7 +353,7 @@ async function demarrerServeur () {
 		}
 		res.status(statusCode).send(body)
   	})
-	
+
 	app.get('/admin', async function (req, res, next) {
 		let langue = 'fr'
 		if (req.session.hasOwnProperty('langue') && req.session.langue !== '') {
@@ -362,7 +362,8 @@ async function demarrerServeur () {
 		const pageContextInit = {
 			urlOriginal: req.originalUrl,
 			hote: hote,
-			langue: langue
+			langue: langue,
+			acces: req.session.admin
 		}
 		const pageContext = await renderPage(pageContextInit)
 		const { httpResponse } = pageContext
@@ -498,6 +499,11 @@ async function demarrerServeur () {
 		req.session.langue = ''
 		req.session.statut = ''
 		req.session.destroy()
+		res.send('deconnecte')
+	})
+
+	app.post('/api/deconnexion-admin', function (req, res) {
+		req.session.admin = false
 		res.send('deconnecte')
 	})
 
@@ -1136,9 +1142,7 @@ async function demarrerServeur () {
 
 	app.post('/api/exporter-pad', function (req, res) {
 		const identifiant = req.body.identifiant
-		const admin = req.body.admin
-		const motdepasseAdmin = process.env.VITE_ADMIN_PASSWORD
-		if ((req.session.identifiant && req.session.identifiant === identifiant) || (admin !== '' && admin === motdepasseAdmin)) {
+		if ((req.session.identifiant && req.session.identifiant === identifiant) || req.session.admin) {
 			const id = req.body.padId
 			db.exists('pads:' + id, async function (err, resultat) {
 				if (resultat === 1) {
@@ -1535,9 +1539,7 @@ async function demarrerServeur () {
 			return false
 		}
 		const identifiant = req.body.identifiant
-		const admin = req.body.admin
-		const motdepasseAdmin = process.env.VITE_ADMIN_PASSWORD
-		if ((req.session.identifiant && req.session.identifiant === identifiant) || (admin !== '' && admin === motdepasseAdmin)) {
+		if ((req.session.identifiant && req.session.identifiant === identifiant) || req.session.admin) {
 			const pad = req.body.padId
 			const type = req.body.type
 			let suppressionFichiers = true
@@ -1744,60 +1746,59 @@ async function demarrerServeur () {
 	})
 
 	app.post('/api/modifier-mot-de-passe-admin', function (req, res) {
-		const admin = req.body.admin
-		if (admin !== '' && admin === process.env.VITE_ADMIN_PASSWORD) {
-			const identifiant = req.body.identifiant
-			const email = req.body.email
-			if (identifiant !== '') {
-				db.exists('utilisateurs:' + identifiant, async function (err, resultat) {
-					if (err) { res.send('erreur'); return false }
-					if (resultat === 1) {
-						const hash = await bcrypt.hash(req.body.motdepasse, 10)
-						db.hset('utilisateurs:' + identifiant, 'motdepasse', hash)
-						res.send('motdepasse_modifie')
-					} else {
-						res.send('identifiant_non_valide')
-					}
-				})
-			} else if (email !== '') {
-				db.keys('utilisateurs:*', function (err, utilisateurs) {
-					if (utilisateurs !== null) {
-						const donneesUtilisateurs = []
-						utilisateurs.forEach(function (utilisateur) {
-							const donneesUtilisateur = new Promise(function (resolve) {
-								db.hgetall('utilisateurs:' + utilisateur.substring(13), function (err, donnees) {
-									if (err) { resolve({}); return false }
-									if (donnees.hasOwnProperty('email')) {
-										resolve({ identifiant: utilisateur.substring(13), email: donnees.email })
-									} else {
-										resolve({})
-									}
-								})
-							})
-							donneesUtilisateurs.push(donneesUtilisateur)
-						})
-						Promise.all(donneesUtilisateurs).then(async function (donnees) {
-							let utilisateurId = ''
-							donnees.forEach(function (utilisateur) {
-								if (utilisateur.hasOwnProperty('email') && utilisateur.email.toLowerCase() === email.toLowerCase()) {
-									utilisateurId = utilisateur.identifiant
+		if (!req.session.admin) { res.send('erreur'); return false }
+		const identifiant = req.body.identifiant
+		const email = req.body.email
+		if (identifiant !== '') {
+			db.exists('utilisateurs:' + identifiant, async function (err, resultat) {
+				if (err) { res.send('erreur'); return false }
+				if (resultat === 1) {
+					const hash = await bcrypt.hash(req.body.motdepasse, 10)
+					db.hset('utilisateurs:' + identifiant, 'motdepasse', hash)
+					res.send('motdepasse_modifie')
+				} else {
+					res.send('identifiant_non_valide')
+				}
+			})
+		} else if (email !== '') {
+			db.keys('utilisateurs:*', function (err, utilisateurs) {
+				if (utilisateurs !== null) {
+					const donneesUtilisateurs = []
+					utilisateurs.forEach(function (utilisateur) {
+						const donneesUtilisateur = new Promise(function (resolve) {
+							db.hgetall('utilisateurs:' + utilisateur.substring(13), function (err, donnees) {
+								if (err) { resolve({}); return false }
+								if (donnees.hasOwnProperty('email')) {
+									resolve({ identifiant: utilisateur.substring(13), email: donnees.email })
+								} else {
+									resolve({})
 								}
 							})
-							if (utilisateurId !== '') {
-								const hash = await bcrypt.hash(req.body.motdepasse, 10)
-								db.hset('utilisateurs:' + utilisateurId, 'motdepasse', hash)
-								res.send(utilisateurId)
-							} else {
-								res.send('email_non_valide')
+						})
+						donneesUtilisateurs.push(donneesUtilisateur)
+					})
+					Promise.all(donneesUtilisateurs).then(async function (donnees) {
+						let utilisateurId = ''
+						donnees.forEach(function (utilisateur) {
+							if (utilisateur.hasOwnProperty('email') && utilisateur.email.toLowerCase() === email.toLowerCase()) {
+								utilisateurId = utilisateur.identifiant
 							}
 						})
-					}
-				})
-			}
+						if (utilisateurId !== '') {
+							const hash = await bcrypt.hash(req.body.motdepasse, 10)
+							db.hset('utilisateurs:' + utilisateurId, 'motdepasse', hash)
+							res.send(utilisateurId)
+						} else {
+							res.send('email_non_valide')
+						}
+					})
+				}
+			})
 		}
 	})
 
 	app.post('/api/recuperer-donnees-pad-admin', function (req, res) {
+		if (!req.session.admin) { res.send('erreur'); return false }
 		const pad = req.body.padId
 		db.exists('pads:' + pad, async function (err, resultat) {
 			if (err) { res.send('erreur'); return false }
@@ -1820,6 +1821,7 @@ async function demarrerServeur () {
 	})
 
 	app.post('/api/modifier-donnees-pad-admin', function (req, res) {
+		if (!req.session.admin) { res.send('erreur'); return false }
 		const pad = req.body.padId
 		const champ = req.body.champ
 		const valeur = req.body.valeur
@@ -1854,6 +1856,7 @@ async function demarrerServeur () {
 	})
 
 	app.post('/api/rattacher-pad', function (req, res) {
+		if (!req.session.admin) { res.send('erreur'); return false }
 		const pad = req.body.padId
 		const identifiant = req.body.identifiant
 		db.exists('utilisateurs:' + identifiant, function (err, reponse) {
@@ -1911,6 +1914,7 @@ async function demarrerServeur () {
 	})
 
 	app.post('/api/transferer-compte', function (req, res) {
+		if (!req.session.admin) { res.send('erreur'); return false }
 		const identifiant = req.body.identifiant
 		const nouvelIdentifiant = req.body.nouvelIdentifiant
 		db.exists('utilisateurs:' + identifiant, function (err, reponse) {
@@ -1985,12 +1989,10 @@ async function demarrerServeur () {
 			return false
 		}
 		const identifiant = req.body.identifiant
-		const admin = req.body.admin
-		const motdepasseAdmin = process.env.VITE_ADMIN_PASSWORD
 		let type = 'utilisateur'
-		if ((req.session.identifiant && req.session.identifiant === identifiant) || (admin !== '' && admin === motdepasseAdmin)) {
-			if (admin === motdepasseAdmin) {
-				type === 'admin'
+		if ((req.session.identifiant && req.session.identifiant === identifiant) || req.session.admin) {
+			if (req.session.admin) {
+				type = 'admin'
 			}
 			db.smembers('pads-crees:' + identifiant, function (err, pads) {
 				if (err) { res.send('erreur'); return false }
@@ -2318,6 +2320,15 @@ async function demarrerServeur () {
 		})
 	})
 
+	app.post('/api/verifier-mot-de-passe-admin', function (req, res) {
+		if (req.body.motdepasse.trim() !== '' && req.body.motdepasse === process.env.VITE_ADMIN_PASSWORD) {
+			req.session.admin = true
+			res.send('motdepasse_correct')
+		} else {
+			res.send('motdepasse_incorrect')
+		}
+	})
+
 	app.post('/api/verifier-code-acces', function (req, res) {
 		const pad = req.body.pad
 		db.hgetall('pads:' + pad, function (err, donnees) {
@@ -2328,7 +2339,7 @@ async function demarrerServeur () {
 				}
 				const padAcces = req.session.acces.map(function (e) {
 					if (e.hasOwnProperty('pad')) {
-						return e.pad 
+						return e.pad
 					} else {
 						return ''
 					}
@@ -2651,7 +2662,7 @@ async function demarrerServeur () {
 			let favicon = ''
 			const domaine = req.body.domaine
 			const protocole = req.body.protocole
-			axios.get(protocole + '//' + domaine, { 
+			axios.get(protocole + '//' + domaine, {
 				responseType: 'document'
 			}).then(function (reponse) {
 				if (reponse && reponse.hasOwnProperty('data')) {
@@ -4170,7 +4181,7 @@ async function demarrerServeur () {
 				socket.emit('deconnecte')
 			}
 		})
-		
+
 		socket.on('modifieraffichagecolonne', function (pad, valeur, index, identifiant) {
 			if (maintenance === true) {
 				socket.emit('maintenance')
@@ -4503,11 +4514,13 @@ async function demarrerServeur () {
 		})
 
 		socket.on('activermaintenance', function () {
+			if (!req.session.admin) { socket.emit('erreur'); return false }
 			maintenance = true
 			socket.emit('verifiermaintenance', true)
 		})
 
 		socket.on('desactivermaintenance', function () {
+			if (!req.session.admin) { socket.emit('erreur'); return false }
 			maintenance = false
 			socket.emit('verifiermaintenance', false)
 		})
@@ -5156,7 +5169,7 @@ async function demarrerServeur () {
 				if (pad.hasOwnProperty('fond') && !pad.fond.includes('/img/') && pad.fond.substring(0, 1) !== '#' && pad.fond !== '') {
 					pad.fond = '/' + definirDossierFichiers(id) + '/' + id + '/' + path.basename(pad.fond)
 				}
-				
+
 				const blocsPad = new Promise(function (resolveMain) {
 					const donneesBlocs = []
 					db.zrange('blocs:' + id, 0, -1, function (err, blocs) {
@@ -5557,7 +5570,7 @@ async function demarrerServeur () {
 		}
 		motdepasse = verifierMotDePasse(motdepasse, specialRegex, caracteresSpeciaux)
 		motdepasse = verifierMotDePasse(motdepasse, majusculesRegex, majuscules)
-		return motdepasse  
+		return motdepasse
 	}
 
 	function verifierEmail (email) {
@@ -5835,7 +5848,7 @@ async function demarrerServeur () {
 								</ul>
 							</div>
 						</div>
-						
+
 						<div id="conteneur-chargement" v-if="chargement">
 							<div id="chargement">
 								<div class="spinner">
@@ -5856,7 +5869,7 @@ async function demarrerServeur () {
 						</div>
 					</main>
 				</div>
-				
+
 				<script type="text/javascript">
 					var vm = new Vue({
 						el: '#app',

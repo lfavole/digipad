@@ -1,4 +1,30 @@
 <template>
+	<div class="conteneur-modale" role="dialog" tabindex="-1" v-if="modale === 'motdepasseadmin' && message === ''">
+		<div id="creation" class="modale" role="document">
+			<div class="en-tete">
+				<span class="titre">{{ $t('motDePasse') }}</span>
+				<span role="button" class="fermer" @click="fermerModaleMotDePasseAdmin"><i class="material-icons">close</i></span>
+			</div>
+			<div class="conteneur">
+				<div class="contenu">
+					<label for="champ-mot-de-passe-admin">{{ $t('motDePasse') }}</label>
+					<input id="champ-mot-de-passe-admin" type="password" :value="admin" @input="admin = $event.target.value" @keydown.enter="verifierMotDePasseAdmin">
+					<div class="actions">
+						<span role="button" tabindex="0" class="bouton" @click="verifierMotDePasseAdmin" v-if="!chargement">{{ $t('valider') }}</span>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<Notification :notification="notification" @fermer="notification = ''" v-if="notification !== ''" />
+
+	<Message :message="message" @fermer="message = ''" v-if="message !== ''" />
+
+	<Chargement v-if="chargement" />
+
+	<ChargementPage v-if="chargementPage" />
+
 	<div id="page" v-if="acces">
 		<div id="accueil">
 			<div id="langues">
@@ -10,6 +36,9 @@
 				<span class="bouton" role="button" tabindex="0" :class="{'selectionne': langue === 'en'}" @click="modifierLangue('en')">EN</span>
 			</div>
 			<div id="conteneur">
+				<div class="conteneur actions">
+					<span class="bouton" role="button" tabindex="0" @click="deconnexion">{{ $t('deconnexion') }}</span>
+				</div>
 				<h1>
 					<span>{{ $t('maintenance') }}</span>
 				</h1>
@@ -160,14 +189,6 @@
 				</div>
 			</div>
 		</div>
-
-		<Notification :notification="notification" @fermer="notification = ''" v-if="notification !== ''" />
-
-		<Message :message="message" @fermer="message = ''" v-if="message !== ''" />
-
-		<Chargement v-if="chargement" />
-
-		<ChargementPage v-if="chargementPage" />
 	</div>
 </template>
 
@@ -190,11 +211,11 @@ export default {
 	},
 	data () {
 		return {
-			chargementPage: true,
+			chargementPage: false,
 			chargement: false,
 			message: '',
 			notification: '',
-			acces: false,
+			acces: this.$pageContext.pageProps.acces,
 			admin: '',
 			modale: '',
 			identifiant: '',
@@ -226,14 +247,47 @@ export default {
 		}.bind(this))
 	},
 	mounted () {
-		const motdepasse = prompt(this.$t('motDePasse'), '')
-		if (motdepasse === import.meta.env.VITE_ADMIN_PASSWORD) {
-			this.acces = true
-			this.admin = motdepasse
-			this.chargementPage = false
+		window.test = this
+		if (!this.acces) {
+			this.modale = 'motdepasseadmin'
 		}
 	},
 	methods: {
+		verifierMotDePasseAdmin () {
+			this.modale = ''
+			this.chargement = true
+			axios.post(this.hote + '/api/verifier-mot-de-passe-admin', {
+				motdepasse: this.admin
+			}).then(function (reponse) {
+				this.chargement = false
+				const donnees = reponse.data
+				if (donnees === 'motdepasse_incorrect') {
+					this.message = this.$t('motDePassePasCorrect')
+					this.modale = 'motdepasseadmin'
+				} else if (donnees === 'motdepasse_correct') {
+					this.acces = true
+				}
+			}.bind(this)).catch(function () {
+				this.chargement = false
+				this.message = this.$t('erreurCommunicationServeur')
+				this.modale = 'motdepasseadmin'
+			}.bind(this))
+			this.admin = ''
+		},
+		deconnexion () {
+			this.chargement = true
+			axios.post(this.hote + '/api/deconnexion-admin').then(function (reponse) {
+				this.chargement = false
+				const donnees = reponse.data
+				if (donnees === 'deconnecte') {
+					this.acces = false
+					this.modale = 'motdepasseadmin'
+				}
+			}.bind(this)).catch(function () {
+				this.chargement = false
+				this.message = this.$t('erreurCommunicationServeur')
+			}.bind(this))
+		},
 		modifierLangue (langue) {
 			if (this.langue !== langue) {
 				axios.post(this.hote + '/api/modifier-langue', {
@@ -259,7 +313,6 @@ export default {
 			if (this.motdepasse.trim() !== '' && (this.identifiant !== '' || this.email !== '')) {
 				this.chargement = true
 				axios.post(this.hote + '/api/modifier-mot-de-passe-admin', {
-					admin: this.admin,
 					identifiant: this.identifiant,
 					email: this.email,
 					motdepasse: this.motdepasse
@@ -347,8 +400,7 @@ export default {
 				this.chargement = true
 				axios.post(this.hote + '/api/exporter-pad', {
 					padId: this.padIdE,
-					identifiant: '',
-					admin: this.admin
+					identifiant: ''
 				}).then(function (reponse) {
 					const donnees = reponse.data
 					if (donnees === 'erreur_export') {
@@ -414,7 +466,6 @@ export default {
 							padId: this.padIdS,
 							type: 'pad',
 							identifiant: identifiant,
-							admin: this.admin,
 							suppressionFichiers: this.suppressionFichiers
 						}).then(function (reponse) {
 							this.chargement = false
@@ -471,8 +522,7 @@ export default {
 				this.modale = ''
 				this.chargement = true
 				axios.post(this.hote + '/api/supprimer-compte', {
-					identifiant: this.identifiantS,
-					admin: this.admin
+					identifiant: this.identifiantS
 				}).then(function (reponse) {
 					this.chargement = false
 					const donnees = reponse.data
