@@ -36,6 +36,7 @@ import connectRedis from 'connect-redis'
 import session from 'express-session'
 import events from 'events'
 import base64 from 'base-64'
+import checkDiskSpace from 'check-disk-space'
 import { renderPage } from 'vike/server'
 
 const production = process.env.NODE_ENV === 'production'
@@ -917,215 +918,223 @@ async function demarrerServeur () {
 			db.get('pad', function (err, num) {
 				if (err) { res.send('erreur_duplication'); return false }
 				const id = parseInt(num) + 1
-				db.exists('pads:' + pad, async function (err, resultat) {
-					if (err) { res.send('erreur_duplication'); return false }
-					if (resultat === 1) {
-						db.hgetall('pads:' + pad, function (err, donnees) {
+				const dossier = path.join(__dirname, '..', '/static/' + definirDossierFichiers(id))
+				checkDiskSpace(dossier).then(async function (diskSpace) {
+					const espace = Math.round((diskSpace.free / diskSpace.size) * 100)
+					if (espace < 5) {
+						res.send('erreur_espace_disque')
+					} else {
+						db.exists('pads:' + pad, async function (err, resultat) {
 							if (err) { res.send('erreur_duplication'); return false }
-							const donneesBlocs = []
-							db.zrange('blocs:' + pad, 0, -1, function (err, blocs) {
-								if (err) { res.send('erreur_duplication'); return false }
-								for (const [indexBloc, bloc] of blocs.entries()) {
-									const donneesBloc = new Promise(function (resolve) {
-										db.hgetall('pad-' + pad + ':' + bloc, function (err, infos) {
-											if (err || !infos || infos === null) { resolve({}); return false }
+							if (resultat === 1) {
+								db.hgetall('pads:' + pad, function (err, donnees) {
+									if (err) { res.send('erreur_duplication'); return false }
+									const donneesBlocs = []
+									db.zrange('blocs:' + pad, 0, -1, function (err, blocs) {
+										if (err) { res.send('erreur_duplication'); return false }
+										for (const [indexBloc, bloc] of blocs.entries()) {
+											const donneesBloc = new Promise(function (resolve) {
+												db.hgetall('pad-' + pad + ':' + bloc, function (err, infos) {
+													if (err || !infos || infos === null) { resolve({}); return false }
+													const date = dayjs().format()
+													if (infos.hasOwnProperty('vignette') && infos.vignette !== '' && !infos.vignette.includes('/img/') && !verifierURL(infos.vignette, ['https', 'http'])) {
+														infos.vignette = '/' + definirDossierFichiers(id) + '/' + id + '/' + path.basename(infos.vignette)
+													}
+													let visibilite = 'visible'
+													if (infos.hasOwnProperty('visibilite')) {
+														visibilite = infos.visibilite
+													}
+													if (infos.hasOwnProperty('iframe') && infos.iframe !== '' && infos.iframe.includes(etherpad)) {
+														const etherpadId = infos.iframe.replace(etherpad + '/p/', '')
+														const destinationId = 'pad-' + id + '-' + Math.random().toString(16).slice(2)
+														const url = etherpad + '/api/1.2.14/copyPad?apikey=' + etherpadApi + '&sourceID=' + etherpadId + '&destinationID=' + destinationId
+														axios.get(url)
+														infos.iframe = etherpad + '/p/' + destinationId
+														infos.media = etherpad + '/p/' + destinationId
+													}
+													const multi = db.multi()
+													const blocId = 'bloc-id-' + (new Date()).getTime() + Math.random().toString(16).slice(10)
+													multi.hmset('pad-' + id + ':' + blocId, 'id', infos.id, 'bloc', blocId, 'titre', infos.titre, 'texte', infos.texte, 'media', infos.media, 'iframe', infos.iframe, 'type', infos.type, 'source', infos.source, 'vignette', infos.vignette, 'date', date, 'identifiant', infos.identifiant, 'commentaires', 0, 'evaluations', 0, 'colonne', infos.colonne, 'visibilite', visibilite)
+													multi.zadd('blocs:' + id, indexBloc, blocId)
+													multi.exec(function () {
+														resolve(blocId)
+													})
+												})
+											})
+											donneesBlocs.push(donneesBloc)
+										}
+										Promise.all(donneesBlocs).then(function () {
+											const token = Math.random().toString(16).slice(2)
 											const date = dayjs().format()
-											if (infos.hasOwnProperty('vignette') && infos.vignette !== '' && !infos.vignette.includes('/img/') && !verifierURL(infos.vignette, ['https', 'http'])) {
-												infos.vignette = '/' + definirDossierFichiers(id) + '/' + id + '/' + path.basename(infos.vignette)
+											const couleur = choisirCouleur()
+											const code = Math.floor(1000 + Math.random() * 9000)
+											let registreActivite = 'active'
+											let conversation = 'desactivee'
+											let listeUtilisateurs = 'activee'
+											let editionNom = 'desactivee'
+											let ordre = 'croissant'
+											let largeur = 'normale'
+											let enregistrements = 'desactives'
+											let copieBloc = 'desactivee'
+											let affichageColonnes = []
+											if (donnees.hasOwnProperty('registreActivite')) {
+												registreActivite = donnees.registreActivite
 											}
-											let visibilite = 'visible'
-											if (infos.hasOwnProperty('visibilite')) {
-												visibilite = infos.visibilite
+											if (donnees.hasOwnProperty('conversation')) {
+												conversation = donnees.conversation
 											}
-											if (infos.hasOwnProperty('iframe') && infos.iframe !== '' && infos.iframe.includes(etherpad)) {
-												const etherpadId = infos.iframe.replace(etherpad + '/p/', '')
-												const destinationId = 'pad-' + id + '-' + Math.random().toString(16).slice(2)
-												const url = etherpad + '/api/1.2.14/copyPad?apikey=' + etherpadApi + '&sourceID=' + etherpadId + '&destinationID=' + destinationId
-												axios.get(url)
-												infos.iframe = etherpad + '/p/' + destinationId
-												infos.media = etherpad + '/p/' + destinationId
+											if (donnees.hasOwnProperty('listeUtilisateurs')) {
+												listeUtilisateurs = donnees.listeUtilisateurs
+											}
+											if (donnees.hasOwnProperty('editionNom')) {
+												editionNom = donnees.editionNom
+											}
+											if (donnees.hasOwnProperty('ordre')) {
+												ordre = donnees.ordre
+											}
+											if (donnees.hasOwnProperty('largeur')) {
+												largeur = donnees.largeur
+											}
+											if (donnees.hasOwnProperty('enregistrements')) {
+												enregistrements = donnees.enregistrements
+											}
+											if (donnees.hasOwnProperty('copieBloc')) {
+												copieBloc = donnees.copieBloc
+											}
+											if (donnees.hasOwnProperty('affichageColonnes')) {
+												affichageColonnes = JSON.parse(donnees.affichageColonnes)
+											} else {
+												JSON.parse(donnees.colonnes).forEach(function () {
+													affichageColonnes.push(true)
+												})
+											}
+											if (!donnees.fond.includes('/img/') && donnees.fond.substring(0, 1) !== '#' && donnees.fond !== '') {
+												donnees.fond = '/' + definirDossierFichiers(id) + '/' + id + '/' + path.basename(donnees.fond)
 											}
 											const multi = db.multi()
-											const blocId = 'bloc-id-' + (new Date()).getTime() + Math.random().toString(16).slice(10)
-											multi.hmset('pad-' + id + ':' + blocId, 'id', infos.id, 'bloc', blocId, 'titre', infos.titre, 'texte', infos.texte, 'media', infos.media, 'iframe', infos.iframe, 'type', infos.type, 'source', infos.source, 'vignette', infos.vignette, 'date', date, 'identifiant', infos.identifiant, 'commentaires', 0, 'evaluations', 0, 'colonne', infos.colonne, 'visibilite', visibilite)
-											multi.zadd('blocs:' + id, indexBloc, blocId)
-											multi.exec(function () {
-												resolve(blocId)
+											multi.incr('pad')
+											if (donnees.hasOwnProperty('code')) {
+												multi.hmset('pads:' + id, 'id', id, 'token', token, 'titre', 'Copie de ' + donnees.titre, 'identifiant', identifiant, 'fond', donnees.fond, 'acces', donnees.acces, 'code', code, 'contributions', donnees.contributions, 'affichage', donnees.affichage, 'registreActivite', registreActivite, 'conversation', conversation, 'listeUtilisateurs', listeUtilisateurs, 'editionNom', editionNom, 'fichiers', donnees.fichiers, 'enregistrements', enregistrements, 'liens', donnees.liens, 'documents', donnees.documents, 'commentaires', donnees.commentaires, 'evaluations', donnees.evaluations, 'copieBloc', copieBloc, 'ordre', ordre, 'largeur', largeur, 'date', date, 'colonnes', donnees.colonnes, 'affichageColonnes', JSON.stringify(affichageColonnes), 'bloc', donnees.bloc, 'activite', 0)
+											} else {
+												multi.hmset('pads:' + id, 'id', id, 'token', token, 'titre', 'Copie de ' + donnees.titre, 'identifiant', identifiant, 'fond', donnees.fond, 'acces', donnees.acces, 'contributions', donnees.contributions, 'affichage', donnees.affichage, 'registreActivite', registreActivite, 'conversation', conversation, 'listeUtilisateurs', listeUtilisateurs, 'editionNom', editionNom, 'fichiers', donnees.fichiers, 'enregistrements', enregistrements, 'liens', donnees.liens, 'documents', donnees.documents, 'commentaires', donnees.commentaires, 'evaluations', donnees.evaluations, 'copieBloc', copieBloc, 'ordre', ordre, 'largeur', largeur, 'date', date, 'colonnes', donnees.colonnes, 'affichageColonnes', JSON.stringify(affichageColonnes), 'bloc', donnees.bloc, 'activite', 0)
+											}
+											multi.sadd('pads-crees:' + identifiant, id)
+											multi.sadd('utilisateurs-pads:' + id, identifiant)
+											multi.hset('couleurs:' + identifiant, 'pad' + id, couleur)
+											multi.exec(async function () {
+												if (await fs.pathExists(path.join(__dirname, '..', '/static/' + definirDossierFichiers(pad) + '/' + pad))) {
+													await fs.copy(path.join(__dirname, '..', '/static/' + definirDossierFichiers(pad) + '/' + pad), path.join(__dirname, '..', '/static/' + definirDossierFichiers(id) + '/' + id))
+												}
+												res.json({ id: id, token: token, titre: 'Copie de ' + donnees.titre, identifiant: identifiant, fond: donnees.fond, acces: donnees.acces, code: code, contributions: donnees.contributions, affichage: donnees.affichage, registreActivite: registreActivite, conversation: conversation, listeUtilisateurs: listeUtilisateurs, editionNom: editionNom, fichiers: donnees.fichiers, enregistrements: enregistrements, liens: donnees.liens, documents: donnees.documents, commentaires: donnees.commentaires, evaluations: donnees.evaluations, copieBloc: copieBloc, ordre: ordre, largeur: largeur, date: date, colonnes: donnees.colonnes, affichageColonnes: affichageColonnes, bloc: donnees.bloc, activite: 0 })
 											})
 										})
 									})
-									donneesBlocs.push(donneesBloc)
-								}
-								Promise.all(donneesBlocs).then(function () {
-									const token = Math.random().toString(16).slice(2)
-									const date = dayjs().format()
-									const couleur = choisirCouleur()
-									const code = Math.floor(1000 + Math.random() * 9000)
-									let registreActivite = 'active'
-									let conversation = 'desactivee'
-									let listeUtilisateurs = 'activee'
-									let editionNom = 'desactivee'
-									let ordre = 'croissant'
-									let largeur = 'normale'
-									let enregistrements = 'desactives'
-									let copieBloc = 'desactivee'
-									let affichageColonnes = []
-									if (donnees.hasOwnProperty('registreActivite')) {
-										registreActivite = donnees.registreActivite
-									}
-									if (donnees.hasOwnProperty('conversation')) {
-										conversation = donnees.conversation
-									}
-									if (donnees.hasOwnProperty('listeUtilisateurs')) {
-										listeUtilisateurs = donnees.listeUtilisateurs
-									}
-									if (donnees.hasOwnProperty('editionNom')) {
-										editionNom = donnees.editionNom
-									}
-									if (donnees.hasOwnProperty('ordre')) {
-										ordre = donnees.ordre
-									}
-									if (donnees.hasOwnProperty('largeur')) {
-										largeur = donnees.largeur
-									}
-									if (donnees.hasOwnProperty('enregistrements')) {
-										enregistrements = donnees.enregistrements
-									}
-									if (donnees.hasOwnProperty('copieBloc')) {
-										copieBloc = donnees.copieBloc
-									}
-									if (donnees.hasOwnProperty('affichageColonnes')) {
-										affichageColonnes = JSON.parse(donnees.affichageColonnes)
-									} else {
-										JSON.parse(donnees.colonnes).forEach(function () {
-											affichageColonnes.push(true)
-										})
-									}
-									if (!donnees.fond.includes('/img/') && donnees.fond.substring(0, 1) !== '#' && donnees.fond !== '') {
-										donnees.fond = '/' + definirDossierFichiers(id) + '/' + id + '/' + path.basename(donnees.fond)
-									}
-									const multi = db.multi()
-									multi.incr('pad')
-									if (donnees.hasOwnProperty('code')) {
-										multi.hmset('pads:' + id, 'id', id, 'token', token, 'titre', 'Copie de ' + donnees.titre, 'identifiant', identifiant, 'fond', donnees.fond, 'acces', donnees.acces, 'code', code, 'contributions', donnees.contributions, 'affichage', donnees.affichage, 'registreActivite', registreActivite, 'conversation', conversation, 'listeUtilisateurs', listeUtilisateurs, 'editionNom', editionNom, 'fichiers', donnees.fichiers, 'enregistrements', enregistrements, 'liens', donnees.liens, 'documents', donnees.documents, 'commentaires', donnees.commentaires, 'evaluations', donnees.evaluations, 'copieBloc', copieBloc, 'ordre', ordre, 'largeur', largeur, 'date', date, 'colonnes', donnees.colonnes, 'affichageColonnes', JSON.stringify(affichageColonnes), 'bloc', donnees.bloc, 'activite', 0)
-									} else {
-										multi.hmset('pads:' + id, 'id', id, 'token', token, 'titre', 'Copie de ' + donnees.titre, 'identifiant', identifiant, 'fond', donnees.fond, 'acces', donnees.acces, 'contributions', donnees.contributions, 'affichage', donnees.affichage, 'registreActivite', registreActivite, 'conversation', conversation, 'listeUtilisateurs', listeUtilisateurs, 'editionNom', editionNom, 'fichiers', donnees.fichiers, 'enregistrements', enregistrements, 'liens', donnees.liens, 'documents', donnees.documents, 'commentaires', donnees.commentaires, 'evaluations', donnees.evaluations, 'copieBloc', copieBloc, 'ordre', ordre, 'largeur', largeur, 'date', date, 'colonnes', donnees.colonnes, 'affichageColonnes', JSON.stringify(affichageColonnes), 'bloc', donnees.bloc, 'activite', 0)
-									}
-									multi.sadd('pads-crees:' + identifiant, id)
-									multi.sadd('utilisateurs-pads:' + id, identifiant)
-									multi.hset('couleurs:' + identifiant, 'pad' + id, couleur)
-									multi.exec(async function () {
-										if (await fs.pathExists(path.join(__dirname, '..', '/static/' + definirDossierFichiers(pad) + '/' + pad))) {
-											await fs.copy(path.join(__dirname, '..', '/static/' + definirDossierFichiers(pad) + '/' + pad), path.join(__dirname, '..', '/static/' + definirDossierFichiers(id) + '/' + id))
-										}
-										res.json({ id: id, token: token, titre: 'Copie de ' + donnees.titre, identifiant: identifiant, fond: donnees.fond, acces: donnees.acces, code: code, contributions: donnees.contributions, affichage: donnees.affichage, registreActivite: registreActivite, conversation: conversation, listeUtilisateurs: listeUtilisateurs, editionNom: editionNom, fichiers: donnees.fichiers, enregistrements: enregistrements, liens: donnees.liens, documents: donnees.documents, commentaires: donnees.commentaires, evaluations: donnees.evaluations, copieBloc: copieBloc, ordre: ordre, largeur: largeur, date: date, colonnes: donnees.colonnes, affichageColonnes: affichageColonnes, bloc: donnees.bloc, activite: 0 })
-									})
 								})
-							})
-						})
-					} else if (resultat !== 1 && await fs.pathExists(path.join(__dirname, '..', '/static/pads/' + pad + '.json'))) {
-						const donnees = await fs.readJson(path.join(__dirname, '..', '/static/pads/' + pad + '.json'))
-						if (typeof donnees === 'object' && donnees !== null && donnees.hasOwnProperty('pad') && donnees.hasOwnProperty('blocs') && donnees.hasOwnProperty('activite')) {
-							const date = dayjs().format()
-							const donneesBlocs = []
-							for (const [indexBloc, bloc] of donnees.blocs.entries()) {
-								const donneesBloc = new Promise(function (resolve) {
-									if (Object.keys(bloc).length > 0) {
-										if (bloc.hasOwnProperty('vignette') && bloc.vignette !== '' && !bloc.vignette.includes('/img/') && !verifierURL(bloc.vignette, ['https', 'http'])) {
-											bloc.vignette = '/' + definirDossierFichiers(id) + '/' + id + '/' + path.basename(bloc.vignette)
+							} else if (resultat !== 1 && await fs.pathExists(path.join(__dirname, '..', '/static/pads/' + pad + '.json'))) {
+								const donnees = await fs.readJson(path.join(__dirname, '..', '/static/pads/' + pad + '.json'))
+								if (typeof donnees === 'object' && donnees !== null && donnees.hasOwnProperty('pad') && donnees.hasOwnProperty('blocs') && donnees.hasOwnProperty('activite')) {
+									const date = dayjs().format()
+									const donneesBlocs = []
+									for (const [indexBloc, bloc] of donnees.blocs.entries()) {
+										const donneesBloc = new Promise(function (resolve) {
+											if (Object.keys(bloc).length > 0) {
+												if (bloc.hasOwnProperty('vignette') && bloc.vignette !== '' && !bloc.vignette.includes('/img/') && !verifierURL(bloc.vignette, ['https', 'http'])) {
+													bloc.vignette = '/' + definirDossierFichiers(id) + '/' + id + '/' + path.basename(bloc.vignette)
+												}
+												let visibilite = 'visible'
+												if (bloc.hasOwnProperty('visibilite')) {
+													visibilite = bloc.visibilite
+												}
+												if (bloc.hasOwnProperty('iframe') && bloc.iframe !== '' && bloc.iframe.includes(etherpad)) {
+													const etherpadId = bloc.iframe.replace(etherpad + '/p/', '')
+													const destinationId = 'pad-' + id + '-' + Math.random().toString(16).slice(2)
+													const url = etherpad + '/api/1.2.14/copyPad?apikey=' + etherpadApi + '&sourceID=' + etherpadId + '&destinationID=' + destinationId
+													axios.get(url)
+													bloc.iframe = etherpad + '/p/' + destinationId
+													bloc.media = etherpad + '/p/' + destinationId
+												}
+												const multi = db.multi()
+												const blocId = 'bloc-id-' + (new Date()).getTime() + Math.random().toString(16).slice(10)
+												multi.hmset('pad-' + id + ':' + blocId, 'id', bloc.id, 'bloc', blocId, 'titre', bloc.titre, 'texte', bloc.texte, 'media', bloc.media, 'iframe', bloc.iframe, 'type', bloc.type, 'source', bloc.source, 'vignette', bloc.vignette, 'date', date, 'identifiant', bloc.identifiant, 'commentaires', 0, 'evaluations', 0, 'colonne', bloc.colonne, 'visibilite', visibilite)
+												multi.zadd('blocs:' + id, indexBloc, blocId)
+												multi.exec(function () {
+													resolve(blocId)
+												})
+											} else {
+												resolve({})
+											}
+										})
+										donneesBlocs.push(donneesBloc)
+									}
+									Promise.all(donneesBlocs).then(function () {
+										const token = Math.random().toString(16).slice(2)
+										const couleur = choisirCouleur()
+										const code = Math.floor(1000 + Math.random() * 9000)
+										let registreActivite = 'active'
+										let conversation = 'desactivee'
+										let listeUtilisateurs = 'activee'
+										let editionNom = 'desactivee'
+										let ordre = 'croissant'
+										let largeur = 'normale'
+										let enregistrements = 'desactives'
+										let copieBloc = 'desactivee'
+										let affichageColonnes = []
+										if (donnees.pad.hasOwnProperty('registreActivite')) {
+											registreActivite = donnees.pad.registreActivite
 										}
-										let visibilite = 'visible'
-										if (bloc.hasOwnProperty('visibilite')) {
-											visibilite = bloc.visibilite
+										if (donnees.pad.hasOwnProperty('conversation')) {
+											conversation = donnees.pad.conversation
 										}
-										if (bloc.hasOwnProperty('iframe') && bloc.iframe !== '' && bloc.iframe.includes(etherpad)) {
-											const etherpadId = bloc.iframe.replace(etherpad + '/p/', '')
-											const destinationId = 'pad-' + id + '-' + Math.random().toString(16).slice(2)
-											const url = etherpad + '/api/1.2.14/copyPad?apikey=' + etherpadApi + '&sourceID=' + etherpadId + '&destinationID=' + destinationId
-											axios.get(url)
-											bloc.iframe = etherpad + '/p/' + destinationId
-											bloc.media = etherpad + '/p/' + destinationId
+										if (donnees.pad.hasOwnProperty('listeUtilisateurs')) {
+											listeUtilisateurs = donnees.pad.listeUtilisateurs
+										}
+										if (donnees.pad.hasOwnProperty('editionNom')) {
+											editionNom = donnees.pad.editionNom
+										}
+										if (donnees.pad.hasOwnProperty('ordre')) {
+											ordre = donnees.pad.ordre
+										}
+										if (donnees.pad.hasOwnProperty('largeur')) {
+											largeur = donnees.pad.largeur
+										}
+										if (donnees.pad.hasOwnProperty('enregistrements')) {
+											enregistrements = donnees.pad.enregistrements
+										}
+										if (donnees.pad.hasOwnProperty('copieBloc')) {
+											copieBloc = donnees.pad.copieBloc
+										}
+										if (donnees.pad.hasOwnProperty('affichageColonnes')) {
+											affichageColonnes = JSON.parse(donnees.pad.affichageColonnes)
+										} else {
+											JSON.parse(donnees.pad.colonnes).forEach(function () {
+												affichageColonnes.push(true)
+											})
+										}
+										if (!donnees.pad.fond.includes('/img/') && donnees.pad.fond.substring(0, 1) !== '#' && donnees.pad.fond !== '') {
+											donnees.pad.fond = '/' + definirDossierFichiers(id) + '/' + id + '/' + path.basename(donnees.pad.fond)
 										}
 										const multi = db.multi()
-										const blocId = 'bloc-id-' + (new Date()).getTime() + Math.random().toString(16).slice(10)
-										multi.hmset('pad-' + id + ':' + blocId, 'id', bloc.id, 'bloc', blocId, 'titre', bloc.titre, 'texte', bloc.texte, 'media', bloc.media, 'iframe', bloc.iframe, 'type', bloc.type, 'source', bloc.source, 'vignette', bloc.vignette, 'date', date, 'identifiant', bloc.identifiant, 'commentaires', 0, 'evaluations', 0, 'colonne', bloc.colonne, 'visibilite', visibilite)
-										multi.zadd('blocs:' + id, indexBloc, blocId)
-										multi.exec(function () {
-											resolve(blocId)
+										multi.incr('pad')
+										if (donnees.pad.hasOwnProperty('code')) {
+											multi.hmset('pads:' + id, 'id', id, 'token', token, 'titre', 'Copie de ' + donnees.pad.titre, 'identifiant', identifiant, 'fond', donnees.pad.fond, 'acces', donnees.pad.acces, 'code', code, 'contributions', donnees.pad.contributions, 'affichage', donnees.pad.affichage, 'registreActivite', registreActivite, 'conversation', conversation, 'listeUtilisateurs', listeUtilisateurs, 'editionNom', editionNom, 'fichiers', donnees.pad.fichiers, 'enregistrements', enregistrements, 'liens', donnees.pad.liens, 'documents', donnees.pad.documents, 'commentaires', donnees.pad.commentaires, 'evaluations', donnees.pad.evaluations, 'copieBloc', copieBloc, 'ordre', ordre, 'largeur', largeur, 'date', date, 'colonnes', donnees.pad.colonnes, 'affichageColonnes', JSON.stringify(affichageColonnes), 'bloc', donnees.pad.bloc, 'activite', 0)
+										} else {
+											multi.hmset('pads:' + id, 'id', id, 'token', token, 'titre', 'Copie de ' + donnees.pad.titre, 'identifiant', identifiant, 'fond', donnees.pad.fond, 'acces', donnees.pad.acces, 'contributions', donnees.pad.contributions, 'affichage', donnees.pad.affichage, 'registreActivite', registreActivite, 'conversation', conversation, 'listeUtilisateurs', listeUtilisateurs, 'editionNom', editionNom, 'fichiers', donnees.pad.fichiers, 'enregistrements', enregistrements, 'liens', donnees.pad.liens, 'documents', donnees.pad.documents, 'commentaires', donnees.pad.commentaires, 'evaluations', donnees.pad.evaluations, 'copieBloc', copieBloc, 'ordre', ordre, 'largeur', largeur, 'date', date, 'colonnes', donnees.pad.colonnes, 'affichageColonnes', JSON.stringify(affichageColonnes), 'bloc', donnees.pad.bloc, 'activite', 0)
+										}
+										multi.sadd('pads-crees:' + identifiant, id)
+										multi.sadd('utilisateurs-pads:' + id, identifiant)
+										multi.hset('couleurs:' + identifiant, 'pad' + id, couleur)
+										multi.exec(async function () {
+											if (await fs.pathExists(path.join(__dirname, '..', '/static/' + definirDossierFichiers(pad) + '/' + pad))) {
+												await fs.copy(path.join(__dirname, '..', '/static/' + definirDossierFichiers(pad) + '/' + pad), path.join(__dirname, '..', '/static/' + definirDossierFichiers(id) + '/' + id))
+											}
+											res.json({ id: id, token: token, titre: 'Copie de ' + donnees.pad.titre, identifiant: identifiant, fond: donnees.pad.fond, acces: donnees.pad.acces, code: code, contributions: donnees.pad.contributions, affichage: donnees.pad.affichage, registreActivite: registreActivite, conversation: conversation, listeUtilisateurs: listeUtilisateurs, editionNom: editionNom, fichiers: donnees.pad.fichiers, enregistrements: enregistrements, liens: donnees.pad.liens, documents: donnees.pad.documents, commentaires: donnees.pad.commentaires, evaluations: donnees.pad.evaluations, copieBloc: copieBloc, ordre: ordre, largeur: largeur, date: date, colonnes: donnees.pad.colonnes, affichageColonnes: affichageColonnes, bloc: donnees.pad.bloc, activite: 0 })
 										})
-									} else {
-										resolve({})
-									}
-								})
-								donneesBlocs.push(donneesBloc)
-							}
-							Promise.all(donneesBlocs).then(function () {
-								const token = Math.random().toString(16).slice(2)
-								const couleur = choisirCouleur()
-								const code = Math.floor(1000 + Math.random() * 9000)
-								let registreActivite = 'active'
-								let conversation = 'desactivee'
-								let listeUtilisateurs = 'activee'
-								let editionNom = 'desactivee'
-								let ordre = 'croissant'
-								let largeur = 'normale'
-								let enregistrements = 'desactives'
-								let copieBloc = 'desactivee'
-								let affichageColonnes = []
-								if (donnees.pad.hasOwnProperty('registreActivite')) {
-									registreActivite = donnees.pad.registreActivite
-								}
-								if (donnees.pad.hasOwnProperty('conversation')) {
-									conversation = donnees.pad.conversation
-								}
-								if (donnees.pad.hasOwnProperty('listeUtilisateurs')) {
-									listeUtilisateurs = donnees.pad.listeUtilisateurs
-								}
-								if (donnees.pad.hasOwnProperty('editionNom')) {
-									editionNom = donnees.pad.editionNom
-								}
-								if (donnees.pad.hasOwnProperty('ordre')) {
-									ordre = donnees.pad.ordre
-								}
-								if (donnees.pad.hasOwnProperty('largeur')) {
-									largeur = donnees.pad.largeur
-								}
-								if (donnees.pad.hasOwnProperty('enregistrements')) {
-									enregistrements = donnees.pad.enregistrements
-								}
-								if (donnees.pad.hasOwnProperty('copieBloc')) {
-									copieBloc = donnees.pad.copieBloc
-								}
-								if (donnees.pad.hasOwnProperty('affichageColonnes')) {
-									affichageColonnes = JSON.parse(donnees.pad.affichageColonnes)
-								} else {
-									JSON.parse(donnees.pad.colonnes).forEach(function () {
-										affichageColonnes.push(true)
 									})
-								}
-								if (!donnees.pad.fond.includes('/img/') && donnees.pad.fond.substring(0, 1) !== '#' && donnees.pad.fond !== '') {
-									donnees.pad.fond = '/' + definirDossierFichiers(id) + '/' + id + '/' + path.basename(donnees.pad.fond)
-								}
-								const multi = db.multi()
-								multi.incr('pad')
-								if (donnees.pad.hasOwnProperty('code')) {
-									multi.hmset('pads:' + id, 'id', id, 'token', token, 'titre', 'Copie de ' + donnees.pad.titre, 'identifiant', identifiant, 'fond', donnees.pad.fond, 'acces', donnees.pad.acces, 'code', code, 'contributions', donnees.pad.contributions, 'affichage', donnees.pad.affichage, 'registreActivite', registreActivite, 'conversation', conversation, 'listeUtilisateurs', listeUtilisateurs, 'editionNom', editionNom, 'fichiers', donnees.pad.fichiers, 'enregistrements', enregistrements, 'liens', donnees.pad.liens, 'documents', donnees.pad.documents, 'commentaires', donnees.pad.commentaires, 'evaluations', donnees.pad.evaluations, 'copieBloc', copieBloc, 'ordre', ordre, 'largeur', largeur, 'date', date, 'colonnes', donnees.pad.colonnes, 'affichageColonnes', JSON.stringify(affichageColonnes), 'bloc', donnees.pad.bloc, 'activite', 0)
 								} else {
-									multi.hmset('pads:' + id, 'id', id, 'token', token, 'titre', 'Copie de ' + donnees.pad.titre, 'identifiant', identifiant, 'fond', donnees.pad.fond, 'acces', donnees.pad.acces, 'contributions', donnees.pad.contributions, 'affichage', donnees.pad.affichage, 'registreActivite', registreActivite, 'conversation', conversation, 'listeUtilisateurs', listeUtilisateurs, 'editionNom', editionNom, 'fichiers', donnees.pad.fichiers, 'enregistrements', enregistrements, 'liens', donnees.pad.liens, 'documents', donnees.pad.documents, 'commentaires', donnees.pad.commentaires, 'evaluations', donnees.pad.evaluations, 'copieBloc', copieBloc, 'ordre', ordre, 'largeur', largeur, 'date', date, 'colonnes', donnees.pad.colonnes, 'affichageColonnes', JSON.stringify(affichageColonnes), 'bloc', donnees.pad.bloc, 'activite', 0)
+									res.send('erreur_duplication')
 								}
-								multi.sadd('pads-crees:' + identifiant, id)
-								multi.sadd('utilisateurs-pads:' + id, identifiant)
-								multi.hset('couleurs:' + identifiant, 'pad' + id, couleur)
-								multi.exec(async function () {
-									if (await fs.pathExists(path.join(__dirname, '..', '/static/' + definirDossierFichiers(pad) + '/' + pad))) {
-										await fs.copy(path.join(__dirname, '..', '/static/' + definirDossierFichiers(pad) + '/' + pad), path.join(__dirname, '..', '/static/' + definirDossierFichiers(id) + '/' + id))
-									}
-									res.json({ id: id, token: token, titre: 'Copie de ' + donnees.pad.titre, identifiant: identifiant, fond: donnees.pad.fond, acces: donnees.pad.acces, code: code, contributions: donnees.pad.contributions, affichage: donnees.pad.affichage, registreActivite: registreActivite, conversation: conversation, listeUtilisateurs: listeUtilisateurs, editionNom: editionNom, fichiers: donnees.pad.fichiers, enregistrements: enregistrements, liens: donnees.pad.liens, documents: donnees.pad.documents, commentaires: donnees.pad.commentaires, evaluations: donnees.pad.evaluations, copieBloc: copieBloc, ordre: ordre, largeur: largeur, date: date, colonnes: donnees.pad.colonnes, affichageColonnes: affichageColonnes, bloc: donnees.pad.bloc, activite: 0 })
-								})
-							})
-						} else {
-							res.send('erreur_duplication')
-						}
+							}
+						})
 					}
 				})
 			})
@@ -1374,146 +1383,154 @@ async function demarrerServeur () {
 						db.get('pad', async function (err, resultat) {
 							if (err) { res.send('erreur_import'); return false }
 							const id = parseInt(resultat) + 1
-							const chemin = path.join(__dirname, '..', '/static/' + definirDossierFichiers(id) + '/' + id)
-							const donneesBlocs = []
-							await fs.mkdirp(chemin)
-							for (const [indexBloc, bloc] of donnees.blocs.entries()) {
-								const donneesBloc = new Promise(function (resolve) {
-									if (bloc.hasOwnProperty('id') && bloc.hasOwnProperty('bloc') && bloc.hasOwnProperty('titre') && bloc.hasOwnProperty('texte') && bloc.hasOwnProperty('media') && bloc.hasOwnProperty('iframe') && bloc.hasOwnProperty('type') && bloc.hasOwnProperty('source') && bloc.hasOwnProperty('vignette') && bloc.hasOwnProperty('identifiant') && bloc.hasOwnProperty('commentaires') && bloc.hasOwnProperty('evaluations') && bloc.hasOwnProperty('colonne') && bloc.hasOwnProperty('listeCommentaires') && bloc.hasOwnProperty('listeEvaluations')) {
+							const dossier = path.join(__dirname, '..', '/static/' + definirDossierFichiers(id))
+							checkDiskSpace(dossier).then(async function (diskSpace) {
+								const espace = Math.round((diskSpace.free / diskSpace.size) * 100)
+								if (espace < 5) {
+									res.send('erreur_espace_disque')
+								} else {
+									const chemin = path.join(__dirname, '..', '/static/' + definirDossierFichiers(id) + '/' + id)
+									const donneesBlocs = []
+									await fs.mkdirp(chemin)
+									for (const [indexBloc, bloc] of donnees.blocs.entries()) {
+										const donneesBloc = new Promise(function (resolve) {
+											if (bloc.hasOwnProperty('id') && bloc.hasOwnProperty('bloc') && bloc.hasOwnProperty('titre') && bloc.hasOwnProperty('texte') && bloc.hasOwnProperty('media') && bloc.hasOwnProperty('iframe') && bloc.hasOwnProperty('type') && bloc.hasOwnProperty('source') && bloc.hasOwnProperty('vignette') && bloc.hasOwnProperty('identifiant') && bloc.hasOwnProperty('commentaires') && bloc.hasOwnProperty('evaluations') && bloc.hasOwnProperty('colonne') && bloc.hasOwnProperty('listeCommentaires') && bloc.hasOwnProperty('listeEvaluations')) {
+												const date = dayjs().format()
+												let commentaires = 0
+												let evaluations = 0
+												if (parametres.commentaires === true) {
+													commentaires = bloc.commentaires
+												}
+												if (parametres.evaluations === true) {
+													evaluations = bloc.evaluations
+												}
+												if (bloc.vignette !== '' && !bloc.vignette.includes('/img/') && !verifierURL(bloc.vignette, ['https', 'http'])) {
+													bloc.vignette = '/' + definirDossierFichiers(donnees.pad.id) + '/' + donnees.pad.id + '/' + path.basename(bloc.vignette)
+												}
+												let visibilite = 'visible'
+												if (bloc.hasOwnProperty('visibilite')) {
+													visibilite = bloc.visibilite
+												}
+												const multi = db.multi()
+												const blocId = 'bloc-id-' + (new Date()).getTime() + Math.random().toString(16).slice(10)
+												multi.hmset('pad-' + id + ':' + blocId, 'id', bloc.id, 'bloc', blocId, 'titre', bloc.titre, 'texte', bloc.texte, 'media', bloc.media, 'iframe', bloc.iframe, 'type', bloc.type, 'source', bloc.source, 'vignette', bloc.vignette, 'date', date, 'identifiant', bloc.identifiant, 'commentaires', commentaires, 'evaluations', evaluations, 'colonne', bloc.colonne, 'visibilite', visibilite)
+												multi.zadd('blocs:' + id, indexBloc, blocId)
+												if (parametres.commentaires === true) {
+													for (const commentaire of bloc.listeCommentaires) {
+														if (commentaire.hasOwnProperty('id') && commentaire.hasOwnProperty('identifiant') && commentaire.hasOwnProperty('date') && commentaire.hasOwnProperty('texte')) {
+															multi.zadd('commentaires:' + blocId, commentaire.id, JSON.stringify(commentaire))
+														}
+													}
+												}
+												if (parametres.evaluations === true) {
+													for (const evaluation of bloc.listeEvaluations) {
+														if (evaluation.hasOwnProperty('id') && evaluation.hasOwnProperty('identifiant') && evaluation.hasOwnProperty('date') && evaluation.hasOwnProperty('etoiles')) {
+															multi.zadd('evaluations:' + blocId, evaluation.id, JSON.stringify(evaluation))
+														}
+													}
+												}
+												multi.exec(async function () {
+													if (bloc.hasOwnProperty('media') && bloc.media !== '' && bloc.type !== 'embed' && await fs.pathExists(path.normalize(cible + '/fichiers/' + bloc.media))) {
+														await fs.copy(path.normalize(cible + '/fichiers/' + bloc.media), path.normalize(chemin + '/' + bloc.media, { overwrite: true }))
+													}
+													if (bloc.hasOwnProperty('vignette') && bloc.vignette !== '' && !bloc.vignette.includes('/img/') && !verifierURL(bloc.vignette, ['https', 'http']) && await fs.pathExists(path.normalize(cible + '/fichiers/' + path.basename(bloc.vignette)))) {
+														await fs.copy(path.normalize(cible + '/fichiers/' + path.basename(bloc.vignette)), path.normalize(chemin + '/' + path.basename(bloc.vignette), { overwrite: true }))
+													}
+													resolve({ bloc: bloc.bloc, blocId: blocId })
+												})
+											} else {
+												resolve({ bloc: 0, blocId: 0 })
+											}
+										})
+										donneesBlocs.push(donneesBloc)
+									}
+									Promise.all(donneesBlocs).then(async function (blocs) {
+										const token = Math.random().toString(16).slice(2)
 										const date = dayjs().format()
-										let commentaires = 0
-										let evaluations = 0
-										if (parametres.commentaires === true) {
-											commentaires = bloc.commentaires
+										const couleur = choisirCouleur()
+										const code = Math.floor(1000 + Math.random() * 9000)
+										let registreActivite = 'active'
+										let conversation = 'desactivee'
+										let listeUtilisateurs = 'activee'
+										let editionNom = 'desactivee'
+										let ordre = 'croissant'
+										let largeur = 'normale'
+										let enregistrements = 'desactives'
+										let copieBloc = 'desactivee'
+										let affichageColonnes = []
+										let activiteId = 0
+										if (donnees.pad.hasOwnProperty('registreActivite')) {
+											registreActivite = donnees.pad.registreActivite
 										}
-										if (parametres.evaluations === true) {
-											evaluations = bloc.evaluations
+										if (donnees.pad.hasOwnProperty('conversation')) {
+											conversation = donnees.pad.conversation
 										}
-										if (bloc.vignette !== '' && !bloc.vignette.includes('/img/') && !verifierURL(bloc.vignette, ['https', 'http'])) {
-											bloc.vignette = '/' + definirDossierFichiers(donnees.pad.id) + '/' + donnees.pad.id + '/' + path.basename(bloc.vignette)
+										if (donnees.pad.hasOwnProperty('listeUtilisateurs')) {
+											listeUtilisateurs = donnees.pad.listeUtilisateurs
 										}
-										let visibilite = 'visible'
-										if (bloc.hasOwnProperty('visibilite')) {
-											visibilite = bloc.visibilite
+										if (donnees.pad.hasOwnProperty('editionNom')) {
+											editionNom = donnees.pad.editionNom
+										}
+										if (donnees.pad.hasOwnProperty('ordre')) {
+											ordre = donnees.pad.ordre
+										}
+										if (donnees.pad.hasOwnProperty('largeur')) {
+											largeur = donnees.pad.largeur
+										}
+										if (donnees.pad.hasOwnProperty('enregistrements')) {
+											enregistrements = donnees.pad.enregistrements
+										}
+										if (donnees.pad.hasOwnProperty('copieBloc')) {
+											copieBloc = donnees.pad.copieBloc
+										}
+										if (donnees.pad.hasOwnProperty('affichageColonnes')) {
+											affichageColonnes = JSON.parse(donnees.pad.affichageColonnes)
+										} else {
+											JSON.parse(donnees.pad.colonnes).forEach(function () {
+												affichageColonnes.push(true)
+											})
+										}
+										if (parametres.activite === true) {
+											activiteId = donnees.pad.activite
+										}
+										if (!donnees.pad.fond.includes('/img/') && donnees.pad.fond.substring(0, 1) !== '#' && donnees.pad.fond !== '' && await fs.pathExists(path.normalize(cible + '/fichiers/' + path.basename(donnees.pad.fond)))) {
+											await fs.copy(path.normalize(cible + '/fichiers/' + path.basename(donnees.pad.fond)), path.normalize(chemin + '/' + path.basename(donnees.pad.fond), { overwrite: true }))
 										}
 										const multi = db.multi()
-										const blocId = 'bloc-id-' + (new Date()).getTime() + Math.random().toString(16).slice(10)
-										multi.hmset('pad-' + id + ':' + blocId, 'id', bloc.id, 'bloc', blocId, 'titre', bloc.titre, 'texte', bloc.texte, 'media', bloc.media, 'iframe', bloc.iframe, 'type', bloc.type, 'source', bloc.source, 'vignette', bloc.vignette, 'date', date, 'identifiant', bloc.identifiant, 'commentaires', commentaires, 'evaluations', evaluations, 'colonne', bloc.colonne, 'visibilite', visibilite)
-										multi.zadd('blocs:' + id, indexBloc, blocId)
-										if (parametres.commentaires === true) {
-											for (const commentaire of bloc.listeCommentaires) {
-												if (commentaire.hasOwnProperty('id') && commentaire.hasOwnProperty('identifiant') && commentaire.hasOwnProperty('date') && commentaire.hasOwnProperty('texte')) {
-													multi.zadd('commentaires:' + blocId, commentaire.id, JSON.stringify(commentaire))
-												}
+										multi.incr('pad')
+										multi.hmset('pads:' + id, 'id', id, 'token', token, 'titre', donnees.pad.titre, 'identifiant', identifiant, 'fond', donnees.pad.fond, 'acces', donnees.pad.acces, 'code', code, 'contributions', donnees.pad.contributions, 'affichage', donnees.pad.affichage, 'registreActivite', registreActivite, 'conversation', conversation, 'listeUtilisateurs', listeUtilisateurs, 'editionNom', editionNom, 'fichiers', donnees.pad.fichiers, 'enregistrements', enregistrements, 'liens', donnees.pad.liens, 'documents', donnees.pad.documents, 'commentaires', donnees.pad.commentaires, 'evaluations', donnees.pad.evaluations, 'copieBloc', copieBloc, 'ordre', ordre, 'largeur', largeur, 'date', date, 'colonnes', donnees.pad.colonnes, 'affichageColonnes', JSON.stringify(affichageColonnes), 'bloc', donnees.pad.bloc, 'activite', activiteId, 'admins', JSON.stringify([]))
+										multi.sadd('pads-crees:' + identifiant, id)
+										multi.sadd('utilisateurs-pads:' + id, identifiant)
+										multi.hset('couleurs:' + identifiant, 'pad' + id, couleur)
+										if (parametres.activite === true) {
+											if (parametres.commentaires === false) {
+												donnees.activite = donnees.activite.filter(function (element) {
+													return element.type !== 'bloc-commente'
+												})
 											}
-										}
-										if (parametres.evaluations === true) {
-											for (const evaluation of bloc.listeEvaluations) {
-												if (evaluation.hasOwnProperty('id') && evaluation.hasOwnProperty('identifiant') && evaluation.hasOwnProperty('date') && evaluation.hasOwnProperty('etoiles')) {
-													multi.zadd('evaluations:' + blocId, evaluation.id, JSON.stringify(evaluation))
+											if (parametres.evaluations === false) {
+												donnees.activite = donnees.activite.filter(function (element) {
+													return element.type !== 'bloc-evalue'
+												})
+											}
+											for (const activite of donnees.activite) {
+												if (activite.hasOwnProperty('bloc') && activite.hasOwnProperty('identifiant') && activite.hasOwnProperty('titre') && activite.hasOwnProperty('date') && activite.hasOwnProperty('couleur') && activite.hasOwnProperty('type') && activite.hasOwnProperty('id')) {
+													blocs.forEach(function (item) {
+														if (activite.bloc === item.bloc) {
+															activite.bloc = item.blocId
+														}
+													})
+													multi.zadd('activite:' + id, activite.id, JSON.stringify(activite))
 												}
 											}
 										}
 										multi.exec(async function () {
-											if (bloc.hasOwnProperty('media') && bloc.media !== '' && bloc.type !== 'embed' && await fs.pathExists(path.normalize(cible + '/fichiers/' + bloc.media))) {
-												await fs.copy(path.normalize(cible + '/fichiers/' + bloc.media), path.normalize(chemin + '/' + bloc.media, { overwrite: true }))
-											}
-											if (bloc.hasOwnProperty('vignette') && bloc.vignette !== '' && !bloc.vignette.includes('/img/') && !verifierURL(bloc.vignette, ['https', 'http']) && await fs.pathExists(path.normalize(cible + '/fichiers/' + path.basename(bloc.vignette)))) {
-												await fs.copy(path.normalize(cible + '/fichiers/' + path.basename(bloc.vignette)), path.normalize(chemin + '/' + path.basename(bloc.vignette), { overwrite: true }))
-											}
-											resolve({ bloc: bloc.bloc, blocId: blocId })
+											await fs.remove(source)
+											await fs.remove(cible)
+											res.json({ id: id, token: token, titre: donnees.pad.titre, identifiant: identifiant, fond: donnees.pad.fond, acces: donnees.pad.acces, code: code, contributions: donnees.pad.contributions, affichage: donnees.pad.affichage, registreActivite: registreActivite, conversation: conversation, listeUtilisateurs: listeUtilisateurs, editionNom: editionNom, fichiers: donnees.pad.fichiers, enregistrements: enregistrements, liens: donnees.pad.liens, documents: donnees.pad.documents, commentaires: donnees.pad.commentaires, evaluations: donnees.pad.evaluations, copieBloc: copieBloc, ordre: ordre, largeur: largeur, date: date, colonnes: donnees.pad.colonnes, affichageColonnes: affichageColonnes, bloc: donnees.pad.bloc, activite: activiteId, admins: [] })
 										})
-									} else {
-										resolve({ bloc: 0, blocId: 0 })
-									}
-								})
-								donneesBlocs.push(donneesBloc)
-							}
-							Promise.all(donneesBlocs).then(async function (blocs) {
-								const token = Math.random().toString(16).slice(2)
-								const date = dayjs().format()
-								const couleur = choisirCouleur()
-								const code = Math.floor(1000 + Math.random() * 9000)
-								let registreActivite = 'active'
-								let conversation = 'desactivee'
-								let listeUtilisateurs = 'activee'
-								let editionNom = 'desactivee'
-								let ordre = 'croissant'
-								let largeur = 'normale'
-								let enregistrements = 'desactives'
-								let copieBloc = 'desactivee'
-								let affichageColonnes = []
-								let activiteId = 0
-								if (donnees.pad.hasOwnProperty('registreActivite')) {
-									registreActivite = donnees.pad.registreActivite
-								}
-								if (donnees.pad.hasOwnProperty('conversation')) {
-									conversation = donnees.pad.conversation
-								}
-								if (donnees.pad.hasOwnProperty('listeUtilisateurs')) {
-									listeUtilisateurs = donnees.pad.listeUtilisateurs
-								}
-								if (donnees.pad.hasOwnProperty('editionNom')) {
-									editionNom = donnees.pad.editionNom
-								}
-								if (donnees.pad.hasOwnProperty('ordre')) {
-									ordre = donnees.pad.ordre
-								}
-								if (donnees.pad.hasOwnProperty('largeur')) {
-									largeur = donnees.pad.largeur
-								}
-								if (donnees.pad.hasOwnProperty('enregistrements')) {
-									enregistrements = donnees.pad.enregistrements
-								}
-								if (donnees.pad.hasOwnProperty('copieBloc')) {
-									copieBloc = donnees.pad.copieBloc
-								}
-								if (donnees.pad.hasOwnProperty('affichageColonnes')) {
-									affichageColonnes = JSON.parse(donnees.pad.affichageColonnes)
-								} else {
-									JSON.parse(donnees.pad.colonnes).forEach(function () {
-										affichageColonnes.push(true)
 									})
 								}
-								if (parametres.activite === true) {
-									activiteId = donnees.pad.activite
-								}
-								if (!donnees.pad.fond.includes('/img/') && donnees.pad.fond.substring(0, 1) !== '#' && donnees.pad.fond !== '' && await fs.pathExists(path.normalize(cible + '/fichiers/' + path.basename(donnees.pad.fond)))) {
-									await fs.copy(path.normalize(cible + '/fichiers/' + path.basename(donnees.pad.fond)), path.normalize(chemin + '/' + path.basename(donnees.pad.fond), { overwrite: true }))
-								}
-								const multi = db.multi()
-								multi.incr('pad')
-								multi.hmset('pads:' + id, 'id', id, 'token', token, 'titre', donnees.pad.titre, 'identifiant', identifiant, 'fond', donnees.pad.fond, 'acces', donnees.pad.acces, 'code', code, 'contributions', donnees.pad.contributions, 'affichage', donnees.pad.affichage, 'registreActivite', registreActivite, 'conversation', conversation, 'listeUtilisateurs', listeUtilisateurs, 'editionNom', editionNom, 'fichiers', donnees.pad.fichiers, 'enregistrements', enregistrements, 'liens', donnees.pad.liens, 'documents', donnees.pad.documents, 'commentaires', donnees.pad.commentaires, 'evaluations', donnees.pad.evaluations, 'copieBloc', copieBloc, 'ordre', ordre, 'largeur', largeur, 'date', date, 'colonnes', donnees.pad.colonnes, 'affichageColonnes', JSON.stringify(affichageColonnes), 'bloc', donnees.pad.bloc, 'activite', activiteId, 'admins', JSON.stringify([]))
-								multi.sadd('pads-crees:' + identifiant, id)
-								multi.sadd('utilisateurs-pads:' + id, identifiant)
-								multi.hset('couleurs:' + identifiant, 'pad' + id, couleur)
-								if (parametres.activite === true) {
-									if (parametres.commentaires === false) {
-										donnees.activite = donnees.activite.filter(function (element) {
-											return element.type !== 'bloc-commente'
-										})
-									}
-									if (parametres.evaluations === false) {
-										donnees.activite = donnees.activite.filter(function (element) {
-											return element.type !== 'bloc-evalue'
-										})
-									}
-									for (const activite of donnees.activite) {
-										if (activite.hasOwnProperty('bloc') && activite.hasOwnProperty('identifiant') && activite.hasOwnProperty('titre') && activite.hasOwnProperty('date') && activite.hasOwnProperty('couleur') && activite.hasOwnProperty('type') && activite.hasOwnProperty('id')) {
-											blocs.forEach(function (item) {
-												if (activite.bloc === item.bloc) {
-													activite.bloc = item.blocId
-												}
-											})
-											multi.zadd('activite:' + id, activite.id, JSON.stringify(activite))
-										}
-									}
-								}
-								multi.exec(async function () {
-									await fs.remove(source)
-									await fs.remove(cible)
-									res.json({ id: id, token: token, titre: donnees.pad.titre, identifiant: identifiant, fond: donnees.pad.fond, acces: donnees.pad.acces, code: code, contributions: donnees.pad.contributions, affichage: donnees.pad.affichage, registreActivite: registreActivite, conversation: conversation, listeUtilisateurs: listeUtilisateurs, editionNom: editionNom, fichiers: donnees.pad.fichiers, enregistrements: enregistrements, liens: donnees.pad.liens, documents: donnees.pad.documents, commentaires: donnees.pad.commentaires, evaluations: donnees.pad.evaluations, copieBloc: copieBloc, ordre: ordre, largeur: largeur, date: date, colonnes: donnees.pad.colonnes, affichageColonnes: affichageColonnes, bloc: donnees.pad.bloc, activite: activiteId, admins: [] })
-								})
 							})
 						})
 					} else {
@@ -2456,104 +2473,113 @@ async function demarrerServeur () {
 		if (!identifiant) {
 			res.send('non_connecte')
 		} else {
-			televerserTemp(req, res, async function (err) {
-				if (err) { res.send('erreur_televersement'); return false }
-				const fichier = req.file
-				if (fichier.hasOwnProperty('mimetype') && fichier.hasOwnProperty('filename')) {
-					let mimetype = fichier.mimetype
-					const chemin = path.join(__dirname, '..', '/static/temp/' + fichier.filename)
-					const destination = path.join(__dirname, '..', '/static/temp/' + path.parse(fichier.filename).name + '.jpg')
-					const destinationPDF = path.join(__dirname, '..', '/static/temp/' + path.parse(fichier.filename).name + '.pdf')
-					if (mimetype.split('/')[0] === 'image') {
-						const extension = path.parse(fichier.filename).ext
-						if (extension.toLowerCase() === '.jpg' || extension.toLowerCase() === '.jpeg') {
-							sharp(chemin).withMetadata().rotate().jpeg().resize(1200, 1200, {
-								fit: sharp.fit.inside,
-								withoutEnlargement: true
-							}).toBuffer((err, buffer) => {
-								if (err) { res.send('erreur_televersement'); return false }
-								fs.writeFile(chemin, buffer, function() {
-									res.json({ fichier: fichier.filename, mimetype: mimetype })
-								})
-							})
-						} else if (extension.toLowerCase() !== '.gif') {
-							sharp(chemin).withMetadata().resize(1200, 1200, {
-								fit: sharp.fit.inside,
-								withoutEnlargement: true
-							}).toBuffer((err, buffer) => {
-								if (err) { res.send('erreur_televersement'); return false }
-								fs.writeFile(chemin, buffer, function() {
-									res.json({ fichier: fichier.filename, mimetype: mimetype })
-								})
-							})
-						} else {
-							res.json({ fichier: fichier.filename, mimetype: mimetype })
-						}
-					} else if (mimetype === 'application/pdf') {
-						gm(chemin + '[0]').setFormat('jpg').resize(450).quality(80).write(destination, function (erreur) {
-							if (erreur) {
-								res.json({ fichier: fichier.filename, mimetype: 'pdf', vignetteGeneree: false })
-							} else {
-								res.json({ fichier: fichier.filename, mimetype: 'pdf', vignetteGeneree: true })
-							}
-						})
-					} else if (mimetype === 'application/vnd.oasis.opendocument.presentation' || mimetype === 'application/vnd.oasis.opendocument.text' || mimetype === 'application/vnd.oasis.opendocument.spreadsheet') {
-						mimetype = 'document'
-						const docBuffer = await fs.readFile(chemin)
-						let pdfBuffer
-						try {
-							pdfBuffer = await libre.convertAsync(docBuffer, '.pdf', undefined)
-						} catch (err) {
-							pdfBuffer = 'erreur'
-						}
-						if (pdfBuffer && pdfBuffer !== 'erreur') {
-							await fs.writeFile(destinationPDF, pdfBuffer)
-							if (await fs.pathExists(destinationPDF)) {
-								gm(destinationPDF + '[0]').setFormat('jpg').resize(450).quality(80).write(destination, async function (erreur) {
-									await fs.remove(destinationPDF)
-									if (erreur) {
-										res.json({ fichier: fichier.filename, mimetype: mimetype, vignetteGeneree: false })
-									} else {
-										res.json({ fichier: fichier.filename, mimetype: mimetype, vignetteGeneree: true })
-									}
-								})
-							} else {
-								res.json({ fichier: fichier.filename, mimetype: mimetype, vignetteGeneree: false })
-							}
-						} else {
-							res.json({ fichier: fichier.filename, mimetype: mimetype, vignetteGeneree: false })
-						}
-					} else if (mimetype === 'application/msword' || mimetype === 'application/vnd.ms-powerpoint' || mimetype === 'application/vnd.ms-excel' || mimetype.includes('officedocument') === true) {
-						mimetype = 'office'
-						const docBuffer = await fs.readFile(chemin)
-						let pdfBuffer
-						try {
-							pdfBuffer = await libre.convertAsync(docBuffer, '.pdf', undefined)
-						} catch (err) {
-							pdfBuffer = 'erreur'
-						}
-						if (pdfBuffer && pdfBuffer !== 'erreur') {
-							await fs.writeFile(destinationPDF, pdfBuffer)
-							if (await fs.pathExists(destinationPDF)) {
-								gm(destinationPDF + '[0]').setFormat('jpg').resize(450).quality(80).write(destination, async function (erreur) {
-									await fs.remove(destinationPDF)
-									if (erreur) {
-										res.json({ fichier: fichier.filename, mimetype: mimetype, vignetteGeneree: false })
-									} else {
-										res.json({ fichier: fichier.filename, mimetype: mimetype, vignetteGeneree: true })
-									}
-								})
-							} else {
-								res.json({ fichier: fichier.filename, mimetype: mimetype, vignetteGeneree: false })
-							}
-						} else {
-							res.json({ fichier: fichier.filename, mimetype: mimetype, vignetteGeneree: false })
-						}
-					} else {
-						res.json({ fichier: fichier.filename, mimetype: mimetype })
-					}
+			const pad = req.body.pad
+			const dossier = path.join(__dirname, '..', '/static/' + definirDossierFichiers(pad))
+			checkDiskSpace(dossier).then(function (diskSpace) {
+				const espace = Math.round((diskSpace.free / diskSpace.size) * 100)
+				if (espace < 5) {
+					res.send('erreur_espace_disque')
 				} else {
-					res.send('erreur_televersement')
+					televerserTemp(req, res, async function (err) {
+						if (err) { res.send('erreur_televersement'); return false }
+						const fichier = req.file
+						if (fichier.hasOwnProperty('mimetype') && fichier.hasOwnProperty('filename')) {
+							let mimetype = fichier.mimetype
+							const chemin = path.join(__dirname, '..', '/static/temp/' + fichier.filename)
+							const destination = path.join(__dirname, '..', '/static/temp/' + path.parse(fichier.filename).name + '.jpg')
+							const destinationPDF = path.join(__dirname, '..', '/static/temp/' + path.parse(fichier.filename).name + '.pdf')
+							if (mimetype.split('/')[0] === 'image') {
+								const extension = path.parse(fichier.filename).ext
+								if (extension.toLowerCase() === '.jpg' || extension.toLowerCase() === '.jpeg') {
+									sharp(chemin).withMetadata().rotate().jpeg().resize(1200, 1200, {
+										fit: sharp.fit.inside,
+										withoutEnlargement: true
+									}).toBuffer((err, buffer) => {
+										if (err) { res.send('erreur_televersement'); return false }
+										fs.writeFile(chemin, buffer, function() {
+											res.json({ fichier: fichier.filename, mimetype: mimetype })
+										})
+									})
+								} else if (extension.toLowerCase() !== '.gif') {
+									sharp(chemin).withMetadata().resize(1200, 1200, {
+										fit: sharp.fit.inside,
+										withoutEnlargement: true
+									}).toBuffer((err, buffer) => {
+										if (err) { res.send('erreur_televersement'); return false }
+										fs.writeFile(chemin, buffer, function() {
+											res.json({ fichier: fichier.filename, mimetype: mimetype })
+										})
+									})
+								} else {
+									res.json({ fichier: fichier.filename, mimetype: mimetype })
+								}
+							} else if (mimetype === 'application/pdf') {
+								gm(chemin + '[0]').setFormat('jpg').resize(450).quality(80).write(destination, function (erreur) {
+									if (erreur) {
+										res.json({ fichier: fichier.filename, mimetype: 'pdf', vignetteGeneree: false })
+									} else {
+										res.json({ fichier: fichier.filename, mimetype: 'pdf', vignetteGeneree: true })
+									}
+								})
+							} else if (mimetype === 'application/vnd.oasis.opendocument.presentation' || mimetype === 'application/vnd.oasis.opendocument.text' || mimetype === 'application/vnd.oasis.opendocument.spreadsheet') {
+								mimetype = 'document'
+								const docBuffer = await fs.readFile(chemin)
+								let pdfBuffer
+								try {
+									pdfBuffer = await libre.convertAsync(docBuffer, '.pdf', undefined)
+								} catch (err) {
+									pdfBuffer = 'erreur'
+								}
+								if (pdfBuffer && pdfBuffer !== 'erreur') {
+									await fs.writeFile(destinationPDF, pdfBuffer)
+									if (await fs.pathExists(destinationPDF)) {
+										gm(destinationPDF + '[0]').setFormat('jpg').resize(450).quality(80).write(destination, async function (erreur) {
+											await fs.remove(destinationPDF)
+											if (erreur) {
+												res.json({ fichier: fichier.filename, mimetype: mimetype, vignetteGeneree: false })
+											} else {
+												res.json({ fichier: fichier.filename, mimetype: mimetype, vignetteGeneree: true })
+											}
+										})
+									} else {
+										res.json({ fichier: fichier.filename, mimetype: mimetype, vignetteGeneree: false })
+									}
+								} else {
+									res.json({ fichier: fichier.filename, mimetype: mimetype, vignetteGeneree: false })
+								}
+							} else if (mimetype === 'application/msword' || mimetype === 'application/vnd.ms-powerpoint' || mimetype === 'application/vnd.ms-excel' || mimetype.includes('officedocument') === true) {
+								mimetype = 'office'
+								const docBuffer = await fs.readFile(chemin)
+								let pdfBuffer
+								try {
+									pdfBuffer = await libre.convertAsync(docBuffer, '.pdf', undefined)
+								} catch (err) {
+									pdfBuffer = 'erreur'
+								}
+								if (pdfBuffer && pdfBuffer !== 'erreur') {
+									await fs.writeFile(destinationPDF, pdfBuffer)
+									if (await fs.pathExists(destinationPDF)) {
+										gm(destinationPDF + '[0]').setFormat('jpg').resize(450).quality(80).write(destination, async function (erreur) {
+											await fs.remove(destinationPDF)
+											if (erreur) {
+												res.json({ fichier: fichier.filename, mimetype: mimetype, vignetteGeneree: false })
+											} else {
+												res.json({ fichier: fichier.filename, mimetype: mimetype, vignetteGeneree: true })
+											}
+										})
+									} else {
+										res.json({ fichier: fichier.filename, mimetype: mimetype, vignetteGeneree: false })
+									}
+								} else {
+									res.json({ fichier: fichier.filename, mimetype: mimetype, vignetteGeneree: false })
+								}
+							} else {
+								res.json({ fichier: fichier.filename, mimetype: mimetype })
+							}
+						} else {
+							res.send('erreur_televersement')
+						}
+					})
 				}
 			})
 		}
@@ -2564,10 +2590,19 @@ async function demarrerServeur () {
 		if (!identifiant) {
 			res.send('non_connecte')
 		} else {
-			televerser(req, res, function (err) {
-				if (err) { res.send('erreur_televersement'); return false }
-				const fichier = req.file
-				res.send(fichier.filename)
+			const pad = req.body.pad
+			const dossier = path.join(__dirname, '..', '/static/' + definirDossierFichiers(pad))
+			checkDiskSpace(dossier).then(function (diskSpace) {
+				const espace = Math.round((diskSpace.free / diskSpace.size) * 100)
+				if (espace < 5) {
+					res.send('erreur_espace_disque')
+				} else {
+					televerser(req, res, function (err) {
+						if (err) { res.send('erreur_televersement'); return false }
+						const fichier = req.file
+						res.send(fichier.filename)
+					})
+				}
 			})
 		}
 	})
@@ -2577,30 +2612,39 @@ async function demarrerServeur () {
 		if (!identifiant) {
 			res.send('non_connecte')
 		} else {
-			televerserTemp(req, res, function (err) {
-				if (err) { res.send('erreur_televersement'); return false }
-				const fichier = req.file
-				const chemin = path.join(__dirname, '..', '/static/temp/' + fichier.filename)
-				const extension = path.parse(fichier.filename).ext
-				if (extension.toLowerCase() === '.jpg' || extension.toLowerCase() === '.jpeg') {
-					sharp(chemin).withMetadata().rotate().jpeg().resize(400, 400, {
-						fit: sharp.fit.inside,
-						withoutEnlargement: true
-					}).toBuffer((err, buffer) => {
-						if (err) { res.send('erreur_televersement'); return false }
-						fs.writeFile(chemin, buffer, function() {
-							res.send('/temp/' + fichier.filename)
-						})
-					})
+			const pad = req.body.pad
+			const dossier = path.join(__dirname, '..', '/static/' + definirDossierFichiers(pad))
+			checkDiskSpace(dossier).then(function (diskSpace) {
+				const espace = Math.round((diskSpace.free / diskSpace.size) * 100)
+				if (espace < 5) {
+					res.send('erreur_espace_disque')
 				} else {
-					sharp(chemin).withMetadata().resize(400, 400, {
-						fit: sharp.fit.inside,
-						withoutEnlargement: true
-					}).toBuffer((err, buffer) => {
+					televerserTemp(req, res, function (err) {
 						if (err) { res.send('erreur_televersement'); return false }
-						fs.writeFile(chemin, buffer, function() {
-							res.send('/temp/' + fichier.filename)
-						})
+						const fichier = req.file
+						const chemin = path.join(__dirname, '..', '/static/temp/' + fichier.filename)
+						const extension = path.parse(fichier.filename).ext
+						if (extension.toLowerCase() === '.jpg' || extension.toLowerCase() === '.jpeg') {
+							sharp(chemin).withMetadata().rotate().jpeg().resize(400, 400, {
+								fit: sharp.fit.inside,
+								withoutEnlargement: true
+							}).toBuffer((err, buffer) => {
+								if (err) { res.send('erreur_televersement'); return false }
+								fs.writeFile(chemin, buffer, function() {
+									res.send('/temp/' + fichier.filename)
+								})
+							})
+						} else {
+							sharp(chemin).withMetadata().resize(400, 400, {
+								fit: sharp.fit.inside,
+								withoutEnlargement: true
+							}).toBuffer((err, buffer) => {
+								if (err) { res.send('erreur_televersement'); return false }
+								fs.writeFile(chemin, buffer, function() {
+									res.send('/temp/' + fichier.filename)
+								})
+							})
+						}
 					})
 				}
 			})
@@ -2612,31 +2656,40 @@ async function demarrerServeur () {
 		if (!identifiant) {
 			res.send('non_connecte')
 		} else {
-			televerser(req, res, function (err) {
-				if (err) { res.send('erreur_televersement'); return false }
-				const fichier = req.file
-				const pad = req.body.pad
-				const chemin = path.join(__dirname, '..', '/static/' + definirDossierFichiers(pad) + '/' + pad + '/' + fichier.filename)
-				const extension = path.parse(fichier.filename).ext
-				if (extension.toLowerCase() === '.jpg' || extension.toLowerCase() === '.jpeg') {
-					sharp(chemin).withMetadata().rotate().jpeg().resize(1200, 1200, {
-						fit: sharp.fit.inside,
-						withoutEnlargement: true
-					}).toBuffer((err, buffer) => {
-						if (err) { res.send('erreur_televersement'); return false }
-						fs.writeFile(chemin, buffer, function() {
-							res.send('/' + definirDossierFichiers(pad) + '/' + pad + '/' + fichier.filename)
-						})
-					})
+			const pad = req.body.pad
+			const dossier = path.join(__dirname, '..', '/static/' + definirDossierFichiers(pad))
+			checkDiskSpace(dossier).then(function (diskSpace) {
+				const espace = Math.round((diskSpace.free / diskSpace.size) * 100)
+				if (espace < 5) {
+					res.send('erreur_espace_disque')
 				} else {
-					sharp(chemin).withMetadata().resize(1200, 1200, {
-						fit: sharp.fit.inside,
-						withoutEnlargement: true
-					}).toBuffer((err, buffer) => {
+					televerser(req, res, function (err) {
 						if (err) { res.send('erreur_televersement'); return false }
-						fs.writeFile(chemin, buffer, function() {
-							res.send('/' + definirDossierFichiers(pad) + '/' + pad + '/' + fichier.filename)
-						})
+						const fichier = req.file
+						const pad = req.body.pad
+						const chemin = path.join(__dirname, '..', '/static/' + definirDossierFichiers(pad) + '/' + pad + '/' + fichier.filename)
+						const extension = path.parse(fichier.filename).ext
+						if (extension.toLowerCase() === '.jpg' || extension.toLowerCase() === '.jpeg') {
+							sharp(chemin).withMetadata().rotate().jpeg().resize(1200, 1200, {
+								fit: sharp.fit.inside,
+								withoutEnlargement: true
+							}).toBuffer((err, buffer) => {
+								if (err) { res.send('erreur_televersement'); return false }
+								fs.writeFile(chemin, buffer, function() {
+									res.send('/' + definirDossierFichiers(pad) + '/' + pad + '/' + fichier.filename)
+								})
+							})
+						} else {
+							sharp(chemin).withMetadata().resize(1200, 1200, {
+								fit: sharp.fit.inside,
+								withoutEnlargement: true
+							}).toBuffer((err, buffer) => {
+								if (err) { res.send('erreur_televersement'); return false }
+								fs.writeFile(chemin, buffer, function() {
+									res.send('/' + definirDossierFichiers(pad) + '/' + pad + '/' + fichier.filename)
+								})
+							})
+						}
 					})
 				}
 			})

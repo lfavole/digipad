@@ -661,6 +661,8 @@ export default {
 						this.message = this.$t('erreurImportPad')
 					} else if (donnees === 'donnees_corrompues') {
 						this.message = this.$t('donneesCorrompuesImportPad')
+					} else if (donnees === 'erreur_espace_disque') {
+						this.message = this.$t('erreurEspaceDisque')
 					} else {
 						this.onglet = 'pads-crees'
 						this.padsCrees.push(donnees)
@@ -845,6 +847,8 @@ export default {
 					window.location.replace('/')
 				} else if (donnees === 'erreur_duplication') {
 					this.message = this.$t('erreurDuplicationPad')
+				} else if (donnees === 'erreur_espace_disque') {
+					this.message = this.$t('erreurEspaceDisque')
 				} else {
 					this.padsCrees.push(donnees)
 					this.notification = this.$t('padDuplique')

@@ -382,5 +382,6 @@
 	"padTransfere": "Podloga prenesena.",
 	"padCreeAvecCompte": "Ova podloga već pripada drugom korisniku.",
 	"utilisateurInexistant": "Ovaj račun ne postoji.",
-	"identifiantNonConforme": "Korisničko ime je prekratko ili sadrži nedopuštene znakove."
+	"identifiantNonConforme": "Korisničko ime je prekratko ili sadrži nedopuštene znakove.",
+	"erreurEspaceDisque": "Na tvrdom disku više nema slobodnog prostora. Datoteku nije moguće prenijeti."
 }

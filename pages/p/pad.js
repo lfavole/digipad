@@ -872,6 +872,7 @@ export default {
 			if (champ.files && champ.files[0] && fichiersAutorises.includes(extension) && champ.files[0].size < this.limite * 1024000) {
 				const fichier = champ.files[0]
 				const formulaire = new FormData()
+				formulaire.append('pad', this.pad.id)
 				formulaire.append('fichier', fichier)
 				axios.post(this.hote + '/api/televerser-fichier', formulaire, {
 					headers: {
@@ -889,6 +890,10 @@ export default {
 						champ.value = ''
 						this.progressionFichier = 0
 						this.message = this.$t('erreurTeleversementFichier')
+					} else if (donnees === 'erreur_espace_disque') {
+						champ.value = ''
+						this.progressionFichier = 0
+						this.message = this.$t('erreurEspaceDisque')
 					} else {
 						this.chargementMedia = true
 						this.media = donnees.fichier
@@ -996,8 +1001,13 @@ export default {
 				if (donnees === 'non_connecte') {
 					window.location.replace('/')
 				} else if (donnees === 'erreur_televersement') {
+					this.transcodage = false
 					this.progressionEnregistrement = false
 					this.message = this.$t('erreurTeleversementFichier')
+				} else if (donnees === 'erreur_espace_disque') {
+					this.transcodage = false
+					this.progressionEnregistrement = false
+					this.message = this.$t('erreurEspaceDisque')
 				} else {
 					this.modaleBloc = false
 					if (this.mode === 'creation') {
@@ -1382,6 +1392,7 @@ export default {
 			if (champ.files && champ.files[0] && formats.includes(extension) && champ.files[0].size < 3072000) {
 				const fichier = champ.files[0]
 				const formulaire = new FormData()
+				formulaire.append('pad', this.pad.id)
 				formulaire.append('fichier', fichier)
 				axios.post(this.hote + '/api/televerser-vignette', formulaire, {
 					headers: {
@@ -1399,6 +1410,10 @@ export default {
 						champ.value = ''
 						this.progressionVignette = 0
 						this.message = this.$t('erreurTeleversementVignette')
+					} else if (donnees === 'erreur_espace_disque') {
+						champ.value = ''
+						this.progressionVignette = 0
+						this.message = this.$t('erreurEspaceDisque')
 					} else {
 						this.vignette = donnees
 						this.$nextTick(function () {
@@ -2651,6 +2666,10 @@ export default {
 						champ.value = ''
 						this.progressionFond = 0
 						this.message = this.$t('erreurTeleversementFichier')
+					} else if (donnees === 'erreur_espace_disque') {
+						champ.value = ''
+						this.progressionFond = 0
+						this.message = this.$t('erreurEspaceDisque')
 					} else {
 						this.$socket.emit('modifierfond', this.pad.id, donnees, this.pad.fond, this.identifiant)
 					}
