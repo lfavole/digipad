@@ -64,6 +64,7 @@ VITE_NFS4_FOLDER (nom du dossier monté NFS, obligatoirement situé dans le doss
 VITE_NFS5_PAD_NUMBER (id de pad à partir de laquelle les fichiers seront enregistrés dans un 5e dossier monté NFS)
 VITE_NFS5_FOLDER (nom du dossier monté NFS, obligatoirement situé dans le dossier /static/. ex : /static/nfs5)
 AUTHORIZED_DOMAINS (domaines autorisés pour api serveur. ex : ladigitale.dev,example.com / par défaut *)
+ALERT_AVAILABLE_SPACE (pourcentage d'espace libre en dessous duquel une alerte est affichée et le téléversement de fichiers empêché / 10 par défaut)
 ```
 
 ### Projet Vue (Vue.js 3 et Vike) avec serveur Node.js (Express) et base de données Redis

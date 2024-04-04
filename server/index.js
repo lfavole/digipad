@@ -68,7 +68,7 @@ async function demarrerServeur () {
 	} else {
 		db = redis.createClient({ port: db_port })
 	}
-	let storeOptions, cookie, dureeSession, dateCron, domainesAutorises
+	let storeOptions, cookie, dureeSession, dateCron, domainesAutorises, minimumEspaceDisque
 	let maintenance = false
 	if (production) {
 		storeOptions = {
@@ -133,6 +133,11 @@ async function demarrerServeur () {
 	cron.schedule(dateCron, async function () {
 		await fs.emptyDir(path.join(__dirname, '..', '/static/temp'))
 	})
+
+	minimumEspaceDisque = 10
+	if (process.env.ALERT_AVAILABLE_SPACE) {
+		minimumEspaceDisque = process.env.ALERT_AVAILABLE_SPACE
+	}
 
 	// Charger plugin dayjs
 	dayjs.extend(localizedFormat)
@@ -921,7 +926,7 @@ async function demarrerServeur () {
 				const dossier = path.join(__dirname, '..', '/static/' + definirDossierFichiers(id))
 				checkDiskSpace(dossier).then(async function (diskSpace) {
 					const espace = Math.round((diskSpace.free / diskSpace.size) * 100)
-					if (espace < 5) {
+					if (espace < minimumEspaceDisque) {
 						res.send('erreur_espace_disque')
 					} else {
 						db.exists('pads:' + pad, async function (err, resultat) {
@@ -1386,7 +1391,7 @@ async function demarrerServeur () {
 							const dossier = path.join(__dirname, '..', '/static/' + definirDossierFichiers(id))
 							checkDiskSpace(dossier).then(async function (diskSpace) {
 								const espace = Math.round((diskSpace.free / diskSpace.size) * 100)
-								if (espace < 5) {
+								if (espace < minimumEspaceDisque) {
 									res.send('erreur_espace_disque')
 								} else {
 									const chemin = path.join(__dirname, '..', '/static/' + definirDossierFichiers(id) + '/' + id)
@@ -5637,7 +5642,7 @@ async function demarrerServeur () {
 				const dossier = path.join(__dirname, '..', '/static/' + definirDossierFichiers(pad))
 				checkDiskSpace(dossier).then(function (diskSpace) {
 					const espace = Math.round((diskSpace.free / diskSpace.size) * 100)
-					if (espace < 50) {
+					if (espace < minimumEspaceDisque) {
 						callback('erreur_espace_disque')
 					} else {
 						callback(null, true)
@@ -5674,7 +5679,7 @@ async function demarrerServeur () {
 				const dossier = path.join(__dirname, '..', '/static/' + definirDossierFichiers(pad))
 				checkDiskSpace(dossier).then(function (diskSpace) {
 					const espace = Math.round((diskSpace.free / diskSpace.size) * 100)
-					if (espace < 5) {
+					if (espace < minimumEspaceDisque) {
 						callback('erreur_espace_disque')
 					} else {
 						callback(null, true)
