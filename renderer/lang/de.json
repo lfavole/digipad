@@ -383,5 +383,5 @@
     "capsuleCopiee": "Kapsel wurde auf das Zielpad kopiert.",
     "confirmationRattacherPad": "Möchten Sie dieses Pad wirklich auf diese Benutzername übertragen?",
     "identifiantDestination": "Ziel-Benutzername",
-	"erreurEspaceDisque": "Es gibt keinen freien Speicherplatz mehr auf der Festplatte. Der Upload der Datei konnte nicht durchgeführt werden."
+	"erreurEspaceDisque": "Es gibt keinen freien Speicherplatz mehr auf der Festplatte des Servers. Der Upload der Datei konnte nicht durchgeführt werden."
 }
