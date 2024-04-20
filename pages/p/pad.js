@@ -334,6 +334,9 @@ export default {
 			}
 			if (!this.accesAutorise) {
 				this.modaleCodeAcces = true
+				this.$nextTick(function () {
+					document.querySelector('#champ-code').focus()
+				})
 			}
 		} else if (this.statut === 'utilisateur') {
 			window.location.href = '/u/' + this.identifiant
@@ -1946,6 +1949,9 @@ export default {
 				this.menuChat = false
 				this.menuOptions = false
 				this.modaleDiaporama = true
+				this.$nextTick(function () {
+					document.querySelector('#diapositive').addEventListener('keydown', this.activerClavierDiaporama)
+				}.bind(this))
 				if (this.pad.commentaires === 'actives') {
 					this.$socket.emit('commentaires', donneesBloc.bloc, 'diapositive')
 				} else {
@@ -1953,6 +1959,13 @@ export default {
 						this.chargerDiapositive()
 					}.bind(this))
 				}
+			}
+		},
+		activerClavierDiaporama (event) {
+			if (event.ctrlKey && event.key === 'ArrowLeft') {
+				this.afficherBlocPrecedent()
+			} else if (event.ctrlKey && event.key === 'ArrowRight') {
+				this.afficherBlocSuivant()
 			}
 		},
 		afficherBlocPrecedent () {
@@ -1973,6 +1986,10 @@ export default {
 			}
 			this.definirBlocActif(this.donneesBloc.bloc)
 			if (this.pad.commentaires === 'actives') {
+				this.editeurCommentaire.content.innerHTML = ''
+				if (this.editionCommentaire) {
+					this.annulerModifierCommentaire()
+				}
 				this.$socket.emit('commentaires', this.donneesBloc.bloc, 'diapositive')
 			} else {
 				this.chargerDiapositive()
@@ -1996,6 +2013,10 @@ export default {
 			}
 			this.definirBlocActif(this.donneesBloc.bloc)
 			if (this.pad.commentaires === 'actives') {
+				this.editeurCommentaire.content.innerHTML = ''
+				if (this.editionCommentaire) {
+					this.annulerModifierCommentaire()
+				}
 				this.$socket.emit('commentaires', this.donneesBloc.bloc, 'diapositive')
 			} else {
 				this.chargerDiapositive()
@@ -2067,6 +2088,7 @@ export default {
 			}
 		},
 		fermerModaleDiaporama () {
+			document.querySelector('#diapositive').removeEventListener('keydown', this.activerClavierDiaporama)
 			this.modaleDiaporama = false
 			this.commentaires = []
 			this.commentaire = ''
