@@ -188,6 +188,9 @@ async function demarrerServeur () {
 	if (process.env.VITE_NFS5_FOLDER && process.env.VITE_NFS5_FOLDER !== '') {
 		app.use('/' + process.env.VITE_NFS5_FOLDER, express.static('static/' + process.env.VITE_NFS5_FOLDER))
 	}
+	if (process.env.VITE_NFS6_FOLDER && process.env.VITE_NFS6_FOLDER !== '') {
+		app.use('/' + process.env.VITE_NFS6_FOLDER, express.static('static/' + process.env.VITE_NFS6_FOLDER))
+	}
 
 	if (production) {
 		const sirv = (await import('sirv')).default
@@ -5697,7 +5700,9 @@ async function demarrerServeur () {
 	}
 
 	function definirDossierFichiers (id) {
-		if (process.env.VITE_NFS5_PAD_NUMBER && process.env.VITE_NFS5_PAD_NUMBER !== '' && process.env.VITE_NFS5_FOLDER && process.env.VITE_NFS5_FOLDER !== '' && parseInt(id) > parseInt(process.env.VITE_NFS5_PAD_NUMBER)) {
+		if (process.env.VITE_NFS6_PAD_NUMBER && process.env.VITE_NFS6_PAD_NUMBER !== '' && process.env.VITE_NFS6_FOLDER && process.env.VITE_NFS6_FOLDER !== '' && parseInt(id) > parseInt(process.env.VITE_NFS6_PAD_NUMBER)) {
+			return process.env.VITE_NFS6_FOLDER
+		} else if (process.env.VITE_NFS5_PAD_NUMBER && process.env.VITE_NFS5_PAD_NUMBER !== '' && process.env.VITE_NFS5_FOLDER && process.env.VITE_NFS5_FOLDER !== '' && parseInt(id) > parseInt(process.env.VITE_NFS5_PAD_NUMBER)) {
 			return process.env.VITE_NFS5_FOLDER
 		} else if (process.env.VITE_NFS4_PAD_NUMBER && process.env.VITE_NFS4_PAD_NUMBER !== '' && process.env.VITE_NFS4_FOLDER && process.env.VITE_NFS4_FOLDER !== '' && parseInt(id) > parseInt(process.env.VITE_NFS4_PAD_NUMBER)) {
 			return process.env.VITE_NFS4_FOLDER
