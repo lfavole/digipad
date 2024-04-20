@@ -652,13 +652,13 @@
 		<!-- Affichage colonne // avec recherche -->
 		<div id="blocs" class="colonnes" v-else-if="pad.affichage === 'colonnes' && action !== 'organiser' && recherche">
 			<template v-for="(col, indexCol) in pad.colonnes">
-				<section :id="'colonne' + indexCol" class="colonne" :class="{'masquee': admin && pad.hasOwnProperty('affichageColonnes') && !pad.affichageColonnes[indexCol], 'large': pad.hasOwnProperty('largeur') && pad.largeur === 'large'}" v-if="!pad.hasOwnProperty('affichageColonnes') || admin || (pad.hasOwnProperty('affichageColonnes') && pad.affichageColonnes[indexCol])" :key="'colonne_' + indexCol">
+				<section :id="'colonne' + indexCol" class="colonne" :class="{'masquee': admin && pad.hasOwnProperty('affichageColonnes') && !pad.affichageColonnes[indexCol], 'large': pad.hasOwnProperty('largeur') && pad.largeur === 'large'}" v-if="blocsRecherche[indexCol].length > 0 && (!pad.hasOwnProperty('affichageColonnes') || admin || (pad.hasOwnProperty('affichageColonnes') && pad.affichageColonnes[indexCol]))" :key="'colonne_' + indexCol">
 					<div class="bloc haut">
 						<div class="titre-colonne">
 							<span>{{ col }}</span>
 						</div>
 					</div>
-					<div class="conteneur-colonne ascenseur" v-if="blocsRecherche[indexCol].length > 0">
+					<div class="conteneur-colonne ascenseur">
 						<div :id="item.bloc" class="bloc" :class="{'privee': item.visibilite === 'privee'}" v-for="(item, indexItem) in blocsRecherche[indexCol]" :style="{'border-color': item.couleur}" :data-bloc="item.bloc" :key="'bloc_' + indexItem">
 							<div class="contenu">
 								<div class="titre" v-if="item.titre !== ''" :style="{'background': eclaircirCouleur(item.couleur)}">
