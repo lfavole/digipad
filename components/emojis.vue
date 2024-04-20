@@ -90,7 +90,12 @@ export default {
 }
 
 #emojis.commentaire-modifie {
-	top: 11.5rem;
+	top: 6rem;
+	left: -1px;
+}
+
+#emojis.commentaire-modifie.diaporama {
+	bottom: 12rem;
 	left: -1px;
 }
 
