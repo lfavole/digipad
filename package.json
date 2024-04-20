@@ -1,6 +1,6 @@
 {
   "name": "digipad",
-  "version": "1.1.22",
+  "version": "1.1.23",
   "homepage": "https://digipad.app",
   "repository": {
     "type": "git",
@@ -18,7 +18,8 @@
     "build": "vite build",
     "server": "nodemon --watch server ./server",
     "server:prod": "cross-env NODE_ENV=production node ./server",
-    "lightendb": "cross-env NODE_ENV=production node server/exporter-pads-json.js"
+    "lightendb": "cross-env NODE_ENV=production node server/exporter-pads-json.js",
+    "maintenance": "cross-env NODE_ENV=production node server/maintenance.js"
   },
   "type": "module",
   "dependencies": {
