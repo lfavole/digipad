@@ -14,5 +14,9 @@ app.get('/', function (req, res) {
     res.sendFile(path.join(__dirname, '..', '/static/maintenance/maintenance.html'))
 })
 
+app.get('*', function (req, res) {
+    res.redirect('/')
+})
+
 const port = process.env.PORT || 3000
 httpServer.listen(port)
