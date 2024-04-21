@@ -133,7 +133,7 @@
 			<div id="mentions-legales" class="modale" role="document">
 				<div class="en-tete">
 					<span class="titre">{{ $t('mentionsLegales') }}</span>
-					<span class="fermer" @click="modaleMentionsLegales = false"><i class="material-icons">close</i></span>
+					<span class="fermer" @click="modale = ''"><i class="material-icons">close</i></span>
 				</div>
 				<div class="conteneur">
 					<div class="contenu">
@@ -141,7 +141,7 @@
 						<label>{{ $t('administrationEtDeveloppement') }}</label>
 						<p>La Digitale - Emmanuel ZIMMERT</p>
 						<label>{{ $t('contact') }}</label>
-						<p>{{ $t('courriel') }} ez@ladigitale.dev – {{ $t('siteWeb') }} https://ladigitale.dev</p>
+						<p>{{ $t('courriel') }} ez[at]ladigitale.dev – {{ $t('siteWeb') }} https://ladigitale.dev</p>
 						<label>{{ $t('proprieteIntellectuelle') }}</label>
 						<p>{{ $t('mentionsLegales2') }}</p>
 						<p>{{ $t('mentionsLegales3') }}</p>
