@@ -9,6 +9,7 @@ async function onBeforeRender (pageContext) {
 	const token = pageContext.routeParams.token
 	const identifiant = pageContext.identifiant
 	const statut = pageContext.statut
+	let pads = pageContext.pads
 	const reponse = await axios.post(pageContext.hote + '/api/recuperer-donnees-pad', {
 		id: id,
 		token: token,
@@ -22,14 +23,14 @@ async function onBeforeRender (pageContext) {
 		}
 		pageProps = { redirection }
 	})
-	if (!reponse || !reponse.hasOwnProperty('data') || !reponse.data.hasOwnProperty('pad') || !reponse.data.hasOwnProperty('blocs') || !reponse.data.hasOwnProperty('activite') || (reponse.data && reponse.data === 'erreur_pad')) {
+	if (!reponse || !reponse.hasOwnProperty('data') || !reponse.data.hasOwnProperty('pad') || !reponse.data.hasOwnProperty('blocs') || !reponse.data.hasOwnProperty('activite') || (reponse.data && reponse.data === 'erreur')) {
 		if (statut === 'utilisateur') {
 			redirection = '/u/' + identifiant
 		}
 		pageProps = { redirection }
 	} else {
 		let admin = false
-		if ((reponse.data.pad.hasOwnProperty('identifiant') && reponse.data.pad.identifiant === identifiant) || (reponse.data.pad.hasOwnProperty('admins') && reponse.data.pad.admins.includes(identifiant))) {
+		if ((reponse.data.pad.hasOwnProperty('identifiant') && reponse.data.pad.identifiant === identifiant) || (reponse.data.pad.hasOwnProperty('admins') && reponse.data.pad.admins.includes(identifiant)) || (statut === 'auteur' && reponse.data.pad.hasOwnProperty('id') && pads.includes(reponse.data.pad.id))) {
 			admin = true
 		}
 		if (!admin && reponse.data.pad.acces === 'prive' && statut === 'utilisateur') {
@@ -44,14 +45,16 @@ async function onBeforeRender (pageContext) {
 			const langues = pageContext.langues
 			const nom = pageContext.nom
 			const langue = pageContext.langue
-			const acces = pageContext.acces
-			const pads = pageContext.pads
-			const digidrive = pageContext.digidrive
+			let digidrive = pageContext.digidrive
 			const pad = reponse.data.pad
 			const blocs = reponse.data.blocs
 			const activite = reponse.data.activite
 			const titre = pad.titre + ' - Digipad by La Digitale'
-			pageProps = { params, hote, userAgent, langues, identifiant, nom, langue, statut, acces, pads, digidrive, pad, blocs, activite, titre }
+			if (!admin) {
+				digidrive = []
+				pads = []
+			}
+			pageProps = { params, hote, userAgent, langues, identifiant, nom, langue, statut, pads, digidrive, pad, blocs, activite, titre }
 		}
 	}
 	return {
