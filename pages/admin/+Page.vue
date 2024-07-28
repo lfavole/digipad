@@ -2,147 +2,147 @@
 	<div id="page" v-if="acces">
 		<div id="accueil">
 			<div id="langues">
-				<span class="bouton" role="button" tabindex="0" :class="{'selectionne': langue === 'fr'}" @click="modifierLangue('fr')">FR</span>
-				<span class="bouton" role="button" tabindex="0" :class="{'selectionne': langue === 'es'}" @click="modifierLangue('es')">ES</span>
-				<span class="bouton" role="button" tabindex="0" :class="{'selectionne': langue === 'it'}" @click="modifierLangue('it')">IT</span>
-				<span class="bouton" role="button" tabindex="0" :class="{'selectionne': langue === 'de'}" @click="modifierLangue('de')">DE</span>
-				<span class="bouton" role="button" tabindex="0" :class="{'selectionne': langue === 'hr'}" @click="modifierLangue('hr')">HR</span>
-				<span class="bouton" role="button" tabindex="0" :class="{'selectionne': langue === 'en'}" @click="modifierLangue('en')">EN</span>
+				<span class="bouton" role="button" :tabindex="definirTabIndex()" :class="{'selectionne': langue === 'fr'}" @click="modifierLangue('fr')" @keydown.enter="modifierLangue('fr')">FR</span>
+				<span class="bouton" role="button" :tabindex="definirTabIndex()" :class="{'selectionne': langue === 'es'}" @click="modifierLangue('es')" @keydown.enter="modifierLangue('es')">ES</span>
+				<span class="bouton" role="button" :tabindex="definirTabIndex()" :class="{'selectionne': langue === 'it'}" @click="modifierLangue('it')" @keydown.enter="modifierLangue('it')">IT</span>
+				<span class="bouton" role="button" :tabindex="definirTabIndex()" :class="{'selectionne': langue === 'de'}" @click="modifierLangue('de')" @keydown.enter="modifierLangue('de')">DE</span>
+				<span class="bouton" role="button" :tabindex="definirTabIndex()" :class="{'selectionne': langue === 'hr'}" @click="modifierLangue('hr')" @keydown.enter="modifierLangue('hr')">HR</span>
+				<span class="bouton" role="button" :tabindex="definirTabIndex()" :class="{'selectionne': langue === 'en'}" @click="modifierLangue('en')" @keydown.enter="modifierLangue('en')">EN</span>
 			</div>
 			<div id="conteneur">
 				<h1>
 					<span>{{ $t('maintenance') }}</span>
 				</h1>
 				<div class="conteneur actions">
-					<span class="bouton maintenance" role="button" tabindex="0" @click="activerMaintenance" v-if="maintenance === false">{{ $t('activerMaintenance') }}</span>
-					<span class="bouton maintenance" role="button" tabindex="0" @click="desactiverMaintenance" v-else>{{ $t('desactiverMaintenance') }}</span>
+					<span class="bouton maintenance" role="button" :tabindex="definirTabIndex()" @click="activerMaintenance" @keydown.enter="activerMaintenance" v-if="maintenance === false">{{ $t('activerMaintenance') }}</span>
+					<span class="bouton maintenance" role="button" :tabindex="definirTabIndex()" @click="desactiverMaintenance" @keydown.enter="desactiverMaintenance" v-else>{{ $t('desactiverMaintenance') }}</span>
 				</div>
 				<h1>
 					<span>{{ $t('modifierMotDePasseUtilisateur') }}</span>
 				</h1>
 				<div class="conteneur">
-					<label>{{ $t('identifiant') }}</label>
-					<input type="text" :value="identifiant" @input="identifiant = $event.target.value">
+					<label for="champ-identifiant">{{ $t('identifiant') }}</label>
+					<input id="champ-identifiant" type="text" :value="identifiant" @input="identifiant = $event.target.value">
 				</div>
 				<div class="conteneur">
-					<label>{{ $t('email') }}</label>
-					<input type="text" :value="email" @input="email = $event.target.value">
+					<label for="champ-email">{{ $t('email') }}</label>
+					<input id="champ-email" type="text" :value="email" @input="email = $event.target.value">
 				</div>
 				<div class="conteneur">
-					<label>{{ $t('motDePasse') }}</label>
-					<input type="text" maxlength="48" :value="motdepasse" @input="motdepasse = $event.target.value">
+					<label for="champ-motdepasse">{{ $t('motDePasse') }}</label>
+					<input id="champ-motdepasse" type="text" maxlength="48" :value="motdepasse" @input="motdepasse = $event.target.value" @keydown.enter="modifierMotDePasse">
 				</div>
 				<div class="conteneur actions">
-					<span class="bouton" role="button" tabindex="0" @click="modifierMotDePasse">{{ $t('valider') }}</span>
+					<span class="bouton" role="button" :tabindex="definirTabIndex()" @click="modifierMotDePasse" @keydown.enter="modifierMotDePasse">{{ $t('valider') }}</span>
 				</div>
 				<h1>
 					<span>{{ $t('recupererDonneesPad') }}</span>
 				</h1>
 				<div class="conteneur">
-					<label>{{ $t('numeroPad') }}</label>
-					<input type="number" :value="padId" @input="padId = $event.target.value">
+					<label for="champ-numero-pad">{{ $t('numeroPad') }}</label>
+					<input id="champ-numero-pad" type="number" :value="padId" @input="padId = $event.target.value" @keydown.enter="recupererDonneesPad">
 				</div>
 				<div class="conteneur" v-if="donneesPad !== ''">
 					<span class="donnees">{{ donneesPad }}</span>
 				</div>
 				<div class="conteneur actions">
-					<span class="bouton" role="button" tabindex="0" @click="recupererDonneesPad">{{ $t('valider') }}</span>
+					<span class="bouton" role="button" :tabindex="definirTabIndex()" @click="recupererDonneesPad" @keydown.enter="recupererDonneesPad">{{ $t('valider') }}</span>
 				</div>
 				<h1>
 					<span>{{ $t('modifierDonneesPad') }}</span>
 				</h1>
 				<div class="conteneur">
-					<label>{{ $t('numeroPad') }}</label>
-					<input type="number" :value="padIdM" @input="padIdM = $event.target.value">
+					<label for="champ-numero-pad-m">{{ $t('numeroPad') }}</label>
+					<input id="champ-numero-pad-m" type="number" :value="padIdM" @input="padIdM = $event.target.value">
 				</div>
 				<div class="conteneur">
-					<label>{{ $t('champ') }}</label>
-					<select @change="champ = $event.target.value">
+					<label for="champ">{{ $t('champ') }}</label>
+					<select id="champ" @change="champ = $event.target.value">
 						<option value="" :selected="champ === ''">-</option>
 						<option value="code" :selected="champ === 'code'">{{ $t('codeAcces') }}</option>
 						<option value="motdepasse" :selected="champ === 'motdepasse'">{{ $t('motDePasse') }}</option>
 					</select>
 				</div>
 				<div class="conteneur">
-					<label>{{ $t('valeur') }}</label>
-					<input type="text" :value="valeur" :maxlength="18" @input="valeur = $event.target.value" v-if="champ === 'code'">
-					<input type="text" :value="valeur" @input="valeur = $event.target.value" v-else>
+					<label for="champ-valeur">{{ $t('valeur') }}</label>
+					<input id="champ-valeur" type="text" :value="valeur" :maxlength="18" @input="valeur = $event.target.value" v-if="champ === 'code'">
+					<input id="champ-valeur" type="text" :value="valeur" @input="valeur = $event.target.value" v-else>
 				</div>
 				<div class="conteneur actions">
-					<span class="bouton" role="button" tabindex="0" @click="modifierDonneesPad">{{ $t('valider') }}</span>
+					<span class="bouton" role="button" :tabindex="definirTabIndex()" @click="modifierDonneesPad" @keydown.enter="modifierDonneesPad">{{ $t('valider') }}</span>
 				</div>
 				<h1>
 					<span>{{ $t('exporterPad') }}</span>
 				</h1>
 				<div class="conteneur">
-					<label>{{ $t('numeroPad') }}</label>
-					<input type="number" :value="padIdE" @input="padIdE = $event.target.value">
+					<label for="champ-numero-pad-e">{{ $t('numeroPad') }}</label>
+					<input id="champ-numero-pad-e" type="number" :value="padIdE" @input="padIdE = $event.target.value" @keydown.enter="exporterPad">
 				</div>
 				<div class="conteneur actions">
-					<span class="bouton" role="button" tabindex="0" @click="exporterPad">{{ $t('valider') }}</span>
+					<span class="bouton" role="button" :tabindex="definirTabIndex()" @click="exporterPad" @keydown.enter="exporterPad">{{ $t('valider') }}</span>
 				</div>
 				<h1>
 					<span>{{ $t('rattacherPad') }}</span>
 				</h1>
 				<div class="conteneur">
-					<label>{{ $t('numeroPad') }}</label>
-					<input type="number" :value="padIdR" @input="padIdR = $event.target.value">
+					<label for="champ-numero-pad-r">{{ $t('numeroPad') }}</label>
+					<input id="champ-numero-pad-r" type="number" :value="padIdR" @input="padIdR = $event.target.value">
 				</div>
 				<div class="conteneur">
-					<label>{{ $t('identifiantDestination') }}</label>
-					<input type="text" :value="identifiantR" @input="identifiantR = $event.target.value">
+					<label for="champ-destination">{{ $t('identifiantDestination') }}</label>
+					<input id="champ-destination" type="text" :value="identifiantR" @input="identifiantR = $event.target.value">
 				</div>
 				<div class="conteneur actions">
-					<span class="bouton" role="button" tabindex="0" @click="modale = 'rattacher-pad'">{{ $t('valider') }}</span>
+					<span class="bouton" role="button" :tabindex="definirTabIndex()" @click="afficherModaleRattacher" @keydown.enter="afficherModaleRattacher">{{ $t('valider') }}</span>
 				</div>
 				<h1>
 					<span>{{ $t('supprimerPad') }}</span>
 				</h1>
 				<div class="conteneur">
-					<label>{{ $t('numeroPad') }}</label>
-					<input type="number" :value="padIdS" @input="padIdS = $event.target.value">
+					<label for="champ-numero-pad-s">{{ $t('numeroPad') }}</label>
+					<input id="champ-numero-pad-s" type="number" :value="padIdS" @input="padIdS = $event.target.value">
 				</div>
 				<div class="conteneur">
 					<div class="conteneur-interrupteur">
 						<span>{{ $t('supprimerFichiersServeur') }}</span>
-						<label class="bouton-interrupteur">
-							<input type="checkbox" :checked="suppressionFichiers" @change="modifierSuppressionFichiers">
+						<label class="bouton-interrupteur" :tabindex="definirTabIndex()" @keydown.enter="activerInput('suppression-fichier')">
+							<input id="suppression-fichier" type="checkbox" :checked="suppressionFichiers" @change="modifierSuppressionFichiers">
 							<span class="barre" />
 						</label>
 					</div>
 				</div>
 				<div class="conteneur actions">
-					<span class="bouton" role="button" tabindex="0" @click="modale = 'supprimer-pad'">{{ $t('valider') }}</span>
+					<span class="bouton" role="button" :tabindex="definirTabIndex()" @click="afficherModaleSupprimerPad" @keydown.enter="afficherModaleSupprimerPad">{{ $t('valider') }}</span>
 				</div>
 				<h1>
 					<span>{{ $t('transfererCompte') }}</span>
 				</h1>
 				<div class="conteneur">
-					<label>{{ $t('identifiantCompteATransferer') }}</label>
-					<input type="text" :value="identifiantO" @input="identifiantO = $event.target.value">
+					<label for="champ-identifiant-transferer">{{ $t('identifiantCompteATransferer') }}</label>
+					<input id="champ-identifiant-transferer" type="text" :value="identifiantO" @input="identifiantO = $event.target.value">
 				</div>
 				<div class="conteneur">
-					<label>{{ $t('identifiantDestination') }}</label>
-					<input type="text" :value="identifiantT" @input="identifiantT = $event.target.value">
+					<label for="champ-identifiant-destination">{{ $t('identifiantDestination') }}</label>
+					<input id="champ-identifiant-destination" type="text" :value="identifiantT" @input="identifiantT = $event.target.value">
 				</div>
 				<div class="conteneur actions">
-					<span class="bouton" role="button" tabindex="0" @click="modale = 'transferer-compte'">{{ $t('valider') }}</span>
+					<span class="bouton" role="button" :tabindex="definirTabIndex()" @click="afficherModaleTransfererCompte" @keydown.enter="afficherModaleTransfererCompte">{{ $t('valider') }}</span>
 				</div>
 				<h1>
 					<span>{{ $t('supprimerCompte') }}</span>
 				</h1>
 				<div class="conteneur">
-					<label>{{ $t('identifiant') }}</label>
-					<input type="text" :value="identifiantS" @input="identifiantS = $event.target.value">
+					<label for="champ-identifiant-s">{{ $t('identifiant') }}</label>
+					<input id="champ-identifiant-s" type="text" :value="identifiantS" @input="identifiantS = $event.target.value">
 				</div>
 				<div class="conteneur actions">
-					<span class="bouton" role="button" tabindex="0" @click="modale = 'supprimer-compte'">{{ $t('valider') }}</span>
+					<span class="bouton" role="button" :tabindex="definirTabIndex()" @click="afficherModaleSupprimerCompte" @keydown.enter="afficherModaleSupprimerCompte">{{ $t('valider') }}</span>
 				</div>
 			</div>
 		</div>
 
-		<div id="conteneur-message" class="conteneur-modale" role="dialog" tabindex="-1" v-if="modale !== ''">
-			<div class="modale" role="document">
+		<div id="conteneur-message" class="conteneur-modale" v-if="modale !== ''">
+			<div class="modale" role="dialog">
 				<div class="conteneur">
 					<div class="contenu">
 						<div class="message" v-html="$t('confirmationRattacherPad')" v-if="modale === 'rattacher-pad'" />
@@ -150,11 +150,11 @@
 						<div class="message" v-html="$t('confirmationTransfererCompte')" v-else-if="modale === 'transferer-compte'" />
 						<div class="message" v-html="$t('confirmationSupprimerCompteAdmin')" v-else-if="modale === 'supprimer-compte'" />
 						<div class="actions">
-							<span role="button" tabindex="0" class="bouton" @click="modale = ''">{{ $t('non') }}</span>
-							<span role="button" tabindex="0" class="bouton" @click="rattacherPad" v-if="modale === 'rattacher-pad'">{{ $t('oui') }}</span>
-							<span role="button" tabindex="0" class="bouton" @click="supprimerPad" v-else-if="modale === 'supprimer-pad'">{{ $t('oui') }}</span>
-							<span role="button" tabindex="0" class="bouton" @click="transfererCompte" v-else-if="modale === 'transferer-compte'">{{ $t('oui') }}</span>
-							<span role="button" tabindex="0" class="bouton" @click="supprimerCompte" v-else-if="modale === 'supprimer-compte'">{{ $t('oui') }}</span>
+							<span class="bouton" role="button" :tabindex="message === '' ? 0 : -1" @click="fermerModale" @keydown.enter="fermerModale">{{ $t('non') }}</span>
+							<span class="bouton" role="button" :tabindex="message === '' ? 0 : -1" @click="rattacherPad" @keydown.enter="rattacherPad" v-if="modale === 'rattacher-pad'">{{ $t('oui') }}</span>
+							<span class="bouton" role="button" :tabindex="message === '' ? 0 : -1" @click="supprimerPad" @keydown.enter="supprimerPad" v-else-if="modale === 'supprimer-pad'">{{ $t('oui') }}</span>
+							<span class="bouton" role="button" :tabindex="message === '' ? 0 : -1" @click="transfererCompte" @keydown.enter="transfererCompte" v-else-if="modale === 'transferer-compte'">{{ $t('oui') }}</span>
+							<span class="bouton" role="button" :tabindex="message === '' ? 0 : -1" @click="supprimerCompte" @keydown.enter="supprimerCompte" v-else-if="modale === 'supprimer-compte'">{{ $t('oui') }}</span>
 						</div>
 					</div>
 				</div>
@@ -163,7 +163,7 @@
 
 		<Notification :notification="notification" @fermer="notification = ''" v-if="notification !== ''" />
 
-		<Message :message="message" @fermer="message = ''" v-if="message !== ''" />
+		<Message :message="message" @elementPrecedent="definirElementPrecedent" @fermer="fermerMessage" v-if="message !== ''" />
 
 		<Chargement v-if="chargement" />
 	</div>
@@ -209,6 +209,7 @@ export default {
 			valeur: '',
 			maintenance: false,
 			suppressionFichiers: true,
+			elementPrecedent: null,
 			hote: this.$pageContext.pageProps.hote,
 			langue: this.$pageContext.pageProps.langue
 		}
@@ -230,9 +231,13 @@ export default {
 				if (donnees === 'acces_verifie') {
 					this.acces = true
 					this.admin = motdepasse
+					document.addEventListener('keydown', this.gererClavier, false)
 				}
 			}.bind(this))
 		}
+	},
+	beforeUnmount () {
+		document.removeEventListener('keydown', this.gererClavier, false)
 	},
 	methods: {
 		modifierLangue (langue) {
@@ -250,11 +255,17 @@ export default {
 				}.bind(this))
 			}
 		},
+		activerInput (id) {
+			document.querySelector('#' + id).click()
+		},
+		definirTabIndex () {
+			return this.modale === '' && this.message === '' ? 0 : -1
+		},
 		activerMaintenance () {
-			this.$socket.emit('activermaintenance')
+			this.$socket.emit('activermaintenance', this.admin)
 		},
 		desactiverMaintenance () {
-			this.$socket.emit('desactivermaintenance')
+			this.$socket.emit('desactivermaintenance', this.admin)
 		},
 		modifierMotDePasse () {
 			if (this.motdepasse.trim() !== '' && (this.identifiant !== '' || this.email !== '')) {
@@ -292,6 +303,7 @@ export default {
 			if (this.padId !== '') {
 				this.chargement = true
 				axios.post(this.hote + '/api/recuperer-donnees-pad-admin', {
+					admin: this.admin,
 					padId: this.padId
 				}).then(function (reponse) {
 					this.chargement = false
@@ -300,6 +312,8 @@ export default {
 						this.message = this.$t('erreurActionServeur')
 					} else if (donnees === 'pad_inexistant') {
 						this.message = this.$t('padInexistant')
+					} else if (donnees === 'non_autorise') {
+						this.message = this.$t('actionNonAutorisee')
 					} else {
 						this.donneesPad = donnees
 					}
@@ -314,6 +328,7 @@ export default {
 			if (this.padIdM !== '' && this.champ !== '' && this.valeur.trim() !== '') {
 				this.chargement = true
 				axios.post(this.hote + '/api/modifier-donnees-pad-admin', {
+					admin: this.admin,
 					padId: this.padIdM,
 					champ: this.champ,
 					valeur: this.valeur
@@ -324,6 +339,8 @@ export default {
 						this.message = this.$t('erreurActionServeur')
 					} else if (donnees === 'pad_inexistant') {
 						this.message = this.$t('padInexistant')
+					} else if (donnees === 'non_autorise') {
+						this.message = this.$t('actionNonAutorisee')
 					} else {
 						this.notification = this.$t('donneesModifiees')
 					}
@@ -351,13 +368,14 @@ export default {
 					identifiant: '',
 					admin: this.admin
 				}).then(function (reponse) {
+					this.chargement = false
 					const donnees = reponse.data
 					if (donnees === 'erreur_export') {
-						this.chargement = false
 						this.message = this.$t('erreurExportPad')
+					} else if (donnees === 'non_autorise') {
+						this.message = this.$t('actionNonAutorisee')
 					} else {
 						saveAs('/temp/' + donnees, 'pad-' + this.padIdE + '.zip')
-						this.chargement = false
 						this.padIdE = ''
 					}
 				}.bind(this)).catch(function () {
@@ -367,11 +385,19 @@ export default {
 				}.bind(this))
 			}
 		},
+		afficherModaleRattacher () {
+			this.elementPrecedent = (document.activeElement || document.body)
+			this.modale = 'rattacher-pad'
+			this.$nextTick(function () {
+				document.querySelector('.modale .bouton').focus()
+			})
+		},
 		rattacherPad () {
 			if (this.padIdR !== '' && this.identifiantR !== '') {
 				this.modale = ''
 				this.chargement = true
 				axios.post(this.hote + '/api/rattacher-pad', {
+					admin: this.admin,
 					padId: this.padIdR,
 					identifiant: this.identifiantR
 				}).then(function (reponse) {
@@ -385,10 +411,13 @@ export default {
 						this.message = this.$t('padInexistant')
 					} else if (donnees === 'pad_cree_avec_compte') {
 						this.message = this.$t('padCreeAvecCompte')
+					} else if (donnees === 'non_autorise') {
+						this.message = this.$t('actionNonAutorisee')
 					} else {
 						this.notification = this.$t('padTransfere')
 						this.padIdR = ''
 						this.identifiantR = ''
+						this.gererFocus()
 					}
 				}.bind(this)).catch(function () {
 					this.chargement = false
@@ -396,11 +425,19 @@ export default {
 				}.bind(this))
 			}
 		},
+		afficherModaleSupprimerPad () {
+			this.elementPrecedent = (document.activeElement || document.body)
+			this.modale = 'supprimer-pad'
+			this.$nextTick(function () {
+				document.querySelector('.modale .bouton').focus()
+			})
+		},
 		supprimerPad () {
 			if (this.padIdS !== '') {
 				this.modale = ''
 				this.chargement = true
 				axios.post(this.hote + '/api/recuperer-donnees-pad-admin', {
+					admin: this.admin,
 					padId: this.padIdS
 				}).then(function (reponse) {
 					this.chargement = false
@@ -409,6 +446,8 @@ export default {
 						this.message = this.$t('erreurActionServeur')
 					} else if (donnees === 'pad_inexistant') {
 						this.message = this.$t('padInexistant')
+					} else if (donnees === 'non_autorise') {
+						this.message = this.$t('actionNonAutorisee')
 					} else {
 						const identifiant = donnees.identifiant
 						axios.post(this.hote + '/api/supprimer-pad', {
@@ -422,10 +461,13 @@ export default {
 							const donnees = reponse.data
 							if (donnees === 'erreur_suppression') {
 								this.message = this.$t('erreurSuppressionMur')
+							} else if (donnees === 'non_autorise') {
+								this.message = this.$t('actionNonAutorisee')
 							} else {
 								this.notification = this.$t('padSupprime')
 								this.padIdS = ''
 								this.suppressionFichiers = true
+								this.gererFocus()
 							}
 						}.bind(this)).catch(function () {
 							this.chargement = false
@@ -442,11 +484,19 @@ export default {
 				}.bind(this))
 			}
 		},
+		afficherModaleTransfererCompte () {
+			this.elementPrecedent = (document.activeElement || document.body)
+			this.modale = 'transferer-compte'
+			this.$nextTick(function () {
+				document.querySelector('.modale .bouton').focus()
+			})
+		},
 		transfererCompte () {
 			if (this.identifiantO !== '' && this.identifiantT !== '') {
 				this.modale = ''
 				this.chargement = true
 				axios.post(this.hote + '/api/transferer-compte', {
+					admin: this.admin,
 					identifiant: this.identifiantO,
 					nouvelIdentifiant: this.identifiantT
 				}).then(function (reponse) {
@@ -456,16 +506,26 @@ export default {
 						this.message = this.$t('erreurActionServeur')
 					} else if (donnees === 'utilisateur_inexistant') {
 						this.message = this.$t('utilisateursInexistants')
+					} else if (donnees === 'non_autorise') {
+						this.message = this.$t('actionNonAutorisee')
 					} else {
 						this.notification = this.$t('compteTransfere')
 						this.identifiantO = ''
 						this.identifiantT = ''
+						this.gererFocus()
 					}
 				}.bind(this)).catch(function () {
 					this.chargement = false
 					this.message = this.$t('erreurCommunicationServeur')
 				}.bind(this))
 			}
+		},
+		afficherModaleSupprimerCompte () {
+			this.elementPrecedent = (document.activeElement || document.body)
+			this.modale = 'supprimer-compte'
+			this.$nextTick(function () {
+				document.querySelector('.modale .bouton').focus()
+			})
 		},
 		supprimerCompte () {
 			if (this.identifiantS !== '') {
@@ -479,14 +539,41 @@ export default {
 					const donnees = reponse.data
 					if (donnees === 'erreur') {
 						this.message = this.$t('erreurActionServeur')
+					} else if (donnees === 'non_autorise') {
+						this.message = this.$t('actionNonAutorisee')
 					} else {
 						this.notification = this.$t('compteSupprime')
 						this.identifiantS = ''
+						this.gererFocus()
 					}
 				}.bind(this)).catch(function () {
 					this.chargement = false
 					this.message = this.$t('erreurCommunicationServeur')
 				}.bind(this))
+			}
+		},
+		fermerModale () {
+			this.modale = ''
+			this.gererFocus()
+		},
+		fermerMessage () {
+			this.message = ''
+			this.gererFocus()
+		},
+		definirElementPrecedent (element) {
+			this.elementPrecedent = element
+		},
+		gererFocus () {
+			if (this.elementPrecedent) {
+				this.elementPrecedent.focus()
+				this.elementPrecedent = null
+			}
+		},
+		gererClavier (event) {
+			if (event.key === 'Escape' && this.message !== '') {
+				this.fermerMessage()
+			} else if (event.key === 'Escape' && this.modale !== '') {
+				this.fermerModale()
 			}
 		}
 	}

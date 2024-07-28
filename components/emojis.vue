@@ -2,27 +2,27 @@
 	<div id="emojis" :class="definirClasses()">
 		<h5>{{ $t('emoticones') }}</h5>
 		<div class="categorie">
-			<span v-for="(emoticone, indexEmoticone) in emoticones" @click="insererEmoji(emoticone)" :key="'emoticone_' + indexEmoticone">{{ emoticone }}</span>
+			<span role="button" :tabindex="tabindex" v-for="(emoticone, indexEmoticone) in emoticones" @click="insererEmoji(emoticone)" @keydown.enter="insererEmoji(emoticone)" :key="'emoticone_' + indexEmoticone">{{ emoticone }}</span>
 		</div>
 		<h5>{{ $t('gestesEtCorps') }}</h5>
 		<div class="categorie">
-			<span v-for="(geste, indexGeste) in gestes" @click="insererEmoji(geste)" :key="'geste_' + indexGeste">{{ geste }}</span>
+			<span role="button" :tabindex="tabindex" v-for="(geste, indexGeste) in gestes" @click="insererEmoji(geste)" @keydown.enter="insererEmoji(geste)" :key="'geste_' + indexGeste">{{ geste }}</span>
 		</div>
 		<h5>{{ $t('nature') }}</h5>
 		<div class="categorie">
-			<span v-for="(nature, indexNature) in natures" @click="insererEmoji(nature)" :key="'nature_' + indexNature">{{ nature }}</span>
+			<span role="button" :tabindex="tabindex" v-for="(nature, indexNature) in natures" @click="insererEmoji(nature)" @keydown.enter="insererEmoji(nature)" :key="'nature_' + indexNature">{{ nature }}</span>
 		</div>
 		<h5>{{ $t('aliments') }}</h5>
 		<div class="categorie">
-			<span v-for="(aliment, indexAliment) in aliments" @click="insererEmoji(aliment)" :key="'aliment_' + indexAliment">{{ aliment }}</span>
+			<span role="button" :tabindex="tabindex" v-for="(aliment, indexAliment) in aliments" @click="insererEmoji(aliment)" @keydown.enter="insererEmoji(aliment)" :key="'aliment_' + indexAliment">{{ aliment }}</span>
 		</div>
 		<h5>{{ $t('objets') }}</h5>
 		<div class="categorie">
-			<span v-for="(objet, indexObjet) in objets" @click="insererEmoji(objet)" :key="'objet_' + indexObjet">{{ objet }}</span>
+			<span role="button" :tabindex="tabindex" v-for="(objet, indexObjet) in objets" @click="insererEmoji(objet)" @keydown.enter="insererEmoji(objet)" :key="'objet_' + indexObjet">{{ objet }}</span>
 		</div>
 		<h5>{{ $t('lieux') }}</h5>
 		<div class="categorie">
-			<span v-for="(lieu, indexLieu) in lieux" @click="insererEmoji(lieu)" :key="'lieu_' + indexLieu">{{ lieu }}</span>
+			<span role="button" :tabindex="tabindex" v-for="(lieu, indexLieu) in lieux" @click="insererEmoji(lieu)" @keydown.enter="insererEmoji(lieu)" :key="'lieu_' + indexLieu">{{ lieu }}</span>
 		</div>
 	</div>
 </template>
@@ -32,7 +32,8 @@ export default {
 	name: 'Emojis',
 	props: {
 		type: String,
-		diaporama: Boolean
+		diaporama: Boolean,
+		tabindex: Number
 	},
 	data () {
 		return {

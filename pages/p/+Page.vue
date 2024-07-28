@@ -4,4 +4,6 @@
 
 <style scoped src="./pad.css"></style>
 
+<style src="./capsule.css"></style>
+
 <style src="./jspanel.css"></style>

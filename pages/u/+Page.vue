@@ -8,24 +8,24 @@
 		</header>
 
 		<nav id="nav">
-			<span id="compte" role="button" tabindex="0" :title="$t('parametresCompte')" @click="menu = !menu"><i class="material-icons">account_circle</i></span>
-			<span id="deconnexion" role="button" tabindex="0" :title="$t('deconnexion')" @click="deconnexion"><i class="material-icons">power_settings_new</i></span>
+			<span id="compte" role="button" :tabindex="definirTabIndex()" :title="$t('parametresCompte')" @click="gererMenu" @keydown.enter="gererMenu"><i class="material-icons">account_circle</i></span>
+			<span id="deconnexion" role="button" :tabindex="definirTabIndex()" :title="$t('deconnexion')" @click="deconnexion" @keydown.enter="deconnexion"><i class="material-icons">power_settings_new</i></span>
 		</nav>
 
-		<div class="menu gauche" :class="{'ouvert': menu}" role="menu" tabindex="-1">
+		<div class="menu gauche" v-if="menu" role="menu">
 			<div class="en-tete">
 				<span class="titre">{{ $t('parametresCompte') }}</span>
-				<span role="button" tabindex="0" class="fermer" @click="menu = false"><i class="material-icons">close</i></span>
+				<span class="fermer" role="button" :tabindex="definirTabIndex()" @click="fermerMenu" @keydown.enter="fermerMenu"><i class="material-icons">close</i></span>
 			</div>
 			<div class="contenu ascenseur">
 				<div class="conteneur">
 					<label>{{ $t('langue') }}</label>
 					<div id="langues">
-						<span role="button" tabindex="0" :class="{'selectionne': langue === 'fr'}" @click="modifierLangue('fr')">FR</span>
-						<span role="button" tabindex="0" :class="{'selectionne': langue === 'es'}" @click="modifierLangue('es')">ES</span>
-						<span role="button" tabindex="0" :class="{'selectionne': langue === 'it'}" @click="modifierLangue('it')">IT</span>
-						<span role="button" tabindex="0" :class="{'selectionne': langue === 'hr'}" @click="modifierLangue('hr')">HR</span>
-						<span role="button" tabindex="0" :class="{'selectionne': langue === 'en'}" @click="modifierLangue('en')">EN</span>
+						<span role="button" :tabindex="definirTabIndex()" :class="{'selectionne': langue === 'fr'}" @click="modifierLangue('fr')" @keydown.enter="modifierLangue('fr')">FR</span>
+						<span role="button" :tabindex="definirTabIndex()" :class="{'selectionne': langue === 'es'}" @click="modifierLangue('es')" @keydown.enter="modifierLangue('es')">ES</span>
+						<span role="button" :tabindex="definirTabIndex()" :class="{'selectionne': langue === 'it'}" @click="modifierLangue('it')" @keydown.enter="modifierLangue('it')">IT</span>
+						<span role="button" :tabindex="definirTabIndex()" :class="{'selectionne': langue === 'hr'}" @click="modifierLangue('hr')" @keydown.enter="modifierLangue('hr')">HR</span>
+						<span role="button" :tabindex="definirTabIndex()" :class="{'selectionne': langue === 'en'}" @click="modifierLangue('en')" @keydown.enter="modifierLangue('en')">EN</span>
 					</div>
 				</div>
 				<div class="conteneur">
@@ -41,50 +41,50 @@
 					<input id="email" type="text" :value="email" @keydown.enter="modifierInformations">
 				</div>
 				<div class="conteneur conteneur-bouton">
-					<span role="button" tabindex="0" class="bouton-vert" @click="modifierInformations">{{ $t('enregistrer') }}</span>
+					<span class="bouton-vert" role="button":tabindex="definirTabIndex()" @click="modifierInformations" @keydown.enter="modifierInformations">{{ $t('enregistrer') }}</span>
 				</div>
 				<div class="conteneur conteneur-bouton">
-					<span role="button" tabindex="0" class="bouton-bleu" @click="afficherModaleMotDePasse">{{ $t('modifierMotDePasse') }}</span>
+					<span class="bouton-bleu" role="button" :tabindex="definirTabIndex()" @click="afficherModaleMotDePasse" @keydown.enter="afficherModaleMotDePasse">{{ $t('modifierMotDePasse') }}</span>
 				</div>
 				<div class="conteneur conteneur-bouton">
-					<span role="button" tabindex="0" class="bouton-rouge" @click="afficherModaleConfirmation($event, '', 'supprimer-compte')">{{ $t('supprimerCompte') }}</span>
+					<span class="bouton-rouge" role="button" :tabindex="definirTabIndex()" @click="afficherModaleConfirmation($event, '', 'supprimer-compte')" @keydown.enter="afficherModaleConfirmation($event, '', 'supprimer-compte')">{{ $t('supprimerCompte') }}</span>
 				</div>
 			</div>
 		</div>
 
 		<div id="onglets" class="ascenseur">
-			<div class="onglet" :class="{'actif': onglet === 'pads-crees'}" @click="onglet = 'pads-crees'">
+			<div class="onglet" role="button" :tabindex="definirTabIndex()" :class="{'actif': onglet === 'pads-crees'}" @click="modifierOnglet('pads-crees')" @keydown.enter="modifierOnglet('pads-crees')">
 				<span>{{ $t('padsCrees') }}</span>
 				<span class="badge">{{ padsCrees.length }}</span>
 			</div>
-			<div class="onglet" :class="{'actif': onglet === 'pads-rejoints'}" @click="onglet = 'pads-rejoints'">
+			<div class="onglet" role="button" :tabindex="definirTabIndex()" :class="{'actif': onglet === 'pads-rejoints'}" @click="modifierOnglet('pads-rejoints')" @keydown.enter="modifierOnglet('pads-rejoints')">
 				<span>{{ $t('padsRejoints') }}</span>
 				<span class="badge">{{ padsRejoints.length }}</span>
 			</div>
-			<div class="onglet" :class="{'actif': onglet === 'pads-admins'}" @click="onglet = 'pads-admins'">
+			<div class="onglet" role="button" :tabindex="definirTabIndex()" :class="{'actif': onglet === 'pads-admins'}" @click="modifierOnglet('pads-admins')" @keydown.enter="modifierOnglet('pads-admins')">
 				<span>{{ $t('padsAdmins') }}</span>
 				<span class="badge">{{ padsAdmins.length }}</span>
 			</div>
-			<div class="onglet" :class="{'actif': onglet === 'pads-favoris'}" @click="onglet = 'pads-favoris'">
+			<div class="onglet" role="button" :tabindex="definirTabIndex()" :class="{'actif': onglet === 'pads-favoris'}" @click="modifierOnglet('pads-favoris')" @keydown.enter="modifierOnglet('pads-favoris')">
 				<span>{{ $t('favoris') }}</span>
 				<span class="badge">{{ padsFavoris.length }}</span>
 			</div>
-			<div class="onglet" v-for="(item, indexItem) in dossiers" :class="{'actif': onglet === item.id}" @click="onglet = item.id" :key="'dossier_' + indexItem">
+			<div class="onglet" role="button" :tabindex="definirTabIndex()" v-for="(item, indexItem) in dossiers" :class="{'actif': onglet === item.id}" @click="modifierOnglet(item.id)" @keydown.enter="modifierOnglet(item.id)" :key="'dossier_' + indexItem">
 				<span>{{ item.nom }}</span>
 				<span class="badge">{{ item.pads.length }}</span>
 				<div class="menu-dossier">
-					<span role="button" tabindex="0" class="bouton" :title="$t('modifierDossier')" @click="afficherModaleModifierDossier($event, item.id)"><i class="material-icons">edit</i></span>
-					<span role="button" tabindex="0" class="bouton supprimer" :title="$t('supprimerDossier')" @click="afficherModaleConfirmation($event, item.id, 'supprimer-dossier')"><i class="material-icons">delete</i></span>
+					<span class="bouton" role="button" :tabindex="definirTabIndex()" :title="$t('modifierDossier')" @click="afficherModaleModifierDossier($event, item.id)" @keydown.enter="afficherModaleModifierDossier($event, item.id)"><i class="material-icons">edit</i></span>
+					<span class="bouton supprimer" role="button" :tabindex="definirTabIndex()" :title="$t('supprimerDossier')" @click="afficherModaleConfirmation($event, item.id, 'supprimer-dossier')" @keydown.enter="afficherModaleConfirmation($event, item.id, 'supprimer-dossier')"><i class="material-icons">delete</i></span>
 				</div>
 			</div>
-			<span class="bouton-ajouter" role="button" tabindex="0" @click="afficherModaleAjouterDossier">{{ $t('ajouterDossier') }}</span>
+			<span class="bouton-ajouter" role="button" :tabindex="definirTabIndex()" @click="afficherModaleAjouterDossier" @keydown.enter="afficherModaleAjouterDossier">{{ $t('ajouterDossier') }}</span>
 		</div>
 
 		<div id="pads" class="ascenseur" :class="affichage">
 			<div class="section">
 				<div id="boutons">
-					<span id="bouton-creer" :class="{'desactive': padsCrees.length >= limite}" role="button" tabindex="0" @click="afficherModaleCreerPad">{{ $t('creerPad') }}</span>
-					<span id="bouton-importer" :class="{'desactive': padsCrees.length >= limite}" role="button" tabindex="0" @click="afficherModaleImporterPad">{{ $t('importerPad') }}</span>
+					<span id="bouton-creer" role="button" :tabindex="definirTabIndex()" :class="{'desactive': padsCrees.length >= limite}" @click="afficherModaleCreerPad" @keydown.enter="afficherModaleCreerPad">{{ $t('creerPad') }}</span>
+					<span id="bouton-importer" role="button" :tabindex="definirTabIndex()" :class="{'desactive': padsCrees.length >= limite}" @click="afficherModaleImporterPad" @keydown.enter="afficherModaleImporterPad">{{ $t('importerPad') }}</span>
 				</div>
 				<div id="afficher">
 					<div class="rechercher">
@@ -101,20 +101,20 @@
 						</select>
 					</div>
 					<div class="afficher">
-						<span role="button" tabindex="0" :title="$t('affichageListe')" @click="modifierAffichage('liste')"><i class="material-icons">view_list</i></span>
-						<span role="button" tabindex="0" :title="$t('affichageMosaique')" @click="modifierAffichage('mosaique')"><i class="material-icons">view_module</i></span>
+						<span role="button" :tabindex="definirTabIndex()" :title="$t('affichageListe')" @click="modifierAffichage('liste')" @keydown.enter="modifierAffichage('liste')"><i class="material-icons">view_list</i></span>
+						<span role="button" :tabindex="definirTabIndex()" :title="$t('affichageMosaique')" @click="modifierAffichage('mosaique')" @keydown.enter="modifierAffichage('mosaique')"><i class="material-icons">view_module</i></span>
 					</div>
 				</div>
 				<div id="actions-dossier" v-if="onglet !== 'pads-crees' && onglet !== 'pads-rejoints' && onglet !== 'pads-admins' && onglet !== 'pads-favoris'">
 					<div class="conteneur">
 						<label>{{ $t('actionsDossier') }}</label>
-						<span role="button" tabindex="0" class="bouton" :title="$t('modifierDossier')" @click="afficherModaleModifierDossier($event, onglet)"><i class="material-icons">edit</i></span>
-						<span role="button" tabindex="0" class="bouton supprimer" :title="$t('supprimerDossier')" @click="afficherModaleConfirmation($event, onglet, 'supprimer-dossier')"><i class="material-icons">delete</i></span>
+						<span class="bouton" role="button" :tabindex="definirTabIndex()" :title="$t('modifierDossier')" @click="afficherModaleModifierDossier($event, onglet)" @keydown.enter="afficherModaleModifierDossier($event, onglet)"><i class="material-icons">edit</i></span>
+						<span class="bouton supprimer" role="button" :tabindex="definirTabIndex()" :title="$t('supprimerDossier')" @click="afficherModaleConfirmation($event, onglet, 'supprimer-dossier')" @keydown.enter="afficherModaleConfirmation($event, onglet, 'supprimer-dossier')"><i class="material-icons">delete</i></span>
 					</div>
 				</div>
 				<div class="pads" v-if="pads.length > 0 && requete === ''">
 					<template v-for="(pad, indexPad) in pads">
-						<div class="pad liste" v-if="affichage === 'liste'" :key="'pad_liste_' + indexPad">
+						<div :id="'pad-' + pad.id" class="pad liste" v-if="affichage === 'liste'" :key="'pad_liste_' + indexPad">
 							<a class="fond" :href="'/p/' + pad.id + '/' + pad.token" :class="{'fond-personnalise': pad.fond.substring(1, 9) === 'fichiers'}" :style="definirFond(pad.fond)" />
 							<a class="meta" :class="{'pad-rejoint': pad.identifiant !== identifiant, 'deplacer': dossiers.length > 0}" :href="'/p/' + pad.id + '/' + pad.token">
 								<span class="mise-a-jour" v-if="pad.hasOwnProperty('notification') && pad.notification.includes(identifiant)" />
@@ -126,24 +126,24 @@
 								<span class="vues" v-else-if="!pad.hasOwnProperty('vues')"> - 0 {{ $t('vue') }}</span>
 							</a>
 							<div class="actions" v-if="pad.identifiant === identifiant">
-								<span class="ajouter-favori" role="button" tabindex="0" @click="ajouterFavori(pad)" :title="$t('ajouterFavori')" v-if="!favoris.includes(pad.id)"><i class="material-icons">star_outline</i></span>
-								<span class="supprimer-favori" role="button" tabindex="0" @click="supprimerFavori(pad.id)" :title="$t('supprimerFavori')" v-else><i class="material-icons">star</i></span>
-								<span class="deplacer" role="button" tabindex="0" @click="afficherModaleDeplacerPad(pad.id)" :title="$t('ajouterDansDossier')" :class="{'actif': verifierDossierPad(pad.id)}" v-if="dossiers.length > 0"><i class="material-icons">drive_file_move</i></span>
-								<span class="dupliquer" role="button" tabindex="0" @click="afficherModaleConfirmation($event, pad.id, 'dupliquer')" :title="$t('dupliquerPad')"><i class="material-icons">content_copy</i></span>
-								<span class="exporter" role="button" tabindex="0" @click="afficherModaleConfirmation($event, pad.id, 'exporter')" :title="$t('exporterPad')"><i class="material-icons">get_app</i></span>
-								<span class="supprimer" role="button" tabindex="0" @click="afficherModaleConfirmation($event, pad.id, 'supprimer')" :title="$t('supprimerPad')"><i class="material-icons">delete</i></span>
+								<span class="ajouter-favori" role="button" :tabindex="definirTabIndex()" @click="ajouterFavori(pad)" @keydown.enter="ajouterFavori(pad)" :title="$t('ajouterFavori')" v-if="!favoris.includes(pad.id)"><i class="material-icons">star_outline</i></span>
+								<span class="supprimer-favori" role="button" :tabindex="definirTabIndex()" @click="supprimerFavori(pad.id)" @keydown.enter="supprimerFavori(pad.id)" :title="$t('supprimerFavori')" v-else><i class="material-icons">star</i></span>
+								<span class="deplacer" role="button" :tabindex="definirTabIndex()" @click="afficherModaleDeplacerPad(pad.id)" @keydown.enter="afficherModaleDeplacerPad(pad.id)" :title="$t('ajouterDansDossier')" :class="{'actif': verifierDossierPad(pad.id)}" v-if="dossiers.length > 0"><i class="material-icons">drive_file_move</i></span>
+								<span class="dupliquer" role="button" :tabindex="definirTabIndex()" @click="afficherModaleConfirmation($event, pad.id, 'dupliquer')" @keydown.enter="afficherModaleConfirmation($event, pad.id, 'dupliquer')" :title="$t('dupliquerPad')"><i class="material-icons">content_copy</i></span>
+								<span class="exporter" role="button" :tabindex="definirTabIndex()" @click="afficherModaleConfirmation($event, pad.id, 'exporter')" @keydown.enter="afficherModaleConfirmation($event, pad.id, 'exporter')" :title="$t('exporterPad')"><i class="material-icons">get_app</i></span>
+								<span class="supprimer" role="button" :tabindex="definirTabIndex()" @click="afficherModaleConfirmation($event, pad.id, 'supprimer')" @keydown.enter="afficherModaleConfirmation($event, pad.id, 'supprimer')" :title="$t('supprimerPad')"><i class="material-icons">delete</i></span>
 							</div>
 							<div class="actions" v-else>
-								<span class="ajouter-favori" role="button" tabindex="0" @click="ajouterFavori(pad)" :title="$t('ajouterFavori')" v-if="!favoris.includes(pad.id)"><i class="material-icons">star_outline</i></span>
-								<span class="supprimer-favori" role="button" tabindex="0" @click="supprimerFavori(pad.id)" :title="$t('supprimerFavori')" v-else><i class="material-icons">star</i></span>
-								<span class="deplacer" role="button" tabindex="0" @click="afficherModaleDeplacerPad(pad.id)" :title="$t('ajouterDansDossier')" :class="{'actif': verifierDossierPad(pad.id)}" v-if="dossiers.length > 0"><i class="material-icons">drive_file_move</i></span>
-								<span class="supprimer" role="button" tabindex="0" @click="afficherModaleConfirmation($event, pad.id, 'supprimer')" :title="$t('supprimerPad')" v-if="definirTypePad(pad.id) === 'pad-rejoint'"><i class="material-icons">delete</i></span>
-								<span class="supprimer" role="button" tabindex="0" @click="afficherModaleConfirmation($event, pad.id, 'supprimer-admin')" :title="$t('quitterPad')" v-else-if="definirTypePad(pad.id) === 'pad-admin'"><i class="material-icons">logout</i></span>
+								<span class="ajouter-favori" role="button" :tabindex="definirTabIndex()" @click="ajouterFavori(pad)" @keydown.enter="ajouterFavori(pad)" :title="$t('ajouterFavori')" v-if="!favoris.includes(pad.id)"><i class="material-icons">star_outline</i></span>
+								<span class="supprimer-favori" role="button" :tabindex="definirTabIndex()" @click="supprimerFavori(pad.id)" :title="$t('supprimerFavori')" v-else><i class="material-icons">star</i></span>
+								<span class="deplacer" role="button" :tabindex="definirTabIndex()" @click="afficherModaleDeplacerPad(pad.id)" @keydown.enter="afficherModaleDeplacerPad(pad.id)" :title="$t('ajouterDansDossier')" :class="{'actif': verifierDossierPad(pad.id)}" v-if="dossiers.length > 0"><i class="material-icons">drive_file_move</i></span>
+								<span class="supprimer" role="button" :tabindex="definirTabIndex()" @click="afficherModaleConfirmation($event, pad.id, 'supprimer')" @keydown.enter="afficherModaleConfirmation($event, pad.id, 'supprimer')" :title="$t('supprimerPad')" v-if="definirTypePad(pad.id) === 'pad-rejoint'"><i class="material-icons">delete</i></span>
+								<span class="supprimer" role="button" :tabindex="definirTabIndex()" @click="afficherModaleConfirmation($event, pad.id, 'supprimer-admin')" @keydown.enter="afficherModaleConfirmation($event, pad.id, 'supprimer-admin')" :title="$t('quitterPad')" v-else-if="definirTypePad(pad.id) === 'pad-admin'"><i class="material-icons">logout</i></span>
 								<span class="admin" :title="$t('admin')" v-if="definirTypePad(pad.id) === 'pad-admin'"><i class="material-icons">admin_panel_settings</i></span>
 							</div>
 						</div>
 
-						<div class="pad mosaique" v-else :key="'pad_mosaique_' + indexPad">
+						<div :id="'pad-' + pad.id" class="pad mosaique" v-else :key="'pad_mosaique_' + indexPad">
 							<a class="conteneur" :class="{'fond-personnalise': pad.fond.substring(1, 9) === 'fichiers'}" :style="definirFond(pad.fond)" :href="'/p/' + pad.id + '/' + pad.token">
 								<div class="meta">
 									<span class="titre"><span class="mise-a-jour" v-if="pad.hasOwnProperty('notification') && pad.notification.includes(identifiant)" />{{ pad.titre }}</span>
@@ -155,19 +155,19 @@
 								</div>
 							</a>
 							<div class="actions" v-if="pad.identifiant === identifiant">
-								<span class="ajouter-favori" role="button" tabindex="0" @click="ajouterFavori(pad)" :title="$t('ajouterFavori')" v-if="!favoris.includes(pad.id)"><i class="material-icons">star_outline</i></span>
-								<span class="supprimer-favori" role="button" tabindex="0" @click="supprimerFavori(pad.id)" :title="$t('supprimerFavori')" v-else><i class="material-icons">star</i></span>
-								<span class="deplacer" role="button" tabindex="0" @click="afficherModaleDeplacerPad(pad.id)" :title="$t('ajouterDansDossier')" :class="{'actif': verifierDossierPad(pad.id)}" v-if="dossiers.length > 0"><i class="material-icons">drive_file_move</i></span>
-								<span class="dupliquer" role="button" tabindex="0" @click="afficherModaleConfirmation($event, pad.id, 'dupliquer')" :title="$t('dupliquerPad')"><i class="material-icons">content_copy</i></span>
-								<span class="exporter" role="button" tabindex="0" @click="afficherModaleConfirmation($event, pad.id, 'exporter')" :title="$t('exporterPad')"><i class="material-icons">get_app</i></span>
-								<span class="supprimer" role="button" tabindex="0" @click="afficherModaleConfirmation($event, pad.id, 'supprimer')" :title="$t('supprimerPad')"><i class="material-icons">delete</i></span>
+								<span class="ajouter-favori" role="button" :tabindex="definirTabIndex()" @click="ajouterFavori(pad)" @keydown.enter="ajouterFavori(pad)" :title="$t('ajouterFavori')" v-if="!favoris.includes(pad.id)"><i class="material-icons">star_outline</i></span>
+								<span class="supprimer-favori" role="button" :tabindex="definirTabIndex()" @click="supprimerFavori(pad.id)" @keydown.enter="supprimerFavori(pad.id)" :title="$t('supprimerFavori')" v-else><i class="material-icons">star</i></span>
+								<span class="deplacer" role="button" :tabindex="definirTabIndex()" @click="afficherModaleDeplacerPad(pad.id)" @keydown.enter="afficherModaleDeplacerPad(pad.id)" :title="$t('ajouterDansDossier')" :class="{'actif': verifierDossierPad(pad.id)}" v-if="dossiers.length > 0"><i class="material-icons">drive_file_move</i></span>
+								<span class="dupliquer" role="button" :tabindex="definirTabIndex()" @click="afficherModaleConfirmation($event, pad.id, 'dupliquer')" @keydown.enter="afficherModaleConfirmation($event, pad.id, 'dupliquer')" :title="$t('dupliquerPad')"><i class="material-icons">content_copy</i></span>
+								<span class="exporter" role="button" :tabindex="definirTabIndex()" @click="afficherModaleConfirmation($event, pad.id, 'exporter')" @keydown.enter="afficherModaleConfirmation($event, pad.id, 'exporter')" :title="$t('exporterPad')"><i class="material-icons">get_app</i></span>
+								<span class="supprimer" role="button" :tabindex="definirTabIndex()" @click="afficherModaleConfirmation($event, pad.id, 'supprimer')" @keydown.enter="afficherModaleConfirmation($event, pad.id, 'supprimer')" :title="$t('supprimerPad')"><i class="material-icons">delete</i></span>
 							</div>
 							<div class="actions" v-else>
-								<span class="ajouter-favori" role="button" tabindex="0" @click="ajouterFavori(pad)" :title="$t('ajouterFavori')" v-if="!favoris.includes(pad.id)"><i class="material-icons">star_outline</i></span>
-								<span class="supprimer-favori" role="button" tabindex="0" @click="supprimerFavori(pad.id)" :title="$t('supprimerFavori')" v-else><i class="material-icons">star</i></span>
-								<span class="deplacer" role="button" tabindex="0" @click="afficherModaleDeplacerPad(pad.id)" :title="$t('ajouterDansDossier')" :class="{'actif': verifierDossierPad(pad.id)}" v-if="dossiers.length > 0"><i class="material-icons">drive_file_move</i></span>
-								<span class="supprimer" role="button" tabindex="0" @click="afficherModaleConfirmation($event, pad.id, 'supprimer')" :title="$t('supprimerPad')" v-if="definirTypePad(pad.id) === 'pad-rejoint'"><i class="material-icons">delete</i></span>
-								<span class="supprimer" role="button" tabindex="0" @click="afficherModaleConfirmation($event, pad.id, 'supprimer-admin')" :title="$t('quitterPad')" v-else-if="definirTypePad(pad.id) === 'pad-admin'"><i class="material-icons">logout</i></span>
+								<span class="ajouter-favori" role="button" :tabindex="definirTabIndex()" @click="ajouterFavori(pad)" @keydown.enter="ajouterFavori(pad)" :title="$t('ajouterFavori')" v-if="!favoris.includes(pad.id)"><i class="material-icons">star_outline</i></span>
+								<span class="supprimer-favori" role="button" :tabindex="definirTabIndex()" @click="supprimerFavori(pad.id)" @keydown.enter="supprimerFavori(pad.id)" :title="$t('supprimerFavori')" v-else><i class="material-icons">star</i></span>
+								<span class="deplacer" role="button" :tabindex="definirTabIndex()" @click="afficherModaleDeplacerPad(pad.id)" @keydown.enter="afficherModaleDeplacerPad(pad.id)" :title="$t('ajouterDansDossier')" :class="{'actif': verifierDossierPad(pad.id)}" v-if="dossiers.length > 0"><i class="material-icons">drive_file_move</i></span>
+								<span class="supprimer" role="button" :tabindex="definirTabIndex()" @click="afficherModaleConfirmation($event, pad.id, 'supprimer')" @keydown.enter="afficherModaleConfirmation($event, pad.id, 'supprimer')" :title="$t('supprimerPad')" v-if="definirTypePad(pad.id) === 'pad-rejoint'"><i class="material-icons">delete</i></span>
+								<span class="supprimer" role="button" :tabindex="definirTabIndex()" @click="afficherModaleConfirmation($event, pad.id, 'supprimer-admin')" @keydown.enter="afficherModaleConfirmation($event, pad.id, 'supprimer-admin')" :title="$t('quitterPad')" v-else-if="definirTypePad(pad.id) === 'pad-admin'"><i class="material-icons">logout</i></span>
 								<span class="admin" :title="$t('admin')" v-if="definirTypePad(pad.id) === 'pad-admin'"><i class="material-icons">admin_panel_settings</i></span>
 							</div>
 						</div>
@@ -181,7 +181,7 @@
 				</div>
 				<div class="pads" v-else-if="resultats.length > 0 && requete !== ''">
 					<template v-for="(pad, indexPad) in resultats">
-						<div class="pad liste" v-if="affichage === 'liste'" :key="'pad_liste_' + indexPad">
+						<div :id="'pad-' + pad.id" class="pad liste" v-if="affichage === 'liste'" :key="'pad_liste_' + indexPad">
 							<a class="fond" :href="'/p/' + pad.id + '/' + pad.token" :class="{'fond-personnalise': pad.fond.substring(1, 9) === 'fichiers'}" :style="definirFond(pad.fond)" />
 							<a class="meta" :class="{'pad-rejoint': pad.identifiant !== identifiant, 'deplacer': dossiers.length > 0}" :href="'/p/' + pad.id + '/' + pad.token">
 								<span class="mise-a-jour" v-if="pad.hasOwnProperty('notification') && pad.notification.includes(identifiant)" />
@@ -193,24 +193,24 @@
 								<span class="vues" v-else-if="!pad.hasOwnProperty('vues')"> - 0 {{ $t('vue') }}</span>
 							</a>
 							<div class="actions" v-if="pad.identifiant === identifiant">
-								<span class="ajouter-favori" role="button" tabindex="0" @click="ajouterFavori(pad)" :title="$t('ajouterFavori')" v-if="!favoris.includes(pad.id)"><i class="material-icons">star_outline</i></span>
-								<span class="supprimer-favori" role="button" tabindex="0" @click="supprimerFavori(pad.id)" :title="$t('supprimerFavori')" v-else><i class="material-icons">star</i></span>
-								<span class="deplacer" role="button" tabindex="0" @click="afficherModaleDeplacerPad(pad.id)" :title="$t('ajouterDansDossier')" :class="{'actif': verifierDossierPad(pad.id)}" v-if="dossiers.length > 0"><i class="material-icons">drive_file_move</i></span>
-								<span class="dupliquer" role="button" tabindex="0" @click="afficherModaleConfirmation($event, pad.id, 'dupliquer')" :title="$t('dupliquerPad')"><i class="material-icons">content_copy</i></span>
-								<span class="exporter" role="button" tabindex="0" @click="afficherModaleConfirmation($event, pad.id, 'exporter')" :title="$t('exporterPad')"><i class="material-icons">get_app</i></span>
-								<span class="supprimer" role="button" tabindex="0" @click="afficherModaleConfirmation($event, pad.id, 'supprimer')" :title="$t('supprimerPad')"><i class="material-icons">delete</i></span>
+								<span class="ajouter-favori" role="button" :tabindex="definirTabIndex()" @click="ajouterFavori(pad)" @keydown.enter="ajouterFavori(pad)" :title="$t('ajouterFavori')" v-if="!favoris.includes(pad.id)"><i class="material-icons">star_outline</i></span>
+								<span class="supprimer-favori" role="button" :tabindex="definirTabIndex()" @click="supprimerFavori(pad.id)" :title="$t('supprimerFavori')" v-else><i class="material-icons">star</i></span>
+								<span class="deplacer" role="button" :tabindex="definirTabIndex()" @click="afficherModaleDeplacerPad(pad.id)" @keydown.enter="afficherModaleDeplacerPad(pad.id)" :title="$t('ajouterDansDossier')" :class="{'actif': verifierDossierPad(pad.id)}" v-if="dossiers.length > 0"><i class="material-icons">drive_file_move</i></span>
+								<span class="dupliquer" role="button" :tabindex="definirTabIndex()" @click="afficherModaleConfirmation($event, pad.id, 'dupliquer')" @keydown.enter="afficherModaleConfirmation($event, pad.id, 'dupliquer')" :title="$t('dupliquerPad')"><i class="material-icons">content_copy</i></span>
+								<span class="exporter" role="button" :tabindex="definirTabIndex()" @click="afficherModaleConfirmation($event, pad.id, 'exporter')" @keydown.enter="afficherModaleConfirmation($event, pad.id, 'exporter')" :title="$t('exporterPad')"><i class="material-icons">get_app</i></span>
+								<span class="supprimer" role="button" :tabindex="definirTabIndex()" @click="afficherModaleConfirmation($event, pad.id, 'supprimer')" @keydown.enter="afficherModaleConfirmation($event, pad.id, 'supprimer')" :title="$t('supprimerPad')"><i class="material-icons">delete</i></span>
 							</div>
 							<div class="actions" v-else>
-								<span class="ajouter-favori" role="button" tabindex="0" @click="ajouterFavori(pad)" :title="$t('ajouterFavori')" v-if="!favoris.includes(pad.id)"><i class="material-icons">star_outline</i></span>
-								<span class="supprimer-favori" role="button" tabindex="0" @click="supprimerFavori(pad.id)" :title="$t('supprimerFavori')" v-else><i class="material-icons">star</i></span>
-								<span class="deplacer" role="button" tabindex="0" @click="afficherModaleDeplacerPad(pad.id)" :title="$t('ajouterDansDossier')" :class="{'actif': verifierDossierPad(pad.id)}" v-if="dossiers.length > 0"><i class="material-icons">drive_file_move</i></span>
-								<span class="supprimer" role="button" tabindex="0" @click="afficherModaleConfirmation($event, pad.id, 'supprimer')" :title="$t('supprimerPad')" v-if="definirTypePad(pad.id) === 'pad-rejoint'"><i class="material-icons">delete</i></span>
-								<span class="supprimer" role="button" tabindex="0" @click="afficherModaleConfirmation($event, pad.id, 'supprimer-admin')" :title="$t('quitterPad')" v-else-if="definirTypePad(pad.id) === 'pad-admin'"><i class="material-icons">logout</i></span>
+								<span class="ajouter-favori" role="button" :tabindex="definirTabIndex()" @click="ajouterFavori(pad)" @keydown.enter="ajouterFavori(pad)" :title="$t('ajouterFavori')" v-if="!favoris.includes(pad.id)"><i class="material-icons">star_outline</i></span>
+								<span class="supprimer-favori" role="button" :tabindex="definirTabIndex()" @click="supprimerFavori(pad.id)" @keydown.enter="supprimerFavori(pad.id)" :title="$t('supprimerFavori')" v-else><i class="material-icons">star</i></span>
+								<span class="deplacer" role="button" :tabindex="definirTabIndex()" @click="afficherModaleDeplacerPad(pad.id)" @keydown.enter="afficherModaleDeplacerPad(pad.id)" :title="$t('ajouterDansDossier')" :class="{'actif': verifierDossierPad(pad.id)}" v-if="dossiers.length > 0"><i class="material-icons">drive_file_move</i></span>
+								<span class="supprimer" role="button" :tabindex="definirTabIndex()" @click="afficherModaleConfirmation($event, pad.id, 'supprimer')" @keydown.enter="afficherModaleConfirmation($event, pad.id, 'supprimer')" :title="$t('supprimerPad')" v-if="definirTypePad(pad.id) === 'pad-rejoint'"><i class="material-icons">delete</i></span>
+								<span class="supprimer" role="button" :tabindex="definirTabIndex()" @click="afficherModaleConfirmation($event, pad.id, 'supprimer-admin')" @keydown.enter="afficherModaleConfirmation($event, pad.id, 'supprimer-admin')" :title="$t('quitterPad')" v-else-if="definirTypePad(pad.id) === 'pad-admin'"><i class="material-icons">logout</i></span>
 								<span class="admin" :title="$t('admin')" v-if="definirTypePad(pad.id) === 'pad-admin'"><i class="material-icons">admin_panel_settings</i></span>
 							</div>
 						</div>
 
-						<div class="pad mosaique" v-else :key="'pad_mosaique_' + indexPad">
+						<div :id="'pad-' + pad.id" class="pad mosaique" v-else :key="'pad_mosaique_' + indexPad">
 							<a class="conteneur" :class="{'fond-personnalise': pad.fond.substring(1, 9) === 'fichiers'}" :style="definirFond(pad.fond)" :href="'/p/' + pad.id + '/' + pad.token">
 								<div class="meta">
 									<span class="titre"><span class="mise-a-jour" v-if="pad.hasOwnProperty('notification') && pad.notification.includes(identifiant)" />{{ pad.titre }}</span>
@@ -222,19 +222,19 @@
 								</div>
 							</a>
 							<div class="actions" v-if="pad.identifiant === identifiant">
-								<span class="ajouter-favori" role="button" tabindex="0" @click="ajouterFavori(pad)" :title="$t('ajouterFavori')" v-if="!favoris.includes(pad.id)"><i class="material-icons">star_outline</i></span>
-								<span class="supprimer-favori" role="button" tabindex="0" @click="supprimerFavori(pad.id)" :title="$t('supprimerFavori')" v-else><i class="material-icons">star</i></span>
-								<span class="deplacer" role="button" tabindex="0" @click="afficherModaleDeplacerPad(pad.id)" :title="$t('ajouterDansDossier')" :class="{'actif': verifierDossierPad(pad.id)}" v-if="dossiers.length > 0"><i class="material-icons">drive_file_move</i></span>
-								<span class="dupliquer" role="button" tabindex="0" @click="afficherModaleConfirmation($event, pad.id, 'dupliquer')" :title="$t('dupliquerPad')"><i class="material-icons">content_copy</i></span>
-								<span class="exporter" role="button" tabindex="0" @click="afficherModaleConfirmation($event, pad.id, 'exporter')" :title="$t('exporterPad')"><i class="material-icons">get_app</i></span>
-								<span class="supprimer" role="button" tabindex="0" @click="afficherModaleConfirmation($event, pad.id, 'supprimer')" :title="$t('supprimerPad')"><i class="material-icons">delete</i></span>
+								<span class="ajouter-favori" role="button" :tabindex="definirTabIndex()" @click="ajouterFavori(pad)" @keydown.enter="ajouterFavori(pad)" :title="$t('ajouterFavori')" v-if="!favoris.includes(pad.id)"><i class="material-icons">star_outline</i></span>
+								<span class="supprimer-favori" role="button" :tabindex="definirTabIndex()" @click="supprimerFavori(pad.id)" :title="$t('supprimerFavori')" v-else><i class="material-icons">star</i></span>
+								<span class="deplacer" role="button" :tabindex="definirTabIndex()" @click="afficherModaleDeplacerPad(pad.id)" @keydown.enter="afficherModaleDeplacerPad(pad.id)" :title="$t('ajouterDansDossier')" :class="{'actif': verifierDossierPad(pad.id)}" v-if="dossiers.length > 0"><i class="material-icons">drive_file_move</i></span>
+								<span class="dupliquer" role="button" :tabindex="definirTabIndex()" @click="afficherModaleConfirmation($event, pad.id, 'dupliquer')" @keydown.enter="afficherModaleConfirmation($event, pad.id, 'dupliquer')" :title="$t('dupliquerPad')"><i class="material-icons">content_copy</i></span>
+								<span class="exporter" role="button" :tabindex="definirTabIndex()" @click="afficherModaleConfirmation($event, pad.id, 'exporter')" @keydown.enter="afficherModaleConfirmation($event, pad.id, 'exporter')" :title="$t('exporterPad')"><i class="material-icons">get_app</i></span>
+								<span class="supprimer" role="button" :tabindex="definirTabIndex()" @click="afficherModaleConfirmation($event, pad.id, 'supprimer')" @keydown.enter="afficherModaleConfirmation($event, pad.id, 'supprimer')" :title="$t('supprimerPad')"><i class="material-icons">delete</i></span>
 							</div>
 							<div class="actions" v-else>
-								<span class="ajouter-favori" role="button" tabindex="0" @click="ajouterFavori(pad)" :title="$t('ajouterFavori')" v-if="!favoris.includes(pad.id)"><i class="material-icons">star_outline</i></span>
-								<span class="supprimer-favori" @click="supprimerFavori(pad.id)" :title="$t('supprimerFavori')" v-else><i class="material-icons">star</i></span>
-								<span class="deplacer" role="button" tabindex="0" @click="afficherModaleDeplacerPad(pad.id)" :title="$t('ajouterDansDossier')" :class="{'actif': verifierDossierPad(pad.id)}" v-if="dossiers.length > 0"><i class="material-icons">drive_file_move</i></span>
-								<span class="supprimer" role="button" tabindex="0" @click="afficherModaleConfirmation($event, pad.id, 'supprimer')" :title="$t('supprimerPad')" v-if="definirTypePad(pad.id) === 'pad-rejoint'"><i class="material-icons">delete</i></span>
-								<span class="supprimer" role="button" tabindex="0" @click="afficherModaleConfirmation($event, pad.id, 'supprimer-admin')" :title="$t('quitterPad')" v-else-if="definirTypePad(pad.id) === 'pad-admin'"><i class="material-icons">logout</i></span>
+								<span class="ajouter-favori" role="button" :tabindex="definirTabIndex()" @click="ajouterFavori(pad)" @keydown.enter="ajouterFavori(pad)" :title="$t('ajouterFavori')" v-if="!favoris.includes(pad.id)"><i class="material-icons">star_outline</i></span>
+								<span class="supprimer-favori" role="button" :tabindex="definirTabIndex()" @click="supprimerFavori(pad.id)" @keydown.enter="supprimerFavori(pad.id)" :title="$t('supprimerFavori')" v-else><i class="material-icons">star</i></span>
+								<span class="deplacer" role="button" :tabindex="definirTabIndex()" @click="afficherModaleDeplacerPad(pad.id)" @keydown.enter="afficherModaleDeplacerPad(pad.id)" :title="$t('ajouterDansDossier')" :class="{'actif': verifierDossierPad(pad.id)}" v-if="dossiers.length > 0"><i class="material-icons">drive_file_move</i></span>
+								<span class="supprimer" role="button" :tabindex="definirTabIndex()" @click="afficherModaleConfirmation($event, pad.id, 'supprimer')" @keydown.enter="afficherModaleConfirmation($event, pad.id, 'supprimer')" :title="$t('supprimerPad')" v-if="definirTypePad(pad.id) === 'pad-rejoint'"><i class="material-icons">delete</i></span>
+								<span class="supprimer" role="button" :tabindex="definirTabIndex()" @click="afficherModaleConfirmation($event, pad.id, 'supprimer-admin')" @keydown.enter="afficherModaleConfirmation($event, pad.id, 'supprimer-admin')" :title="$t('quitterPad')" v-else-if="definirTypePad(pad.id) === 'pad-admin'"><i class="material-icons">logout</i></span>
 								<span class="admin" :title="$t('admin')" v-if="definirTypePad(pad.id) === 'pad-admin'"><i class="material-icons">admin_panel_settings</i></span>
 							</div>
 						</div>
@@ -246,11 +246,11 @@
 			</div>
 		</div>
 
-		<div class="conteneur-modale" role="dialog" tabindex="-1" v-if="modale === 'mot-de-passe'">
-			<div id="motdepasse" class="modale" role="document">
+		<div class="conteneur-modale" v-if="modale === 'mot-de-passe'">
+			<div id="motdepasse" class="modale" role="dialog">
 				<div class="en-tete">
 					<span class="titre">{{ $t('modifierMotDePasse') }}</span>
-					<span role="button" tabindex="0" class="fermer" @click="fermerModaleMotDePasse"><i class="material-icons">close</i></span>
+					<span class="fermer" role="button" :tabindex="definirTabIndexModale()" @click="fermerModaleMotDePasse" @keydown.enter="fermerModaleMotDePasse"><i class="material-icons">close</i></span>
 				</div>
 				<div class="conteneur">
 					<div class="contenu">
@@ -261,25 +261,25 @@
 						<label for="champ-confirmation-motdepasse">{{ $t('confirmationNouveauMotDePasse') }}</label>
 						<input id="champ-confirmation-motdepasse" type="password" maxlength="48" :value="confirmationNouveauMotDePasse" @input="confirmationNouveauMotDePasse = $event.target.value" @keydown.enter="modifierMotDePasse">
 						<div class="actions">
-							<span role="button" tabindex="0" class="bouton" @click="modifierMotDePasse">{{ $t('modifier') }}</span>
+							<span class="bouton" role="button" :tabindex="definirTabIndexModale()" @click="modifierMotDePasse" @keydown.enter="modifierMotDePasse">{{ $t('modifier') }}</span>
 						</div>
 					</div>
 				</div>
 			</div>
 		</div>
 
-		<div class="conteneur-modale" role="dialog" tabindex="-1" v-else-if="modale === 'creer-pad'">
-			<div id="creation" class="modale" role="document">
+		<div class="conteneur-modale" v-else-if="modale === 'creer-pad'">
+			<div id="creation" class="modale" role="dialog">
 				<div class="en-tete">
 					<span class="titre">{{ $t('creerPad') }}</span>
-					<span role="button" class="fermer" @click="fermerModaleCreerPad"><i class="material-icons">close</i></span>
+					<span class="fermer" role="button" :tabindex="definirTabIndexModale()" @click="fermerModaleCreerPad" @keydown.enter="fermerModaleCreerPad"><i class="material-icons">close</i></span>
 				</div>
 				<div class="conteneur">
 					<div class="contenu">
 						<label for="champ-titre-pad">{{ $t('titrePad') }}</label>
 						<input id="champ-titre-pad" type="text" maxlength="48" :value="titre" @input="titre = $event.target.value" @keydown.enter="creerPad">
 						<div class="actions">
-							<span role="button" tabindex="0" class="bouton" @click="creerPad" v-if="!chargementModale">{{ $t('creer') }}</span>
+							<span class="bouton" role="button" :tabindex="definirTabIndexModale()" @click="creerPad" @keydown.enter="creerPad" v-if="!chargementModale">{{ $t('creer') }}</span>
 							<div class="conteneur-chargement" v-else>
 								<div class="chargement" />
 							</div>
@@ -289,17 +289,17 @@
 			</div>
 		</div>
 
-		<div class="conteneur-modale" role="dialog" tabindex="-1" v-else-if="modale === 'deplacer-pad'">
-			<div id="deplacement" class="modale" role="document">
+		<div class="conteneur-modale" v-else-if="modale === 'deplacer-pad'">
+			<div id="deplacement" class="modale" role="dialog">
 				<div class="en-tete">
 					<span class="titre">{{ $t('ajouterDansDossier') }}</span>
-					<span role="button" class="fermer" @click="fermerModaleDeplacerPad"><i class="material-icons">close</i></span>
+					<span class="fermer" role="button" :tabindex="definirTabIndexModale()" @click="fermerModaleDeplacerPad" @keydown.enter="fermerModaleDeplacerPad"><i class="material-icons">close</i></span>
 				</div>
 				<div class="conteneur">
 					<div class="contenu">
 						<label for="champ-dossier-actuel">{{ $t('dossierActuel') }}</label>
-						<input type="text" :value="$t('aucunDossier')" disabled v-if="dossierActuel.id === 'aucun'">
-						<input type="text" :value="dossierActuel.nom" disabled v-else>
+						<input id="champ-dossier-actuel" type="text" :value="$t('aucunDossier')" disabled v-if="dossierActuel.id === 'aucun'">
+						<input id="champ-dossier-actuel" type="text" :value="dossierActuel.nom" disabled v-else>
 						<label for="champ-dossier-pad">{{ $t('dossierDestination') }}</label>
 						<select id="champ-dossier-pad">
 							<option value="aucun" v-if="dossierActuel.id !== 'aucun'">{{ $t('aucunDossier') }}</option>
@@ -308,44 +308,44 @@
 							</template>
 						</select>
 						<div class="actions">
-							<span role="button" tabindex="0" class="bouton" @click="deplacerPad">{{ $t('valider') }}</span>
+							<span class="bouton" role="button" :tabindex="definirTabIndexModale()" @click="deplacerPad" @keydown.enter="deplacerPad">{{ $t('valider') }}</span>
 						</div>
 					</div>
 				</div>
 			</div>
 		</div>
 
-		<div class="conteneur-modale" role="dialog" tabindex="-1" v-else-if="modale === 'importer-pad'">
-			<div id="import" class="modale" role="document">
+		<div class="conteneur-modale" v-else-if="modale === 'importer-pad'">
+			<div id="import" class="modale" role="dialog">
 				<div class="en-tete">
 					<span class="titre">{{ $t('importerPad') }}</span>
-					<span role="button" tabindex="0" class="fermer" @click="fermerModaleImporterPad"><i class="material-icons">close</i></span>
+					<span class="fermer" role="button" :tabindex="definirTabIndexModale()" @click="fermerModaleImporterPad" @keydown.enter="fermerModaleImporterPad"><i class="material-icons">close</i></span>
 				</div>
 				<div class="conteneur">
 					<div class="contenu">
 						<div class="conteneur-interrupteur" v-if="progressionImport === 0">
 							<span>{{ $t('importerCommentaires') }}</span>
-							<label class="bouton-interrupteur">
-								<input type="checkbox" :checked="parametresImport.commentaires" @change="modifierParametresImport($event, 'commentaires')">
+							<label class="bouton-interrupteur" :tabindex="definirTabIndexModale()" @keydown.enter="activerInput('parametre-commentaires')">
+								<input id="parametre-commentaires" type="checkbox" :checked="parametresImport.commentaires" @change="modifierParametresImport($event, 'commentaires')">
 								<span class="barre" />
 							</label>
 						</div>
 						<div class="conteneur-interrupteur" v-if="progressionImport === 0">
 							<span>{{ $t('importerEvaluations') }}</span>
-							<label class="bouton-interrupteur">
-								<input type="checkbox" :checked="parametresImport.evaluations" @change="modifierParametresImport($event, 'evaluations')">
+							<label class="bouton-interrupteur" :tabindex="definirTabIndexModale()" @keydown.enter="activerInput('parametre-evaluations')">
+								<input id="parametre-evaluations" type="checkbox" :checked="parametresImport.evaluations" @change="modifierParametresImport($event, 'evaluations')">
 								<span class="barre" />
 							</label>
 						</div>
 						<div class="conteneur-interrupteur" v-if="progressionImport === 0">
 							<span>{{ $t('importerActivite') }}</span>
-							<label class="bouton-interrupteur">
-								<input type="checkbox" :checked="parametresImport.activite" @change="modifierParametresImport($event, 'activite')">
+							<label class="bouton-interrupteur" :tabindex="definirTabIndexModale()" @keydown.enter="activerInput('parametre-activite')">
+								<input id="parametre-activite" type="checkbox" :checked="parametresImport.activite" @change="modifierParametresImport($event, 'activite')">
 								<span class="barre" />
 							</label>
 						</div>
-						<label for="importer-pad" class="bouton" v-show="progressionImport === 0">{{ $t('selectionnerPad') }}</label>
-						<input id="importer-pad" type="file" style="display: none" accept=".zip" @change="importerPad">
+						<label for="importer-pad" class="bouton" role="button" :tabindex="definirTabIndexModale()" @keydown.enter="activerInput('importer-pad')" v-if="progressionImport === 0">{{ $t('selectionnerPad') }}</label>
+						<input id="importer-pad" type="file" style="display: none" accept=".zip" @change="importerPad" v-if="progressionImport === 0">
 						<div class="conteneur-chargement progression" v-if="progressionImport > 0">
 							<progress class="barre-progression" max="100" :value="progressionImport" />
 							<div class="chargement" />
@@ -355,44 +355,44 @@
 			</div>
 		</div>
 
-		<div class="conteneur-modale" role="dialog" tabindex="-1" v-else-if="modale === 'ajouter-dossier'">
-			<div id="ajout-dossier" class="modale" role="document">
+		<div class="conteneur-modale" v-else-if="modale === 'ajouter-dossier'">
+			<div id="ajout-dossier" class="modale" role="dialog">
 				<div class="en-tete">
 					<span class="titre">{{ $t('ajouterDossier') }}</span>
-					<span role="button" class="fermer" @click="fermerModaleAjouterDossier"><i class="material-icons">close</i></span>
+					<span class="fermer" role="button" :tabindex="definirTabIndexModale()" @click="fermerModaleAjouterDossier" @keydown.enter="fermerModaleAjouterDossier"><i class="material-icons">close</i></span>
 				</div>
 				<div class="conteneur">
 					<div class="contenu">
 						<label for="champ-nom-dossier">{{ $t('nomDossier') }}</label>
 						<input id="champ-nom-dossier" type="text" maxlength="48" :value="dossier" @input="dossier = $event.target.value" @keydown.enter="ajouterDossier">
 						<div class="actions">
-							<span role="button" tabindex="0" class="bouton" @click="ajouterDossier">{{ $t('valider') }}</span>
+							<span class="bouton" role="button" :tabindex="definirTabIndexModale()" @click="ajouterDossier" @keydown.enter="ajouterDossier">{{ $t('valider') }}</span>
 						</div>
 					</div>
 				</div>
 			</div>
 		</div>
 
-		<div class="conteneur-modale" role="dialog" tabindex="-1" v-else-if="modale === 'modifier-dossier'">
-			<div id="modification-dossier" class="modale" role="document">
+		<div class="conteneur-modale" v-else-if="modale === 'modifier-dossier'">
+			<div id="modification-dossier" class="modale" role="dialog">
 				<div class="en-tete">
 					<span class="titre">{{ $t('modifierDossier') }}</span>
-					<span role="button" class="fermer" @click="fermerModaleModifierDossier"><i class="material-icons">close</i></span>
+					<span class="fermer" role="button" :tabindex="definirTabIndexModale()" @click="fermerModaleModifierDossier" @keydown.enter="fermerModaleModifierDossier"><i class="material-icons">close</i></span>
 				</div>
 				<div class="conteneur">
 					<div class="contenu">
 						<label for="champ-nom-dossier">{{ $t('nomDossier') }}</label>
 						<input id="champ-nom-dossier" type="text" maxlength="48" :value="dossier" @input="dossier = $event.target.value" @keydown.enter="modifierDossier">
 						<div class="actions">
-							<span role="button" tabindex="0" class="bouton" @click="modifierDossier">{{ $t('valider') }}</span>
+							<span class="bouton" role="button" :tabindex="definirTabIndexModale()" @click="modifierDossier" @keydown.enter="modifierDossier">{{ $t('valider') }}</span>
 						</div>
 					</div>
 				</div>
 			</div>
 		</div>
 
-		<div id="conteneur-message" class="conteneur-modale" role="dialog" tabindex="-1" v-if="modaleConfirmation !== ''">
-			<div class="modale" role="document">
+		<div id="conteneur-message" class="conteneur-modale" v-if="modaleConfirmation !== ''">
+			<div class="modale" role="dialog">
 				<div class="conteneur">
 					<div class="contenu">
 						<div class="message" v-html="$t('confirmationDupliquerPad')" v-if="modaleConfirmation === 'dupliquer'" />
@@ -402,13 +402,13 @@
 						<div class="message" v-html="$t('confirmationSupprimerCompte')" v-else-if="modaleConfirmation === 'supprimer-compte'" />
 						<div class="message" v-html="$t('confirmationSupprimerDossier')" v-else-if="modaleConfirmation === 'supprimer-dossier'" />
 						<div class="actions">
-							<span role="button" tabindex="0" class="bouton" @click="fermerModaleConfirmation">{{ $t('non') }}</span>
-							<span role="button" tabindex="0" class="bouton" @click="dupliquerPad" v-if="modaleConfirmation === 'dupliquer'">{{ $t('oui') }}</span>
-							<span role="button" tabindex="0" class="bouton" @click="exporterPad" v-else-if="modaleConfirmation === 'exporter'">{{ $t('oui') }}</span>
-							<span role="button" tabindex="0" class="bouton" @click="supprimerPad" v-else-if="modaleConfirmation === 'supprimer'">{{ $t('oui') }}</span>
-							<span role="button" tabindex="0" class="bouton" @click="supprimerPad" v-else-if="modaleConfirmation === 'supprimer-admin'">{{ $t('oui') }}</span>
-							<span role="button" tabindex="0" class="bouton" @click="supprimerCompte" v-else-if="modaleConfirmation === 'supprimer-compte'">{{ $t('oui') }}</span>
-							<span role="button" tabindex="0" class="bouton" @click="supprimerDossier" v-else-if="modaleConfirmation === 'supprimer-dossier'">{{ $t('oui') }}</span>
+							<span class="bouton" role="button" :tabindex="message === '' ? 0 : -1" @click="fermerModaleConfirmation" @keydown.enter="fermerModaleConfirmation">{{ $t('non') }}</span>
+							<span class="bouton" role="button" :tabindex="message === '' ? 0 : -1" @click="dupliquerPad" @keydown.enter="dupliquerPad" v-if="modaleConfirmation === 'dupliquer'">{{ $t('oui') }}</span>
+							<span class="bouton" role="button" :tabindex="message === '' ? 0 : -1" @click="exporterPad" @keydown.enter="exporterPad" v-else-if="modaleConfirmation === 'exporter'">{{ $t('oui') }}</span>
+							<span class="bouton" role="button" :tabindex="message === '' ? 0 : -1" @click="supprimerPad" @keydown.enter="supprimerPad" v-else-if="modaleConfirmation === 'supprimer'">{{ $t('oui') }}</span>
+							<span class="bouton" role="button" :tabindex="message === '' ? 0 : -1" @click="supprimerPad" @keydown.enter="supprimerPad" v-else-if="modaleConfirmation === 'supprimer-admin'">{{ $t('oui') }}</span>
+							<span class="bouton" role="button" :tabindex="message === '' ? 0 : -1" @click="supprimerCompte" @keydown.enter="supprimerCompte" v-else-if="modaleConfirmation === 'supprimer-compte'">{{ $t('oui') }}</span>
+							<span class="bouton" role="button" :tabindex="message === '' ? 0 : -1" @click="supprimerDossier" @keydown.enter="supprimerDossier" v-else-if="modaleConfirmation === 'supprimer-dossier'">{{ $t('oui') }}</span>
 						</div>
 					</div>
 				</div>
@@ -417,7 +417,7 @@
 
 		<Notification :notification="notification" @fermer="notification = ''" v-if="notification !== ''" />
 
-		<Message :message="message" @fermer="message = ''" v-if="message !== ''" />
+		<Message :message="message" @elementPrecedent="definirElementPrecedent" @fermer="fermerMessage" v-if="message !== ''" />
 
 		<Chargement v-if="chargement" />
 
@@ -472,6 +472,7 @@ export default {
 			dossier: '',
 			dossierId: '',
 			dossierActuel: {},
+			elementPrecedent: null,
 			hote: this.$pageContext.pageProps.hote,
 			identifiant: this.$pageContext.pageProps.identifiant,
 			nom: this.$pageContext.pageProps.nom,
@@ -544,35 +545,6 @@ export default {
 		if (import.meta.env.VITE_WALL_LIMIT && import.meta.env.VITE_WALL_LIMIT !== '') {
 			this.limite = parseInt(import.meta.env.VITE_WALL_LIMIT)
 		}
-
-		const observer = new PerformanceObserver((liste) => {
-			liste.getEntries().forEach(async function (entree) {
-				if (entree.type === 'back_forward') {
-					const reponse = await axios.post(this.hote + '/api/recuperer-donnees-utilisateur', {
-						identifiant: this.identifiant
-					}, {
-						headers: { 'Content-Type': 'application/json' }
-					})
-					if (reponse && reponse.hasOwnProperty('data')) {
-						this.affichage = reponse.data.affichage
-						this.classement = reponse.data.classement
-						this.padsCrees = reponse.data.padsCrees
-						this.padsRejoints = reponse.data.padsRejoints
-						this.padsAdmins = reponse.data.padsAdmins
-						this.padsFavoris = reponse.data.padsFavoris
-						this.dossiers = reponse.data.dossiers
-						this.pads = this.padsCrees
-						const favoris = []
-						this.padsFavoris.forEach(function (pad) {
-							favoris.push(pad.id)
-						})
-						this.favoris = favoris
-						this.classer(this.classement)
-					}
-				}
-			}.bind(this))
-		})
-		observer.observe({ type: 'navigation', buffered: true })
 	},
 	mounted () {
 		document.getElementsByTagName('html')[0].setAttribute('lang', this.langue)
@@ -582,8 +554,41 @@ export default {
 				this.chargementPage = false
 			}.bind(this), 300)
 		}.bind(this))
+
+		document.addEventListener('keydown', this.gererClavier, false)
+	},
+	beforeUnmount () {
+		document.removeEventListener('keydown', this.gererClavier, false)
 	},
 	methods: {
+		gererMenu () {
+			if (!this.menu) {
+				this.elementPrecedent = (document.activeElement || document.body)
+				this.menu = true
+				setTimeout(function () {
+					document.querySelector('.menu').classList.add('ouvert')
+					document.querySelector('.menu .fermer').focus()
+				}, 0)
+			} else {
+				this.fermerMenu()
+			}
+		},
+		fermerMenu () {
+			this.menu = false
+			this.gererFocus()
+		},
+		modifierOnglet (onglet) {
+			this.onglet = onglet
+		},
+		activerInput (id) {
+			document.querySelector('#' + id).click()
+		},
+		definirTabIndex () {
+			return this.modale === '' && this.message === '' && this.modaleConfirmation === '' && !this.menu ? 0 : -1
+		},
+		definirTabIndexModale () {
+			return this.message === '' && this.modaleConfirmation === '' ? 0 : -1
+		},
 		definirFond (fond) {
 			if (fond.substring(0, 1) === '#') {
 				return { backgroundColor: fond }
@@ -593,6 +598,7 @@ export default {
 		},
 		afficherModaleCreerPad () {
 			if (this.padsCrees.length < this.limite) {
+				this.elementPrecedent = (document.activeElement || document.body)
 				this.modale = 'creer-pad'
 				this.$nextTick(function () {
 					document.querySelector('#creation input').focus()
@@ -626,10 +632,15 @@ export default {
 		fermerModaleCreerPad () {
 			this.modale = ''
 			this.titre = ''
+			this.gererFocus()
 		},
 		afficherModaleImporterPad () {
 			if (this.padsCrees.length < this.limite) {
+				this.elementPrecedent = (document.activeElement || document.body)
 				this.modale = 'importer-pad'
+				this.$nextTick(function () {
+					document.querySelector('.modale .fermer').focus()
+				})
 			} else {
 				this.message = this.$t('limitePad', { limite: this.limite })
 			}
@@ -683,24 +694,29 @@ export default {
 			this.parametresImport.evaluations = false
 			this.parametresImport.activite = false
 			this.progressionImport = 0
-			document.querySelector('#importer-pad').value = ''
+			this.gererFocus()
 		},
 		afficherModaleConfirmation (event, id, type) {
 			event.preventDefault()
 			event.stopPropagation()
 			if (type === 'supprimer-compte') {
-				this.menu = false
+				this.fermerMenu()
 			} else if (type === 'supprimer-dossier') {
 				this.dossierId = id
 			} else {
 				this.padId = id
 			}
+			this.elementPrecedent = (document.activeElement || document.body)
 			this.modaleConfirmation = type
+			this.$nextTick(function () {
+				document.querySelector('.modale .bouton').focus()
+			})
 		},
 		fermerModaleConfirmation () {
 			this.modaleConfirmation = ''
 			this.padId = ''
 			this.dossierId = ''
+			this.gererFocus()
 		},
 		ajouterFavori (pad) {
 			this.chargement = true
@@ -718,6 +734,9 @@ export default {
 					this.padsFavoris.push(pad)
 					this.favoris.push(pad.id)
 					this.notification = this.$t('padAjouteFavoris')
+					this.$nextTick(function () {
+						document.querySelector('#pad-' + pad.id + ' .supprimer-favori').focus()
+					})
 				}
 			}.bind(this)).catch(function () {
 				this.chargement = false
@@ -760,6 +779,11 @@ export default {
 						}.bind(this))
 					}
 					this.notification = this.$t('padSupprimeFavoris')
+					this.$nextTick(function () {
+						if (document.querySelector('#pad-' + padId + ' .ajouter-favori')) {
+							document.querySelector('#pad-' + padId + ' .ajouter-favori').focus()
+						}
+					})
 				}
 			}.bind(this)).catch(function () {
 				this.chargement = false
@@ -784,7 +808,11 @@ export default {
 				}
 			}.bind(this))
 			this.dossierActuel = dossierActuel
+			this.elementPrecedent = (document.activeElement || document.body)
 			this.modale = 'deplacer-pad'
+			this.$nextTick(function () {
+				document.querySelector('.modale input').focus()
+			})
 		},
 		deplacerPad () {
 			const destination = document.querySelector('#champ-dossier-pad').value
@@ -802,6 +830,8 @@ export default {
 						window.location.replace('/')
 					} else if (donnees === 'erreur_deplacement') {
 						this.message = this.$t('erreurDeplacementPad')
+					} else if (donnees === 'non_autorise') {
+						this.message = this.$t('actionNonAutorisee')
 					} else {
 						this.dossiers.forEach(function (dossier, indexDossier) {
 							if (dossier.pads.includes(this.padId)) {
@@ -833,6 +863,7 @@ export default {
 			this.modale = ''
 			this.padId = ''
 			this.dossierActuel = {}
+			this.gererFocus()
 		},
 		dupliquerPad () {
 			this.modaleConfirmation = ''
@@ -849,6 +880,8 @@ export default {
 					this.message = this.$t('erreurDuplicationPad')
 				} else if (donnees === 'erreur_espace_disque') {
 					this.message = this.$t('erreurEspaceDisque')
+				} else if (donnees === 'non_autorise') {
+					this.message = this.$t('actionNonAutorisee')
 				} else {
 					this.padsCrees.push(donnees)
 					this.notification = this.$t('padDuplique')
@@ -875,6 +908,8 @@ export default {
 					window.location.replace('/')
 				} else if (donnees === 'erreur_export') {
 					this.message = this.$t('erreurExportPad')
+				} else if (donnees === 'non_autorise') {
+					this.message = this.$t('actionNonAutorisee')
 				} else {
 					saveAs('/temp/' + donnees, 'pad-' + this.padId + '.zip')
 				}
@@ -899,6 +934,8 @@ export default {
 				const donnees = reponse.data
 				if (donnees === 'non_connecte') {
 					window.location.replace('/')
+				} else if (donnees === 'non_autorise') {
+					this.message = this.$t('actionNonAutorisee')
 				} else if (donnees === 'erreur_suppression') {
 					this.message = this.$t('erreurSuppressionPad')
 				} else {
@@ -1117,6 +1154,7 @@ export default {
 			this.motDePasse = ''
 			this.nouveauMotDePasse = ''
 			this.confirmationNouveauMotDePasse = ''
+			this.gererFocus()
 		},
 		modifierLangue (langue) {
 			if (this.langue !== langue) {
@@ -1160,6 +1198,7 @@ export default {
 			}
 		},
 		afficherModaleAjouterDossier () {
+			this.elementPrecedent = (document.activeElement || document.body)
 			this.modale = 'ajouter-dossier'
 			this.$nextTick(function () {
 				document.querySelector('#ajout-dossier input').focus()
@@ -1194,6 +1233,7 @@ export default {
 		fermerModaleAjouterDossier () {
 			this.modale = ''
 			this.dossier = ''
+			this.gererFocus()
 		},
 		afficherModaleModifierDossier (event, id) {
 			event.preventDefault()
@@ -1204,6 +1244,7 @@ export default {
 				}
 			}.bind(this))
 			this.dossierId = id
+			this.elementPrecedent = (document.activeElement || document.body)
 			this.modale = 'modifier-dossier'
 			this.$nextTick(function () {
 				document.querySelector('#modification-dossier input').focus()
@@ -1244,6 +1285,7 @@ export default {
 			this.modale = ''
 			this.dossier = ''
 			this.dossierId = ''
+			this.gererFocus()
 		},
 		supprimerDossier () {
 			this.modaleConfirmation = ''
@@ -1286,6 +1328,9 @@ export default {
 				if (donnees === 'erreur') {
 					this.chargement = false
 					this.message = this.$t('erreurCommunicationServeur')
+				} else if (donnees === 'non_autorise') {
+					this.chargement = false
+					this.message = this.$t('actionNonAutorisee')
 				} else {
 					this.$socket.emit('deconnexion', identifiant)
 					window.location.replace('/')
@@ -1305,6 +1350,34 @@ export default {
 				this.chargement = false
 				this.message = this.$t('erreurCommunicationServeur')
 			}.bind(this))
+		},
+		fermerModale () {
+			this.modale = ''
+			this.gererFocus()
+		},
+		fermerMessage () {
+			this.message = ''
+			this.gererFocus()
+		},
+		definirElementPrecedent (element) {
+			this.elementPrecedent = element
+		},
+		gererFocus () {
+			if (this.elementPrecedent) {
+				this.elementPrecedent.focus()
+				this.elementPrecedent = null
+			}
+		},
+		gererClavier (event) {
+			if (event.key === 'Escape' && this.message !== '') {
+				this.fermerMessage()
+			} else if (event.key === 'Escape' && this.modaleConfirmation !== '') {
+				this.fermerModaleConfirmation()
+			} else if (event.key === 'Escape' && this.modale !== '') {
+				this.fermerModale()
+			} else if (event.key === 'Escape' && this.menu) {
+				this.fermerMenu()
+			}
 		}
 	}
 }
