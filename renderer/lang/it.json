@@ -383,5 +383,8 @@
 	"padCreeAvecCompte": "Questo pad appartiene già a un altro utente.",
 	"utilisateurInexistant": "Questo account non esiste.",
 	"identifiantNonConforme": "Il nome utente è troppo corto o contiene caratteri non validi.",
-	"erreurEspaceDisque": "Non c'è più spazio libero sul disco rigido del server. Non è stato possibile caricare il file."
+	"erreurEspaceDisque": "Non c'è più spazio libero sul disco rigido del server. Non è stato possibile caricare il file.",
+	"actionNonAutorisee": "Non siete autorizzati a eseguire questa azione.",
+	"masquerMotDePasse": "Occulta password",
+	"afficherMotDePasse": "Mostra password"
 }

@@ -383,5 +383,8 @@
 	"padCreeAvecCompte": "Ova podloga već pripada drugom korisniku.",
 	"utilisateurInexistant": "Ovaj račun ne postoji.",
 	"identifiantNonConforme": "Korisničko ime je prekratko ili sadrži nedopuštene znakove.",
-	"erreurEspaceDisque": "Nema više slobodnog prostora na tvrdom disku poslužitelja. Datoteka se nije mogla učitati."
+	"erreurEspaceDisque": "Nema više slobodnog prostora na tvrdom disku poslužitelja. Datoteka se nije mogla učitati.",
+	"actionNonAutorisee": "Ne smijete izvršiti ovu radnju.",
+	"masquerMotDePasse": "Sakrij lozinku",
+	"afficherMotDePasse": "Prikaži lozinku"
 }

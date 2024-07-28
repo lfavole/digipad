@@ -383,5 +383,8 @@
 	"padCreeAvecCompte": "This pad already belongs to another user.",
 	"utilisateurInexistant": "This account does not exist.",
 	"identifiantNonConforme": "Username is too short or contains illegal characters.",
-	"erreurEspaceDisque": "There is no more free space on the server's hard disk. The file could not be uploaded."
+	"erreurEspaceDisque": "There is no more free space on the server's hard disk. The file could not be uploaded.",
+	"actionNonAutorisee": "You are not authorized to perform this action.",
+	"masquerMotDePasse": "Hide password",
+	"afficherMotDePasse": "Show password"
 }

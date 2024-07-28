@@ -383,5 +383,8 @@
 	"padCreeAvecCompte": "Ce pad appartient déjà à un autre utilisateur.",
 	"utilisateurInexistant": "Ce compte n'existe pas.",
 	"identifiantNonConforme": "L'identifiant est trop court ou comporte des caractères non autorisés.",
-	"erreurEspaceDisque": "Il n'y a plus d'espace libre sur le disque dur du serveur. Le téléversement du fichier n'a pas pu être effectué."
+	"erreurEspaceDisque": "Il n'y a plus d'espace libre sur le disque dur du serveur. Le téléversement du fichier n'a pas pu être effectué.",
+	"actionNonAutorisee": "Vous n'êtes pas autorisé à effectuer cette action.",
+	"masquerMotDePasse": "Masquer le mot de passe",
+	"afficherMotDePasse": "Afficher le mot de passe"
 }
