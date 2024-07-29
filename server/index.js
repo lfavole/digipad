@@ -2458,7 +2458,7 @@ async function demarrerServeur () {
 			if (err || !donnees || donnees === null || !donnees.hasOwnProperty('code')) { res.send('erreur'); return false }
 			if (code === donnees.code) {
 				const donneesPad = await recupererDonneesPadProtege(donnees, pad, identifiant)
-				if (!req.session.acces) {
+				if (!req.session.hasOwnProperty('acces')) {
 					req.session.acces = []
 				}
 				let padAcces = false
@@ -3228,6 +3228,9 @@ async function demarrerServeur () {
 			const identifiant = donnees.identifiant
 			let code = ''
 			if (donnees.code === '') {
+				if (!socket.request.session.hasOwnProperty('acces')) {
+					socket.request.session.acces = []
+				}
 				socket.request.session.acces.map(function (e) {
 					if (e.hasOwnProperty('pad') && e.pad === pad) {
 						code = e.code 
