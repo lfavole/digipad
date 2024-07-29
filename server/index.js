@@ -3320,22 +3320,17 @@ async function demarrerServeur () {
 			if (identifiant !== '' && identifiant !== undefined && socket.request.session.identifiant === identifiant) {
 				db.hgetall('pads:' + pad, function (err, donnees) {
 					if (err || !donnees || donnees === null || !donnees.hasOwnProperty('id') || !donnees.hasOwnProperty('token') || !donnees.hasOwnProperty('identifiant')) { socket.emit('erreur'); return false }
-					const proprietaire = donnees.identifiant
-					let admins = []
-					if (donnees.hasOwnProperty('admins')) {
-						admins = donnees.admins
-					}
-					if (donnees.id === pad && donnees.token === token && (admins.includes(identifiant) || proprietaire === identifiant)) {
-						const proprietaire = donnees.identifiant
-						let admins = []
-						if (donnees.hasOwnProperty('admins')) {
-							admins = donnees.admins
-						}
+					if (donnees.id === pad && donnees.token === token) {
 						db.exists('pad-' + pad + ':' + bloc, function (err, resultat) {
 							if (err) { socket.emit('erreur'); return false }
 							if (resultat === 1) {
 								db.hgetall('pad-' + pad + ':' + bloc, async function (err, objet) {
 									if (err) { socket.emit('erreur'); return false }
+									const proprietaire = donnees.identifiant
+									let admins = []
+									if (donnees.hasOwnProperty('admins')) {
+										admins = donnees.admins
+									}
 									if (objet.identifiant === identifiant || proprietaire === identifiant || admins.includes(identifiant) || donnees.contributions === 'modifiables') {
 										let visibilite = 'visible'
 										if (objet.hasOwnProperty('visibilite')) {
@@ -3417,6 +3412,8 @@ async function demarrerServeur () {
 											socket.request.session.cookie.expires = new Date(Date.now() + dureeSession)
 											socket.request.session.save()
 										}
+									} else {
+										socket.emit('nonautorise')
 									}
 								})
 							}
@@ -3600,51 +3597,55 @@ async function demarrerServeur () {
 			if (identifiant !== '' && identifiant !== undefined && socket.request.session.identifiant === identifiant) {
 				db.hgetall('pads:' + pad, function (err, donnees) {
 					if (err || !donnees || donnees === null || !donnees.hasOwnProperty('id') || !donnees.hasOwnProperty('token') || !donnees.hasOwnProperty('identifiant')) { socket.emit('erreur'); return false }
-					const proprietaire = donnees.identifiant
-					let admins = []
-					if (donnees.hasOwnProperty('admins')) {
-						admins = donnees.admins
-					}
-					if (donnees.id === pad && donnees.token === token && (admins.includes(identifiant) || proprietaire === identifiant)) {
+					if (donnees.id === pad && donnees.token === token) {
 						db.exists('pad-' + pad + ':' + bloc, function (err, resultat) {
 							if (err) { socket.emit('erreur'); return false }
 							if (resultat === 1) {
 								db.hgetall('pad-' + pad + ':' + bloc, function (err, objet) {
 									if (err) { socket.emit('erreur'); return false }
-									if (objet.hasOwnProperty('media') && objet.media !== '' && objet.type !== 'embed') {
-										supprimerFichier(pad, objet.media)
+									const proprietaire = donnees.identifiant
+									let admins = []
+									if (donnees.hasOwnProperty('admins')) {
+										admins = donnees.admins
 									}
-									if (objet.hasOwnProperty('vignette') && objet.vignette !== '' && !objet.vignette.includes('/img/') && !verifierURL(objet.vignette, ['https', 'http'])) {
-										supprimerFichier(pad, path.basename(objet.vignette))
-									}
-									let etherpadId, url
-									if (objet.hasOwnProperty('iframe') && objet.iframe !== '' && objet.iframe.includes(etherpad)) {
-										etherpadId = objet.iframe.replace(etherpad + '/p/', '')
-										url = etherpad + '/api/1/deletePad?apikey=' + etherpadApi + '&padID=' + etherpadId
-										axios.get(url)
-									}
-									if (objet.hasOwnProperty('media') && objet.media !== '' && objet.media.includes(etherpad)) {
-										etherpadId = objet.media.replace(etherpad + '/p/', '')
-										url = etherpad + '/api/1/deletePad?apikey=' + etherpadApi + '&padID=' + etherpadId
-										axios.get(url)
-									}
-									if (objet.hasOwnProperty('bloc') && objet.bloc === bloc) {
-										const date = dayjs().format()
-										const activiteId = parseInt(donnees.activite) + 1
-										const multi = db.multi()
-										multi.del('pad-' + pad + ':' + bloc)
-										multi.zrem('blocs:' + pad, bloc)
-										multi.del('commentaires:' + bloc)
-										multi.del('evaluations:' + bloc)
-										multi.hset('dates-pads:' + pad, 'date', date)
-										// Enregistrer entrée du registre d'activité
-										multi.hincrby('pads:' + pad, 'activite', 1)
-										multi.zadd('activite:' + pad, activiteId, JSON.stringify({ id: activiteId, bloc: bloc, identifiant: identifiant, titre: titre, date: date, couleur: couleur, type: 'bloc-supprime' }))
-										multi.exec(function () {
-											io.in('pad-' + pad).emit('supprimerbloc', { bloc: bloc, identifiant: identifiant, nom: nom, titre: titre, date: date, couleur: couleur, colonne: colonne, activiteId: activiteId })
-											socket.request.session.cookie.expires = new Date(Date.now() + dureeSession)
-											socket.request.session.save()
-										})
+									if (objet.identifiant === identifiant || proprietaire === identifiant || admins.includes(identifiant)) {
+										if (objet.hasOwnProperty('media') && objet.media !== '' && objet.type !== 'embed') {
+											supprimerFichier(pad, objet.media)
+										}
+										if (objet.hasOwnProperty('vignette') && objet.vignette !== '' && !objet.vignette.includes('/img/') && !verifierURL(objet.vignette, ['https', 'http'])) {
+											supprimerFichier(pad, path.basename(objet.vignette))
+										}
+										let etherpadId, url
+										if (objet.hasOwnProperty('iframe') && objet.iframe !== '' && objet.iframe.includes(etherpad)) {
+											etherpadId = objet.iframe.replace(etherpad + '/p/', '')
+											url = etherpad + '/api/1/deletePad?apikey=' + etherpadApi + '&padID=' + etherpadId
+											axios.get(url)
+										}
+										if (objet.hasOwnProperty('media') && objet.media !== '' && objet.media.includes(etherpad)) {
+											etherpadId = objet.media.replace(etherpad + '/p/', '')
+											url = etherpad + '/api/1/deletePad?apikey=' + etherpadApi + '&padID=' + etherpadId
+											axios.get(url)
+										}
+										if (objet.hasOwnProperty('bloc') && objet.bloc === bloc) {
+											const date = dayjs().format()
+											const activiteId = parseInt(donnees.activite) + 1
+											const multi = db.multi()
+											multi.del('pad-' + pad + ':' + bloc)
+											multi.zrem('blocs:' + pad, bloc)
+											multi.del('commentaires:' + bloc)
+											multi.del('evaluations:' + bloc)
+											multi.hset('dates-pads:' + pad, 'date', date)
+											// Enregistrer entrée du registre d'activité
+											multi.hincrby('pads:' + pad, 'activite', 1)
+											multi.zadd('activite:' + pad, activiteId, JSON.stringify({ id: activiteId, bloc: bloc, identifiant: identifiant, titre: titre, date: date, couleur: couleur, type: 'bloc-supprime' }))
+											multi.exec(function () {
+												io.in('pad-' + pad).emit('supprimerbloc', { bloc: bloc, identifiant: identifiant, nom: nom, titre: titre, date: date, couleur: couleur, colonne: colonne, activiteId: activiteId })
+												socket.request.session.cookie.expires = new Date(Date.now() + dureeSession)
+												socket.request.session.save()
+											})
+										}
+									} else {
+										socket.emit('nonautorise')
 									}
 								})
 							}
