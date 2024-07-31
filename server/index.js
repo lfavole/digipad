@@ -1098,8 +1098,7 @@ async function demarrerServeur () {
 							} else if (resultat !== 1 && await fs.pathExists(path.join(__dirname, '..', '/static/pads/' + pad + '.json'))) {
 								const donnees = await fs.readJson(path.join(__dirname, '..', '/static/pads/' + pad + '.json'))
 								if (typeof donnees === 'object' && donnees !== null && donnees.hasOwnProperty('pad') && donnees.hasOwnProperty('blocs') && donnees.hasOwnProperty('activite')) {
-									const proprietaire = donnees.identifiant
-									if (proprietaire === identifiant) {
+									if (donnees.pad.identifiant === identifiant) {
 										const date = dayjs().format()
 										const donneesBlocs = []
 										for (const [indexBloc, bloc] of donnees.blocs.entries()) {
@@ -1340,10 +1339,10 @@ async function demarrerServeur () {
 									await fs.copy(path.join(__dirname, '..', '/public/fonts/Roboto-Slab-Medium.woff2'), path.normalize(chemin + '/' + id + '/static/fonts/Roboto-Slab-Medium.woff2'))
 									await fs.copy(path.join(__dirname, '..', '/public/img/favicon.png'), path.normalize(chemin + '/' + id + '/static/img/favicon.png'))
 									for (const bloc of parametres.blocs) {
-										if (Object.keys(bloc).length > 0 && bloc.media !== '' && bloc.type !== 'embed' && await fs.pathExists(path.join(__dirname, '..', '/static/' + definirDossierFichiers(id) + '/' + id + '/' + bloc.media))) {
+										if (Object.keys(bloc).length > 0 && bloc.hasOwnProperty('media') && bloc.media !== '' && bloc.type !== 'embed' && await fs.pathExists(path.join(__dirname, '..', '/static/' + definirDossierFichiers(id) + '/' + id + '/' + bloc.media))) {
 											await fs.copy(path.join(__dirname, '..', '/static/' + definirDossierFichiers(id) + '/' + id + '/' + bloc.media), path.normalize(chemin + '/' + id + '/fichiers/' + bloc.media, { overwrite: true }))
 										}
-										if (Object.keys(bloc).length > 0 && bloc.vignette && bloc.vignette !== '') {
+										if (Object.keys(bloc).length > 0 && bloc.hasOwnProperty('vignette') && bloc.vignette !== '') {
 											if (bloc.vignette.includes('/img/') && !verifierURL(bloc.vignette, ['https', 'http']) && await fs.pathExists(path.join(__dirname, '..', '/public' + bloc.vignette))) {
 												await fs.copy(path.join(__dirname, '..', '/public' + bloc.vignette), path.normalize(chemin + '/' + id + '/static' + bloc.vignette, { overwrite: true }))
 											} else if (!verifierURL(bloc.vignette, ['https', 'http'])) {
@@ -1376,61 +1375,64 @@ async function demarrerServeur () {
 					})
 				} else if (resultat !== 1 && await fs.pathExists(path.join(__dirname, '..', '/static/pads/' + id + '.json'))) {
 					const donnees = await fs.readJson(path.join(__dirname, '..', '/static/pads/' + id + '.json'))
-					const proprietaire = donnees.identifiant
-					if (typeof donnees === 'object' && donnees !== null && donnees.hasOwnProperty('pad') && donnees.hasOwnProperty('blocs') && donnees.hasOwnProperty('activite') && proprietaire === identifiant) {
-						const html = genererHTML(donnees.pad, donnees.blocs)
-						const chemin = path.join(__dirname, '..', '/static/temp')
-						await fs.mkdirp(path.normalize(chemin + '/' + id))
-						await fs.mkdirp(path.normalize(chemin + '/' + id + '/fichiers'))
-						await fs.mkdirp(path.normalize(chemin + '/' + id + '/static'))
-						await fs.writeFile(path.normalize(chemin + '/' + id + '/donnees.json'), JSON.stringify(donnees, '', 4), 'utf8')
-						await fs.writeFile(path.normalize(chemin + '/' + id + '/index.html'), html, 'utf8')
-						if (!donnees.pad.fond.includes('/img/') && donnees.pad.fond.substring(0, 1) !== '#' && donnees.pad.fond !== '') {
-							const fichierFond = path.basename(donnees.pad.fond)
-							if (await fs.pathExists(path.join(__dirname, '..', '/static/' + definirDossierFichiers(id) + '/' + id + '/' + fichierFond))) {
-								await fs.copy(path.join(__dirname, '..', '/static/' + definirDossierFichiers(id) + '/' + id + '/' + fichierFond), path.normalize(chemin + '/' + id + '/fichiers/' + fichierFond, { overwrite: true }))
+					if (typeof donnees === 'object' && donnees !== null && donnees.hasOwnProperty('pad') && donnees.hasOwnProperty('blocs') && donnees.hasOwnProperty('activite')) {
+						if (donnees.pad.identifiant === identifiant) {
+							const html = genererHTML(donnees.pad, donnees.blocs)
+							const chemin = path.join(__dirname, '..', '/static/temp')
+							await fs.mkdirp(path.normalize(chemin + '/' + id))
+							await fs.mkdirp(path.normalize(chemin + '/' + id + '/fichiers'))
+							await fs.mkdirp(path.normalize(chemin + '/' + id + '/static'))
+							await fs.writeFile(path.normalize(chemin + '/' + id + '/donnees.json'), JSON.stringify(donnees, '', 4), 'utf8')
+							await fs.writeFile(path.normalize(chemin + '/' + id + '/index.html'), html, 'utf8')
+							if (!donnees.pad.fond.includes('/img/') && donnees.pad.fond.substring(0, 1) !== '#' && donnees.pad.fond !== '') {
+								const fichierFond = path.basename(donnees.pad.fond)
+								if (await fs.pathExists(path.join(__dirname, '..', '/static/' + definirDossierFichiers(id) + '/' + id + '/' + fichierFond))) {
+									await fs.copy(path.join(__dirname, '..', '/static/' + definirDossierFichiers(id) + '/' + id + '/' + fichierFond), path.normalize(chemin + '/' + id + '/fichiers/' + fichierFond, { overwrite: true }))
+								}
+							} else if (donnees.pad.fond.includes('/img/') && await fs.pathExists(path.join(__dirname, '..', '/public' + donnees.pad.fond))) {
+								await fs.copy(path.join(__dirname, '..', '/public' + donnees.pad.fond), path.normalize(chemin + '/' + id + '/static' + donnees.pad.fond, { overwrite: true }))
 							}
-						} else if (donnees.pad.fond.includes('/img/') && await fs.pathExists(path.join(__dirname, '..', '/public' + donnees.pad.fond))) {
-							await fs.copy(path.join(__dirname, '..', '/public' + donnees.pad.fond), path.normalize(chemin + '/' + id + '/static' + donnees.pad.fond, { overwrite: true }))
-						}
-						if (await fs.pathExists(path.join(__dirname, '..', '/static/export/css'))) {
-							await fs.copy(path.join(__dirname, '..', '/static/export/css'), path.normalize(chemin + '/' + id + '/static/css'))
-						}
-						if (await fs.pathExists(path.join(__dirname, '..', '/static/export/js'))) {
-							await fs.copy(path.join(__dirname, '..', '/static/export/js'), path.normalize(chemin + '/' + id + '/static/js'))
-						}
-						await fs.copy(path.join(__dirname, '..', '/public/fonts/MaterialIcons-Regular.woff'), path.normalize(chemin + '/' + id + '/static/fonts/MaterialIcons-Regular.woff'))
-						await fs.copy(path.join(__dirname, '..', '/public/fonts/MaterialIcons-Regular.woff2'), path.normalize(chemin + '/' + id + '/static/fonts/MaterialIcons-Regular.woff2'))
-						await fs.copy(path.join(__dirname, '..', '/public/fonts/Roboto-Slab-Medium.woff'), path.normalize(chemin + '/' + id + '/static/fonts/Roboto-Slab-Medium.woff'))
-						await fs.copy(path.join(__dirname, '..', '/public/fonts/Roboto-Slab-Medium.woff2'), path.normalize(chemin + '/' + id + '/static/fonts/Roboto-Slab-Medium.woff2'))
-						await fs.copy(path.join(__dirname, '..', '/public/img/favicon.png'), path.normalize(chemin + '/' + id + '/static/img/favicon.png'))
-						for (const bloc of donnees.blocs) {
-							if (Object.keys(bloc).length > 0 && bloc.media !== '' && bloc.type !== 'embed' && await fs.pathExists(path.join(__dirname, '..', '/static/' + definirDossierFichiers(id) + '/' + id + '/' + bloc.media))) {
-								await fs.copy(path.join(__dirname, '..', '/static/' + definirDossierFichiers(id) + '/' + id + '/' + bloc.media), path.normalize(chemin + '/' + id + '/fichiers/' + bloc.media, { overwrite: true }))
+							if (await fs.pathExists(path.join(__dirname, '..', '/static/export/css'))) {
+								await fs.copy(path.join(__dirname, '..', '/static/export/css'), path.normalize(chemin + '/' + id + '/static/css'))
 							}
-							if (Object.keys(bloc).length > 0 && bloc.vignette && bloc.vignette !== '') {
-								if (bloc.vignette.includes('/img/') && !verifierURL(bloc.vignette, ['https', 'http']) && await fs.pathExists(path.join(__dirname, '..', '/public' + bloc.vignette))) {
-									await fs.copy(path.join(__dirname, '..', '/public' + bloc.vignette), path.normalize(chemin + '/' + id + '/static' + bloc.vignette, { overwrite: true }))
-								} else if (!verifierURL(bloc.vignette, ['https', 'http'])) {
-									const fichierVignette = path.basename(bloc.vignette)
-									if (await fs.pathExists(path.join(__dirname, '..', '/static/' + definirDossierFichiers(id) + '/' + id + '/' + fichierVignette))) {
-										await fs.copy(path.join(__dirname, '..', '/static/' + definirDossierFichiers(id) + '/' + id + '/' + fichierVignette), path.normalize(chemin + '/' + id + '/fichiers/' + fichierVignette, { overwrite: true }))
+							if (await fs.pathExists(path.join(__dirname, '..', '/static/export/js'))) {
+								await fs.copy(path.join(__dirname, '..', '/static/export/js'), path.normalize(chemin + '/' + id + '/static/js'))
+							}
+							await fs.copy(path.join(__dirname, '..', '/public/fonts/MaterialIcons-Regular.woff'), path.normalize(chemin + '/' + id + '/static/fonts/MaterialIcons-Regular.woff'))
+							await fs.copy(path.join(__dirname, '..', '/public/fonts/MaterialIcons-Regular.woff2'), path.normalize(chemin + '/' + id + '/static/fonts/MaterialIcons-Regular.woff2'))
+							await fs.copy(path.join(__dirname, '..', '/public/fonts/Roboto-Slab-Medium.woff'), path.normalize(chemin + '/' + id + '/static/fonts/Roboto-Slab-Medium.woff'))
+							await fs.copy(path.join(__dirname, '..', '/public/fonts/Roboto-Slab-Medium.woff2'), path.normalize(chemin + '/' + id + '/static/fonts/Roboto-Slab-Medium.woff2'))
+							await fs.copy(path.join(__dirname, '..', '/public/img/favicon.png'), path.normalize(chemin + '/' + id + '/static/img/favicon.png'))
+							for (const bloc of donnees.blocs) {
+								if (Object.keys(bloc).length > 0 && bloc.hasOwnProperty('media') && bloc.media !== '' && bloc.type !== 'embed' && await fs.pathExists(path.join(__dirname, '..', '/static/' + definirDossierFichiers(id) + '/' + id + '/' + bloc.media))) {
+									await fs.copy(path.join(__dirname, '..', '/static/' + definirDossierFichiers(id) + '/' + id + '/' + bloc.media), path.normalize(chemin + '/' + id + '/fichiers/' + bloc.media, { overwrite: true }))
+								}
+								if (Object.keys(bloc).length > 0 && bloc.hasOwnProperty('vignette') && bloc.vignette !== '') {
+									if (bloc.vignette.includes('/img/') && !verifierURL(bloc.vignette, ['https', 'http']) && await fs.pathExists(path.join(__dirname, '..', '/public' + bloc.vignette))) {
+										await fs.copy(path.join(__dirname, '..', '/public' + bloc.vignette), path.normalize(chemin + '/' + id + '/static' + bloc.vignette, { overwrite: true }))
+									} else if (!verifierURL(bloc.vignette, ['https', 'http'])) {
+										const fichierVignette = path.basename(bloc.vignette)
+										if (await fs.pathExists(path.join(__dirname, '..', '/static/' + definirDossierFichiers(id) + '/' + id + '/' + fichierVignette))) {
+											await fs.copy(path.join(__dirname, '..', '/static/' + definirDossierFichiers(id) + '/' + id + '/' + fichierVignette), path.normalize(chemin + '/' + id + '/fichiers/' + fichierVignette, { overwrite: true }))
+										}
 									}
 								}
 							}
+							const archiveId = Math.floor((Math.random() * 100000) + 1)
+							const sortie = fs.createWriteStream(path.normalize(chemin + '/pad-' + id + '_' + archiveId + '.zip'))
+							const archive = archiver('zip', {
+								zlib: { level: 9 }
+							})
+							sortie.on('finish', async function () {
+								await fs.remove(path.normalize(chemin + '/' + id))
+								res.send('pad-' + id + '_' + archiveId + '.zip')
+							})
+							archive.pipe(sortie)
+							archive.directory(path.normalize(chemin + '/' + id), false)
+							archive.finalize()
+						} else {
+							res.send('non_autorise')
 						}
-						const archiveId = Math.floor((Math.random() * 100000) + 1)
-						const sortie = fs.createWriteStream(path.normalize(chemin + '/pad-' + id + '_' + archiveId + '.zip'))
-						const archive = archiver('zip', {
-							zlib: { level: 9 }
-						})
-						sortie.on('finish', async function () {
-							await fs.remove(path.normalize(chemin + '/' + id))
-							res.send('pad-' + id + '_' + archiveId + '.zip')
-						})
-						archive.pipe(sortie)
-						archive.directory(path.normalize(chemin + '/' + id), false)
-						archive.finalize()
 					} else {
 						res.send('erreur_export')
 					}
@@ -2001,8 +2003,8 @@ async function demarrerServeur () {
 							})
 						} else if (resultat !== 1 && await fs.pathExists(path.join(__dirname, '..', '/static/pads/' + pad + '.json'))) {
 							const donnees = await fs.readJson(path.join(__dirname, '..', '/static/pads/' + pad + '.json'))
-							if (typeof donnees === 'object' && donnees !== null) {
-								if (donnees.hasOwnProperty('motdepasse')) {
+							if (typeof donnees === 'object' && donnees !== null && donnees.hasOwnProperty('pad') && donnees.hasOwnProperty('blocs') && donnees.hasOwnProperty('activite')) {
+								if (donnees.pad.hasOwnProperty('motdepasse')) {
 									await ajouterPadDansDb(pad, donnees)
 									const multi = db.multi()
 									multi.sadd('pads-crees:' + identifiant, pad)
@@ -2066,7 +2068,7 @@ async function demarrerServeur () {
 												})
 											} else if (resultat !== 1 && await fs.pathExists(path.join(__dirname, '..', '/static/pads/' + pad + '.json'))) {
 												const donnees = await fs.readJson(path.join(__dirname, '..', '/static/pads/' + pad + '.json'))
-												if (typeof donnees === 'object' && donnees !== null) {
+												if (typeof donnees === 'object' && donnees !== null && donnees.hasOwnProperty('pad') && donnees.hasOwnProperty('blocs') && donnees.hasOwnProperty('activite')) {
 													await ajouterPadDansDb(pad, donnees)
 													const multi = db.multi()
 													multi.sadd('pads-crees:' + nouvelIdentifiant, pad)
@@ -3336,7 +3338,7 @@ async function demarrerServeur () {
 											visibilite = 'privee'
 										}
 										const date = dayjs().format()
-										if (objet.hasOwnProperty('vignette') && objet.vignette !== vignette && vignette !== '' && !vignette.includes('/img/') && !verifierURL(vignette, ['https', 'http'])) {
+										if (vignette && objet.hasOwnProperty('vignette') && objet.vignette !== vignette && vignette !== '' && !vignette.includes('/img/') && !verifierURL(vignette, ['https', 'http'])) {
 											vignette = '/' + definirDossierFichiers(pad) + '/' + pad + '/' + path.basename(vignette)
 										}
 										if (visibilite === 'visible') {
@@ -3355,7 +3357,7 @@ async function demarrerServeur () {
 												if (objet.hasOwnProperty('media') && objet.media !== media && objet.media !== '' && objet.type !== 'embed') {
 													supprimerFichier(pad, objet.media)
 												}
-												if (objet.hasOwnProperty('vignette') && objet.vignette !== vignette && vignette !== '' && !vignette.includes('/img/') && !verifierURL(vignette, ['https', 'http']) && await fs.pathExists(path.join(__dirname, '..', '/static/temp/' + path.basename(vignette)))) {
+												if (vignette && objet.hasOwnProperty('vignette') && objet.vignette !== vignette && vignette !== '' && !vignette.includes('/img/') && !verifierURL(vignette, ['https', 'http']) && await fs.pathExists(path.join(__dirname, '..', '/static/temp/' + path.basename(vignette)))) {
 													await fs.copy(path.join(__dirname, '..', '/static/temp/' + path.basename(vignette)), path.join(__dirname, '..', '/static' + vignette))
 													await fs.remove(path.join(__dirname, '..', '/static/temp/' + path.basename(vignette)))
 												}
@@ -3378,7 +3380,7 @@ async function demarrerServeur () {
 												if (objet.hasOwnProperty('media') && objet.media !== media && objet.media !== '' && objet.type !== 'embed') {
 													supprimerFichier(pad, objet.media)
 												}
-												if (objet.hasOwnProperty('vignette') && objet.vignette !== vignette && vignette !== '' && !vignette.includes('/img/') && !verifierURL(vignette, ['https', 'http']) && await fs.pathExists(path.join(__dirname, '..', '/static/temp/' + path.basename(vignette)))) {
+												if (vignette && objet.hasOwnProperty('vignette') && objet.vignette !== vignette && vignette !== '' && !vignette.includes('/img/') && !verifierURL(vignette, ['https', 'http']) && await fs.pathExists(path.join(__dirname, '..', '/static/temp/' + path.basename(vignette)))) {
 													await fs.copy(path.join(__dirname, '..', '/static/temp/' + path.basename(vignette)), path.join(__dirname, '..', '/static' + vignette))
 													await fs.remove(path.join(__dirname, '..', '/static/temp/' + path.basename(vignette)))
 												}
@@ -3397,7 +3399,7 @@ async function demarrerServeur () {
 											if (objet.hasOwnProperty('media') && objet.media !== media && objet.media !== '' && objet.type !== 'embed') {
 												supprimerFichier(pad, objet.media)
 											}
-											if (objet.hasOwnProperty('vignette') && objet.vignette !== vignette && vignette !== '' && !vignette.includes('/img/') && !verifierURL(vignette, ['https', 'http']) && await fs.pathExists(path.join(__dirname, '..', '/static/temp/' + path.basename(vignette)))) {
+											if (vignette && objet.hasOwnProperty('vignette') && objet.vignette !== vignette && vignette !== '' && !vignette.includes('/img/') && !verifierURL(vignette, ['https', 'http']) && await fs.pathExists(path.join(__dirname, '..', '/static/temp/' + path.basename(vignette)))) {
 												await fs.copy(path.join(__dirname, '..', '/static/temp/' + path.basename(vignette)), path.join(__dirname, '..', '/static' + vignette))
 												await fs.remove(path.join(__dirname, '..', '/static/temp/' + path.basename(vignette)))
 											}
@@ -6023,7 +6025,7 @@ async function demarrerServeur () {
 									})
 								} else {
 									// Vérifier notification mise à jour pad
-									if (pad.hasOwnProperty('notification') && pad.notification.includes(identifiant)) {
+									if (pad.hasOwnProperty('notification') && pad.notification.includes(identifiant) && Array.isArray(pad.notification)) {
 										pad.notification.splice(pad.notification.indexOf(identifiant), 1)
 										db.hset('pads:' + id, 'notification', JSON.stringify(pad.notification), function () {
 											res.json({ pad: pad, blocs: blocs, activite: activite.reverse() })
@@ -6035,7 +6037,7 @@ async function demarrerServeur () {
 							})
 						} else {
 							// Vérifier notification mise à jour pad
-							if (pad.hasOwnProperty('notification') && pad.notification.includes(identifiant)) {
+							if (pad.hasOwnProperty('notification') && pad.notification.includes(identifiant) && Array.isArray(pad.notification)) {
 								pad.notification.splice(pad.notification.indexOf(identifiant), 1)
 								db.hset('pads:' + id, 'notification', JSON.stringify(pad.notification), function () {
 									res.json({ pad: pad, blocs: blocs, activite: activite.reverse() })
@@ -6326,7 +6328,7 @@ async function demarrerServeur () {
 					blocs.reverse()
 				}
 				// Vérifier notification mise à jour pad
-				if (pad.hasOwnProperty('notification') && pad.notification.includes(identifiant)) {
+				if (pad.hasOwnProperty('notification') && pad.notification.includes(identifiant) && Array.isArray(pad.notification)) {
 					pad.notification.splice(pad.notification.indexOf(identifiant), 1)
 					db.hset('pads:' + id, 'notification', JSON.stringify(pad.notification), function () {
 						resolveData({ pad: pad, blocs: blocs, activite: activite.reverse() })
@@ -6662,9 +6664,9 @@ async function demarrerServeur () {
 										</div>
 										<div class="texte" v-if="item.texte !== ''" v-html="item.texte"></div>
 										<div class="media" v-if="item.media !== ''">
-											<img v-if="item.type === 'image'" :src="'./fichiers/' + item.media" @click="afficherMedia(item)">
-											<img v-else-if="item.type === 'lien-image'" :src="item.media" @click="afficherMedia(item)">
-											<span v-else-if="item.type === 'audio' || item.type === 'video' || item.type === 'document' || item.type === 'pdf' || item.type === 'office' || item.type === 'embed'" @click="afficherMedia(item)"><img :class="{'vignette': definirVignette(item).substring(0, 9) !== './static/'}" :src="definirVignette(item)"></span>
+											<img role="button" tabindex="0" v-if="item.type === 'image'" :src="'./fichiers/' + item.media" @click="afficherMedia(item)" @keydown.enter="afficherMedia(item)">
+											<img role="button" tabindex="0" v-else-if="item.type === 'lien-image'" :src="item.media" @click="afficherMedia(item)" @keydown.enter="afficherMedia(item)">
+											<span role="button" tabindex="0" v-else-if="item.type === 'audio' || item.type === 'video' || item.type === 'document' || item.type === 'pdf' || item.type === 'office' || item.type === 'embed'" @click="afficherMedia(item)" @keydown.enter="afficherMedia(item)"><img :class="{'vignette': definirVignette(item).substring(0, 9) !== './static/'}" :src="definirVignette(item)"></span>
 											<span v-else-if="item.type === 'lien'"><a :href="item.media" target="_blank"><img :class="{'vignette': definirVignette(item).substring(0, 9) !== './static/'}" :src="definirVignette(item)"></a></span>
 											<span v-else><a :href="'./fichiers/' + item.media" download><img :class="{'vignette': definirVignette(item).substring(0, 9) !== './static/'}" :src="definirVignette(item)"></a></span>
 										</div>
@@ -6676,7 +6678,7 @@ async function demarrerServeur () {
 											</span>
 										</div>
 										<div class="action" :style="{'color': couleurs[item.identifiant]}">
-											<span role="button" tabindex="0" class="bouton" @click="ouvrirModaleCommentaires(item.bloc, item.titre)" v-if="pad.commentaires === 'actives'"><i class="material-icons">comment</i><span class="badge">{{ item.commentaires }}</span></span>
+											<span role="button" tabindex="0" class="bouton" @click="ouvrirModaleCommentaires(item.bloc, item.titre)" @keydown.enter="ouvrirModaleCommentaires(item.bloc, item.titre)" v-if="pad.commentaires === 'actives'"><i class="material-icons">comment</i><span class="badge">{{ item.commentaires }}</span></span>
 											<span role="button" tabindex="0" class="bouton info" :data-description="item.info"><i class="material-icons">info</i></span>
 											<span class="media-type" v-if="item.media !== ''"><i class="material-icons">{{ definirIconeMedia(item) }}</i></span>
 										</div>
@@ -6692,9 +6694,9 @@ async function demarrerServeur () {
 										</div>
 										<div class="texte" v-if="item.texte !== ''" v-html="item.texte"></div>
 										<div class="media" v-if="item.media !== ''">
-											<img v-if="item.type === 'image'" :src="'./fichiers/' + item.media" @click="afficherMedia(item)">
-											<img v-else-if="item.type === 'lien-image'" :src="item.media" @click="afficherMedia(item)">
-											<span v-else-if="item.type === 'audio' || item.type === 'video' || item.type === 'document' || item.type === 'pdf' || item.type === 'office' || item.type === 'embed'" @click="afficherMedia(item)"><img :class="{'vignette': definirVignette(item).substring(0, 9) !== './static/'}" :src="definirVignette(item)"></span>
+											<img role="button" tabindex="0" v-if="item.type === 'image'" :src="'./fichiers/' + item.media" @click="afficherMedia(item)" @keydown.enter="afficherMedia(item)">
+											<img role="button" tabindex="0" v-else-if="item.type === 'lien-image'" :src="item.media" @click="afficherMedia(item)" @keydown.enter="afficherMedia(item)">
+											<span role="button" tabindex="0" v-else-if="item.type === 'audio' || item.type === 'video' || item.type === 'document' || item.type === 'pdf' || item.type === 'office' || item.type === 'embed'" @click="afficherMedia(item)" @keydown.enter="afficherMedia(item)"><img :class="{'vignette': definirVignette(item).substring(0, 9) !== './static/'}" :src="definirVignette(item)"></span>
 											<span v-else-if="item.type === 'lien'"><a :href="item.media" target="_blank"><img :class="{'vignette': definirVignette(item).substring(0, 9) !== './static/'}" :src="definirVignette(item)"></a></span>
 											<span v-else><a :href="'./fichiers/' + item.media" download><img :class="{'vignette': definirVignette(item).substring(0, 9) !== './static/'}" :src="definirVignette(item)"></a></span>
 										</div>
@@ -6706,7 +6708,7 @@ async function demarrerServeur () {
 											</span>
 										</div>
 										<div class="action" :style="{'color': couleurs[item.identifiant]}">
-											<span role="button" tabindex="0" class="bouton" @click="ouvrirModaleCommentaires(item.bloc, item.titre)" v-if="pad.commentaires === 'actives'"><i class="material-icons">comment</i><span class="badge">{{ item.commentaires }}</span></span>
+											<span role="button" tabindex="0" class="bouton" @click="ouvrirModaleCommentaires(item.bloc, item.titre)" @keydown.enter="ouvrirModaleCommentaires(item.bloc, item.titre)" v-if="pad.commentaires === 'actives'"><i class="material-icons">comment</i><span class="badge">{{ item.commentaires }}</span></span>
 											<span role="button" tabindex="0" class="bouton info" :data-description="item.info"><i class="material-icons">info</i></span>
 											<span class="media-type" v-if="item.media !== ''"><i class="material-icons">{{ definirIconeMedia(item) }}</i></span>
 										</div>
@@ -6729,9 +6731,9 @@ async function demarrerServeur () {
 												</div>
 												<div class="texte" v-if="item.texte !== ''" v-html="item.texte"></div>
 												<div class="media" v-if="item.media !== ''">
-													<img v-if="item.type === 'image'" :src="'./fichiers/' + item.media" @click="afficherMedia(item)">
-													<img v-else-if="item.type === 'lien-image'" :src="item.media" @click="afficherMedia(item)">
-													<span v-else-if="item.type === 'audio' || item.type === 'video' || item.type === 'document' || item.type === 'pdf' || item.type === 'office' || item.type === 'embed'" @click="afficherMedia(item)"><img :class="{'vignette': definirVignette(item).substring(0, 9) !== './static/'}" :src="definirVignette(item)"></span>
+													<img role="button" tabindex="0" v-if="item.type === 'image'" :src="'./fichiers/' + item.media" @click="afficherMedia(item)" @keydown.enter="afficherMedia(item)">
+													<img role="button" tabindex="0" v-else-if="item.type === 'lien-image'" :src="item.media" @click="afficherMedia(item)" @keydown.enter="afficherMedia(item)">
+													<span role="button" tabindex="0" v-else-if="item.type === 'audio' || item.type === 'video' || item.type === 'document' || item.type === 'pdf' || item.type === 'office' || item.type === 'embed'" @click="afficherMedia(item)" @keydown.enter="afficherMedia(item)"><img :class="{'vignette': definirVignette(item).substring(0, 9) !== './static/'}" :src="definirVignette(item)"></span>
 													<span v-else-if="item.type === 'lien'"><a :href="item.media" target="_blank"><img :class="{'vignette': definirVignette(item).substring(0, 9) !== './static/'}" :src="definirVignette(item)"></a></span>
 													<span v-else><a :href="'./fichiers/' + item.media" download><img :class="{'vignette': definirVignette(item).substring(0, 9) !== './static/'}" :src="definirVignette(item)"></a></span>
 												</div>
@@ -6743,7 +6745,7 @@ async function demarrerServeur () {
 													</span>
 												</div>
 												<div class="action" :style="{'color': couleurs[item.identifiant]}">
-													<span role="button" tabindex="0" class="bouton" @click="ouvrirModaleCommentaires(item.bloc)" v-if="pad.commentaires === 'actives'"><i class="material-icons">comment</i><span class="badge">{{ item.commentaires }}</span></span>
+													<span role="button" tabindex="0" class="bouton" @click="ouvrirModaleCommentaires(item.bloc)" @keydown.enter="ouvrirModaleCommentaires(item.bloc)" v-if="pad.commentaires === 'actives'"><i class="material-icons">comment</i><span class="badge">{{ item.commentaires }}</span></span>
 													<span role="button" tabindex="0" class="bouton info" :data-description="item.info"><i class="material-icons">info</i></span>
 													<span class="media-type" v-if="item.media !== ''"><i class="material-icons">{{ definirIconeMedia(item) }}</i></span>
 												</div>
@@ -6758,7 +6760,7 @@ async function demarrerServeur () {
 							<div id="discussion" class="modale" role="dialog">
 								<div class="en-tete">
 									<span class="titre">{{ titre }}</span>
-									<span role="button" tabindex="0" class="fermer" @click="fermerModaleCommentaires"><i class="material-icons">close</i></span>
+									<span role="button" tabindex="0" class="fermer" @click="fermerModaleCommentaires" @keydown.enter="fermerModaleCommentaires"><i class="material-icons">close</i></span>
 								</div>
 								<ul class="commentaires ascenseur">
 									<li v-for="(entreeCommentaire, indexEntreeCommentaire) in commentaires" :key="indexEntreeCommentaire">
@@ -6821,6 +6823,9 @@ async function demarrerServeur () {
 									this.commentaires = commentaires
 									this.titre = titre
 									this.modaleCommentaires = true
+									this.$nextTick(function () {
+										document.querySelector('.modale .fermer').focus()
+									})
 								}
 							},
 							fermerModaleCommentaires () {
