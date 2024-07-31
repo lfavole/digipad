@@ -243,7 +243,7 @@ header {
 	line-height: 1;
 	cursor: help;
 }
-  
+
 .info:before {
 	visibility: hidden;
 	font-size: 1.1rem;
@@ -263,7 +263,7 @@ header {
 	text-align: center;
 	transition: 0.2s ease-in-out;
 }
-  
+
 .info:after {
 	visibility: hidden;
 	content: '';
@@ -280,13 +280,15 @@ header {
 	transition: 0.2s ease-in-out;
 	opacity: 0;
 }
-  
+
+.info:focus:before,
 .info:active:before {
 	visibility: visible;
 	opacity: 1;
 	bottom: 3rem;
 }
-  
+
+.info:focus:after,
 .info:active:after {
 	visibility: visible;
 	opacity: 1;
