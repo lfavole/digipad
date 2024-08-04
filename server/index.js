@@ -220,7 +220,7 @@ async function demarrerServeur () {
 				urlOriginal: req.originalUrl,
 				params: req.query,
 				hote: hote,
-				langues: ['fr', 'es', 'it', 'de', 'hr', 'en'],
+				langues: ['fr', 'es', 'it', 'de', 'en', 'hr'],
 				langue: langue
 			}
 			const pageContext = await renderPage(pageContextInit)
@@ -322,7 +322,7 @@ async function demarrerServeur () {
 							urlOriginal: req.originalUrl,
 							params: req.query,
 							hote: hote,
-							langues: ['fr', 'es', 'it', 'de', 'hr', 'en'],
+							langues: ['fr', 'es', 'it', 'de', 'en', 'hr'],
 							identifiant: req.session.identifiant,
 							nom: req.session.nom,
 							email: req.session.email,
@@ -410,7 +410,7 @@ async function demarrerServeur () {
 									urlOriginal: req.originalUrl,
 									params: req.query,
 									hote: hote,
-									langues: ['fr', 'es', 'it', 'de', 'hr', 'en'],
+									langues: ['fr', 'es', 'it', 'de', 'en', 'hr'],
 									identifiant: req.session.identifiant,
 									nom: req.session.nom,
 									email: req.session.email,
@@ -484,7 +484,7 @@ async function demarrerServeur () {
 			params: req.query,
 			hote: hote,
 			userAgent: userAgent,
-			langues: ['fr', 'es', 'it', 'de', 'hr', 'en'],
+			langues: ['fr', 'es', 'it', 'de', 'en', 'hr'],
 			identifiant: req.session.identifiant,
 			nom: req.session.nom,
 			email: req.session.email,
@@ -6604,18 +6604,18 @@ async function demarrerServeur () {
 				dateFormattee = 'Erstellt am ' + dayjs(new Date(donnees.date)).locale('de').format('L') + ' um ' + dayjs(new Date(donnees.date)).locale('de').format('LT') + ' von ' + donnees.nom + '.'
 			}
 			break
-		case 'hr':
-			if (donnees.hasOwnProperty('modifie')) {
-				dateFormattee = 'Stvoreno na ' + dayjs(new Date(donnees.date)).locale('hr').format('L') + ' u ' + dayjs(new Date(donnees.date)).locale('hr').format('LT') + ' po ' + donnees.nom + '. Izmijenjeno na ' + dayjs(new Date(donnees.modifie)).locale('hr').format('L') + ' u ' + dayjs(new Date(donnees.modifie)).locale('hr').format('LT') + '.'
-			} else {
-				dateFormattee = 'Stvoreno na ' + dayjs(new Date(donnees.date)).locale('hr').format('L') + ' u ' + dayjs(new Date(donnees.date)).locale('hr').format('LT') + ' po ' + donnees.nom + '.'
-			}
-			break
 		case 'en':
 			if (donnees.hasOwnProperty('modifie')) {
 				dateFormattee = 'Created on ' + dayjs(new Date(donnees.date)).locale('en').format('L') + ' at ' + dayjs(new Date(donnees.date)).locale('en').format('LT') + ' by ' + donnees.nom + '. Modified on ' + dayjs(new Date(donnees.modifie)).locale('en').format('L') + ' at ' + dayjs(new Date(donnees.modifie)).locale('en').format('LT') + '.'
 			} else {
 				dateFormattee = 'Created on ' + dayjs(new Date(donnees.date)).locale('en').format('L') + ' at ' + dayjs(new Date(donnees.date)).locale('en').format('LT') + ' by ' + donnees.nom + '.'
+			}
+			break
+		case 'hr':
+			if (donnees.hasOwnProperty('modifie')) {
+				dateFormattee = 'Stvoreno na ' + dayjs(new Date(donnees.date)).locale('hr').format('L') + ' u ' + dayjs(new Date(donnees.date)).locale('hr').format('LT') + ' po ' + donnees.nom + '. Izmijenjeno na ' + dayjs(new Date(donnees.modifie)).locale('hr').format('L') + ' u ' + dayjs(new Date(donnees.modifie)).locale('hr').format('LT') + '.'
+			} else {
+				dateFormattee = 'Stvoreno na ' + dayjs(new Date(donnees.date)).locale('hr').format('L') + ' u ' + dayjs(new Date(donnees.date)).locale('hr').format('LT') + ' po ' + donnees.nom + '.'
 			}
 			break
 		}
