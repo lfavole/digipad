@@ -400,6 +400,36 @@ export default {
 					this.chargementPage = false
 				}.bind(this), 300)
 
+				if (this.mobile) {
+					document.querySelector('#pad').addEventListener('touchstart', function (event) {
+						if (((event.target.closest('.titre') !== null && event.target.textContent !== '') || (event.target.closest('.texte') !== null && event.target.textContent !== '')) && this.pad.affichage === 'colonnes') {
+							this.desactiverDefilementHorizontal()
+						}
+					}.bind(this))
+
+					document.querySelector('#pad').addEventListener('touchend', function () {
+						if (this.pad.affichage === 'colonnes') {
+							setTimeout(function () {
+								this.activerDefilementHorizontal()
+							}.bind(this), 200)
+						}
+					}.bind(this))
+				} else {
+					document.querySelector('#pad').addEventListener('mousedown', function (event) {
+						if (((event.target.closest('.titre') !== null && event.target.textContent !== '') || (event.target.closest('.texte') !== null && event.target.textContent !== '')) && this.pad.affichage === 'colonnes') {
+							this.desactiverDefilementHorizontal()
+						}
+					}.bind(this))
+
+					document.querySelector('#pad').addEventListener('mouseup', function () {
+						if (this.pad.affichage === 'colonnes') {
+							setTimeout(function () {
+								this.activerDefilementHorizontal()
+							}.bind(this), 200)
+						}
+					}.bind(this))
+				}
+
 				document.querySelector('#pad').addEventListener('dragover', function (event) {
 					event.preventDefault()
 					event.stopPropagation()
@@ -3998,11 +4028,28 @@ export default {
 				this.chargement = false
 			}.bind(this))
 
-			this.$socket.on('modifieraffichagecolonne', function (affichageColonnes) {
+			this.$socket.on('modifieraffichagecolonne', function (affichageColonnes, valeur, colonne) {
 				this.pad.affichageColonnes = affichageColonnes
 				if (this.admin) {
 					this.notification = this.$t('affichageColonneModifie')
+					this.chargement = false
+				} else if (valeur === true) {
+					this.$socket.emit('verifierblocscolonnes', { pad: this.pad.id, identifiant: this.identifiant })
+				} else if (valeur === false) {
+					const blocs = JSON.parse(JSON.stringify(this.blocs))
+					blocs.forEach(function (bloc, index) {
+						if (parseInt(bloc.colonne) === parseInt(colonne)) {
+							blocs.splice(index, 1)
+						}
+					})
+					this.blocs = blocs
+					this.chargement = false
 				}
+			}.bind(this))
+
+			this.$socket.on('verifierblocscolonnes', function (blocs) {
+				this.blocs = blocs
+				this.definirColonnes(this.blocs)
 				this.chargement = false
 			}.bind(this))
 
