@@ -831,8 +831,6 @@ export default {
 						window.location.replace('/')
 					} else if (donnees === 'erreur_deplacement') {
 						this.message = this.$t('erreurDeplacementPad')
-					} else if (donnees === 'non_autorise') {
-						this.message = this.$t('actionNonAutorisee')
 					} else {
 						this.dossiers.forEach(function (dossier, indexDossier) {
 							if (dossier.pads.includes(this.padId)) {
