@@ -1251,7 +1251,9 @@ label.bouton-bleu {
 #diapositive .conteneur-texte *,
 #blocs .bloc .titre span,
 #blocs .bloc .texte,
-#blocs .bloc .texte * {
+#blocs .bloc .texte *,
+.commentaires li .texte,
+.commentaires li .texte * {
 	user-select: text!important;
 	-webkit-user-select: text!important;
 	-webkit-touch-callout: default!important;
