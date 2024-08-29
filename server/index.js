@@ -937,30 +937,22 @@ async function demarrerServeur () {
 		if (req.session.identifiant && req.session.identifiant === identifiant && req.session.statut === 'utilisateur') {
 			const padId = req.body.padId
 			const destination = req.body.destination
-			db.hgetall('pads:' + padId, function (err, resultat) {
-				if (err || !resultat || resultat === null) { res.send('erreur_deplacement'); return false }
-				const proprietaire = resultat.identifiant
-				if (proprietaire === identifiant) {
-					db.hgetall('utilisateurs:' + identifiant, function (err, donnees) {
-						if (err) { res.send('erreur_deplacement'); return false }
-						const dossiers = JSON.parse(donnees.dossiers)
-						dossiers.forEach(function (dossier, indexDossier) {
-							if (dossier.pads.includes(padId)) {
-								const indexPad = dossier.pads.indexOf(padId)
-								dossiers[indexDossier].pads.splice(indexPad, 1)
-							}
-							if (dossier.id === destination) {
-								dossiers[indexDossier].pads.push(padId)
-							}
-						})
-						db.hset('utilisateurs:' + identifiant, 'dossiers', JSON.stringify(dossiers), function (err) {
-							if (err) { res.send('erreur_deplacement'); return false }
-							res.send('pad_deplace')
-						})
-					})
-				} else {
-					res.send('non_autorise')
-				}
+			db.hgetall('utilisateurs:' + identifiant, function (err, donnees) {
+				if (err) { res.send('erreur_deplacement'); return false }
+				const dossiers = JSON.parse(donnees.dossiers)
+				dossiers.forEach(function (dossier, indexDossier) {
+					if (dossier.pads.includes(padId)) {
+						const indexPad = dossier.pads.indexOf(padId)
+						dossiers[indexDossier].pads.splice(indexPad, 1)
+					}
+					if (dossier.id === destination) {
+						dossiers[indexDossier].pads.push(padId)
+					}
+				})
+				db.hset('utilisateurs:' + identifiant, 'dossiers', JSON.stringify(dossiers), function (err) {
+					if (err) { res.send('erreur_deplacement'); return false }
+					res.send('pad_deplace')
+				})
 			})
 		} else {
 			res.send('non_connecte')
@@ -1224,7 +1216,7 @@ async function demarrerServeur () {
 					db.hgetall('pads:' + id, function (err, d) {
 						if (err || !d || d === null) { res.send('erreur_export'); return false }
 						const proprietaire = d.identifiant
-						if (proprietaire === identifiant) {
+						if (proprietaire === identifiant || (admin !== '' && admin === motdepasseAdmin)) {
 							const donneesPad = new Promise(function (resolveMain) {
 								db.hgetall('pads:' + id, function (err, resultats) {
 									if (err) { resolveMain({}); return false }
@@ -1376,7 +1368,7 @@ async function demarrerServeur () {
 				} else if (resultat !== 1 && await fs.pathExists(path.join(__dirname, '..', '/static/pads/' + id + '.json'))) {
 					const donnees = await fs.readJson(path.join(__dirname, '..', '/static/pads/' + id + '.json'))
 					if (typeof donnees === 'object' && donnees !== null && donnees.hasOwnProperty('pad') && donnees.hasOwnProperty('blocs') && donnees.hasOwnProperty('activite')) {
-						if (donnees.pad.identifiant === identifiant) {
+						if (donnees.pad.identifiant === identifiant || (admin !== '' && admin === motdepasseAdmin)) {
 							const html = genererHTML(donnees.pad, donnees.blocs)
 							const chemin = path.join(__dirname, '..', '/static/temp')
 							await fs.mkdirp(path.normalize(chemin + '/' + id))
@@ -2035,6 +2027,67 @@ async function demarrerServeur () {
 		}
 	})
 
+	app.post('/api/transferer-pad', function (req, res) {
+		const nouvelIdentifiant = req.body.nouvelIdentifiant
+		const pad = req.body.padId
+		const admin = req.body.admin
+		if (admin !== '' && admin === process.env.VITE_ADMIN_PASSWORD) {
+			db.exists('utilisateurs:' + nouvelIdentifiant, function (err, resultat) {
+				if (err) { res.send('erreur'); return false  }
+				if (resultat === 1) {
+					db.exists('pads:' + pad, async function (err, resultat) {
+						if (err) { res.send('erreur'); return false  }
+						if (resultat === 1) {
+							db.hgetall('pads:' + pad, function (err, donnees) {
+								if (err || !donnees || donnees === null) { res.send('erreur'); return false }
+								const identifiant = donnees.identifiant
+								const multi = db.multi()
+								multi.sadd('pads-crees:' + nouvelIdentifiant, pad)
+								multi.srem('pads-crees:' + identifiant, pad)
+								multi.sadd('utilisateurs-pads:' + pad, nouvelIdentifiant)
+								multi.srem('utilisateurs-pads:' + pad, identifiant)
+								multi.hset('pads:' + pad, 'identifiant', nouvelIdentifiant)
+								multi.srem('pads-admins:' + nouvelIdentifiant, pad)
+								multi.srem('pads-rejoints:' + nouvelIdentifiant, pad)
+								multi.srem('pads-utilisateurs:' + nouvelIdentifiant, pad)
+								multi.exec(function () {
+									res.send('pad_transfere')
+								})
+							})
+						} else if (resultat !== 1 && await fs.pathExists(path.join(__dirname, '..', '/static/pads/' + pad + '.json'))) {
+							const donnees = await fs.readJson(path.join(__dirname, '..', '/static/pads/' + pad + '.json'))
+							if (typeof donnees === 'object' && donnees !== null && donnees.hasOwnProperty('pad') && donnees.hasOwnProperty('blocs') && donnees.hasOwnProperty('activite')) {
+								await ajouterPadDansDb(pad, donnees)
+								const identifiant = donnees.pad.identifiant
+								const multi = db.multi()
+								multi.sadd('pads-crees:' + nouvelIdentifiant, pad)
+								multi.srem('pads-crees:' + identifiant, pad)
+								multi.sadd('utilisateurs-pads:' + pad, nouvelIdentifiant)
+								multi.srem('utilisateurs-pads:' + pad, identifiant)
+								multi.hset('pads:' + pad, 'identifiant', nouvelIdentifiant)
+								multi.srem('pads-admins:' + nouvelIdentifiant, pad)
+								multi.srem('pads-rejoints:' + nouvelIdentifiant, pad)
+								multi.srem('pads-utilisateurs:' + nouvelIdentifiant, pad)
+								multi.exec(function () {
+									res.send('pad_transfere')
+								})
+							} else {
+								res.send('erreur')
+							}
+						} else {
+							res.send('pad_inexistant')
+						}
+					})
+
+				} else {
+					res.send('utilisateur_inexistant')
+				}
+			})
+		} else {
+			res.send('non_autorise')
+		}
+	})
+
 	app.post('/api/transferer-compte', function (req, res) {
 		const identifiant = req.body.identifiant
 		const nouvelIdentifiant = req.body.nouvelIdentifiant
@@ -2086,7 +2139,7 @@ async function demarrerServeur () {
 													resolve('erreur')
 												}
 											} else {
-												resolve('mur_inexistant')
+												resolve('pad_inexistant')
 											}
 										})
 									})
@@ -4700,7 +4753,7 @@ async function demarrerServeur () {
 						}
 						affichageColonnes[index] = valeur
 						db.hset('pads:' + pad, 'affichageColonnes', JSON.stringify(affichageColonnes), function () {
-							io.in('pad-' + pad).emit('modifieraffichagecolonne', affichageColonnes)
+							io.in('pad-' + pad).emit('modifieraffichagecolonne', affichageColonnes, valeur, index)
 							socket.request.session.cookie.expires = new Date(Date.now() + dureeSession)
 							socket.request.session.save()
 						})
@@ -4710,6 +4763,18 @@ async function demarrerServeur () {
 				})
 			} else {
 				socket.emit('deconnecte')
+			}
+		})
+
+		socket.on('verifierblocscolonnes', function (donnees) {
+			const pad = donnees.pad
+			const identifiant = donnees.identifiant
+			if (socket.request.session.identifiant === identifiant) {
+				db.hgetall('pads:' + pad, async function (err, resultat) {
+					if (err || !resultat || resultat === null) { socket.emit('erreur'); return false }
+					const donneesPad = await recupererDonneesPadProtege(resultat, pad, identifiant)
+					socket.emit('verifierblocscolonnes', donneesPad.blocs)
+				})
 			}
 		})
 
@@ -5776,6 +5841,11 @@ async function demarrerServeur () {
 												resolve({})
 												return false
 											}
+											// Ne pas ajouter les capsules dans les colonnes masquées
+											if (pad.affichage === 'colonnes' && pad.affichageColonnes[donnees.colonne] === false && pad.identifiant !== identifiant && !pad.admins.includes(identifiant)) {
+												resolve({})
+												return false
+											}
 											db.zcard('commentaires:' + bloc, function (err, commentaires) {
 												if (err) {
 													donnees.commentaires = []
@@ -6106,6 +6176,10 @@ async function demarrerServeur () {
 										donnees.media = donnees.media.replace('https://env-7747481.jcloud-ver-jpe.ik-server.com', process.env.VITE_ETHERPAD)
 									}
 									if ((pad.contributions === 'moderees' && donnees.visibilite === 'masquee') || donnees.visibilite === 'privee') {
+										resolve({})
+										return false
+									}
+									if (pad.affichage === 'colonnes' && pad.affichageColonnes[donnees.colonne] === false) {
 										resolve({})
 										return false
 									}

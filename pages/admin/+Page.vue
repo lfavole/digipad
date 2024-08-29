@@ -96,6 +96,20 @@
 					<span class="bouton" role="button" :tabindex="definirTabIndex()" @click="afficherModaleRattacher" @keydown.enter="afficherModaleRattacher">{{ $t('valider') }}</span>
 				</div>
 				<h1>
+					<span>{{ $t('transfererPad') }}</span>
+				</h1>
+				<div class="conteneur">
+					<label for="champ-numero-pad-n">{{ $t('numeroPad') }}</label>
+					<input id="champ-numero-pad-n" type="number" :value="padIdN" @input="padIdN = $event.target.value">
+				</div>
+				<div class="conteneur">
+					<label for="champ-identifiant-n">{{ $t('identifiantDestination') }}</label>
+					<input id="champ-identifiant-n" type="text" :value="identifiantN" @input="identifiantN = $event.target.value">
+				</div>
+				<div class="conteneur actions">
+					<span class="bouton" role="button" :tabindex="definirTabIndex()" @click="afficherModaleTransfererPad" @keydown.enter="afficherModaleTransfererPad">{{ $t('valider') }}</span>
+				</div>
+				<h1>
 					<span>{{ $t('supprimerPad') }}</span>
 				</h1>
 				<div class="conteneur">
@@ -147,12 +161,14 @@
 					<div class="contenu">
 						<div class="message" v-html="$t('confirmationRattacherPad')" v-if="modale === 'rattacher-pad'" />
 						<div class="message" v-html="$t('confirmationSupprimerPad')" v-else-if="modale === 'supprimer-pad'" />
+						<div class="message" v-html="$t('confirmationRattacherPad')" v-else-if="modale === 'transferer-pad'" />
 						<div class="message" v-html="$t('confirmationTransfererCompte')" v-else-if="modale === 'transferer-compte'" />
 						<div class="message" v-html="$t('confirmationSupprimerCompteAdmin')" v-else-if="modale === 'supprimer-compte'" />
 						<div class="actions">
 							<span class="bouton" role="button" :tabindex="message === '' ? 0 : -1" @click="fermerModale" @keydown.enter="fermerModale">{{ $t('non') }}</span>
 							<span class="bouton" role="button" :tabindex="message === '' ? 0 : -1" @click="rattacherPad" @keydown.enter="rattacherPad" v-if="modale === 'rattacher-pad'">{{ $t('oui') }}</span>
 							<span class="bouton" role="button" :tabindex="message === '' ? 0 : -1" @click="supprimerPad" @keydown.enter="supprimerPad" v-else-if="modale === 'supprimer-pad'">{{ $t('oui') }}</span>
+							<span class="bouton" role="button" :tabindex="message === '' ? 0 : -1" @click="transfererPad" @keydown.enter="transfererPad" v-else-if="modale === 'transferer-pad'">{{ $t('oui') }}</span>
 							<span class="bouton" role="button" :tabindex="message === '' ? 0 : -1" @click="transfererCompte" @keydown.enter="transfererCompte" v-else-if="modale === 'transferer-compte'">{{ $t('oui') }}</span>
 							<span class="bouton" role="button" :tabindex="message === '' ? 0 : -1" @click="supprimerCompte" @keydown.enter="supprimerCompte" v-else-if="modale === 'supprimer-compte'">{{ $t('oui') }}</span>
 						</div>
@@ -200,11 +216,13 @@ export default {
 			padIdM: '',
 			padIdE: '',
 			padIdR: '',
+			padIdN: '',
 			donneesPad: '',
 			identifiantS: '',
 			identifiantO: '',
 			identifiantT: '',
 			identifiantR: '',
+			identifiantN: '',
 			champ: '',
 			valeur: '',
 			maintenance: false,
@@ -480,6 +498,44 @@ export default {
 					this.chargement = false
 					this.padIdS = ''
 					this.suppressionFichiers = true
+					this.message = this.$t('erreurCommunicationServeur')
+				}.bind(this))
+			}
+		},
+		afficherModaleTransfererPad () {
+			this.elementPrecedent = (document.activeElement || document.body)
+			this.modale = 'transferer-pad'
+			this.$nextTick(function () {
+				document.querySelector('.modale .bouton').focus()
+			})
+		},
+		transfererPad () {
+			if (this.identifiantN !== '' && this.padIdN !== '') {
+				this.modale = ''
+				this.chargement = true
+				axios.post(this.hote + '/api/transferer-pad', {
+					admin: this.admin,
+					nouvelIdentifiant: this.identifiantN,
+					padId: this.padIdN
+				}).then(function (reponse) {
+					this.chargement = false
+					const donnees = reponse.data
+					if (donnees === 'erreur') {
+						this.message = this.$t('erreurActionServeur')
+					} else if (donnees === 'utilisateur_inexistant') {
+						this.message = this.$t('utilisateurInexistant')
+					} else if (donnees === 'pad_inexistant') {
+						this.message = this.$t('padInexistant')
+					} else if (donnees === 'non_autorise') {
+						this.message = this.$t('actionNonAutorisee')
+					} else {
+						this.notification = this.$t('padTransfere')
+						this.identifiantN = ''
+						this.padIdN = ''
+						this.gererFocus()
+					}
+				}.bind(this)).catch(function () {
+					this.chargement = false
 					this.message = this.$t('erreurCommunicationServeur')
 				}.bind(this))
 			}

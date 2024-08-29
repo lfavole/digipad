@@ -386,5 +386,6 @@
 	"erreurEspaceDisque": "Nema više slobodnog prostora na tvrdom disku poslužitelja. Datoteka se nije mogla učitati.",
 	"actionNonAutorisee": "Ne smijete izvršiti ovu radnju.",
 	"masquerMotDePasse": "Sakrij lozinku",
-	"afficherMotDePasse": "Prikaži lozinku"
+	"afficherMotDePasse": "Prikaži lozinku",
+	"transfererPad": "Prijenos podlogu na drugi račun"
 }

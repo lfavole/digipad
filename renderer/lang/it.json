@@ -386,5 +386,6 @@
 	"erreurEspaceDisque": "Non c'è più spazio libero sul disco rigido del server. Non è stato possibile caricare il file.",
 	"actionNonAutorisee": "Non siete autorizzati a eseguire questa azione.",
 	"masquerMotDePasse": "Occulta password",
-	"afficherMotDePasse": "Mostra password"
+	"afficherMotDePasse": "Mostra password",
+	"transfererPad": "Trasferimento di un pad a un altro account"
 }

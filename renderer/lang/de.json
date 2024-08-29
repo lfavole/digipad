@@ -386,5 +386,6 @@
 	"erreurEspaceDisque": "Es gibt keinen freien Speicherplatz mehr auf der Festplatte des Servers. Der Upload der Datei konnte nicht durchgeführt werden.",
     "actionNonAutorisee": "Sie sind nicht berechtigt, diese Aktion durchzuführen.",
 	"masquerMotDePasse": "Passwort ausblenden",
-	"afficherMotDePasse": "Passwort anzeigen"
+	"afficherMotDePasse": "Passwort anzeigen",
+	"transfererPad": "Pad auf ein anderes Konto übertragen"
 }

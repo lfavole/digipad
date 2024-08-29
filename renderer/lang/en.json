@@ -386,5 +386,6 @@
 	"erreurEspaceDisque": "There is no more free space on the server's hard disk. The file could not be uploaded.",
 	"actionNonAutorisee": "You are not authorized to perform this action.",
 	"masquerMotDePasse": "Hide password",
-	"afficherMotDePasse": "Show password"
+	"afficherMotDePasse": "Show password",
+	"transfererPad": "Transfer a pad to another account"
 }
