@@ -2024,16 +2024,36 @@ export default {
 			this.commentaire = ''
 			const bloc = this.donneesBloc.bloc
 			let indexBloc = 0
-			this.blocs.forEach(function (item, index) {
-				if (item.bloc === bloc) {
-					indexBloc = index
-				}
-			})
-			indexBloc--
-			if (indexBloc === -1) {
-				this.donneesBloc = this.blocs[this.blocs.length - 1]
+			let indexColonne = 0
+			if (this.pad.affichage === 'colonnes') {
+				this.colonnes.forEach(function (colonne, indexCol) {
+					colonne.forEach(function (item, index) {
+						if (item.bloc === bloc) {
+							indexBloc = index
+							indexColonne = indexCol
+						}
+					})
+				})
 			} else {
+				this.blocs.forEach(function (item, index) {
+					if (item.bloc === bloc) {
+						indexBloc = index
+					}
+				})
+			}
+			indexBloc--
+			if (indexBloc === -1 && this.pad.affichage !== 'colonnes') {
+				this.donneesBloc = this.blocs[this.blocs.length - 1]
+			} else if (indexBloc !== -1 && this.pad.affichage !== 'colonnes') {
 				this.donneesBloc = this.blocs[indexBloc]
+			} else if (indexBloc === -1 && this.pad.affichage === 'colonnes') {
+				if (this.colonnes[indexColonne - 1]) {
+					this.donneesBloc = this.colonnes[indexColonne - 1][this.colonnes[indexColonne - 1].length - 1]
+				} else {
+					this.donneesBloc = this.colonnes[this.colonnes.length - 1][this.colonnes[this.colonnes.length - 1].length - 1]
+				}
+			} else if (indexBloc !== -1 && this.pad.affichage === 'colonnes') {
+				this.donneesBloc = this.colonnes[indexColonne][indexBloc]
 			}
 			this.definirBlocActif(this.donneesBloc.bloc)
 			if (this.pad.commentaires === 'actives') {
@@ -2051,16 +2071,36 @@ export default {
 			this.commentaire = ''
 			const bloc = this.donneesBloc.bloc
 			let indexBloc = 0
-			this.blocs.forEach(function (item, index) {
-				if (item.bloc === bloc) {
-					indexBloc = index
-				}
-			})
-			indexBloc++
-			if (indexBloc === this.blocs.length) {
-				this.donneesBloc = this.blocs[0]
+			let indexColonne = 0
+			if (this.pad.affichage === 'colonnes') {
+				this.colonnes.forEach(function (colonne, indexCol) {
+					colonne.forEach(function (item, index) {
+						if (item.bloc === bloc) {
+							indexBloc = index
+							indexColonne = indexCol
+						}
+					})
+				})
 			} else {
+				this.blocs.forEach(function (item, index) {
+					if (item.bloc === bloc) {
+						indexBloc = index
+					}
+				})
+			}
+			indexBloc++
+			if (indexBloc === this.blocs.length && this.pad.affichage !== 'colonnes') {
+				this.donneesBloc = this.blocs[0]
+			} else if (indexBloc !== this.blocs.length && this.pad.affichage !== 'colonnes') {
 				this.donneesBloc = this.blocs[indexBloc]
+			} else if (indexBloc === this.colonnes[indexColonne].length && this.pad.affichage === 'colonnes') {
+				if (this.colonnes[indexColonne + 1]) {
+					this.donneesBloc = this.colonnes[indexColonne + 1][0]
+				} else {
+					this.donneesBloc = this.colonnes[0][0]
+				}
+			} else if (indexBloc !== this.colonnes[indexColonne].length && this.pad.affichage === 'colonnes') {
+				this.donneesBloc = this.colonnes[indexColonne][indexBloc]
 			}
 			this.definirBlocActif(this.donneesBloc.bloc)
 			if (this.pad.commentaires === 'actives') {
