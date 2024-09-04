@@ -224,6 +224,11 @@ async function demarrerServeur () {
 				langue: langue
 			}
 			const pageContext = await renderPage(pageContextInit)
+			if (pageContext.errorWhileRendering) {
+				if (!pageContext.httpResponse) {
+					throw pageContext.errorWhileRendering
+				}
+			}
 			const { httpResponse } = pageContext
 			if (!httpResponse) {
 				return next()
@@ -337,6 +342,11 @@ async function demarrerServeur () {
 							dossiers: []
 						}
 						const pageContext = await renderPage(pageContextInit)
+						if (pageContext.errorWhileRendering) {
+							if (!pageContext.httpResponse) {
+								throw pageContext.errorWhileRendering
+							}
+						}
 						const { httpResponse } = pageContext
 						if (!httpResponse) {
 							return next()
@@ -425,6 +435,11 @@ async function demarrerServeur () {
 									dossiers: dossiers
 								}
 								const pageContext = await renderPage(pageContextInit)
+								if (pageContext.errorWhileRendering) {
+									if (!pageContext.httpResponse) {
+										throw pageContext.errorWhileRendering
+									}
+								}
 								const { httpResponse } = pageContext
 								if (!httpResponse) {
 									return next()
@@ -494,6 +509,11 @@ async function demarrerServeur () {
 			digidrive: req.session.digidrive
 		}
 		const pageContext = await renderPage(pageContextInit)
+		if (pageContext.errorWhileRendering) {
+			if (!pageContext.httpResponse) {
+				throw pageContext.errorWhileRendering
+			}
+		}
 		const { httpResponse } = pageContext
 		if (!httpResponse) {
 			return next()
@@ -522,6 +542,11 @@ async function demarrerServeur () {
 			langue: langue
 		}
 		const pageContext = await renderPage(pageContextInit)
+		if (pageContext.errorWhileRendering) {
+			if (!pageContext.httpResponse) {
+				throw pageContext.errorWhileRendering
+			}
+		}
 		const { httpResponse } = pageContext
 		if (!httpResponse) {
 			return next()
@@ -547,6 +572,11 @@ async function demarrerServeur () {
 			langue: langue
 		}
 		const pageContext = await renderPage(pageContextInit)
+		if (pageContext.errorWhileRendering) {
+			if (!pageContext.httpResponse) {
+				throw pageContext.errorWhileRendering
+			}
+		}
 		const { httpResponse } = pageContext
 		if (!httpResponse) {
 			return next()
@@ -781,7 +811,7 @@ async function demarrerServeur () {
 						const creation = await creerPad(id, token, titre, date, identifiant, couleur)
 						if (creation === true) {
 							const chemin = path.join(__dirname, '..', '/static/' + definirDossierFichiers(id) + '/' + id)
-							await fs.mkdirs(chemin)
+							await fs.mkdirp(chemin)
 							res.json({ id: id, token: token, titre: titre, identifiant: identifiant, fond: '/img/fond1.png', acces: 'public', contributions: 'ouvertes', affichage: 'mur', registreActivite: 'active', conversation: 'desactivee', listeUtilisateurs: 'activee', editionNom: 'desactivee', fichiers: 'actives', enregistrements: 'desactives', liens: 'actives', documents: 'desactives', commentaires: 'desactives', evaluations: 'desactivees', copieBloc: 'desactivee', ordre: 'croissant', largeur: 'normale', date: date, colonnes: [], affichageColonnes: [], bloc: 0, activite: 0, admins: [] })
 						} else {
 							res.send('erreur_creation')
@@ -791,7 +821,7 @@ async function demarrerServeur () {
 					const creation = await creerPad(1, token, titre, date, identifiant, couleur)
 					if (creation === true) {
 						const chemin = path.join(__dirname, '..', '/static/' + definirDossierFichiers(1) + '/1')
-						await fs.mkdirs(chemin)
+						await fs.mkdirp(chemin)
 						res.json({ id: 1, token: token, titre: titre, identifiant: identifiant, fond: '/img/fond1.png', acces: 'public', contributions: 'ouvertes', affichage: 'mur', registreActivite: 'active', conversation: 'desactivee', listeUtilisateurs: 'activee', editionNom: 'desactivee', fichiers: 'actives', enregistrements: 'desactives', liens: 'actives', documents: 'desactives', commentaires: 'desactives', evaluations: 'desactivees', copieBloc: 'desactivee', ordre: 'croissant', largeur: 'normale', date: date, colonnes: [], affichageColonnes: [], bloc: 0, activite: 0, admins: [] })
 					} else {
 						res.send('erreur_creation')
@@ -845,7 +875,7 @@ async function demarrerServeur () {
 					const creation = await creerPadSansCompte(id, token, titre, hash, date, identifiant, nom, langue, '')
 					if (creation === true) {
 						const chemin = path.join(__dirname, '..', '/static/' + definirDossierFichiers(id) + '/' + id)
-						await fs.mkdirs(chemin)
+						await fs.mkdirp(chemin)
 						req.session.langue = langue
 						req.session.statut = 'auteur'
 						req.session.cookie.expires = new Date(Date.now() + dureeSession)
@@ -858,7 +888,7 @@ async function demarrerServeur () {
 				const creation = await creerPadSansCompte(1, token, titre, hash, date, identifiant, nom, langue, '')
 				if (creation === true) {
 					const chemin = path.join(__dirname, '..', '/static/' + definirDossierFichiers(1) + '/1')
-					await fs.mkdirs(chemin)
+					await fs.mkdirp(chemin)
 					req.session.langue = langue
 					req.session.statut = 'auteur'
 					req.session.cookie.expires = new Date(Date.now() + dureeSession)
@@ -2917,7 +2947,7 @@ async function demarrerServeur () {
 							const creation = await creerPadSansCompte(id, token, titre, hash, date, identifiant, nom, langue, 'api')
 							if (creation === true) {
 								const chemin = path.join(__dirname, '..', '/static/' + definirDossierFichiers(id) + '/' + id)
-								await fs.mkdirs(chemin)
+								await fs.mkdirp(chemin)
 								res.send(id + '/' + token)
 							} else {
 								res.send('erreur_creation')
@@ -2927,7 +2957,7 @@ async function demarrerServeur () {
 						const creation = await creerPadSansCompte(1, token, titre, hash, date, identifiant, nom, langue, 'api')
 						if (creation === true) {
 							const chemin = path.join(__dirname, '..', '/static/' + definirDossierFichiers(1) + '/1')
-							await fs.mkdirs(chemin)
+							await fs.mkdirp(chemin)
 							res.send('1/' + token)
 						} else {
 							res.send('erreur_creation')
@@ -5755,7 +5785,10 @@ async function demarrerServeur () {
 				}
 				let vues = 0
 				if (pad.hasOwnProperty('vues')) {
-					vues = parseInt(pad.vues) + 1
+					vues = parseInt(pad.vues)
+					if (!admin) {
+						vues = vues + 1
+					}
 				}
 				// Pour homogénéité des paramètres de pad
 				if (!pad.hasOwnProperty('ordre')) {

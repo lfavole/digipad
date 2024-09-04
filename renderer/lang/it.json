@@ -387,5 +387,8 @@
 	"actionNonAutorisee": "Non siete autorizzati a eseguire questa azione.",
 	"masquerMotDePasse": "Occulta password",
 	"afficherMotDePasse": "Mostra password",
-	"transfererPad": "Trasferimento di un pad a un altro account"
+	"transfererPad": "Trasferimento di un pad a un altro account",
+	"erreur": "Oops…",
+	"erreurChargementPage": "Errore nel caricamento della pagina",
+	"retourAccueil": "Torna alla pagina iniziale"
 }

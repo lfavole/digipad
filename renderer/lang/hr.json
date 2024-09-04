@@ -387,5 +387,8 @@
 	"actionNonAutorisee": "Ne smijete izvršiti ovu radnju.",
 	"masquerMotDePasse": "Sakrij lozinku",
 	"afficherMotDePasse": "Prikaži lozinku",
-	"transfererPad": "Prijenos podlogu na drugi račun"
+	"transfererPad": "Prijenos podlogu na drugi račun",
+	"erreur": "Ups…",
+	"erreurChargementPage": "Pogreška pri učitavanju stranice",
+	"retourAccueil": "Povratak na početnu stranicu"
 }

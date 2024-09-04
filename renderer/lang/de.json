@@ -387,5 +387,8 @@
     "actionNonAutorisee": "Sie sind nicht berechtigt, diese Aktion durchzuführen.",
 	"masquerMotDePasse": "Passwort ausblenden",
 	"afficherMotDePasse": "Passwort anzeigen",
-	"transfererPad": "Pad auf ein anderes Konto übertragen"
+	"transfererPad": "Pad auf ein anderes Konto übertragen",
+    "erreur": "Ups…",
+	"erreurChargementPage": "Fehler beim Laden der Seite",
+	"retourAccueil": "Zurück zur Startseite"
 }
