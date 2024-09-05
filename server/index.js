@@ -5786,7 +5786,7 @@ async function demarrerServeur () {
 				let vues = 0
 				if (pad.hasOwnProperty('vues')) {
 					vues = parseInt(pad.vues)
-					if (!admin) {
+					if (!admin && !accesPrive) {
 						vues = vues + 1
 					}
 				}
