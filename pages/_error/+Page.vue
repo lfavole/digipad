@@ -20,10 +20,16 @@ export default {
 	},
 	data () {
 		return {
-			chargementPage: true
+			chargementPage: true,
+			langue: this.$pageContext.pageProps.langue
 		}
 	},
+	created () {
+		this.$i18n.locale = this.langue
+	},
 	mounted () {
+		document.getElementsByTagName('html')[0].setAttribute('lang', this.langue)
+
 		setTimeout(function () {
 			this.chargementPage = false
 		}.bind(this), 300)
