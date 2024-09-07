@@ -17,7 +17,7 @@
     "prod": "npm run build && npm run server:prod",
     "build": "vite build",
     "server": "nodemon --watch server ./server",
-    "server:prod": "cross-env NODE_ENV=production node ./server",
+    "server:prod": "cross-env NODE_ENV=production node --nouse-idle-notification --expose-gc --max-old-space-size=9216 ./server",
     "lightendb": "cross-env NODE_ENV=production node server/exporter-pads-json.js",
     "maintenance": "cross-env NODE_ENV=production node server/maintenance.js"
   },
