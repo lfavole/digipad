@@ -43,6 +43,19 @@ const production = process.env.NODE_ENV === 'production'
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const root = `${__dirname}/..`
 
+planifierCollecteDechets()
+
+function planifierCollecteDechets () {
+	if (!global.gc) {
+		return false
+	}
+	const prochainAppel = 30 + (Math.random() * 15)
+	setTimeout(function () {
+		global.gc()
+		planifierCollecteDechets()
+	}, prochainAppel * 1000)
+}
+
 demarrerServeur()
 
 async function demarrerServeur () {
@@ -146,7 +159,7 @@ async function demarrerServeur () {
 	const etherpadApi = process.env.VITE_ETHERPAD_API_KEY
 
 	// Augmenter nombre de tâches asynchrones par défaut
-	events.EventEmitter.defaultMaxListeners = 50
+	events.EventEmitter.defaultMaxListeners = 100
 
 	app.set('trust proxy', true)
 	app.use(
@@ -3243,7 +3256,10 @@ async function demarrerServeur () {
 	const port = process.env.PORT || 3000
 	httpServer.listen(port)
 
-	const io = new Server(httpServer, { cookie: false })
+	const io = new Server(httpServer, {
+		cookie: false,
+		perMessageDeflate: false
+	})
 	const wrap = middleware => (socket, next) => middleware(socket.request, {}, next)
 	io.use(wrap(sessionMiddleware))
 
