@@ -43,7 +43,7 @@ const production = process.env.NODE_ENV === 'production'
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const root = `${__dirname}/..`
 
-planifierCollecteDechets()
+/* planifierCollecteDechets()
 
 function planifierCollecteDechets () {
 	if (!global.gc) {
@@ -54,7 +54,7 @@ function planifierCollecteDechets () {
 		global.gc()
 		planifierCollecteDechets()
 	}, prochainAppel * 1000)
-}
+} */
 
 demarrerServeur()
 
