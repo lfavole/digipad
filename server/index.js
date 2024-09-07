@@ -43,7 +43,7 @@ const production = process.env.NODE_ENV === 'production'
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const root = `${__dirname}/..`
 
-/* planifierCollecteDechets()
+planifierCollecteDechets()
 
 function planifierCollecteDechets () {
 	if (!global.gc) {
@@ -54,7 +54,7 @@ function planifierCollecteDechets () {
 		global.gc()
 		planifierCollecteDechets()
 	}, prochainAppel * 1000)
-} */
+}
 
 demarrerServeur()
 
@@ -159,7 +159,7 @@ async function demarrerServeur () {
 	const etherpadApi = process.env.VITE_ETHERPAD_API_KEY
 
 	// Augmenter nombre de tâches asynchrones par défaut
-	events.EventEmitter.defaultMaxListeners = 100
+	events.EventEmitter.defaultMaxListeners = 120
 
 	app.set('trust proxy', true)
 	app.use(
