@@ -625,7 +625,7 @@ export default {
 						window.location.href = '/p/' + donnees.id + '/' + donnees.token
 					}
 				}.bind(this)).catch(function () {
-					this.chargementModale = true
+					this.chargementModale = false
 					this.message = this.$t('erreurCommunicationServeur')
 				}.bind(this))
 			}
@@ -729,15 +729,15 @@ export default {
 				const donnees = reponse.data
 				if (donnees === 'non_connecte') {
 					window.location.replace('/')
-				} else if (donnees === 'erreur_ajout_favori') {
-					this.message = this.$t('erreurAjoutFavoris')
-				} else {
+				} else if (donnees === 'pad_ajoute_favoris') {
 					this.padsFavoris.push(pad)
 					this.favoris.push(pad.id)
 					this.notification = this.$t('padAjouteFavoris')
 					this.$nextTick(function () {
 						document.querySelector('#pad-' + pad.id + ' .supprimer-favori').focus()
 					})
+				} else {
+					this.message = this.$t('erreurAjoutFavoris')
 				}
 			}.bind(this)).catch(function () {
 				this.chargement = false
@@ -754,9 +754,7 @@ export default {
 				const donnees = reponse.data
 				if (donnees === 'non_connecte') {
 					window.location.replace('/')
-				} else if (donnees === 'erreur_suppression_favori') {
-					this.message = this.$t('erreurSuppressionFavoris')
-				} else {
+				} else if (donnees === 'pad_supprime_favoris') {
 					this.padsFavoris.forEach(function (pad, indexPad) {
 						if (pad.id === padId) {
 							this.padsFavoris.splice(indexPad, 1)
@@ -785,6 +783,8 @@ export default {
 							document.querySelector('#pad-' + padId + ' .ajouter-favori').focus()
 						}
 					})
+				} else {
+					this.message = this.$t('erreurSuppressionFavoris')
 				}
 			}.bind(this)).catch(function () {
 				this.chargement = false
@@ -829,9 +829,7 @@ export default {
 					const donnees = reponse.data
 					if (donnees === 'non_connecte') {
 						window.location.replace('/')
-					} else if (donnees === 'erreur_deplacement') {
-						this.message = this.$t('erreurDeplacementPad')
-					} else {
+					} else if (donnees === 'pad_deplace') {
 						this.dossiers.forEach(function (dossier, indexDossier) {
 							if (dossier.pads.includes(this.padId)) {
 								const indexPad = dossier.pads.indexOf(this.padId)
@@ -850,6 +848,8 @@ export default {
 						}
 						this.notification = this.$t('padDeplace')
 						this.fermerModaleDeplacerPad()
+					} else {
+						this.message = this.$t('erreurDeplacementPad')
 					}
 				}.bind(this)).catch(function () {
 					this.chargement = false
@@ -909,6 +909,8 @@ export default {
 					this.message = this.$t('erreurExportPad')
 				} else if (donnees === 'non_autorise') {
 					this.message = this.$t('actionNonAutorisee')
+				} else if (donnees === 'pad_inexistant') {
+					this.message = this.$t('padInexistant')
 				} else {
 					saveAs('/temp/' + donnees, 'pad-' + this.padId + '.zip')
 				}
@@ -1262,15 +1264,15 @@ export default {
 					const donnees = reponse.data
 					if (donnees === 'non_connecte') {
 						window.location.replace('/')
-					} else if (donnees === 'erreur_modification_dossier') {
-						this.message = this.$t('erreurModificationDossier')
-					} else {
+					} else if (donnees === 'dossier_modifie') {
 						this.dossiers.forEach(function (dossier, index) {
 							if (dossier.id === this.dossierId) {
 								this.dossiers[index].nom = this.dossier
 							}
 						}.bind(this))
 						this.notification = this.$t('dossierModifie')
+					} else {
+						this.message = this.$t('erreurModificationDossier')
 					}
 					this.fermerModaleModifierDossier()
 				}.bind(this)).catch(function () {
@@ -1297,9 +1299,7 @@ export default {
 				const donnees = reponse.data
 				if (donnees === 'non_connecte') {
 					window.location.replace('/')
-				} else if (donnees === 'erreur_suppression_dossier') {
-					this.message = this.$t('erreurSuppressionDossier')
-				} else {
+				} else if (donnees === 'dossier_supprime') {
 					this.dossiers.forEach(function (dossier, index) {
 						if (dossier.id === this.dossierId) {
 							this.dossiers.splice(index, 1)
@@ -1308,6 +1308,8 @@ export default {
 					this.onglet = 'pads-crees'
 					this.notification = this.$t('dossierSupprime')
 					this.dossierId = ''
+				} else {
+					this.message = this.$t('erreurSuppressionDossier')
 				}
 			}.bind(this)).catch(function () {
 				this.chargement = false
