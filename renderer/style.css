@@ -754,6 +754,10 @@ label.bouton-bleu {
     border: 1px solid #ddd;
 }
 
+#import .contenu {
+	font-size: 0;
+}
+
 #codeqr #qr img {
 	max-width: 100%;
 	height: auto;
