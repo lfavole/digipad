@@ -392,6 +392,8 @@ export default {
 						this.message = this.$t('erreurExportPad')
 					} else if (donnees === 'non_autorise') {
 						this.message = this.$t('actionNonAutorisee')
+					} else if (donnees === 'pad_inexistant') {
+						this.message = this.$t('padInexistant')
 					} else {
 						saveAs('/temp/' + donnees, 'pad-' + this.padIdE + '.zip')
 						this.padIdE = ''
