@@ -3,9 +3,13 @@ export { render as onRenderHtml }
 import { escapeInject } from 'vike/server'
 
 async function render (pageContext) {
+	let hote = 'https://digipad.app'
 	let titre = 'Digipad by La Digitale'
 	if (pageContext && pageContext.hasOwnProperty('pageProps') && pageContext.pageProps.hasOwnProperty('titre')) {
 		titre = pageContext.pageProps.titre
+	}
+	if (pageContext && pageContext.hasOwnProperty('pageProps') && pageContext.pageProps.hasOwnProperty('hote')) {
+		hote = pageContext.pageProps.hote
 	}
 	const documentHtml = escapeInject`<!DOCTYPE html>
 		<html lang="fr">
@@ -22,8 +26,8 @@ async function render (pageContext) {
 				<meta property="og:title" content="${titre}">
 				<meta property="og:description" content="Une application en ligne pour créer des murs multimédias collaboratifs proposée par La Digitale">
 				<meta property="og:type" content="website" />
-				<meta property="og:url" content="https://digipad.app" />
-				<meta property="og:image" content="https://digipad.app/img/digipad.png" />
+				<meta property="og:url" content="${hote}" />
+				<meta property="og:image" content="${hote}/img/digipad.png" />
 				<meta property="og:locale" content="fr_FR" />
 				<title>${titre}</title>
 				<link rel="icon" type="image/png" href="/img/favicon.png">
