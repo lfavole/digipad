@@ -163,6 +163,11 @@ async function demarrerServeur () {
 		client.release()
 	}
 
+	let earlyHints103 = false
+	if (process.env.EARLY_HINTS && parseInt(process.env.EARLY_HINTS) === 1) {
+		earlyHints103 = true
+	}
+
 	const transporter = nodemailer.createTransport({
 		host: process.env.EMAIL_HOST,
 		port: process.env.EMAIL_PORT,
@@ -283,7 +288,7 @@ async function demarrerServeur () {
 				return next()
 			}
 			const { body, statusCode, headers, earlyHints } = httpResponse
-			if (res.writeEarlyHints) {
+			if (earlyHints103 === true && res.writeEarlyHints) {
 				res.writeEarlyHints({ link: earlyHints.map((e) => e.earlyHintLink) })
 			}
 			if (headers) {
@@ -402,7 +407,7 @@ async function demarrerServeur () {
 						return next()
 					}
 					const { body, statusCode, headers, earlyHints } = httpResponse
-					if (res.writeEarlyHints) {
+					if (earlyHints103 === true && res.writeEarlyHints) {
 						res.writeEarlyHints({ link: earlyHints.map((e) => e.earlyHintLink) })
 					}
 					if (headers) {
@@ -499,7 +504,7 @@ async function demarrerServeur () {
 							return next()
 						}
 						const { body, statusCode, headers, earlyHints } = httpResponse
-						if (res.writeEarlyHints) {
+						if (earlyHints103 === true && res.writeEarlyHints) {
 							res.writeEarlyHints({ link: earlyHints.map((e) => e.earlyHintLink) })
 						}
 						if (headers) {
@@ -571,7 +576,7 @@ async function demarrerServeur () {
 			return next()
 		}
 		const { body, statusCode, headers, earlyHints } = httpResponse
-		if (res.writeEarlyHints) {
+		if (earlyHints103 === true && res.writeEarlyHints) {
 			res.writeEarlyHints({ link: earlyHints.map((e) => e.earlyHintLink) })
 		}
 		if (headers) {
@@ -605,7 +610,7 @@ async function demarrerServeur () {
 			return next()
 		}
 		const { body, statusCode, headers, earlyHints } = httpResponse
-		if (res.writeEarlyHints) {
+		if (earlyHints103 === true && res.writeEarlyHints) {
 			res.writeEarlyHints({ link: earlyHints.map((e) => e.earlyHintLink) })
 		}
 		if (headers) {
@@ -635,7 +640,7 @@ async function demarrerServeur () {
 			return next()
 		}
 		const { body, statusCode, headers, earlyHints } = httpResponse
-		if (res.writeEarlyHints) {
+		if (earlyHints103 === true && res.writeEarlyHints) {
 			res.writeEarlyHints({ link: earlyHints.map((e) => e.earlyHintLink) })
 		}
 		if (headers) {
