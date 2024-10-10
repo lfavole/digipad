@@ -2735,21 +2735,19 @@ async function demarrerServeur () {
 							sharp(chemin).withMetadata().rotate().jpeg().resize(1200, 1200, {
 								fit: sharp.fit.inside,
 								withoutEnlargement: true
-							}).toBuffer((err, buffer) => {
+							}).toBuffer(async function (err, buffer) {
 								if (err) { res.send('erreur_televersement'); return false }
-								fs.writeFile(chemin, buffer, function() {
-									res.json({ fichier: fichier.filename, mimetype: mimetype })
-								})
+								await fs.writeFile(chemin, buffer)
+								res.json({ fichier: fichier.filename, mimetype: mimetype })
 							})
 						} else if (extension.toLowerCase() !== '.gif') {
 							sharp(chemin).withMetadata().resize(1200, 1200, {
 								fit: sharp.fit.inside,
 								withoutEnlargement: true
-							}).toBuffer((err, buffer) => {
+							}).toBuffer(async function (err, buffer) {
 								if (err) { res.send('erreur_televersement'); return false }
-								fs.writeFile(chemin, buffer, function() {
-									res.json({ fichier: fichier.filename, mimetype: mimetype })
-								})
+								await fs.writeFile(chemin, buffer)
+								res.json({ fichier: fichier.filename, mimetype: mimetype })
 							})
 						} else {
 							res.json({ fichier: fichier.filename, mimetype: mimetype })
@@ -2853,21 +2851,19 @@ async function demarrerServeur () {
 					sharp(chemin).withMetadata().rotate().jpeg().resize(400, 400, {
 						fit: sharp.fit.inside,
 						withoutEnlargement: true
-					}).toBuffer((err, buffer) => {
+					}).toBuffer(async function (err, buffer) {
 						if (err) { res.send('erreur_televersement'); return false }
-						fs.writeFile(chemin, buffer, function() {
-							res.send('/temp/' + fichier.filename)
-						})
+						await fs.writeFile(chemin, buffer)
+						res.send('/temp/' + fichier.filename)
 					})
 				} else {
 					sharp(chemin).withMetadata().resize(400, 400, {
 						fit: sharp.fit.inside,
 						withoutEnlargement: true
-					}).toBuffer((err, buffer) => {
+					}).toBuffer(async function (err, buffer) {
 						if (err) { res.send('erreur_televersement'); return false }
-						fs.writeFile(chemin, buffer, function() {
-							res.send('/temp/' + fichier.filename)
-						})
+						await fs.writeFile(chemin, buffer)
+						res.send('/temp/' + fichier.filename)
 					})
 				}
 			})
@@ -2890,21 +2886,19 @@ async function demarrerServeur () {
 					sharp(chemin).withMetadata().rotate().jpeg().resize(1200, 1200, {
 						fit: sharp.fit.inside,
 						withoutEnlargement: true
-					}).toBuffer((err, buffer) => {
+					}).toBuffer(async function (err, buffer) {
 						if (err) { res.send('erreur_televersement'); return false }
-						fs.writeFile(chemin, buffer, function() {
-							res.send('/' + definirDossierFichiers(pad) + '/' + pad + '/' + fichier.filename)
-						})
+						await fs.writeFile(chemin, buffer)
+						res.send('/' + definirDossierFichiers(pad) + '/' + pad + '/' + fichier.filename)
 					})
 				} else {
 					sharp(chemin).withMetadata().resize(1200, 1200, {
 						fit: sharp.fit.inside,
 						withoutEnlargement: true
-					}).toBuffer((err, buffer) => {
+					}).toBuffer(async function (err, buffer) {
 						if (err) { res.send('erreur_televersement'); return false }
-						fs.writeFile(chemin, buffer, function() {
-							res.send('/' + definirDossierFichiers(pad) + '/' + pad + '/' + fichier.filename)
-						})
+						await fs.writeFile(chemin, buffer)
+						res.send('/' + definirDossierFichiers(pad) + '/' + pad + '/' + fichier.filename)
 					})
 				}
 			})
