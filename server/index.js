@@ -257,7 +257,8 @@ async function demarrerServeur () {
     	).middlewares
     	app.use(viteDevMiddleware)
   	} else if (production && parseInt(process.env.REVERSE_PROXY) !== 1) {
-		app.use(express.static(`${root}/dist/client`))
+		const sirv = (await import('sirv')).default
+		app.use(sirv(`${root}/dist/client`))
 	}
 
 	app.get('/', async function (req, res, next) {
