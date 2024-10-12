@@ -8,9 +8,7 @@ module.exports = {
 		],
 		autorestart: true,
 		max_restarts: 10,
-		// instances: 'max',
 		exec_interpreter: 'node',
-		// exec_mode: 'cluster',
 		env: {
 			'NODE_ENV': 'development'
 		},
