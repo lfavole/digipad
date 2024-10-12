@@ -79,11 +79,15 @@ async function demarrerServeur () {
 		db_port = process.env.DB_PORT
 	}
 	if (production) {
-		db = await createClient({ host: process.env.DB_HOST, port: db_port, password: process.env.DB_PWD }).on('error', function (err) {
+		db = await createClient({
+			url: 'redis://default:' + process.env.DB_PWD  + '@' + process.env.DB_HOST + ':' + db_port
+		}).on('error', function (err) {
 			console.log('redis: ', err)
 		}).connect()
 	} else {
-		db = await createClient({ port: db_port }).on('error', function (err) {
+		db = await createClient({
+			url: 'redis://localhost:' + db_port
+		}).on('error', function (err) {
 			console.log('redis: ' + err)
 		}).connect()
 	}
