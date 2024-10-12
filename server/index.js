@@ -66,7 +66,6 @@ async function demarrerServeur () {
 	const app = express()
 	app.use(compression())
 	const httpServer = createServer(app)
-	const { Pool } = pg
 
 	let hote = 'http://localhost:3000'
 	if (production) {
@@ -139,6 +138,7 @@ async function demarrerServeur () {
 	let pgdb = false
 	let pool = null
 	if (production && process.env.PG_DB && parseInt(process.env.PG_DB) === 1) {
+		const { Pool } = pg
 		pgdb = true
 		let maxCon = 240
 		if (cluster === true) {
