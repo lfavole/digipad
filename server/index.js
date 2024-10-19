@@ -309,46 +309,30 @@ async function demarrerServeur () {
 			res.redirect('/maintenance')
 		} else if (identifiant === req.session.identifiant && req.session.statut === 'utilisateur') {
 			recupererDonneesUtilisateur(identifiant).then(async function (pads) {
+				// Vérification des données des pads
 				let padsCrees = pads[0].filter(function (element) {
-					return element !== '' && Object.keys(element).length > 0
+					return element !== '' && Object.keys(element).length > 0 && element.hasOwnProperty('id') && element.hasOwnProperty('token') && element.hasOwnProperty('identifiant') && element.hasOwnProperty('titre') && element.hasOwnProperty('fond') && element.hasOwnProperty('date')
 				})
 				let padsRejoints = pads[1].filter(function (element) {
-					return element !== '' && Object.keys(element).length > 0
+					return element !== '' && Object.keys(element).length > 0 && element.hasOwnProperty('id') && element.hasOwnProperty('token') && element.hasOwnProperty('identifiant') && element.hasOwnProperty('titre') && element.hasOwnProperty('fond') && element.hasOwnProperty('date')
 				})
 				let padsAdmins = pads[2].filter(function (element) {
-					return element !== '' && Object.keys(element).length > 0
+					return element !== '' && Object.keys(element).length > 0 && element.hasOwnProperty('id') && element.hasOwnProperty('token') && element.hasOwnProperty('identifiant') && element.hasOwnProperty('titre') && element.hasOwnProperty('fond') && element.hasOwnProperty('date')
 				})
 				let padsFavoris = pads[3].filter(function (element) {
-					return element !== '' && Object.keys(element).length > 0
+					return element !== '' && Object.keys(element).length > 0 && element.hasOwnProperty('id') && element.hasOwnProperty('token') && element.hasOwnProperty('identifiant') && element.hasOwnProperty('titre') && element.hasOwnProperty('fond') && element.hasOwnProperty('date')
 				})
-				// Vérification des données des pads
 				padsCrees.forEach(function (pad, indexPad) {
-					if (!pad.hasOwnProperty('id') || !pad.hasOwnProperty('token') || !pad.hasOwnProperty('identifiant') || !pad.hasOwnProperty('titre') || !pad.hasOwnProperty('fond') || !pad.hasOwnProperty('date')) {
-						padsCrees.splice(indexPad, 1)
-					} else {
-						padsCrees[indexPad].id = parseInt(pad.id)
-					}
+					padsCrees[indexPad].id = parseInt(pad.id)
 				})
 				padsRejoints.forEach(function (pad, indexPad) {
-					if (!pad.hasOwnProperty('id') || !pad.hasOwnProperty('token') || !pad.hasOwnProperty('identifiant') || !pad.hasOwnProperty('titre') || !pad.hasOwnProperty('fond') || !pad.hasOwnProperty('date')) {
-						padsRejoints.splice(indexPad, 1)
-					} else {
-						padsRejoints[indexPad].id = parseInt(pad.id)
-					}
+					padsRejoints[indexPad].id = parseInt(pad.id)
 				})
 				padsAdmins.forEach(function (pad, indexPad) {
-					if (!pad.hasOwnProperty('id') || !pad.hasOwnProperty('token') || !pad.hasOwnProperty('identifiant') || !pad.hasOwnProperty('titre') || !pad.hasOwnProperty('fond') || !pad.hasOwnProperty('date')) {
-						padsAdmins.splice(indexPad, 1)
-					} else {
-						padsAdmins[indexPad].id = parseInt(pad.id)
-					}
+					padsAdmins[indexPad].id = parseInt(pad.id)
 				})
 				padsFavoris.forEach(function (pad, indexPad) {
-					if (!pad.hasOwnProperty('id') || !pad.hasOwnProperty('token') || !pad.hasOwnProperty('identifiant') || !pad.hasOwnProperty('titre') || !pad.hasOwnProperty('fond') || !pad.hasOwnProperty('date')) {
-						padsFavoris.splice(indexPad, 1)
-					} else {
-						padsFavoris[indexPad].id = parseInt(pad.id)
-					}
+					padsFavoris[indexPad].id = parseInt(pad.id)
 				})
 				// Suppresion redondances pads rejoints et pads administrés
 				padsRejoints.forEach(function (pad, indexPad) {
