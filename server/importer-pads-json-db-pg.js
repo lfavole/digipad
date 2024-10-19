@@ -20,7 +20,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url))
 importer()
 
 async function importer () {
-	for (let i = 0; i < 900000; i++) {
+	for (let i = 0; i < 1000000; i++) {
 		const chemin = path.join(__dirname, '..', '/static/pads')
 		if (await fs.pathExists(path.normalize(chemin + '/' + i + '.json'))) {
 			try {
