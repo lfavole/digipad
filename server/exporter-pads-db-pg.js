@@ -8,23 +8,35 @@ if (process.env.DB_PORT) {
 	db_port = process.env.DB_PORT
 }
 if (process.env.NODE_ENV === 'production') {
-	db = await createClient({ host: process.env.DB_HOST, port: db_port, password: process.env.DB_PWD }).on('error', function (err) {
+	db = await createClient({
+		url: 'redis://default:' + process.env.DB_PWD  + '@' + process.env.DB_HOST + ':' + db_port
+	}).on('error', function (err) {
 		console.log('redis: ', err)
 	}).connect()
 } else {
-	db = await createClient({ port: db_port }).on('error', function (err) {
+	db = await createClient({
+		url: 'redis://localhost:' + db_port
+	}).on('error', function (err) {
 		console.log('redis: ' + err)
 	}).connect()
 }
-const { Client, Query } = pg
-const client = new Client({
+
+const { Pool, Query } = pg
+const pool = new Pool({
 	user: process.env.PG_DB_USER,
 	password: process.env.PG_DB_PWD,
 	host: process.env.PG_DB_HOST,
 	port: process.env.PG_DB_PORT,
-	database: process.env.PG_DB_NAME
+	database: process.env.PG_DB_NAME,
+	max: 10,
+	idleTimeoutMillis: 30000,
+	connectionTimeoutMillis: 360000,
+	allowExitOnIdle: true
 })
-await client.connect()
+pool.on('error', function (err) {
+	console.log('pg: ' + err)
+})
+const client = await pool.connect()
 
 exporter(10)
 
@@ -34,10 +46,12 @@ async function exporter (jours) {
 		const id = i
 		const resultat = await db.EXISTS('pads:' + id)
 		if (resultat === 1) {
-			const donnees = await db.HGETALL('pads:' + id)
-			if ((donnees.hasOwnProperty('modifie') && dayjs(new Date(donnees.modifie)).isBefore(dayjs().subtract(jours, 'days'))) || (donnees.hasOwnProperty('date') && dayjs(new Date(donnees.date)).isBefore(dayjs().subtract(jours, 'days')))) {
+			let d = await db.HGETALL('pads:' + id)
+			d = Object.assign({}, d)
+			if (d.hasOwnProperty('id') && d.hasOwnProperty('token') && d.hasOwnProperty('identifiant') && d.hasOwnProperty('titre') && d.hasOwnProperty('fond') && ((d.hasOwnProperty('modifie') && dayjs(new Date(d.modifie)).isBefore(dayjs().subtract(jours, 'days'))) || (d.hasOwnProperty('date') && dayjs(new Date(d.date)).isBefore(dayjs().subtract(jours, 'days'))))) {
 				const donneesPad = new Promise(async function (resolveMain) {
-					const resultats = await db.HGETALL('pads:' + id)
+					let resultats = await db.HGETALL('pads:' + id)
+					resultats = Object.assign({}, resultats)
 					if (resultats === null) { resolveMain({}); return false }
 					resolveMain(resultats)
 				})
@@ -47,7 +61,8 @@ async function exporter (jours) {
 					if (blocs === null) { resolveMain(donneesBlocs); return false }
 					for (const bloc of blocs) {
 						const donneesBloc = new Promise(async function (resolve) {
-							const donnees = await db.HGETALL('pad-' + id + ':' + bloc)
+							let donnees = await db.HGETALL('pad-' + id + ':' + bloc)
+							donnees = Object.assign({}, donnees)
 							if (donnees === null) { resolve({}); return false }
 							if (donnees && Object.keys(donnees).length > 0) {
 								const donneesCommentaires = []
@@ -119,10 +134,9 @@ async function exporter (jours) {
 							.DEL('blocs:' + id)
 							.DEL('pads:' + id)
 							.DEL('activite:' + id)
-							exec()
+							.exec()
 							console.log(id)
 						})
-						
 						requete.on('error', function () {
 							console.log('erreur : pad-' + id)
 						})
