@@ -249,6 +249,12 @@ async function demarrerServeur () {
 		if (process.env.VITE_NFS6_FOLDER && process.env.VITE_NFS6_FOLDER !== '') {
 			app.use('/' + process.env.VITE_NFS6_FOLDER, express.static('static/' + process.env.VITE_NFS6_FOLDER))
 		}
+		if (process.env.VITE_NFS7_FOLDER && process.env.VITE_NFS7_FOLDER !== '') {
+			app.use('/' + process.env.VITE_NFS7_FOLDER, express.static('static/' + process.env.VITE_NFS7_FOLDER))
+		}
+		if (process.env.VITE_NFS8_FOLDER && process.env.VITE_NFS8_FOLDER !== '') {
+			app.use('/' + process.env.VITE_NFS8_FOLDER, express.static('static/' + process.env.VITE_NFS8_FOLDER))
+		}
 	}
 
 	if (!production) {
@@ -1058,7 +1064,7 @@ async function demarrerServeur () {
 									infos = Object.assign({}, infos)
 									if (infos === null) { resolve({}); return false }
 									const date = dayjs().format()
-									if (infos.hasOwnProperty('vignette') && infos.vignette !== '' && !String(infos.vignette).includes('/img/') && !verifierURL(infos.vignette, ['https', 'http'])) {
+									if (infos.hasOwnProperty('vignette') && infos.vignette !== '' && typeof infos.vignette === 'string' && !infos.vignette.includes('/img/') && !verifierURL(infos.vignette, ['https', 'http'])) {
 										infos.vignette = '/' + definirDossierFichiers(id) + '/' + id + '/' + path.basename(infos.vignette)
 									}
 									let visibilite = 'visible'
@@ -1128,7 +1134,7 @@ async function demarrerServeur () {
 										affichageColonnes.push(true)
 									})
 								}
-								if (!donnees.fond.includes('/img/') && donnees.fond.substring(0, 1) !== '#' && donnees.fond !== '') {
+								if (!donnees.fond.includes('/img/') && donnees.fond.substring(0, 1) !== '#' && donnees.fond !== '' && typeof donnees.fond === 'string') {
 									donnees.fond = '/' + definirDossierFichiers(id) + '/' + id + '/' + path.basename(donnees.fond)
 								}
 								if (donnees.hasOwnProperty('code')) {
@@ -1170,7 +1176,7 @@ async function demarrerServeur () {
 								for (const [indexBloc, bloc] of donnees.blocs.entries()) {
 									const donneesBloc = new Promise(async function (resolve) {
 										if (Object.keys(bloc).length > 0) {
-											if (bloc.hasOwnProperty('vignette') && bloc.vignette !== '' && !String(bloc.vignette).includes('/img/') && !verifierURL(bloc.vignette, ['https', 'http'])) {
+											if (bloc.hasOwnProperty('vignette') && bloc.vignette !== '' && typeof bloc.vignette === 'string' && !bloc.vignette.includes('/img/') && !verifierURL(bloc.vignette, ['https', 'http'])) {
 												bloc.vignette = '/' + definirDossierFichiers(id) + '/' + id + '/' + path.basename(bloc.vignette)
 											}
 											let visibilite = 'visible'
@@ -1242,7 +1248,7 @@ async function demarrerServeur () {
 											affichageColonnes.push(true)
 										})
 									}
-									if (!donnees.pad.fond.includes('/img/') && donnees.pad.fond.substring(0, 1) !== '#' && donnees.pad.fond !== '') {
+									if (!donnees.pad.fond.includes('/img/') && donnees.pad.fond.substring(0, 1) !== '#' && donnees.pad.fond !== '' && typeof donnees.pad.fond === 'string') {
 										donnees.pad.fond = '/' + definirDossierFichiers(id) + '/' + id + '/' + path.basename(donnees.pad.fond)
 									}
 									if (donnees.pad.hasOwnProperty('code')) {
@@ -1388,7 +1394,7 @@ async function demarrerServeur () {
 							await fs.mkdirp(path.normalize(chemin + '/' + id + '/static'))
 							await fs.writeFile(path.normalize(chemin + '/' + id + '/donnees.json'), JSON.stringify(parametres, '', 4), 'utf8')
 							await fs.writeFile(path.normalize(chemin + '/' + id + '/index.html'), html, 'utf8')
-							if (!parametres.pad.fond.includes('/img/') && parametres.pad.fond.substring(0, 1) !== '#' && parametres.pad.fond !== '') {
+							if (!parametres.pad.fond.includes('/img/') && parametres.pad.fond.substring(0, 1) !== '#' && parametres.pad.fond !== '' && typeof parametres.pad.fond === 'string') {
 								const fichierFond = path.basename(parametres.pad.fond)
 								if (await fs.pathExists(path.join(__dirname, '..', '/static/' + definirDossierFichiers(id) + '/' + id + '/' + fichierFond))) {
 									await fs.copy(path.join(__dirname, '..', '/static/' + definirDossierFichiers(id) + '/' + id + '/' + fichierFond), path.normalize(chemin + '/' + id + '/fichiers/' + fichierFond, { overwrite: true }))
@@ -1412,9 +1418,9 @@ async function demarrerServeur () {
 									await fs.copy(path.join(__dirname, '..', '/static/' + definirDossierFichiers(id) + '/' + id + '/' + bloc.media), path.normalize(chemin + '/' + id + '/fichiers/' + bloc.media, { overwrite: true }))
 								}
 								if (Object.keys(bloc).length > 0 && bloc.hasOwnProperty('vignette') && bloc.vignette !== '') {
-									if (String(bloc.vignette).includes('/img/') && !verifierURL(bloc.vignette, ['https', 'http']) && await fs.pathExists(path.join(__dirname, '..', '/public' + bloc.vignette))) {
+									if (typeof bloc.vignette === 'string' && bloc.vignette.includes('/img/') && !verifierURL(bloc.vignette, ['https', 'http']) && await fs.pathExists(path.join(__dirname, '..', '/public' + bloc.vignette))) {
 										await fs.copy(path.join(__dirname, '..', '/public' + bloc.vignette), path.normalize(chemin + '/' + id + '/static' + bloc.vignette, { overwrite: true }))
-									} else if (!verifierURL(bloc.vignette, ['https', 'http'])) {
+									} else if (typeof bloc.vignette === 'string' && !verifierURL(bloc.vignette, ['https', 'http'])) {
 										const fichierVignette = path.basename(bloc.vignette)
 										if (await fs.pathExists(path.join(__dirname, '..', '/static/' + definirDossierFichiers(id) + '/' + id + '/' + fichierVignette))) {
 											await fs.copy(path.join(__dirname, '..', '/static/' + definirDossierFichiers(id) + '/' + id + '/' + fichierVignette), path.normalize(chemin + '/' + id + '/fichiers/' + fichierVignette, { overwrite: true }))
@@ -1455,7 +1461,7 @@ async function demarrerServeur () {
 						await fs.mkdirp(path.normalize(chemin + '/' + id + '/static'))
 						await fs.writeFile(path.normalize(chemin + '/' + id + '/donnees.json'), JSON.stringify(donnees, '', 4), 'utf8')
 						await fs.writeFile(path.normalize(chemin + '/' + id + '/index.html'), html, 'utf8')
-						if (!donnees.pad.fond.includes('/img/') && donnees.pad.fond.substring(0, 1) !== '#' && donnees.pad.fond !== '') {
+						if (!donnees.pad.fond.includes('/img/') && donnees.pad.fond.substring(0, 1) !== '#' && donnees.pad.fond !== '' && typeof donnees.pad.fond === 'string') {
 							const fichierFond = path.basename(donnees.pad.fond)
 							if (await fs.pathExists(path.join(__dirname, '..', '/static/' + definirDossierFichiers(id) + '/' + id + '/' + fichierFond))) {
 								await fs.copy(path.join(__dirname, '..', '/static/' + definirDossierFichiers(id) + '/' + id + '/' + fichierFond), path.normalize(chemin + '/' + id + '/fichiers/' + fichierFond, { overwrite: true }))
@@ -1479,9 +1485,9 @@ async function demarrerServeur () {
 								await fs.copy(path.join(__dirname, '..', '/static/' + definirDossierFichiers(id) + '/' + id + '/' + bloc.media), path.normalize(chemin + '/' + id + '/fichiers/' + bloc.media, { overwrite: true }))
 							}
 							if (Object.keys(bloc).length > 0 && bloc.hasOwnProperty('vignette') && bloc.vignette !== '') {
-								if (String(bloc.vignette).includes('/img/') && !verifierURL(bloc.vignette, ['https', 'http']) && await fs.pathExists(path.join(__dirname, '..', '/public' + bloc.vignette))) {
+								if (typeof bloc.vignette === 'string' && bloc.vignette.includes('/img/') && !verifierURL(bloc.vignette, ['https', 'http']) && await fs.pathExists(path.join(__dirname, '..', '/public' + bloc.vignette))) {
 									await fs.copy(path.join(__dirname, '..', '/public' + bloc.vignette), path.normalize(chemin + '/' + id + '/static' + bloc.vignette, { overwrite: true }))
-								} else if (!verifierURL(bloc.vignette, ['https', 'http'])) {
+								} else if (typeof bloc.vignette === 'string' && !verifierURL(bloc.vignette, ['https', 'http'])) {
 									const fichierVignette = path.basename(bloc.vignette)
 									if (await fs.pathExists(path.join(__dirname, '..', '/static/' + definirDossierFichiers(id) + '/' + id + '/' + fichierVignette))) {
 										await fs.copy(path.join(__dirname, '..', '/static/' + definirDossierFichiers(id) + '/' + id + '/' + fichierVignette), path.normalize(chemin + '/' + id + '/fichiers/' + fichierVignette, { overwrite: true }))
@@ -1558,7 +1564,7 @@ async function demarrerServeur () {
 											if (parametres.evaluations === true) {
 												evaluations = bloc.evaluations
 											}
-											if (bloc.vignette !== '' && !String(bloc.vignette).includes('/img/') && !verifierURL(bloc.vignette, ['https', 'http'])) {
+											if (bloc.vignette !== '' && typeof bloc.vignette === 'string' && !bloc.vignette.includes('/img/') && !verifierURL(bloc.vignette, ['https', 'http'])) {
 												bloc.vignette = '/' + definirDossierFichiers(donnees.pad.id) + '/' + donnees.pad.id + '/' + path.basename(bloc.vignette)
 											}
 											let visibilite = 'visible'
@@ -1588,7 +1594,7 @@ async function demarrerServeur () {
 											if (bloc.hasOwnProperty('media') && bloc.media !== '' && bloc.type !== 'embed' && await fs.pathExists(path.normalize(cible + '/fichiers/' + bloc.media))) {
 												await fs.copy(path.normalize(cible + '/fichiers/' + bloc.media), path.normalize(chemin + '/' + bloc.media, { overwrite: true }))
 											}
-											if (bloc.hasOwnProperty('vignette') && bloc.vignette !== '' && !String(bloc.vignette).includes('/img/') && !verifierURL(bloc.vignette, ['https', 'http']) && await fs.pathExists(path.normalize(cible + '/fichiers/' + path.basename(bloc.vignette)))) {
+											if (bloc.hasOwnProperty('vignette') && bloc.vignette !== '' && typeof bloc.vignette === 'string' && !bloc.vignette.includes('/img/') && !verifierURL(bloc.vignette, ['https', 'http']) && await fs.pathExists(path.normalize(cible + '/fichiers/' + path.basename(bloc.vignette)))) {
 												await fs.copy(path.normalize(cible + '/fichiers/' + path.basename(bloc.vignette)), path.normalize(chemin + '/' + path.basename(bloc.vignette), { overwrite: true }))
 											}
 											resolve({ bloc: bloc.bloc, blocId: blocId })
@@ -1647,7 +1653,7 @@ async function demarrerServeur () {
 									if (parametres.activite === true) {
 										activiteId = donnees.pad.activite
 									}
-									if (!donnees.pad.fond.includes('/img/') && donnees.pad.fond.substring(0, 1) !== '#' && donnees.pad.fond !== '' && await fs.pathExists(path.normalize(cible + '/fichiers/' + path.basename(donnees.pad.fond)))) {
+									if (!donnees.pad.fond.includes('/img/') && donnees.pad.fond.substring(0, 1) !== '#' && donnees.pad.fond !== '' && typeof donnees.pad.fond === 'string' && await fs.pathExists(path.normalize(cible + '/fichiers/' + path.basename(donnees.pad.fond)))) {
 										await fs.copy(path.normalize(cible + '/fichiers/' + path.basename(donnees.pad.fond)), path.normalize(chemin + '/' + path.basename(donnees.pad.fond), { overwrite: true }))
 									}
 									await db
@@ -2348,7 +2354,7 @@ async function demarrerServeur () {
 									if (donnees.hasOwnProperty('media') && donnees.media !== '' && donnees.type !== 'embed') {
 										supprimerFichier(pad, donnees.media)
 									}
-									if (donnees.hasOwnProperty('vignette') && donnees.vignette !== '' && !String(donnees.vignette).includes('/img/') && !verifierURL(donnees.vignette, ['https', 'http'])) {
+									if (donnees.hasOwnProperty('vignette') && donnees.vignette !== '' && typeof donnees.vignette === 'string' && !donnees.vignette.includes('/img/') && !verifierURL(donnees.vignette, ['https', 'http'])) {
 										supprimerFichier(pad, path.basename(donnees.vignette))
 									}
 									await db
@@ -2429,7 +2435,7 @@ async function demarrerServeur () {
 										if (blocs[i].hasOwnProperty('media') && blocs[i].media !== '' && blocs[i].type !== 'embed') {
 											supprimerFichier(pad, blocs[i].media)
 										}
-										if (blocs[i].hasOwnProperty('vignette') && blocs[i].vignette !== '' && !String(blocs[i].vignette).includes('/img/') && !verifierURL(blocs[i].vignette, ['https', 'http'])) {
+										if (blocs[i].hasOwnProperty('vignette') && blocs[i].vignette !== '' && typeof blocs[i].vignette === 'string' && !blocs[i].vignette.includes('/img/') && !verifierURL(blocs[i].vignette, ['https', 'http'])) {
 											supprimerFichier(pad, path.basename(blocs[i].vignette))
 										}
 										await db
@@ -3392,7 +3398,7 @@ async function demarrerServeur () {
 					} else if (!admins.includes(identifiant) && proprietaire !== identifiant && donnees.contributions === 'moderees') {
 						visibilite = 'masquee'
 					}
-					if (vignette && vignette !== '' && !String(vignette).includes('/img/') && !verifierURL(vignette, ['https', 'http'])) {
+					if (vignette && vignette !== '' && typeof vignette === 'string' && !vignette.includes('/img/') && !verifierURL(vignette, ['https', 'http'])) {
 						vignette = '/' + definirDossierFichiers(pad) + '/' + pad + '/' + path.basename(vignette)
 					}
 					await db
@@ -3414,7 +3420,7 @@ async function demarrerServeur () {
 						await fs.copy(path.join(__dirname, '..', '/static/temp/' + media), path.join(__dirname, '..', '/static/' + definirDossierFichiers(pad) + '/' + pad + '/' + media))
 						await fs.remove(path.join(__dirname, '..', '/static/temp/' + media))
 					}
-					if (vignette && vignette !== '' && !String(vignette).includes('/img/') && !verifierURL(vignette, ['https', 'http']) && await fs.pathExists(path.join(__dirname, '..', '/static/temp/' + path.basename(vignette)))) {
+					if (vignette && vignette !== '' && typeof vignette === 'string' && !vignette.includes('/img/') && !verifierURL(vignette, ['https', 'http']) && await fs.pathExists(path.join(__dirname, '..', '/static/temp/' + path.basename(vignette)))) {
 						await fs.copy(path.join(__dirname, '..', '/static/temp/' + path.basename(vignette)), path.join(__dirname, '..', '/static' + vignette))
 						await fs.remove(path.join(__dirname, '..', '/static/temp/' + path.basename(vignette)))
 					}
@@ -3459,7 +3465,7 @@ async function demarrerServeur () {
 								visibilite = 'privee'
 							}
 							const date = dayjs().format()
-							if (vignette && objet.hasOwnProperty('vignette') && objet.vignette !== vignette && vignette !== '' && !String(vignette).includes('/img/') && !verifierURL(vignette, ['https', 'http'])) {
+							if (vignette && objet.hasOwnProperty('vignette') && objet.vignette !== vignette && vignette !== '' && typeof vignette === 'string' && !vignette.includes('/img/') && !verifierURL(vignette, ['https', 'http'])) {
 								vignette = '/' + definirDossierFichiers(pad) + '/' + pad + '/' + path.basename(vignette)
 							}
 							if (visibilite === 'visible') {
@@ -3479,11 +3485,11 @@ async function demarrerServeur () {
 								if (objet.hasOwnProperty('media') && objet.media !== media && objet.media !== '' && objet.type !== 'embed') {
 									supprimerFichier(pad, objet.media)
 								}
-								if (vignette && objet.hasOwnProperty('vignette') && objet.vignette !== vignette && vignette !== '' && !String(vignette).includes('/img/') && !verifierURL(vignette, ['https', 'http']) && await fs.pathExists(path.join(__dirname, '..', '/static/temp/' + path.basename(vignette)))) {
+								if (vignette && objet.hasOwnProperty('vignette') && objet.vignette !== vignette && vignette !== '' && typeof vignette === 'string' && !vignette.includes('/img/') && !verifierURL(vignette, ['https', 'http']) && await fs.pathExists(path.join(__dirname, '..', '/static/temp/' + path.basename(vignette)))) {
 									await fs.copy(path.join(__dirname, '..', '/static/temp/' + path.basename(vignette)), path.join(__dirname, '..', '/static' + vignette))
 									await fs.remove(path.join(__dirname, '..', '/static/temp/' + path.basename(vignette)))
 								}
-								if (objet.hasOwnProperty('vignette') && objet.vignette !== vignette && objet.vignette !== '' && !String(objet.vignette).includes('/img/') && !verifierURL(objet.vignette, ['https', 'http'])) {
+								if (objet.hasOwnProperty('vignette') && objet.vignette !== vignette && objet.vignette !== '' && typeof objet.vignette === 'string' && !objet.vignette.includes('/img/') && !verifierURL(objet.vignette, ['https', 'http'])) {
 									supprimerFichier(pad, path.basename(objet.vignette))
 								}
 								io.in('pad-' + pad).emit('modifierbloc', { bloc: bloc, titre: titre, texte: texte, media: media, iframe: iframe, type: type, source: source, vignette: vignette, identifiant: identifiant, nom: nom, modifie: date, couleur: couleur, colonne: colonne, visibilite: visibilite, activiteId: activiteId })
@@ -3502,11 +3508,11 @@ async function demarrerServeur () {
 								if (objet.hasOwnProperty('media') && objet.media !== media && objet.media !== '' && objet.type !== 'embed') {
 									supprimerFichier(pad, objet.media)
 								}
-								if (vignette && objet.hasOwnProperty('vignette') && objet.vignette !== vignette && vignette !== '' && !String(vignette).includes('/img/') && !verifierURL(vignette, ['https', 'http']) && await fs.pathExists(path.join(__dirname, '..', '/static/temp/' + path.basename(vignette)))) {
+								if (vignette && objet.hasOwnProperty('vignette') && objet.vignette !== vignette && vignette !== '' && typeof vignette === 'string' && !vignette.includes('/img/') && !verifierURL(vignette, ['https', 'http']) && await fs.pathExists(path.join(__dirname, '..', '/static/temp/' + path.basename(vignette)))) {
 									await fs.copy(path.join(__dirname, '..', '/static/temp/' + path.basename(vignette)), path.join(__dirname, '..', '/static' + vignette))
 									await fs.remove(path.join(__dirname, '..', '/static/temp/' + path.basename(vignette)))
 								}
-								if (objet.hasOwnProperty('vignette') && objet.vignette !== vignette && objet.vignette !== '' && !String(objet.vignette).includes('/img/') && !verifierURL(objet.vignette, ['https', 'http'])) {
+								if (objet.hasOwnProperty('vignette') && objet.vignette !== vignette && objet.vignette !== '' && typeof objet.vignette === 'string' && !objet.vignette.includes('/img/') && !verifierURL(objet.vignette, ['https', 'http'])) {
 									supprimerFichier(pad, path.basename(objet.vignette))
 								}
 								io.in('pad-' + pad).emit('modifierbloc', { bloc: bloc, titre: titre, texte: texte, media: media, iframe: iframe, type: type, source: source, vignette: vignette, identifiant: identifiant, nom: nom, modifie: date, couleur: couleur, colonne: colonne, visibilite: visibilite })
@@ -3520,11 +3526,11 @@ async function demarrerServeur () {
 								if (objet.hasOwnProperty('media') && objet.media !== media && objet.media !== '' && objet.type !== 'embed') {
 									supprimerFichier(pad, objet.media)
 								}
-								if (vignette && objet.hasOwnProperty('vignette') && objet.vignette !== vignette && vignette !== '' && !String(vignette).includes('/img/') && !verifierURL(vignette, ['https', 'http']) && await fs.pathExists(path.join(__dirname, '..', '/static/temp/' + path.basename(vignette)))) {
+								if (vignette && objet.hasOwnProperty('vignette') && objet.vignette !== vignette && vignette !== '' && typeof vignette === 'string' && !vignette.includes('/img/') && !verifierURL(vignette, ['https', 'http']) && await fs.pathExists(path.join(__dirname, '..', '/static/temp/' + path.basename(vignette)))) {
 									await fs.copy(path.join(__dirname, '..', '/static/temp/' + path.basename(vignette)), path.join(__dirname, '..', '/static' + vignette))
 									await fs.remove(path.join(__dirname, '..', '/static/temp/' + path.basename(vignette)))
 								}
-								if (objet.hasOwnProperty('vignette') && objet.vignette !== vignette && objet.vignette !== '' && !String(objet.vignette).includes('/img/') && !verifierURL(objet.vignette, ['https', 'http'])) {
+								if (objet.hasOwnProperty('vignette') && objet.vignette !== vignette && objet.vignette !== '' && typeof objet.vignette === 'string' && !objet.vignette.includes('/img/') && !verifierURL(objet.vignette, ['https', 'http'])) {
 									supprimerFichier(pad, path.basename(objet.vignette))
 								}
 								io.in('pad-' + pad).emit('modifierbloc', { bloc: bloc, titre: titre, texte: texte, media: media, iframe: iframe, type: type, source: source, vignette: vignette, identifiant: identifiant, nom: nom, modifie: date, couleur: couleur, colonne: colonne, visibilite: visibilite })
@@ -3562,7 +3568,7 @@ async function demarrerServeur () {
 					const date = dayjs().format()
 					const activiteId = parseInt(donnees.activite) + 1
 					let vignetteOrigine = ''
-					if (vignette && vignette !== '' && !String(vignette).includes('/img/') && !verifierURL(vignette, ['https', 'http'])) {
+					if (vignette && vignette !== '' && typeof vignette === 'string' && !vignette.includes('/img/') && !verifierURL(vignette, ['https', 'http'])) {
 						vignette = '/' + definirDossierFichiers(pad) + '/' + pad + '/' + path.basename(vignette)
 						vignetteOrigine = '/' + definirDossierFichiers(padOrigine) + '/' + padOrigine + '/' + path.basename(vignette)
 					}
@@ -3730,7 +3736,7 @@ async function demarrerServeur () {
 							if (objet.hasOwnProperty('media') && objet.media !== '' && objet.type !== 'embed') {
 								supprimerFichier(pad, objet.media)
 							}
-							if (objet.hasOwnProperty('vignette') && objet.vignette !== '' && !String(objet.vignette).includes('/img/') && !verifierURL(objet.vignette, ['https', 'http'])) {
+							if (objet.hasOwnProperty('vignette') && objet.vignette !== '' && typeof objet.vignette === 'string' && !objet.vignette.includes('/img/') && !verifierURL(objet.vignette, ['https', 'http'])) {
 								supprimerFichier(pad, path.basename(objet.vignette))
 							}
 							let etherpadId, url
@@ -4280,7 +4286,7 @@ async function demarrerServeur () {
 				if (admins.includes(identifiant) || proprietaire === identifiant) {
 					await db.HSET('pads:' + pad, 'fond', fond)
 					io.in('pad-' + pad).emit('modifierfond', fond)
-					if (!ancienfond.includes('/img/') && ancienfond.substring(0, 1) !== '#' && ancienfond !== '') {
+					if (!ancienfond.includes('/img/') && ancienfond.substring(0, 1) !== '#' && ancienfond !== '' && typeof ancienfond === 'string') {
 						supprimerFichier(pad, path.basename(ancienfond))
 					}
 					socket.request.session.cookie.expires = new Date(Date.now() + dureeSession)
@@ -4310,7 +4316,7 @@ async function demarrerServeur () {
 				if (admins.includes(identifiant) || proprietaire === identifiant) {
 					await db.HSET('pads:' + pad, 'fond', fond)
 					io.in('pad-' + pad).emit('modifiercouleurfond', fond)
-					if (!ancienfond.includes('/img/') && ancienfond.substring(0, 1) !== '#' && ancienfond !== '') {
+					if (!ancienfond.includes('/img/') && ancienfond.substring(0, 1) !== '#' && ancienfond !== '' && typeof ancienfond === 'string') {
 						supprimerFichier(pad, path.basename(ancienfond))
 					}
 					socket.request.session.cookie.expires = new Date(Date.now() + dureeSession)
@@ -4851,7 +4857,7 @@ async function demarrerServeur () {
 									if (objet.hasOwnProperty('media') && objet.media !== '' && objet.type !== 'embed') {
 										supprimerFichier(pad, objet.media)
 									}
-									if (objet.hasOwnProperty('vignette') && objet.vignette !== '' && !String(objet.vignette).includes('/img/') && !verifierURL(objet.vignette, ['https', 'http'])) {
+									if (objet.hasOwnProperty('vignette') && objet.vignette !== '' && typeof objet.vignette === 'string' && !objet.vignette.includes('/img/') && !verifierURL(objet.vignette, ['https', 'http'])) {
 										supprimerFichier(pad, path.basename(objet.vignette))
 									}
 									if (objet.hasOwnProperty('bloc') && objet.bloc === blocSupprime) {
@@ -5291,7 +5297,7 @@ async function demarrerServeur () {
 						donnees = Object.assign({}, donnees)
 						if (donnees === null) { resolve({}); return false }
 						// Pour résoudre le problème de chemin pour les fichiers déplacés
-						if (donnees.hasOwnProperty('fond') && !donnees.fond.includes('/img/') && donnees.fond.substring(0, 1) !== '#' && donnees.fond !== '') {
+						if (donnees.hasOwnProperty('fond') && !donnees.fond.includes('/img/') && donnees.fond.substring(0, 1) !== '#' && donnees.fond !== '' && typeof donnees.fond === 'string') {
 							donnees.fond = '/' + definirDossierFichiers(pad) + '/' + pad + '/' + path.basename(donnees.fond)
 						}
 						const reponse = await db.EXISTS('utilisateurs:' + donnees.identifiant)
@@ -5321,7 +5327,7 @@ async function demarrerServeur () {
 							const donnees = JSON.parse(donneesQ.rows[0].donnees)
 							if (donnees.hasOwnProperty('identifiant')) {
 								// Pour résoudre le problème de chemin pour les fichiers déplacés
-								if (donnees.hasOwnProperty('fond') && !donnees.fond.includes('/img/') && donnees.fond.substring(0, 1) !== '#' && donnees.fond !== '') {
+								if (donnees.hasOwnProperty('fond') && !donnees.fond.includes('/img/') && donnees.fond.substring(0, 1) !== '#' && donnees.fond !== '' && typeof donnees.fond === 'string') {
 									donnees.fond = '/' + definirDossierFichiers(pad) + '/' + pad + '/' + path.basename(donnees.fond)
 								}
 								const reponse = await db.EXISTS('utilisateurs:' + donnees.identifiant)
@@ -5373,7 +5379,7 @@ async function demarrerServeur () {
 						donnees = Object.assign({}, donnees)
 						if (donnees === null) { resolve({}); return false }
 						// Pour résoudre le problème de chemin pour les fichiers déplacés
-						if (donnees.hasOwnProperty('fond') && !donnees.fond.includes('/img/') && donnees.fond.substring(0, 1) !== '#' && donnees.fond !== '') {
+						if (donnees.hasOwnProperty('fond') && !donnees.fond.includes('/img/') && donnees.fond.substring(0, 1) !== '#' && donnees.fond !== '' && typeof donnees.fond === 'string') {
 							donnees.fond = '/' + definirDossierFichiers(pad) + '/' + pad + '/' + path.basename(donnees.fond)
 						}
 						const reponse = await db.EXISTS('utilisateurs:' + donnees.identifiant)
@@ -5408,7 +5414,7 @@ async function demarrerServeur () {
 							const donnees = JSON.parse(donneesQ.rows[0].donnees)
 							if (donnees.hasOwnProperty('identifiant')) {
 								// Pour résoudre le problème de chemin pour les fichiers déplacés
-								if (donnees.hasOwnProperty('fond') && !donnees.fond.includes('/img/') && donnees.fond.substring(0, 1) !== '#' && donnees.fond !== '') {
+								if (donnees.hasOwnProperty('fond') && !donnees.fond.includes('/img/') && donnees.fond.substring(0, 1) !== '#' && donnees.fond !== '' && typeof donnees.fond === 'string') {
 									donnees.fond = '/' + definirDossierFichiers(pad) + '/' + pad + '/' + path.basename(donnees.fond)
 								}
 								const reponse = await db.EXISTS('utilisateurs:' + donnees.identifiant)
@@ -5460,7 +5466,7 @@ async function demarrerServeur () {
 						donnees = Object.assign({}, donnees)
 						if (donnees === null) { resolve({}) }
 						// Pour résoudre le problème de chemin pour les fichiers déplacés
-						if (donnees.hasOwnProperty('fond') && !donnees.fond.includes('/img/') && donnees.fond.substring(0, 1) !== '#' && donnees.fond !== '') {
+						if (donnees.hasOwnProperty('fond') && !donnees.fond.includes('/img/') && donnees.fond.substring(0, 1) !== '#' && donnees.fond !== '' && typeof donnees.fond === 'string') {
 							donnees.fond = '/' + definirDossierFichiers(pad) + '/' + pad + '/' + path.basename(donnees.fond)
 						}
 						const reponse = await db.EXISTS('utilisateurs:' + donnees.identifiant)
@@ -5490,7 +5496,7 @@ async function demarrerServeur () {
 							const donnees = JSON.parse(donneesQ.rows[0].donnees)
 							if (donnees.hasOwnProperty('identifiant')) {
 								// Pour résoudre le problème de chemin pour les fichiers déplacés
-								if (donnees.hasOwnProperty('fond') && !donnees.fond.includes('/img/') && donnees.fond.substring(0, 1) !== '#' && donnees.fond !== '') {
+								if (donnees.hasOwnProperty('fond') && !donnees.fond.includes('/img/') && donnees.fond.substring(0, 1) !== '#' && donnees.fond !== '' && typeof donnees.fond === 'string') {
 									donnees.fond = '/' + definirDossierFichiers(pad) + '/' + pad + '/' + path.basename(donnees.fond)
 								}
 								const reponse = await db.EXISTS('utilisateurs:' + donnees.identifiant)
@@ -5542,7 +5548,7 @@ async function demarrerServeur () {
 						donnees = Object.assign({}, donnees)
 						if (donnees === null) { resolve({}); return false }
 						// Pour résoudre le problème de chemin pour les fichiers déplacés
-						if (donnees.hasOwnProperty('fond') && !donnees.fond.includes('/img/') && donnees.fond.substring(0, 1) !== '#' && donnees.fond !== '') {
+						if (donnees.hasOwnProperty('fond') && !donnees.fond.includes('/img/') && donnees.fond.substring(0, 1) !== '#' && donnees.fond !== '' && typeof donnees.fond === 'string') {
 							donnees.fond = '/' + definirDossierFichiers(pad) + '/' + pad + '/' + path.basename(donnees.fond)
 						}
 						const reponse = await db.EXISTS('utilisateurs:' + donnees.identifiant)
@@ -5572,7 +5578,7 @@ async function demarrerServeur () {
 							const donnees = JSON.parse(donneesQ.rows[0].donnees)
 							if (donnees.hasOwnProperty('identifiant')) {
 								// Pour résoudre le problème de chemin pour les fichiers déplacés
-								if (donnees.hasOwnProperty('fond') && !donnees.fond.includes('/img/') && donnees.fond.substring(0, 1) !== '#' && donnees.fond !== '') {
+								if (donnees.hasOwnProperty('fond') && !donnees.fond.includes('/img/') && donnees.fond.substring(0, 1) !== '#' && donnees.fond !== '' && typeof donnees.fond === 'string') {
 									donnees.fond = '/' + definirDossierFichiers(pad) + '/' + pad + '/' + path.basename(donnees.fond)
 								}
 								const reponse = await db.EXISTS('utilisateurs:' + donnees.identifiant)
@@ -5765,7 +5771,7 @@ async function demarrerServeur () {
 				pad.affichageColonnes = affichageColonnes
 			}
 			// Pour résoudre le problème de chemin pour les fichiers déplacés
-			if (pad.hasOwnProperty('fond') && !pad.fond.includes('/img/') && pad.fond.substring(0, 1) !== '#' && pad.fond !== '') {
+			if (pad.hasOwnProperty('fond') && !pad.fond.includes('/img/') && pad.fond.substring(0, 1) !== '#' && pad.fond !== '' && typeof pad.fond === 'string') {
 				pad.fond = '/' + definirDossierFichiers(id) + '/' + id + '/' + path.basename(pad.fond)
 			}
 			// Cacher mot de passe front
@@ -5799,7 +5805,7 @@ async function demarrerServeur () {
 									donnees.colonne = nombreColonnes - 1
 								}
 								// Pour résoudre le problème de chemin pour les fichiers déplacés
-								if (donnees.hasOwnProperty('vignette') && donnees.vignette !== '' && !String(donnees.vignette).includes('/img/') && !verifierURL(donnees.vignette, ['https', 'http'])) {
+								if (donnees.hasOwnProperty('vignette') && donnees.vignette !== '' && typeof donnees.vignette === 'string' && !donnees.vignette.includes('/img/') && !verifierURL(donnees.vignette, ['https', 'http'])) {
 									donnees.vignette = '/' + definirDossierFichiers(id) + '/' + id + '/' + path.basename(donnees.vignette)
 								}
 								// Pour homogénéité des paramètres du bloc avec modération activée
@@ -6120,7 +6126,7 @@ async function demarrerServeur () {
 							if (parseInt(donnees.colonne) >= nombreColonnes) {
 								donnees.colonne = nombreColonnes - 1
 							}
-							if (donnees.hasOwnProperty('vignette') && donnees.vignette !== '' && !String(donnees.vignette).includes('/img/') && !verifierURL(donnees.vignette, ['https', 'http'])) {
+							if (donnees.hasOwnProperty('vignette') && donnees.vignette !== '' && typeof donnees.vignette === 'string' && !donnees.vignette.includes('/img/') && !verifierURL(donnees.vignette, ['https', 'http'])) {
 								donnees.vignette = '/' + definirDossierFichiers(id) + '/' + id + '/' + path.basename(donnees.vignette)
 							}
 							if (!donnees.hasOwnProperty('visibilite')) {
@@ -6548,7 +6554,11 @@ async function demarrerServeur () {
 	}
 
 	function definirDossierFichiers (id) {
-		if (process.env.VITE_NFS6_PAD_NUMBER && process.env.VITE_NFS6_PAD_NUMBER !== '' && process.env.VITE_NFS6_FOLDER && process.env.VITE_NFS6_FOLDER !== '' && parseInt(id) > parseInt(process.env.VITE_NFS6_PAD_NUMBER)) {
+		if (process.env.VITE_NFS8_PAD_NUMBER && process.env.VITE_NFS8_PAD_NUMBER !== '' && process.env.VITE_NFS8_FOLDER && process.env.VITE_NFS8_FOLDER !== '' && parseInt(id) > parseInt(process.env.VITE_NFS8_PAD_NUMBER)) {
+			return process.env.VITE_NFS8_FOLDER
+		} else if (process.env.VITE_NFS7_PAD_NUMBER && process.env.VITE_NFS7_PAD_NUMBER !== '' && process.env.VITE_NFS7_FOLDER && process.env.VITE_NFS7_FOLDER !== '' && parseInt(id) > parseInt(process.env.VITE_NFS7_PAD_NUMBER)) {
+			return process.env.VITE_NFS7_FOLDER
+		} else if (process.env.VITE_NFS6_PAD_NUMBER && process.env.VITE_NFS6_PAD_NUMBER !== '' && process.env.VITE_NFS6_FOLDER && process.env.VITE_NFS6_FOLDER !== '' && parseInt(id) > parseInt(process.env.VITE_NFS6_PAD_NUMBER)) {
 			return process.env.VITE_NFS6_FOLDER
 		} else if (process.env.VITE_NFS5_PAD_NUMBER && process.env.VITE_NFS5_PAD_NUMBER !== '' && process.env.VITE_NFS5_FOLDER && process.env.VITE_NFS5_FOLDER !== '' && parseInt(id) > parseInt(process.env.VITE_NFS5_PAD_NUMBER)) {
 			return process.env.VITE_NFS5_FOLDER
