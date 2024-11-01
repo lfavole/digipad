@@ -68,7 +68,7 @@ VITE_NFS_PAD_NUMBER (id de pad à partir de laquelle les fichiers seront enregis
 VITE_NFS_FOLDER (nom du dossier monté NFS, obligatoirement situé dans le dossier /static/. ex : /static/nfs)
 VITE_NFS2_PAD_NUMBER (id de pad à partir de laquelle les fichiers seront enregistrés dans un 2e dossier monté NFS)
 VITE_NFS2_FOLDER (nom du dossier monté NFS, obligatoirement situé dans le dossier /static/. ex : /static/nfs2)
-... (NF3, NFS4, NFS5, NFS6)
+... (NF3, NFS4, NFS5, NFS6, NFS7, NFS8)
 AUTHORIZED_DOMAINS (domaines autorisés pour api serveur. ex : ladigitale.dev,example.com / par défaut *)
 ALERT_AVAILABLE_SPACE (pourcentage d'espace libre en dessous duquel une alerte est affichée et le téléversement de fichiers empêché / 10 par défaut)
 ```
