@@ -1,0 +1,23 @@
+{
+    "devCommand": "npm run build",
+    "builds": [
+        {
+            "src": "server/index.js",
+            "use": "@vercel/node"
+        },
+        {
+            "src": "dist/client/assets/**/*",
+            "use": "@vercel/static"
+        }
+    ],
+    "routes": [
+        {
+            "src": "/((?!assets/).*)",
+            "dest": "server/index.js"
+        },
+        {
+            "src": "/(.*)",
+            "dest": "dist/client/assets/$1"
+        }
+    ]
+}
